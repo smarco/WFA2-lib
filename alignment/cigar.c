@@ -53,6 +53,20 @@ void cigar_clear(
   cigar->end_offset = cigar->max_operations;
   cigar->score = INT32_MIN;
 }
+void cigar_resize(
+    cigar_t* const cigar,
+    const int max_operations) {
+  // Check maximum operations
+  if (max_operations > cigar->max_operations) {
+    cigar->max_operations = max_operations;
+    mm_allocator_free(cigar->mm_allocator,cigar->operations); // Free
+    cigar->operations = mm_allocator_malloc(
+        cigar->mm_allocator,max_operations); // Allocate
+  }
+  cigar->begin_offset = cigar->max_operations - 1;
+  cigar->end_offset = cigar->max_operations;
+  cigar->score = INT32_MIN;
+}
 void cigar_free(
     cigar_t* const cigar) {
   mm_allocator_free(cigar->mm_allocator,cigar->operations);

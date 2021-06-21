@@ -144,4 +144,18 @@ void wavefront_init_victim(
     wavefront->bt_prev = wavefront->bt_prev_mem - lo; // Center at k=0
   }
 }
+/*
+ * Utils
+ */
+uint64_t wavefront_get_size(
+    wavefront_t* const wavefront) {
+  uint64_t total_size = wavefront->max_wavefront_elements*sizeof(wf_offset_t);
+  if (wavefront->bt_pcigar_mem) {
+    total_size += wavefront->max_wavefront_elements*(sizeof(pcigar_t)+sizeof(block_idx_t));
+  }
+  return total_size;
+}
+
+
+
 

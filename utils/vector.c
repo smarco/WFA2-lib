@@ -43,12 +43,12 @@
 vector_t* vector_new_(
     const uint64_t num_initial_elements,
     const uint64_t element_size) {
-  vector_t* const vector_buffer = malloc(sizeof(vector_t));
+  vector_t* const vector_buffer = (vector_t*) malloc(sizeof(vector_t));
   vector_buffer->element_size = element_size;
   vector_buffer->elements_allocated = num_initial_elements;
   vector_buffer->memory = malloc(num_initial_elements*element_size);
   if (!vector_buffer->memory) {
-    fprintf(stderr,"Could not create new vector (%"PRIu64" bytes requested)",
+    fprintf(stderr,"Could not create new vector (%" PRIu64 " bytes requested)",
         num_initial_elements*element_size);
     exit(1);
   }
@@ -76,7 +76,7 @@ void vector_reserve(
     vector->elements_allocated = num_elements>proposed?num_elements:proposed;
     vector->memory = realloc(vector->memory,vector->elements_allocated*vector->element_size);
     if (!vector->memory) {
-      fprintf(stderr,"Could not reserve vector (%"PRIu64" bytes requested)",
+      fprintf(stderr,"Could not reserve vector (%" PRIu64 " bytes requested)",
           vector->elements_allocated*vector->element_size);
       exit(1);
     }

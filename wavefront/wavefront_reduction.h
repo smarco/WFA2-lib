@@ -40,7 +40,7 @@
  */
 void wavefront_reduction_set_none(
     wavefront_reduction_t* const wavefront_reduction);
-void wavefront_reduction_set_dynamic(
+void wavefront_reduction_set_adaptive(
     wavefront_reduction_t* const wavefront_reduction,
     const int min_wavefront_length,
     const int max_distance_threshold);

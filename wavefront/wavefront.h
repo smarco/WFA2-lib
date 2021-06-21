@@ -136,4 +136,10 @@ void wavefront_init_victim(
     const int lo,
     const int hi);
 
+/*
+ * Utils
+ */
+uint64_t wavefront_get_size(
+    wavefront_t* const wavefront);
+
 #endif /* WAVEFRONT_H_ */

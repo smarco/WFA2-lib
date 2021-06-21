@@ -103,13 +103,13 @@ void counter_print_stats(
   // Print Samples
   const uint64_t num_samples = counter_get_num_samples(counter);
   if (num_samples >= METRIC_FACTOR_1G) {
-    fprintf(stream," (samples=%"PRIu64"G",num_samples/METRIC_FACTOR_1G);
+    fprintf(stream," (samples=%" PRIu64 "G",num_samples/METRIC_FACTOR_1G);
   } else if (num_samples >= METRIC_FACTOR_1M) {
-    fprintf(stream," (samples=%"PRIu64"M",num_samples/METRIC_FACTOR_1M);
+    fprintf(stream," (samples=%" PRIu64 "M",num_samples/METRIC_FACTOR_1M);
   } else if (num_samples >= METRIC_FACTOR_1K) {
-    fprintf(stream," (samples=%"PRIu64"K",num_samples/METRIC_FACTOR_1K);
+    fprintf(stream," (samples=%" PRIu64 "K",num_samples/METRIC_FACTOR_1K);
   } else {
-    fprintf(stream," (samples=%"PRIu64"",num_samples);
+    fprintf(stream," (samples=%" PRIu64 "",num_samples);
     if (num_samples==0) {
       fprintf(stream,",--n/a--)}\n");
       return;
@@ -222,13 +222,13 @@ void percentage_print(
   // Print Samples
   const uint64_t num_samples = counter_get_num_samples(counter);
   if (num_samples >= METRIC_FACTOR_1G) {
-    fprintf(stream," (samples=%"PRIu64"G",num_samples/METRIC_FACTOR_1G);
+    fprintf(stream," (samples=%" PRIu64 "G",num_samples/METRIC_FACTOR_1G);
   } else if (num_samples >= METRIC_FACTOR_1M) {
-    fprintf(stream," (samples=%"PRIu64"M",num_samples/METRIC_FACTOR_1M);
+    fprintf(stream," (samples=%" PRIu64 "M",num_samples/METRIC_FACTOR_1M);
   } else if (num_samples >= METRIC_FACTOR_1K) {
-    fprintf(stream," (samples=%"PRIu64"K",num_samples/METRIC_FACTOR_1K);
+    fprintf(stream," (samples=%" PRIu64 "K",num_samples/METRIC_FACTOR_1K);
   } else {
-    fprintf(stream," (samples=%"PRIu64"",num_samples);
+    fprintf(stream," (samples=%" PRIu64 "",num_samples);
   }
   if (num_samples == 0) {
     fprintf(stream,")\n");

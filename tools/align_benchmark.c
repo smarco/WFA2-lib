@@ -152,29 +152,8 @@ benchmark_args parameters = {
  */
 void align_pairwise_test() {
   // Patters & Texts
-//  char * pattern = "GATTACA";
-//  char * text = "GATCACTA";
-  char * pattern = "GGTTACTTGCGTATGTGCTACCTCATTTGCTAATAAAAATCGGCGCCCGACAGACTTAGGGCGGATTCTTAAGGGATTCGTTGGATCAATGGCCCGACTTCTATGGACCGACCGTGGAGTAACCCTTGAGGGCGCTAGCGCGTTATCTTTGTTAACAATAGCGAAAAATCTATGTACAACATCATGCTGCAATTCAACAA";
-  char * text =    "GGTTACTTGCGTTGTCTACCTCATTTGCTAATAAAAATCGGCGCCCGACACGACTTGGGCGGATTCTTAAAGGATTCGTCGATCCAATGGCCCACTTGCTATGTGACGATCCGTGGAGTACCCTATGAGTTGCGTAGCGATTATTCTTTGATAACAAAGCGAAAAATATATGTACAACAACATGCTGAATTCAACAAGAT";
-
-//  char *pattern =  "GGTTACTTGCGTATGTGCTACCTCATTTGCTAATAAAAATCGGCGCCCGACAGACTTAGGGCGGATTCTTAAGGGATTCGTTGGATCAATGGCCCGACTTCT"
-//      "ATGGACCGACCGTGGAGTAACCCTTGAGGGCGCTAGCGCGTTATCTTTGTTAACAATAGCGAAAAATCTATGTACAACATCATGCTGCAATTCAACAAGACGTCTCGAGGTAGTG"
-//      "ATACACCAGCCTGCGGGCCTCGCCCACCGCAGCAACGGGAATAGATCTCTTGGCATCGCATCGCGTGAGCCGAGACCGCGCACTCCTTACTTTGACCTGTAACCTGGCAAAGACG"
-//      "GTCCTTCTGTAACTTCATTGTCCAGCAACGGACAGCATAGTATAAGCCGCTCTACCCGGTACAGGGTGGTCCAAGCGAGCCGGAGAGATAATGAGATCTCCATGCGTAGCCATAA"
-//      "GATTAATAGTGTGTGACTTTAGGAAACCACGTGCGGCCTTCCGTCCAGATGACCAGGGTTACGGTCCAGAATGGTTATGATCCCGCTCATAACTGAAAAGCCGTACTACGAATGC"
-//      "GTCTTCTTGGGTGTACACTACCTCGCGGAAATAGGATGAGATGTGGCTAATCGTTCAGTCGAATGTTGCACGTTCCCGACTATGTGTAATCTTGTGCTCTTGCGCGATCCCCCAT"
-//      "ATGCACGACCTTTGAGCTTAAGAATCCCTGAACTCCAAGCCCCATGTCCGCGAGGAATCTCCTTCACCATTGACTATGGCAATCGGCGCGCTACGCGATTTTCAAACATTCTTCA"
-//      "GTGACCGAGTTAGTTCTGGTTTCTGAAGACTGCCTGGCGACGATGACCTTCGTGCGTCATTTGAAGTTAGACAACGCGAAGCGGTTAGCCGAACCCTAATTACTCTGGGGTCTCT"
-//      "TAAGCCCGGGTTGAAGTCATTTCGCACGAGGTTGGAATGGCGGATGGGATGTGACAAGTACCAAAGCCCATTGCAGATAAGTAATCCTAAAGG";
-//  char *text =     "GGTTACTTGCGTTGTCTACCTCATTTGCTAATAAAAATCGGCGCCCGACACGACTTGGGCGGATTCTTAAAGGATTCGTCGATCCAATGGCCCACTTGCTAT"
-//      "GTGACGATCCGTGGAGTACCCTATGAGTTGCGTAGCGATTATTCTTTGATAACAAAGCGAAAAATATATGTACAACAACATGCTGAATTCAACAAGATGTCTGGTAGGTGGTGAT"
-//      "CACACCAGCCTTCGGGCTCGCCACTGCAGCAACGGAAATAGTCTCTTTGGCTACCATCGACGTGAGCCGAGCAGCACATTCCTTACTTTGACGTGTAACTGGCAAGACGCTCCTT"
-//      "CTTACTTCTTGTCAGCACCGGATCAGCATAGTATAAGCCGCTCTACCACGGTACAGGGTGGTCCAAGCGACCCGGAGAGCAAATGAGCTCTCCAGGCGTAGCGATAAGATTCAAT"
-//      "AGTGTGTAAACTTTAGGTAAACCATCTGTGCGGCCTTCCATGCCCAGATGACCCAGGTTACGTCCAGAATGTATATCCGCAGCCATAACGAAAAGCCGTACTAGATGCGTCTTCT"
-//      "TGGCGTGTACACTAACGCGCGAAATAGGCATGAGATGTGGTAATCGTTCAGGTCGGTGTGGCGACGTTCCCACATATGTGTTAATCTTGTGCTCTTGCGCGATCCCCTTCTGACA"
-//      "CACCTTTGAGCTAAAACTCCCTGAACTCCAAGGCCCATCGGTCCGCGAGGAGATCCTTTCACCTTGACTATGGCAATGGCGCGCCGCGATTATCAAACTTTCTTCAGTGACCCGA"
-//      "GTTCGTTCTGGTTTCTTGAAGACTGCCTGGCGTAGATGACTTCGGTGCTCATCTGAATAGACAACGCGAAGCGGTGTGGCCGAACCCTAATACTCTTAGACTCTCTTAAGCCCGG"
-//      "GTTAAGTATCATTTCGCACGAGGTTGGCAGGCGGAGGGGTGACATGTACGAAAGCACATGCGATAAATAATCCTAAAGG";
+  char * pattern = "GATTACA";
+  char * text = "GATCACTA";
 
   // MMAllocator
   mm_allocator_t* const mm_allocator = mm_allocator_new(BUFFER_SIZE_8M);
@@ -221,11 +200,12 @@ void align_pairwise_test() {
   wavefront_aligner_attr_t attributes = wavefront_aligner_attr_default;
   attributes.distance_metric = gap_affine;
   attributes.affine_penalties = affine_penalties;
-  attributes.affine2p_penalties = affine2p_penalties;
-  attributes.reduction.reduction_strategy = wavefront_reduction_none; // wavefront_reduction_dynamic
+  // attributes.affine2p_penalties = affine2p_penalties;
+  attributes.reduction.reduction_strategy = wavefront_reduction_none; // wavefront_reduction_adaptive
   attributes.reduction.min_wavefront_length = 10;
   attributes.reduction.max_distance_threshold = 50;
-  attributes.low_memory = false;
+  attributes.alignment_scope = alignment_scope_alignment; // alignment_scope_score
+  attributes.low_memory = true;
   attributes.mm_allocator = mm_allocator;
   wavefront_aligner_t* const wf_aligner =
       wavefront_aligner_new(strlen(pattern),strlen(text),&attributes);
@@ -255,8 +235,8 @@ wavefront_aligner_t* align_benchmark_configure_wf(
     attributes.alignment_scope = alignment_scope_score;
   }
   // WF-Reduction
-  if (parameters.reduction_type == wavefront_reduction_dynamic) {
-    attributes.reduction.reduction_strategy = wavefront_reduction_dynamic;
+  if (parameters.reduction_type == wavefront_reduction_adaptive) {
+    attributes.reduction.reduction_strategy = wavefront_reduction_adaptive;
     attributes.reduction.min_wavefront_length = parameters.min_wavefront_length;
     attributes.reduction.max_distance_threshold = parameters.max_distance_threshold;
   } else {
@@ -442,6 +422,7 @@ void align_benchmark() {
   // Free
   fclose(input_file);
   if (align_input.output_file != NULL) fclose(align_input.output_file);
+  if (align_input.wf_aligner) wavefront_aligner_delete(align_input.wf_aligner);
   mm_allocator_delete(align_input.mm_allocator);
   free(line1);
   free(line2);
@@ -542,7 +523,7 @@ void parse_arguments(int argc,char** argv) {
         parameters.reduction_type = wavefront_reduction_none;
         parameters.algorithm = alignment_edit_wavefront;
       } else if (strcmp(optarg,"edit-wfa-adaptive")==0) {
-        parameters.reduction_type = wavefront_reduction_dynamic;
+        parameters.reduction_type = wavefront_reduction_adaptive;
         parameters.algorithm = alignment_edit_wavefront;
       /* Gap-Lineal */
       } else if (strcmp(optarg,"gap-lineal-nw")==0 ||
@@ -552,7 +533,7 @@ void parse_arguments(int argc,char** argv) {
         parameters.reduction_type = wavefront_reduction_none;
         parameters.algorithm = alignment_gap_lineal_wavefront;
       } else if (strcmp(optarg,"gap-lineal-wfa-adaptive")==0) {
-        parameters.reduction_type = wavefront_reduction_dynamic;
+        parameters.reduction_type = wavefront_reduction_adaptive;
         parameters.algorithm = alignment_gap_lineal_wavefront;
       /* Gap-Affine */
       } else if (strcmp(optarg,"gap-affine-swg")==0 ||
@@ -565,7 +546,7 @@ void parse_arguments(int argc,char** argv) {
         parameters.reduction_type = wavefront_reduction_none;
         parameters.algorithm = alignment_gap_affine_wavefront;
       } else if (strcmp(optarg,"gap-affine-wfa-adaptive")==0) {
-        parameters.reduction_type = wavefront_reduction_dynamic;
+        parameters.reduction_type = wavefront_reduction_adaptive;
         parameters.algorithm = alignment_gap_affine_wavefront;
       /* Gap-Affine 2-Pieces */
       } else if (strcmp(optarg,"gap-affine2p-dp")==0) {
@@ -574,7 +555,7 @@ void parse_arguments(int argc,char** argv) {
         parameters.reduction_type = wavefront_reduction_none;
         parameters.algorithm = alignment_gap_affine2p_wavefront;
       } else if (strcmp(optarg,"gap-affine2p-wfa-adaptive")==0) {
-        parameters.reduction_type = wavefront_reduction_dynamic;
+        parameters.reduction_type = wavefront_reduction_adaptive;
         parameters.algorithm = alignment_gap_affine2p_wavefront;
       } else {
         fprintf(stderr,"Algorithm '%s' not recognized\n",optarg);

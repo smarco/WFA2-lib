@@ -70,7 +70,7 @@ typedef struct {
 mm_stack_segment_t* mm_stack_segment_new(
     mm_stack_t* const mm_stack) {
   // Allocate handler
-  mm_stack_segment_t* const segment = malloc(sizeof(mm_stack_segment_t));
+  mm_stack_segment_t* const segment = (mm_stack_segment_t*) malloc(sizeof(mm_stack_segment_t));
   // Memory
   segment->size = mm_stack->segment_size;
   segment->memory = malloc(mm_stack->segment_size);
@@ -95,7 +95,7 @@ void mm_stack_segment_delete(
 mm_stack_t* mm_stack_new(
     const uint64_t segment_size) {
   // Allocate handler
-  mm_stack_t* const mm_stack = malloc(sizeof(mm_stack_t));
+  mm_stack_t* const mm_stack = (mm_stack_t*) malloc(sizeof(mm_stack_t));
   // Memory segments
   mm_stack->segments = vector_new(MM_STACK_INITIAL_SEGMENTS,mm_stack_segment_t*);
   mm_stack->segment_size = segment_size;

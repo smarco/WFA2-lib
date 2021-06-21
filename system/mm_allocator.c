@@ -110,7 +110,7 @@ typedef struct {
 mm_allocator_segment_t* mm_allocator_segment_new(
     mm_allocator_t* const mm_allocator) {
   // Allocate handler
-  mm_allocator_segment_t* const segment = malloc(sizeof(mm_allocator_segment_t));
+  mm_allocator_segment_t* const segment = (mm_allocator_segment_t*) malloc(sizeof(mm_allocator_segment_t));
   // Index
   const uint64_t segment_idx = vector_get_used(mm_allocator->segments);
   segment->idx = segment_idx;
@@ -151,7 +151,7 @@ uint64_t mm_allocator_segment_get_num_requests(
 mm_allocator_t* mm_allocator_new(
     const uint64_t segment_size) {
   // Allocate handler
-  mm_allocator_t* const mm_allocator = malloc(sizeof(mm_allocator_t));
+  mm_allocator_t* const mm_allocator = (mm_allocator_t*) malloc(sizeof(mm_allocator_t));
   mm_allocator->request_ticker = 0;
   // Segments
   mm_allocator->segment_size = segment_size;
@@ -296,7 +296,7 @@ void* mm_allocator_allocate(
       memory_aligned = memory_aligned - ((uintptr_t)memory_aligned % align_bytes);
     }
     // Set mm_reference
-    mm_allocator_reference_t* const mm_reference = memory_aligned - sizeof(mm_allocator_reference_t);
+    mm_allocator_reference_t* const mm_reference = (mm_allocator_reference_t*)(memory_aligned - sizeof(mm_allocator_reference_t));
     mm_reference->segment_idx = segment->idx;
     mm_reference->request_idx = mm_allocator_segment_get_num_requests(segment);
     // Add request
@@ -323,7 +323,7 @@ void* mm_allocator_allocate(
       memory_aligned = memory_aligned - ((uintptr_t)memory_aligned % align_bytes);
     }
     // Set reference
-    mm_allocator_reference_t* const mm_reference = memory_aligned - sizeof(mm_allocator_reference_t);
+    mm_allocator_reference_t* const mm_reference = (mm_allocator_reference_t*)(memory_aligned - sizeof(mm_allocator_reference_t));
     mm_reference->segment_idx = UINT32_MAX;
     mm_reference->request_idx = vector_get_used(mm_allocator->malloc_requests);
     // Add malloc-request
@@ -424,7 +424,7 @@ void mm_allocator_free(
 #else
   // Get reference
   void* const effective_memory = memory - sizeof(mm_allocator_reference_t);
-  mm_allocator_reference_t* const mm_reference = effective_memory;
+  mm_allocator_reference_t* const mm_reference = (mm_allocator_reference_t*) effective_memory;
   if (mm_reference->segment_idx == UINT32_MAX) {
     // Free malloc memory
     mm_allocator_free_malloc_request(mm_allocator,mm_reference);

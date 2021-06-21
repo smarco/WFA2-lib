@@ -72,6 +72,9 @@ void cigar_allocate(
     mm_allocator_t* const mm_allocator);
 void cigar_clear(
     cigar_t* const cigar);
+void cigar_resize(
+    cigar_t* const cigar,
+    const int max_operations);
 void cigar_free(
     cigar_t* const cigar);
 

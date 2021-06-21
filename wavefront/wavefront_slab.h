@@ -47,6 +47,8 @@ typedef struct {
   int max_wavefront_elements;   // Maximum wf-elements allocated (max. wf. size)
   vector_t* wavefronts;         // All wavefronts (wavefront_t*)
   vector_t* wavefronts_free;    // Free wavefronts (wavefront_t*)
+  // Stats
+  uint64_t memory_used;         // Memory used (Bytes)
   // MM
   mm_allocator_t* mm_allocator; // MM-Allocator
 } wavefront_slab_t;
@@ -58,12 +60,14 @@ wavefront_slab_t* wavefront_slab_new(
     const int init_max_wavefront_elements,
     const bool allocate_backtrace,
     mm_allocator_t* const mm_allocator);
+void wavefront_slab_reap(
+    wavefront_slab_t* const wavefront_slab,
+    const bool reap_all);
 void wavefront_slab_resize(
     wavefront_slab_t* const wavefront_slab,
     const int max_wavefront_elements);
 void wavefront_slab_clear(
-    wavefront_slab_t* const wavefront_slab,
-    const bool deallocate_oversized);
+    wavefront_slab_t* const wavefront_slab);
 void wavefront_slab_delete(
     wavefront_slab_t* const wavefront_slab);
 
@@ -78,12 +82,12 @@ void wavefront_slab_free(
     wavefront_slab_t* const wavefront_slab,
     wavefront_t* const wavefront);
 
+/*
+ * Utils
+ */
+uint64_t wavefront_slab_get_size(
+    wavefront_slab_t* const wavefront_slab);
+
 #endif /* WAVEFRONT_SLAB_H_ */
-
-
-
-
-
-
 
 

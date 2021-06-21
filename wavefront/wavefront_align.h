@@ -35,10 +35,14 @@
 #include "wavefront_aligner.h"
 #include "wavefront_display.h" // For convenience
 
+#define WF_ALIGN_SUCCESSFUL   0
+#define WF_ALIGN_MAX_SCORE   -1
+#define WF_ALIGN_OOM         -2
+
 /*
  * Wavefront Alignment
  */
-void wavefront_align(
+int wavefront_align(
     wavefront_aligner_t* const wf_aligner,
     const char* const pattern,
     const int pattern_length,

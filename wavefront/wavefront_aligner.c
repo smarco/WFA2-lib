@@ -41,6 +41,11 @@
 #define WF_NULL_INIT_HI     ( 1024)
 #define WF_NULL_INIT_LENGTH WAVEFRONT_LENGTH(WF_NULL_INIT_LO,WF_NULL_INIT_HI)
 
+#define WF_MAX_SCORE                             INT_MAX
+#define WF_LIMIT_PROBE_INTERVAL_DEFAULT              256
+#define WF_MAX_MEMORY_DEFAULT                         -1 /* Unlimited */
+#define WF_MAX_MEMORY_RESIDENT_DEFAULT  BUFFER_SIZE_256M
+
 /*
  * Default parameters
  */
@@ -70,14 +75,17 @@ wavefront_aligner_attr_t wavefront_aligner_attr_default = {
     },
     // Reduction
     .reduction = {
-        .reduction_strategy = wavefront_reduction_none, // TODO: DU wants dynamic
-        .min_wavefront_length = -1, // 10,
-        .max_distance_threshold = -1, // 50,
+        .reduction_strategy = wavefront_reduction_none, // TODO: DU wants adaptive
+        .min_wavefront_length = -1, // 10 0
+        .max_distance_threshold = -1, // 50 0,
     },
     // Memory model
     .low_memory = false,  // TODO: DU wants (low_memory if length >= 10000) // FIXME
     // MM
     .mm_allocator = NULL, // Use private MM
+    // Limits
+    .max_alignment_score = WF_MAX_SCORE,
+    .max_memory_used = WF_MAX_MEMORY_DEFAULT // Unlimited
 };
 
 /*
@@ -142,8 +150,8 @@ wavefront_aligner_t* wavefront_aligner_new(
   wf_aligner->bt_piggyback = bt_piggyback;
   wavefront_set_penalties(wf_aligner,attributes); // Set penalties
   // Reduction strategy
-  if (attributes->reduction.reduction_strategy == wavefront_reduction_dynamic) {
-    wavefront_reduction_set_dynamic(
+  if (attributes->reduction.reduction_strategy == wavefront_reduction_adaptive) {
+    wavefront_reduction_set_adaptive(
         &wf_aligner->reduction,
         attributes->reduction.min_wavefront_length,
         attributes->reduction.max_distance_threshold);
@@ -168,9 +176,19 @@ wavefront_aligner_t* wavefront_aligner_new(
       &wf_aligner->num_wavefronts); // Compute dimensions
   wavefront_components_allocate(wf_aligner,attributes->distance_metric);
   // CIGAR
-  cigar_allocate(&wf_aligner->cigar,pattern_length+text_length,mm_allocator);
+  cigar_allocate(&wf_aligner->cigar,2*(pattern_length+text_length),mm_allocator);
+  // Internals
+  wf_aligner->max_alignment_score = attributes->max_alignment_score;
+  wf_aligner->limit_probe_interval = WF_LIMIT_PROBE_INTERVAL_DEFAULT;
+  wf_aligner->max_memory_used = attributes->max_memory_used;
+  wf_aligner->max_resident_memory = WF_MAX_MEMORY_RESIDENT_DEFAULT;
   // Return
   return wf_aligner;
+}
+void wavefront_aligner_reap(
+    wavefront_aligner_t* const wf_aligner) {
+  if (wf_aligner->bt_buffer) wf_backtrace_buffer_reap(wf_aligner->bt_buffer); // BT-Buffer
+  wavefront_slab_reap(wf_aligner->wavefront_slab,true); // Clear Slab
 }
 void wavefront_aligner_clear(
     wavefront_aligner_t* const wf_aligner) {
@@ -178,10 +196,9 @@ void wavefront_aligner_clear(
   if (wf_aligner->memory_modular) wavefront_components_clear(wf_aligner,wf_aligner->distance_metric);
   // Clear CIGAR
   cigar_clear(&wf_aligner->cigar);
-  // BT-Buffer
+  // Clear BT-Buffer and Slab
   if (wf_aligner->bt_buffer) wf_backtrace_buffer_clear(wf_aligner->bt_buffer);
-  // Clear Slab
-  wavefront_slab_clear(wf_aligner->wavefront_slab,false);
+  wavefront_slab_clear(wf_aligner->wavefront_slab);
 }
 void wavefront_aligner_clear__resize(
     wavefront_aligner_t* const wf_aligner,
@@ -201,17 +218,11 @@ void wavefront_aligner_clear__resize(
     if (wf_aligner->memory_modular) wavefront_components_clear(wf_aligner,wf_aligner->distance_metric);
   }
   // Resize CIGAR
-  if (pattern_length+text_length > wf_aligner->pattern_length+wf_aligner->text_length) {
-    cigar_free(&wf_aligner->cigar); // FIXME
-    cigar_allocate(&wf_aligner->cigar,pattern_length+text_length,wf_aligner->mm_allocator); // FIXME
-  } else {
-    cigar_clear(&wf_aligner->cigar);
-  }
-  // BT-Buffer
+  cigar_resize(&wf_aligner->cigar,2*(pattern_length+text_length));
+  // Clear BT-Buffer and Slab
   if (wf_aligner->bt_buffer) wf_backtrace_buffer_clear(wf_aligner->bt_buffer);
-  // Clear Slab
-  wavefront_slab_clear(wf_aligner->wavefront_slab,false);
-  // Resize
+  wavefront_slab_clear(wf_aligner->wavefront_slab);
+  // Resize pattern & text
   wf_aligner->pattern_length = pattern_length;
   wf_aligner->text_length = text_length;
 }
@@ -229,13 +240,49 @@ void wavefront_aligner_delete(
   wavefront_components_free(wf_aligner,wf_aligner->distance_metric);
   // CIGAR
   cigar_free(&wf_aligner->cigar);
-  // MM
+  // BT-Buffer and Slab
   if (wf_aligner->bt_buffer) wf_backtrace_buffer_delete(wf_aligner->bt_buffer);
-  wavefront_slab_delete(wf_aligner->wavefront_slab); // Slab
-  if (wf_aligner->mm_allocator_own) {
-    mm_allocator_delete(wf_aligner->mm_allocator);
-  }
+  wavefront_slab_delete(wf_aligner->wavefront_slab);
+  // MM
+  const bool mm_allocator_own = wf_aligner->mm_allocator_own;
   mm_allocator_free(mm_allocator,wf_aligner); // Handler
+  if (mm_allocator_own) {
+    mm_allocator_delete(mm_allocator);
+  }
+}
+/*
+ * Configuration
+ */
+void wavefront_aligner_set_reduction_none(
+    wavefront_aligner_t* const wf_aligner) {
+  wavefront_reduction_set_none(&wf_aligner->reduction);
+}
+void wavefront_aligner_set_reduction_adaptive(
+    wavefront_aligner_t* const wf_aligner,
+    const int min_wavefront_length,
+    const int max_distance_threshold) {
+  wavefront_reduction_set_adaptive(&wf_aligner->reduction,
+      min_wavefront_length,max_distance_threshold);
+}
+void wavefront_aligner_set_max_alignment_score(
+    wavefront_aligner_t* const wf_aligner,
+    const int max_alignment_score) {
+  wf_aligner->max_alignment_score = max_alignment_score;
+}
+void wavefront_aligner_set_max_memory_used(
+    wavefront_aligner_t* const wf_aligner,
+    const uint64_t max_memory_used) {
+  wf_aligner->max_memory_used = max_memory_used;
+}
+/*
+ * Utils
+ */
+uint64_t wavefront_aligner_get_size(
+    wavefront_aligner_t* const wf_aligner) {
+  const uint64_t bt_buffer_size = (wf_aligner->bt_buffer) ?
+      wf_backtrace_buffer_get_size(wf_aligner->bt_buffer) : 0;
+  const uint64_t slab_size = wavefront_slab_get_size(wf_aligner->wavefront_slab);
+  return bt_buffer_size + slab_size;
 }
 
 

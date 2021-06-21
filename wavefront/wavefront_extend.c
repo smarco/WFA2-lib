@@ -100,8 +100,8 @@ void wavefront_extend(
   wavefront_extend_packed(
       wf_aligner,pattern,pattern_length,
       text,text_length,score);
-  // Reduce wavefront dynamically
-  if (wf_aligner->reduction.reduction_strategy == wavefront_reduction_dynamic) {
+  // Reduce wavefront adaptively
+  if (wf_aligner->reduction.reduction_strategy == wavefront_reduction_adaptive) {
     wavefront_reduce(wf_aligner,pattern_length,text_length,score);
   }
 }

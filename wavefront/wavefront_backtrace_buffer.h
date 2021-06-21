@@ -67,6 +67,8 @@ typedef struct {
 wf_backtrace_buffer_t* wf_backtrace_buffer_new();
 void wf_backtrace_buffer_clear(
     wf_backtrace_buffer_t* const bt_buffer);
+void wf_backtrace_buffer_reap(
+    wf_backtrace_buffer_t* const bt_buffer);
 void wf_backtrace_buffer_delete(
     wf_backtrace_buffer_t* const bt_buffer);
 
@@ -90,5 +92,11 @@ void wf_backtrace_buffer_recover_cigar(
     char* const text,
     const int text_length,
     cigar_t* const cigar);
+
+/*
+ * Utils
+ */
+uint64_t wf_backtrace_buffer_get_size(
+    wf_backtrace_buffer_t* const bt_buffer);
 
 #endif /* WAVEFRONT_BACKTRACE_BUFFER_H_ */

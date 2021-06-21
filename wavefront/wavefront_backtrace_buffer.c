@@ -34,7 +34,7 @@
 /*
  * Config
  */
-#define BT_BUFFER_SEGMENT_LENGTH BUFFER_SIZE_1M
+#define BT_BUFFER_SEGMENT_LENGTH BUFFER_SIZE_8M
 
 /*
  * BT-Block Segments
@@ -68,6 +68,21 @@ void wf_backtrace_buffer_clear(
   bt_buffer->segment_idx = 0;
   bt_buffer->segment_pos = 1; // Discard block-0
   vector_set_used(bt_buffer->segments,1);
+}
+void wf_backtrace_buffer_reap(
+    wf_backtrace_buffer_t* const bt_buffer) {
+  // Reap segments beyond the first
+  const int num_segments = vector_get_used(bt_buffer->segments);
+  wf_backtrace_block_t** const bt_blocks =
+      vector_get_mem(bt_buffer->segments,wf_backtrace_block_t*);
+  int i;
+  for (i=1;i<num_segments;++i) {
+    mm_allocator_free(bt_buffer->mm_allocator,bt_blocks[i]);
+  }
+  vector_set_used(bt_buffer->segments,1);
+  // Clear
+  bt_buffer->segment_idx = 0;
+  bt_buffer->segment_pos = 1; // Discard block-0
 }
 void wf_backtrace_buffer_delete(
     wf_backtrace_buffer_t* const bt_buffer) {
@@ -180,6 +195,14 @@ void wf_backtrace_buffer_recover_cigar(
   // Close CIGAR
   cigar->end_offset = cigar_buffer - cigar->operations;
   *cigar_buffer = '\0';
+}
+/*
+ * Utils
+ */
+uint64_t wf_backtrace_buffer_get_size(
+    wf_backtrace_buffer_t* const bt_buffer) {
+  const uint64_t segments_used = vector_get_used(bt_buffer->segments);
+  return segments_used*BT_BUFFER_SEGMENT_LENGTH;
 }
 
 
