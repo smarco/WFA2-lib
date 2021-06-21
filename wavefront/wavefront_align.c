@@ -156,8 +156,8 @@ int wavefront_align_global(
         break;
     }
     // Probe limits
-    if (score >= wf_aligner->max_score_scope) {
-      wf_aligner->cigar.score = wf_aligner->max_score_scope;
+    if (score >= wf_aligner->max_alignment_score) {
+      wf_aligner->cigar.score = wf_aligner->max_alignment_score;
       return WF_ALIGN_MAX_SCORE;
     }
     if (score % wf_aligner->limit_probe_interval == 0 &&
