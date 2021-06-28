@@ -26,25 +26,29 @@
  *
  * PROJECT: Wavefront Alignments Algorithms
  * AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
- * DESCRIPTION: Common functions/utilities and headers for C development
+ * DESCRIPTION: WFA Sample-Code
  */
 
-#include "commons.h"
+#include <iostream>
+#include <string>
+#include "bindings/cpp/WFAligner.hpp"
 
-/*
- * Random number generator [min,max)
- */
-uint64_t rand_iid(
-    const uint64_t min,
-    const uint64_t max) {
-  const int n_rand = rand(); // [0, RAND_MAX]
-  const uint64_t range = max - min;
-  const uint64_t rem = RAND_MAX % range;
-  const uint64_t sample = RAND_MAX / range;
-  // Consider the small interval within remainder of RAND_MAX
-  if (n_rand < RAND_MAX - rem) {
-    return min + n_rand/sample;
-  } else {
-    return rand_iid(min,max);
-  }
+using namespace std;
+
+int main(int argc,char* argv[]) {
+  // Patter & Text
+  string pattern = "TCTTTACTCGCGCGTTGGAGAAATACAATAGT";
+  string text    = "TCTATACTGCGCGTTTGGAGAAATAAAATAGT";
+
+  // Create a WFAligner
+  WFAlignerGapAffine aligner(4,6,2);
+  // Align
+  aligner.align(pattern,text);
+  cout << "WFA-Alignemnt returns score " << aligner.get_alignment_score() << endl;
+
+  // Print CIGAR
+  string cigar = aligner.get_alignment_cigar();
+  cout << "PATTERN: " << pattern  << endl;
+  cout << "TEXT: " << text  << endl;
+  cout << "CIGAR: " << cigar  << endl;
 }

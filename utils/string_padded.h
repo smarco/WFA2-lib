@@ -42,12 +42,15 @@
  * Strings Padded
  */
 typedef struct {
-  // Strings
-  char* pattern_padded_buffer;
+  // Dimensions
+  int pattern_length;
+  int text_length;
+  // Padded strings
   char* pattern_padded;
-  char* text_padded_buffer;
   char* text_padded;
   // MM
+  char* pattern_padded_buffer;
+  char* text_padded_buffer;
   mm_allocator_t* mm_allocator;
 } strings_padded_t;
 

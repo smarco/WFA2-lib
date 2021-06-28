@@ -53,6 +53,12 @@ typedef struct {
   mm_allocator_t* mm_allocator; // MM-Allocator
 } wavefront_slab_t;
 
+typedef enum {
+  wf_slab_reap_free_unfit = 1, // Reap only the free wavefronts that are unfit
+  wf_slab_reap_all_unfit  = 2, // Reap all unfit wavefronts
+  wf_slab_reap_all        = 3  // Reap all (free memory)
+} wf_slab_reap_mode_t;
+
 /*
  * Setup
  */
@@ -62,7 +68,7 @@ wavefront_slab_t* wavefront_slab_new(
     mm_allocator_t* const mm_allocator);
 void wavefront_slab_reap(
     wavefront_slab_t* const wavefront_slab,
-    const bool reap_all);
+    const wf_slab_reap_mode_t reap_mode);
 void wavefront_slab_resize(
     wavefront_slab_t* const wavefront_slab,
     const int max_wavefront_elements);

@@ -38,69 +38,27 @@
 #include "system/mm_allocator.h"
 #include "system/mm_stack.h"
 #include "alignment/cigar.h"
-#include "gap_affine2p/affine2p_penalties.h"
 #include "wavefront_slab.h"
 #include "wavefront_penalties.h"
-
-/*
- * Alignment scope
- */
-typedef enum {
-  alignment_scope_score,      // Only distance/score
-  alignment_scope_alignment,  // Full alignment CIGAR
-} alignment_scope_t;
-
-/*
- * Wavefront Reduction
- */
-typedef enum {
-  wavefront_reduction_none,
-  wavefront_reduction_adaptive,
-} wavefront_reduction_type;
-typedef struct {
-  wavefront_reduction_type reduction_strategy;     // Reduction strategy
-  int min_wavefront_length;                        // Adaptive: Minimum wavefronts length to reduce
-  int max_distance_threshold;                      // Adaptive: Maximum distance between offsets allowed
-} wavefront_reduction_t;
-
-/*
- * Wavefront Aligner Attributes
- */
-typedef struct {
-  // Distance model & Penalties
-  distance_metric_t distance_metric;       // Alignment metric/distance used
-  alignment_scope_t alignment_scope;       // Alignment scope (score only or full-CIGAR)
-  lineal_penalties_t lineal_penalties;     // Gap-lineal penalties (placeholder)
-  affine_penalties_t affine_penalties;     // Gap-affine penalties (placeholder)
-  affine2p_penalties_t affine2p_penalties; // Gap-affine-2p penalties (placeholder)
-  // Reduction strategy
-  wavefront_reduction_t reduction;         // Wavefront reduction
-  // Memory model
-  bool low_memory;                         // Use low-memory strategy (modular wavefronts and piggyback)
-  // External MM (instead of allocating one inside)
-  mm_allocator_t* mm_allocator;            // MM-Allocator
-  // Limits
-  int max_alignment_score;                 // Maximum score allowed before quit
-  uint64_t max_memory_used;                // Maximum memory allowed to used before quit
-} wavefront_aligner_attr_t;
-
-// Default parameters
-extern wavefront_aligner_attr_t wavefront_aligner_attr_default;
+#include "wavefront_attributes.h"
 
 /*
  * Wavefront Aligner
  */
 typedef struct {
-  // Attributes
+  // Dimensions
   int pattern_length;                          // Pattern length
   int text_length;                             // Text length
+  int max_score_scope;                         // Maximum score-difference between dependent wavefronts
+  // Alignment Attributes
   distance_metric_t distance_metric;           // Alignment metric/distance used
   alignment_scope_t alignment_scope;           // Alignment scope (score only or full-CIGAR)
+  alignment_form_t alignment_form;             // Alignment form (end-to-end/ends-free)
   wavefronts_penalties_t penalties;            // Alignment penalties
+  // Wavefront Attributes
   wavefront_reduction_t reduction;             // Reduction parameters
   bool memory_modular;                         // Memory strategy (modular wavefronts)
   bool bt_piggyback;                           // Backtrace Piggyback
-  int max_score_scope;                         // Maximum score-difference between dependent wavefronts
   // Wavefront components
   int num_wavefronts;                          // Total number of allocated wavefronts
   wavefront_t** mwavefronts;                   // M-wavefronts
@@ -118,7 +76,6 @@ typedef struct {
   mm_allocator_t* mm_allocator;                // MM-Allocator
   wavefront_slab_t* wavefront_slab;            // MM-Wavefront-Slab (Allocates/Reuses the individual wavefronts)
   // Limits
-  int max_alignment_score;                     // Maximum score allowed before quit
   int limit_probe_interval;                    // Score-ticks to check limits
   uint64_t max_memory_used;                    // Maximum memory allowed to used before quit
   uint64_t max_resident_memory;                // Maximum memory allowed to be buffered before reap
@@ -135,7 +92,7 @@ void wavefront_aligner_reap(
     wavefront_aligner_t* const wf_aligner);
 void wavefront_aligner_clear(
     wavefront_aligner_t* const wf_aligner);
-void wavefront_aligner_clear__resize(
+void wavefront_aligner_resize(
     wavefront_aligner_t* const wf_aligner,
     const int pattern_length,
     const int text_length);
@@ -145,12 +102,22 @@ void wavefront_aligner_delete(
 /*
  * Configuration
  */
+void wavefront_aligner_set_alignment_end_to_end(
+    wavefront_aligner_t* const wf_aligner);
+void wavefront_aligner_set_alignment_free_ends(
+    wavefront_aligner_t* const wf_aligner,
+    const int pattern_begin_free,
+    const int pattern_end_free,
+    const int text_begin_free,
+    const int text_end_free);
+
 void wavefront_aligner_set_reduction_none(
     wavefront_aligner_t* const wf_aligner);
 void wavefront_aligner_set_reduction_adaptive(
     wavefront_aligner_t* const wf_aligner,
     const int min_wavefront_length,
     const int max_distance_threshold);
+
 void wavefront_aligner_set_max_alignment_score(
     wavefront_aligner_t* const wf_aligner,
     const int max_alignment_score);

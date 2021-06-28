@@ -188,6 +188,9 @@
 #define UINT32_ZERO_MASK       0xFFFFFFFEul
 #define UINT32_ONE_LAST_MASK   0x80000000ul
 #define UINT32_ZERO_LAST_MASK  0x7FFFFFFFul
+// Conversions/Extractions
+#define UINT64_TO_UINT32_LSB(value) ((uint32_t)((value) & 0x00000000FFFFFFFFul))
+#define UINT64_TO_UINT32_MSB(value) ((uint32_t)((value) >> 32))
 
 /*
  * Common numerical data processing/formating

@@ -29,7 +29,6 @@
  * DESCRIPTION: WaveFront aligner data structure
  */
 
-#include "gap_affine2p/affine2p_penalties.h"
 #include "wavefront_aligner.h"
 #include "wavefront_reduction.h"
 #include "wavefront_components.h"
@@ -40,53 +39,6 @@
 #define WF_NULL_INIT_LO     (-1024)
 #define WF_NULL_INIT_HI     ( 1024)
 #define WF_NULL_INIT_LENGTH WAVEFRONT_LENGTH(WF_NULL_INIT_LO,WF_NULL_INIT_HI)
-
-#define WF_MAX_SCORE                             INT_MAX
-#define WF_LIMIT_PROBE_INTERVAL_DEFAULT              256
-#define WF_MAX_MEMORY_DEFAULT                         -1 /* Unlimited */
-#define WF_MAX_MEMORY_RESIDENT_DEFAULT  BUFFER_SIZE_256M
-
-/*
- * Default parameters
- */
-wavefront_aligner_attr_t wavefront_aligner_attr_default = {
-    // Distance model & Penalties
-    .distance_metric = gap_affine, // TODO: DU wants lineal
-    .alignment_scope = alignment_scope_alignment, // TODO: I don't know what DU wants, honestly
-    .lineal_penalties = {
-        .match = 0,
-        .mismatch = 4,
-        .insertion = 2,
-        .deletion  = 2,
-    },
-    .affine_penalties = {
-        .match = 0,
-        .mismatch = 4,
-        .gap_opening = 6,
-        .gap_extension = 2, // 1
-    },
-    .affine2p_penalties = {
-        .match = 0,
-        .mismatch = 4,
-        .gap_opening1 = 6,
-        .gap_extension1 = 2,
-        .gap_opening2 = 24,
-        .gap_extension2 = 1, // TODO: Should be 2 (???)
-    },
-    // Reduction
-    .reduction = {
-        .reduction_strategy = wavefront_reduction_none, // TODO: DU wants adaptive
-        .min_wavefront_length = -1, // 10 0
-        .max_distance_threshold = -1, // 50 0,
-    },
-    // Memory model
-    .low_memory = false,  // TODO: DU wants (low_memory if length >= 10000) // FIXME
-    // MM
-    .mm_allocator = NULL, // Use private MM
-    // Limits
-    .max_alignment_score = WF_MAX_SCORE,
-    .max_memory_used = WF_MAX_MEMORY_DEFAULT // Unlimited
-};
 
 /*
  * Penalties
@@ -125,7 +77,7 @@ wavefront_aligner_t* wavefront_aligner_new(
     wavefront_aligner_attr_t* attributes) {
   // Attributes
   if (attributes == NULL) attributes = &wavefront_aligner_attr_default;
-  const bool score_only = (attributes->alignment_scope == alignment_scope_score);
+  const bool score_only = (attributes->alignment_scope == compute_score);
   const bool memory_modular = attributes->low_memory || score_only;
   const bool bt_piggyback = attributes->low_memory && !score_only;
   // MM
@@ -146,6 +98,7 @@ wavefront_aligner_t* wavefront_aligner_new(
   wf_aligner->text_length = text_length;
   wf_aligner->distance_metric = attributes->distance_metric;
   wf_aligner->alignment_scope = attributes->alignment_scope;
+  wf_aligner->alignment_form = attributes->alignment_form;
   wf_aligner->memory_modular = memory_modular;
   wf_aligner->bt_piggyback = bt_piggyback;
   wavefront_set_penalties(wf_aligner,attributes); // Set penalties
@@ -177,8 +130,7 @@ wavefront_aligner_t* wavefront_aligner_new(
   wavefront_components_allocate(wf_aligner,attributes->distance_metric);
   // CIGAR
   cigar_allocate(&wf_aligner->cigar,2*(pattern_length+text_length),mm_allocator);
-  // Internals
-  wf_aligner->max_alignment_score = attributes->max_alignment_score;
+  // Limits
   wf_aligner->limit_probe_interval = WF_LIMIT_PROBE_INTERVAL_DEFAULT;
   wf_aligner->max_memory_used = attributes->max_memory_used;
   wf_aligner->max_resident_memory = WF_MAX_MEMORY_RESIDENT_DEFAULT;
@@ -188,7 +140,7 @@ wavefront_aligner_t* wavefront_aligner_new(
 void wavefront_aligner_reap(
     wavefront_aligner_t* const wf_aligner) {
   if (wf_aligner->bt_buffer) wf_backtrace_buffer_reap(wf_aligner->bt_buffer); // BT-Buffer
-  wavefront_slab_reap(wf_aligner->wavefront_slab,true); // Clear Slab
+  wavefront_slab_reap(wf_aligner->wavefront_slab,wf_slab_reap_all); // Clear Slab
 }
 void wavefront_aligner_clear(
     wavefront_aligner_t* const wf_aligner) {
@@ -200,7 +152,7 @@ void wavefront_aligner_clear(
   if (wf_aligner->bt_buffer) wf_backtrace_buffer_clear(wf_aligner->bt_buffer);
   wavefront_slab_clear(wf_aligner->wavefront_slab);
 }
-void wavefront_aligner_clear__resize(
+void wavefront_aligner_resize(
     wavefront_aligner_t* const wf_aligner,
     const int pattern_length,
     const int text_length) {
@@ -253,6 +205,22 @@ void wavefront_aligner_delete(
 /*
  * Configuration
  */
+void wavefront_aligner_set_alignment_end_to_end(
+    wavefront_aligner_t* const wf_aligner) {
+  wf_aligner->alignment_form.span = alignment_end2end;
+}
+void wavefront_aligner_set_alignment_free_ends(
+    wavefront_aligner_t* const wf_aligner,
+    const int pattern_begin_free,
+    const int pattern_end_free,
+    const int text_begin_free,
+    const int text_end_free) {
+  wf_aligner->alignment_form.span = alignment_endsfree;
+  wf_aligner->alignment_form.pattern_begin_free = pattern_begin_free;
+  wf_aligner->alignment_form.pattern_end_free = pattern_end_free;
+  wf_aligner->alignment_form.text_begin_free = text_begin_free;
+  wf_aligner->alignment_form.text_end_free = text_end_free;
+}
 void wavefront_aligner_set_reduction_none(
     wavefront_aligner_t* const wf_aligner) {
   wavefront_reduction_set_none(&wf_aligner->reduction);
@@ -267,7 +235,7 @@ void wavefront_aligner_set_reduction_adaptive(
 void wavefront_aligner_set_max_alignment_score(
     wavefront_aligner_t* const wf_aligner,
     const int max_alignment_score) {
-  wf_aligner->max_alignment_score = max_alignment_score;
+  wf_aligner->alignment_form.max_alignment_score = max_alignment_score;
 }
 void wavefront_aligner_set_max_memory_used(
     wavefront_aligner_t* const wf_aligner,

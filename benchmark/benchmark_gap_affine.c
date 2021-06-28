@@ -68,6 +68,42 @@ void benchmark_gap_affine_swg(
   affine_matrix_free(&affine_matrix,align_input->mm_allocator);
   cigar_free(&cigar);
 }
+void benchmark_gap_affine_swg_endsfree(
+    align_input_t* const align_input,
+    affine_penalties_t* const penalties,
+    const int pattern_begin_free,
+    const int pattern_end_free,
+    const int text_begin_free,
+    const int text_end_free) {
+  // Allocate
+  affine_matrix_t affine_matrix;
+  affine_matrix_allocate(
+      &affine_matrix,align_input->pattern_length+1,
+      align_input->text_length+1,align_input->mm_allocator);
+  cigar_t cigar;
+  cigar_allocate(&cigar,
+      align_input->pattern_length+align_input->text_length,
+      align_input->mm_allocator);
+  // Align
+  timer_start(&align_input->timer);
+  swg_compute_endsfree(&affine_matrix,penalties,
+      align_input->pattern,align_input->pattern_length,
+      align_input->text,align_input->text_length,
+      pattern_begin_free,pattern_begin_free,
+      text_begin_free,text_end_free,&cigar);
+  timer_stop(&align_input->timer);
+  // DEBUG
+  if (align_input->debug_flags) {
+    benchmark_check_alignment(align_input,&cigar);
+  }
+  if (align_input->output_file) {
+    const int score = cigar_score_gap_affine(&cigar,penalties);
+    benchmark_print_alignment_short(align_input->output_file,score,&cigar);
+  }
+  // Free
+  affine_matrix_free(&affine_matrix,align_input->mm_allocator);
+  cigar_free(&cigar);
+}
 void benchmark_gap_affine_swg_banded(
     align_input_t* const align_input,
     affine_penalties_t* const penalties,
@@ -104,7 +140,7 @@ void benchmark_gap_affine_wavefront(
     affine_penalties_t* const penalties) {
   // Clear & resize
   wavefront_aligner_t* const wf_aligner = align_input->wf_aligner;
-  wavefront_aligner_clear__resize(wf_aligner,
+  wavefront_aligner_resize(wf_aligner,
       align_input->pattern_length,align_input->text_length);
   // Align
   timer_start(&align_input->timer);
@@ -117,7 +153,7 @@ void benchmark_gap_affine_wavefront(
     benchmark_check_alignment(align_input,&wf_aligner->cigar);
   }
   if (align_input->output_file) {
-    const int score_only = (wf_aligner->alignment_scope == alignment_scope_score);
+    const int score_only = (wf_aligner->alignment_scope == compute_score);
     const int score = (score_only) ?
         wf_aligner->cigar.score : cigar_score_gap_affine(&wf_aligner->cigar,penalties);
     benchmark_print_alignment_short(align_input->output_file,score,&wf_aligner->cigar);

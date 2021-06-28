@@ -49,13 +49,13 @@ typedef int32_t wf_offset_t;
 /*
  * Translate k and offset to coordinates h,v
  */
-#define WAVEFRONT_V(k,offset) ((offset)-(k))
-#define WAVEFRONT_H(k,offset) (offset)
+#define WAVEFRONT_V(k,offset)   ((offset)-(k))
+#define WAVEFRONT_H(k,offset)         (offset)
+#define WAVEFRONT_DIAGONAL(h,v)      ((h)-(v))
+#define WAVEFRONT_OFFSET(h,v)              (h)
+#define WAVEFRONT_LENGTH(lo,hi)  ((hi)-(lo)+2)
 
-#define WAVEFRONT_DIAGONAL(h,v) ((h)-(v))
-#define WAVEFRONT_OFFSET(h,v)   (h)
-
-#define WAVEFRONT_LENGTH(lo,hi) ((hi)-(lo)+2)
+#define WAVEFRONT_DIAGONAL_NULL        INT_MAX
 
 /*
  * Wavefront
@@ -72,6 +72,8 @@ typedef struct {
   int hi;                              // Effective highest diagonal (inclusive)
   int lo_base;                         // Lowest diagonal before reduction (inclusive)
   int hi_base;                         // Highest diagonal before reduction (inclusive)
+  // Alignment reaching ends
+  int k_alignment_end;                 // Wavefront reaching the end of the alignment
   // Wavefront elements
   wf_offset_t* offsets;                // Offsets (k-centered)
   pcigar_t* bt_pcigar;                 // Backtrace-block (k-centered)

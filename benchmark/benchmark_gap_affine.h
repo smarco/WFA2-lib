@@ -45,6 +45,13 @@ void benchmark_gap_affine_swg_banded(
     align_input_t* const align_input,
     affine_penalties_t* const penalties,
     const int bandwidth);
+void benchmark_gap_affine_swg_endsfree(
+    align_input_t* const align_input,
+    affine_penalties_t* const penalties,
+    const int pattern_begin_free,
+    const int pattern_end_free,
+    const int text_begin_free,
+    const int text_end_free);
 void benchmark_gap_affine_wavefront(
     align_input_t* const align_input,
     affine_penalties_t* const penalties);

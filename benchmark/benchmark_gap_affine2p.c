@@ -69,7 +69,7 @@ void benchmark_gap_affine2p_wavefront(
     affine2p_penalties_t* const penalties) {
   // Clear & resize
   wavefront_aligner_t* const wf_aligner = align_input->wf_aligner;
-  wavefront_aligner_clear__resize(wf_aligner,
+  wavefront_aligner_resize(wf_aligner,
       align_input->pattern_length,align_input->text_length);
   // Align
   timer_start(&align_input->timer);
@@ -82,7 +82,7 @@ void benchmark_gap_affine2p_wavefront(
   //    benchmark_check_alignment(align_input,&cigar);
   //  }
   if (align_input->output_file) {
-    const int score_only = (wf_aligner->alignment_scope == alignment_scope_score);
+    const int score_only = (wf_aligner->alignment_scope == compute_score);
     const int score = (score_only) ?
         wf_aligner->cigar.score : cigar_score_gap_affine2p(&wf_aligner->cigar,penalties);
     benchmark_print_alignment_short(align_input->output_file,score,&wf_aligner->cigar);

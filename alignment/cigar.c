@@ -41,16 +41,16 @@ void cigar_allocate(
   // Allocate buffer
   cigar->max_operations = max_operations;
   cigar->operations = mm_allocator_malloc(mm_allocator,cigar->max_operations);
-  cigar->begin_offset = cigar->max_operations - 1;
-  cigar->end_offset = cigar->max_operations;
+  cigar->begin_offset = 0;
+  cigar->end_offset = 0;
   cigar->score = INT32_MIN;
   // MM
   cigar->mm_allocator = mm_allocator;
 }
 void cigar_clear(
     cigar_t* const cigar) {
-  cigar->begin_offset = cigar->max_operations - 1;
-  cigar->end_offset = cigar->max_operations;
+  cigar->begin_offset = 0;
+  cigar->end_offset = 0;
   cigar->score = INT32_MIN;
 }
 void cigar_resize(
@@ -63,8 +63,8 @@ void cigar_resize(
     cigar->operations = mm_allocator_malloc(
         cigar->mm_allocator,max_operations); // Allocate
   }
-  cigar->begin_offset = cigar->max_operations - 1;
-  cigar->end_offset = cigar->max_operations;
+  cigar->begin_offset = 0;
+  cigar->end_offset = 0;
   cigar->score = INT32_MIN;
 }
 void cigar_free(

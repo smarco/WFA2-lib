@@ -49,7 +49,7 @@ int main(int argc,char* argv[]) {
   int i;
   for (i=0;i<100000;++i) {
     // Clean
-    wavefront_aligner_clear__resize(wf_aligner,strlen(pattern),strlen(text));
+    wavefront_aligner_resize(wf_aligner,strlen(pattern),strlen(text));
     // Align
     wavefront_align(wf_aligner,pattern,strlen(pattern),text,strlen(text));
     // Report

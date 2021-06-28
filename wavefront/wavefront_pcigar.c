@@ -88,9 +88,9 @@ int pcigar_unpack(
  * PCIGAR extend exact-matches
  */
 int pcigar_recover_extend(
-    char* const pattern,
+    const char* const pattern,
     const int pattern_length,
-    char* const text,
+    const char* const text,
     const int text_length,
     int v,
     int h,
@@ -130,9 +130,9 @@ int pcigar_recover_extend(
  */
 void pcigar_recover(
     pcigar_t pcigar,
-    char* const pattern,
+    const char* const pattern,
     const int pattern_length,
-    char* const text,
+    const char* const text,
     const int text_length,
     int* const v_pos,
     int* const h_pos,
@@ -182,4 +182,15 @@ void pcigar_recover(
   *v_pos = v;
   *h_pos = h;
   *current_matrix_type = matrix_type;
+}
+/*
+ * Display
+ */
+void pcigar_print(
+    FILE* const stream,
+    pcigar_t pcigar) {
+  char cigar_buffer[64];
+  const int pcigar_length = pcigar_unpack(pcigar,cigar_buffer);
+  cigar_buffer[pcigar_length] = '\0';
+  fprintf(stream,"%s",cigar_buffer);
 }

@@ -39,6 +39,11 @@
 #include "wavefront_pcigar.h"
 
 /*
+ * Constants
+ */
+#define WF_BACKTRACE_PREV_NULL UINT32_MAX
+
+/*
  * Backtrace Block
  */
 typedef uint32_t block_idx_t;
@@ -79,18 +84,26 @@ void wf_backtrace_buffer_store_block(
     wf_backtrace_buffer_t* const bt_buffer,
     pcigar_t* const pcigar,
     block_idx_t* const prev_idx);
+void wf_backtrace_buffer_store_starting_block(
+    wf_backtrace_buffer_t* const bt_buffer,
+    const int v,
+    const int h,
+    pcigar_t* const pcigar,
+    block_idx_t* const prev_idx);
 
 /*
  * Recover CIGAR
  */
 void wf_backtrace_buffer_recover_cigar(
     wf_backtrace_buffer_t* const bt_buffer,
+    const char* const pattern,
+    const int pattern_length,
+    const char* const text,
+    const int text_length,
+    const int alignment_k,
+    const int alignment_offset,
     const pcigar_t pcigar_last,
     const block_idx_t prev_idx_last,
-    char* const pattern,
-    const int pattern_length,
-    char* const text,
-    const int text_length,
     cigar_t* const cigar);
 
 /*

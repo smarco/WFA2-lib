@@ -102,23 +102,30 @@ int pcigar_unpack(
  * PCIGAR recover
  */
 int pcigar_recover_extend(
-    char* const pattern,
+    const char* const pattern,
     const int pattern_length,
-    char* const text,
+    const char* const text,
     const int text_length,
     int v,
     int h,
     char* cigar_buffer);
 void pcigar_recover(
     pcigar_t pcigar,
-    char* const pattern,
+    const char* const pattern,
     const int pattern_length,
-    char* const text,
+    const char* const text,
     const int text_length,
     int* const v_pos,
     int* const h_pos,
     char* cigar_buffer,
     int* const cigar_length,
     affine_matrix_type* const current_matrix_type);
+
+/*
+ * Display
+ */
+void pcigar_print(
+    FILE* const stream,
+    pcigar_t pcigar);
 
 #endif /* WAVEFRONT_PACKED_CIGAR_H_ */

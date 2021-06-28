@@ -62,8 +62,9 @@ wavefront_slab_t* wavefront_slab_new(
 }
 void wavefront_slab_reap(
     wavefront_slab_t* const wavefront_slab,
-    const bool reap_all) {
+    const wf_slab_reap_mode_t reap_mode) {
   // Parameters
+  const bool reap_all = (reap_mode == wf_slab_reap_all);
   const int max_wavefront_elements = wavefront_slab->max_wavefront_elements;
   mm_allocator_t* const mm_allocator = wavefront_slab->mm_allocator;
   // Clear free
@@ -74,20 +75,28 @@ void wavefront_slab_reap(
   const int num_wavefronts = vector_get_used(wavefront_slab->wavefronts);
   int i, valid_idx = 0;
   for (i=0;i<num_wavefronts;++i) {
-    // Check wavefront status
-    if (wavefronts[i]->status == wavefront_status_deallocated) {
-      mm_allocator_free(mm_allocator,wavefronts[i]); // Delete handler
-    } else {
-      // Busy or free
-      const bool unfit = wavefronts[i]->max_wavefront_elements < max_wavefront_elements;
-      if (reap_all || unfit) {
-        wavefront_free(wavefronts[i],mm_allocator); // Free wavefront
-        wavefront_slab->memory_used -= wavefront_get_size(wavefronts[i]);
+    switch (wavefronts[i]->status) {
+      case wavefront_status_deallocated: // Deallocated
         mm_allocator_free(mm_allocator,wavefronts[i]); // Delete handler
-      } else {
-        wavefronts[valid_idx++] = wavefronts[i]; // Valid wavefront
-        wavefronts[i]->status = wavefront_status_free; // Set free
-        vector_insert(wavefront_slab->wavefronts_free,wavefronts[i],wavefront_t*);
+        break;
+      case wavefront_status_busy:
+        if (reap_mode == wf_slab_reap_free_unfit) {
+          wavefronts[valid_idx++] = wavefronts[i]; // Valid wavefront
+          break;
+        }
+        // no break
+      case wavefront_status_free: {
+        const bool unfit = (wavefronts[i]->max_wavefront_elements < max_wavefront_elements);
+        if (reap_all || unfit) {
+          wavefront_free(wavefronts[i],mm_allocator); // Free wavefront
+          wavefront_slab->memory_used -= wavefront_get_size(wavefronts[i]);
+          mm_allocator_free(mm_allocator,wavefronts[i]); // Delete handler
+        } else {
+          wavefronts[valid_idx++] = wavefronts[i]; // Valid wavefront
+          wavefronts[i]->status = wavefront_status_free; // Set free
+          vector_insert(wavefront_slab->wavefronts_free,wavefronts[i],wavefront_t*);
+        }
+        break;
       }
     }
   }
@@ -101,13 +110,13 @@ void wavefront_slab_resize(
     // Set new max-elements wavefront length
     wavefront_slab->max_wavefront_elements = max_wavefront_elements;
     // Reap short wavefronts (unfit)
-    wavefront_slab_reap(wavefront_slab,false);
+    wavefront_slab_reap(wavefront_slab,wf_slab_reap_free_unfit);
   }
 }
 void wavefront_slab_clear(
     wavefront_slab_t* const wavefront_slab) {
   // Reap short wavefronts (unfit)
-  wavefront_slab_reap(wavefront_slab,false);
+  wavefront_slab_reap(wavefront_slab,wf_slab_reap_all_unfit);
 }
 void wavefront_slab_delete(
     wavefront_slab_t* const wavefront_slab) {
@@ -141,7 +150,7 @@ wavefront_t* wavefront_slab_allocate(
     const int hi) {
   // Parameters
   vector_t* const wavefronts_free = wavefront_slab->wavefronts_free;
-  const int wavefront_length = hi - lo + 2;
+  const int wavefront_length = WAVEFRONT_LENGTH(lo,hi);
   // Check max-length of pre-allocated wavefronts
   if (wavefront_length > wavefront_slab->max_wavefront_elements) {
     // Compute new slab size & redim

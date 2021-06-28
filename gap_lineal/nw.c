@@ -42,11 +42,11 @@ void nw_traceback(
   // Parameters
   int** const dp = score_matrix->columns;
   char* const operations = cigar->operations;
-  int op_sentinel = cigar->end_offset-1;
-  int h, v;
+  cigar->end_offset = cigar->max_operations;
+  int op_sentinel = cigar->end_offset - 1;
   // Compute traceback
-  h = score_matrix->num_columns-1;
-  v = score_matrix->num_rows-1;
+  int h = score_matrix->num_columns-1;
+  int v = score_matrix->num_rows-1;
   while (h>0 && v>0) {
     if (dp[h][v] == dp[h][v-1]+penalties->deletion) {
       operations[op_sentinel--] = 'D';
@@ -63,7 +63,7 @@ void nw_traceback(
   }
   while (h>0) {operations[op_sentinel--] = 'I'; --h;}
   while (v>0) {operations[op_sentinel--] = 'D'; --v;}
-  cigar->begin_offset = op_sentinel+1;
+  cigar->begin_offset = op_sentinel + 1;
 }
 void nw_compute(
     score_matrix_t* const score_matrix,

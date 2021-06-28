@@ -33,23 +33,29 @@
 #include "gap_affine/swg.h"
 
 /*
- * SWG distance computation using dynamic-programming matrix
+ * SWG traceback
  */
 void swg_traceback(
     affine_matrix_t* const affine_matrix,
     affine_penalties_t* const penalties,
     const int pattern_length,
     const int text_length,
+    const int target_v,
+    const int target_h,
     cigar_t* const cigar) {
   // Parameters
   affine_cell_t** const dp = affine_matrix->columns;
   char* const operations = cigar->operations;
-  int op_sentinel = cigar->end_offset-1;
-  int h, v;
+  cigar->end_offset = cigar->max_operations;
+  int op_sentinel = cigar->end_offset - 1;
+  // Add final insertions/deletions
+  int i;
+  for (i=target_v;i<pattern_length;++i) { operations[op_sentinel--] = 'D'; }
+  for (i=target_h;i<text_length;++i) { operations[op_sentinel--] = 'I'; }
   // Compute traceback
-  h = text_length;
-  v = pattern_length;
   affine_matrix_type matrix_type = affine_matrix_M;
+  int h = target_h;
+  int v = target_v;
   while (h>0 && v>0) {
     switch (matrix_type) {
       case affine_matrix_D:
@@ -87,10 +93,15 @@ void swg_traceback(
         break;
     }
   }
-  while (h>0) {operations[op_sentinel--] = 'I'; --h;}
-  while (v>0) {operations[op_sentinel--] = 'D'; --v;}
+  // Add initial deletions/insertions
+  while (v>0) { operations[op_sentinel--] = 'D'; --v; }
+  while (h>0) { operations[op_sentinel--] = 'I'; --h; }
   cigar->begin_offset = op_sentinel+1;
+  cigar->score = dp[target_h][target_v].M;
 }
+/*
+ * SWG alignment
+ */
 void swg_compute(
     affine_matrix_t* const affine_matrix,
     affine_penalties_t* const penalties,
@@ -135,12 +146,96 @@ void swg_compute(
     }
   }
   // Compute traceback
-  swg_traceback(affine_matrix,penalties,pattern_length,text_length,cigar);
+  swg_traceback(
+      affine_matrix,penalties,
+      pattern_length,text_length,
+      pattern_length,text_length,cigar);
   // DEBUG
   //affine_matrix_print(stderr,affine_matrix,pattern,text);
 }
 /*
- * SWG distance computation using dynamic-programming matrix (banded)
+ * SWG alignment (ends-free)
+ */
+void swg_compute_endsfree(
+    affine_matrix_t* const affine_matrix,
+    affine_penalties_t* const penalties,
+    const char* const pattern,
+    const int pattern_length,
+    const char* const text,
+    const int text_length,
+    const int pattern_begin_free,
+    const int pattern_end_free,
+    const int text_begin_free,
+    const int text_end_free,
+    cigar_t* const cigar) {
+  // Parameters
+  affine_cell_t** const dp = affine_matrix->columns;
+  const int pattern_min_v = pattern_length - pattern_end_free;
+  const int text_min_h = text_length - text_end_free;
+  int h, v;
+  // Init DP
+  dp[0][0].D = AFFINE_SCORE_MAX;
+  dp[0][0].I = AFFINE_SCORE_MAX;
+  dp[0][0].M = 0;
+  for (v=1;v<=pattern_length;++v) { // Init first column
+    dp[0][v].D = (v > pattern_begin_free) ? penalties->gap_opening + (v+1-pattern_begin_free)*penalties->gap_extension : 0;
+    dp[0][v].I = AFFINE_SCORE_MAX;
+    dp[0][v].M = dp[0][v].D;
+  }
+  for (h=1;h<=text_length;++h) { // Init first row
+    dp[h][0].D = AFFINE_SCORE_MAX;
+    dp[h][0].I = (h > text_begin_free) ? penalties->gap_opening + (h+1-text_begin_free)*penalties->gap_extension : 0;
+    dp[h][0].M = dp[h][0].I;
+  }
+  // Keep minimum score
+  int min_v = 0, min_h = 0, min_score = AFFINE_SCORE_MAX;
+  if (text_min_h==0 && dp[0][pattern_length].M<min_score) {
+    min_score = dp[0][pattern_length].M;
+    min_v = pattern_length;
+    min_h = 0;
+  }
+  // Compute DP
+  for (h=1;h<=text_length;++h) {
+    for (v=1;v<=pattern_length;++v) {
+      // Update DP.D
+      const int del_new = dp[h][v-1].M + penalties->gap_opening + penalties->gap_extension;
+      const int del_ext = dp[h][v-1].D + penalties->gap_extension;
+      const int del = MIN(del_new,del_ext);
+      dp[h][v].D = del;
+      // Update DP.I
+      const int ins_new = dp[h-1][v].M + penalties->gap_opening + penalties->gap_extension;
+      const int ins_ext = dp[h-1][v].I + penalties->gap_extension;
+      const int ins = MIN(ins_new,ins_ext);
+      dp[h][v].I = ins;
+      // Update DP.M
+      const int m_match = dp[h-1][v-1].M + ((pattern[v-1]==text[h-1]) ? penalties->match : penalties->mismatch);
+      dp[h][v].M = MIN(m_match,MIN(ins,del));
+    }
+    // Pattern aligned. Keep minimum score
+    if (h>=text_min_h && dp[h][pattern_length].M<min_score) {
+      min_score = dp[h][pattern_length].M;
+      min_v = pattern_length;
+      min_h = h;
+    }
+  }
+  // Text aligned. Keep minimum score
+  for (v=pattern_length;v>=0;--v) {
+    if (v>=pattern_min_v && dp[text_length][v].M<min_score) {
+      min_score = dp[text_length][v].M;
+      min_v = v;
+      min_h = text_length;
+    }
+  }
+  // Compute traceback
+  swg_traceback(
+      affine_matrix,penalties,
+      pattern_length,text_length,
+      min_v,min_h,cigar);
+  // DEBUG
+  //affine_matrix_print(stderr,affine_matrix,pattern,text);
+}
+/*
+ * SWG alignment (banded)
  */
 void swg_compute_banded(
     affine_matrix_t* const affine_matrix,
@@ -210,5 +305,8 @@ void swg_compute_banded(
     }
   }
   // Compute traceback
-  swg_traceback(affine_matrix,penalties,pattern_length,text_length,cigar);
+  swg_traceback(
+      affine_matrix,penalties,
+      pattern_length,text_length,
+      pattern_length,text_length,cigar);
 }

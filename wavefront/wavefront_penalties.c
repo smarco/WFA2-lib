@@ -55,7 +55,7 @@ void wavefronts_penalties_set_lineal(
   if (lineal_penalties->match > 0) {
     fprintf(stderr,"Match score must be negative or zero (M=%d)\n",lineal_penalties->match);
     exit(1);
-  }else if (lineal_penalties->mismatch <= 0 ||
+  } else if (lineal_penalties->mismatch <= 0 ||
             lineal_penalties->deletion <= 0 ||
             lineal_penalties->insertion <= 0) {
     fprintf(stderr,"Penalties must be strictly positive (X=%d,D=%d,I=%d). "

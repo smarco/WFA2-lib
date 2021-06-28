@@ -94,6 +94,7 @@ void wavefront_init(
   wavefront->hi = hi;
   wavefront->lo_base = lo;
   wavefront->hi_base = hi;
+  wavefront->k_alignment_end = WAVEFRONT_DIAGONAL_NULL;
   // Setup offsets
   wavefront->offsets = wavefront->offsets_mem - lo; // Center at k=0
   if (wavefront->bt_pcigar_mem) {
@@ -111,6 +112,7 @@ void wavefront_init_null(
   wavefront->hi = -1;
   wavefront->lo_base = lo; // To keep track of limits
   wavefront->hi_base = hi; // To keep track of limits
+  wavefront->k_alignment_end = WAVEFRONT_DIAGONAL_NULL;
   // Setup offsets
   wavefront->offsets = wavefront->offsets_mem - lo; // Center at k=0
   if (wavefront->bt_pcigar_mem) {
@@ -137,6 +139,7 @@ void wavefront_init_victim(
   wavefront->hi = -1;
   wavefront->lo_base = lo; // To keep track of limits
   wavefront->hi_base = hi; // To keep track of limits
+  wavefront->k_alignment_end = WAVEFRONT_DIAGONAL_NULL;
   // Setup offsets
   wavefront->offsets = wavefront->offsets_mem - lo; // Center at k=0
   if (wavefront->bt_pcigar_mem) {

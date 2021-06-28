@@ -44,11 +44,11 @@ void affine2p_dp_traceback(
   // Parameters
   affine2p_cell_t** const dp = matrix->columns;
   char* const operations = cigar->operations;
+  cigar->end_offset = cigar->max_operations;
   int op_sentinel = cigar->end_offset - 1;
-  int h, v;
   // Compute traceback
-  h = text_length;
-  v = pattern_length;
+  int h = text_length;
+  int v = pattern_length;
   affine2p_matrix_type matrix_type = affine2p_matrix_M;
   while (h>0 && v>0) {
     switch (matrix_type) {

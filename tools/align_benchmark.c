@@ -64,6 +64,7 @@ typedef enum {
   alignment_gap_lineal_nw,
   alignment_gap_lineal_wavefront,
   alignment_gap_affine_swg,
+  alignment_gap_affine_swg_endsfree,
   alignment_gap_affine_swg_banded,
   alignment_gap_affine_wavefront,
   alignment_gap_affine2p_dp,
@@ -91,6 +92,11 @@ typedef struct {
   bool low_memory;
   // Other parameters
   int bandwidth;
+  bool endsfree;
+  int pattern_begin_free;
+  int text_begin_free;
+  int pattern_end_free;
+  int text_end_free;
   // Profile
   profiler_timer_t timer_global;
   int progress;
@@ -137,6 +143,11 @@ benchmark_args parameters = {
   .low_memory = false,
   // Other parameters
   .bandwidth = 10,
+  .endsfree = false,
+  .pattern_begin_free = 0,
+  .text_begin_free = 0,
+  .pattern_end_free = 0,
+  .text_end_free = 0,
   // Check
   .check_correct = false,
   .check_score = false,
@@ -204,8 +215,8 @@ void align_pairwise_test() {
   attributes.reduction.reduction_strategy = wavefront_reduction_none; // wavefront_reduction_adaptive
   attributes.reduction.min_wavefront_length = 10;
   attributes.reduction.max_distance_threshold = 50;
-  attributes.alignment_scope = alignment_scope_alignment; // alignment_scope_score
-  attributes.low_memory = true;
+  attributes.alignment_scope = compute_alignment; // compute_score
+  attributes.low_memory = false;
   attributes.mm_allocator = mm_allocator;
   wavefront_aligner_t* const wf_aligner =
       wavefront_aligner_new(strlen(pattern),strlen(text),&attributes);
@@ -232,7 +243,7 @@ wavefront_aligner_t* align_benchmark_configure_wf(
   attributes.low_memory = parameters.low_memory;
   attributes.mm_allocator = mm_allocator;
   if (parameters.score_only) {
-    attributes.alignment_scope = alignment_scope_score;
+    attributes.alignment_scope = compute_score;
   }
   // WF-Reduction
   if (parameters.reduction_type == wavefront_reduction_adaptive) {
@@ -264,6 +275,16 @@ wavefront_aligner_t* align_benchmark_configure_wf(
     default:
       return NULL; // No WF selected
       break;
+  }
+  // Select alignment form
+  if (parameters.endsfree) {
+    attributes.alignment_form.span = alignment_endsfree;
+    attributes.alignment_form.pattern_begin_free = parameters.pattern_begin_free;
+    attributes.alignment_form.text_begin_free = parameters.text_begin_free;
+    attributes.alignment_form.pattern_end_free = parameters.pattern_end_free;
+    attributes.alignment_form.text_end_free = parameters.text_end_free;
+  } else {
+    attributes.alignment_form.span = alignment_end2end;
   }
   // Allocate
   return wavefront_aligner_new(BENCHMARK_INIT_SEQ_LENGTH,BENCHMARK_INIT_SEQ_LENGTH,&attributes);
@@ -390,6 +411,12 @@ void align_benchmark() {
       case alignment_gap_affine_swg:
         benchmark_gap_affine_swg(&align_input,&parameters.affine_penalties);
         break;
+      case alignment_gap_affine_swg_endsfree:
+        benchmark_gap_affine_swg_endsfree(
+            &align_input,&parameters.affine_penalties,
+            parameters.pattern_begin_free,parameters.pattern_begin_free,
+            parameters.text_begin_free,parameters.text_end_free);
+        break;
       case alignment_gap_affine_swg_banded:
         benchmark_gap_affine_swg_banded(&align_input,
             &parameters.affine_penalties,parameters.bandwidth);
@@ -465,6 +492,7 @@ void usage() {
       "          --minimum-wavefront-length <INT>                           \n"
       "          --maximum-difference-distance <INT>                        \n"
       "          --low-memory                                               \n"
+      "          --ends-free P0,Pf,T0,Tf                                    \n"
       "        [Other parameters]                                           \n"
       "          --bandwidth <INT>                                          \n"
       "        [Misc]                                                       \n"
@@ -488,8 +516,9 @@ void parse_arguments(int argc,char** argv) {
     { "minimum-wavefront-length", required_argument, 0, 1002 },
     { "maximum-difference-distance", required_argument, 0, 1003 },
     { "low-memory", no_argument, 0, 1004 },
-    /* Other specifics */
-    { "bandwidth", required_argument, 0, 1000 },
+    /* Other parameters */
+    { "bandwidth", required_argument, 0, 3000 },
+    { "ends-free", required_argument, 0, 3001 },
     /* Misc */
     { "progress", required_argument, 0, 'P' },
     { "check", optional_argument, 0, 'c' },
@@ -625,11 +654,23 @@ void parse_arguments(int argc,char** argv) {
       parameters.low_memory = true;
       break;
     /*
-     * Other specifics
+     * Other parameters
      */
-    case 1000: // --bandwidth
+    case 3000: // --bandwidth
       parameters.bandwidth = atoi(optarg);
       break;
+    case 3001: { // --ends-free P0,Pf,T0,Tf
+      parameters.endsfree = true;
+      char* sentinel = strtok(optarg,",");
+      parameters.pattern_begin_free = atoi(sentinel);
+      sentinel = strtok(NULL,",");
+      parameters.pattern_end_free = atoi(sentinel);
+      sentinel = strtok(NULL,",");
+      parameters.text_begin_free = atoi(sentinel);
+      sentinel = strtok(NULL,",");
+      parameters.text_end_free = atoi(sentinel);
+      break;
+    }
     /*
      * Misc
      */
@@ -689,6 +730,21 @@ void parse_arguments(int argc,char** argv) {
   if (parameters.algorithm!=alignment_test && parameters.input_filename==NULL) {
     fprintf(stderr,"Option --input is required \n");
     exit(1);
+  }
+  if (parameters.endsfree) {
+    switch (parameters.algorithm) {
+      case alignment_gap_affine_swg:
+        parameters.algorithm = alignment_gap_affine_swg_endsfree;
+        break;
+      case alignment_gap_lineal_wavefront:
+      case alignment_gap_affine_wavefront:
+      case alignment_gap_affine2p_wavefront:
+        break;
+      default:
+        fprintf(stderr,"Ends-free variant not implemented selected algorithm\n");
+        exit(1);
+        break;
+    }
   }
 }
 int main(int argc,char* argv[]) {

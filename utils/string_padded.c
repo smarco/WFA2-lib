@@ -112,6 +112,9 @@ strings_padded_t* strings_padded_new_rhomb(
       text_begin_padding_length,text_end_padding_length,'Y',
       &(strings_padded->text_padded_buffer),
       &(strings_padded->text_padded),mm_allocator);
+  // Set lengths
+  strings_padded->pattern_length = pattern_length;
+  strings_padded->text_length = text_length;
   // Return
   return strings_padded;
 }
