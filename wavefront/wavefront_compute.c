@@ -211,7 +211,7 @@ void wavefront_aligner_allocate_output(
   const distance_metric_t distance_metric = wf_aligner->distance_metric;
   wavefront_slab_t* const wavefront_slab = wf_aligner->wavefront_slab;
   // Allocate null/victim wavefronts
-  if (lo < wf_aligner->wavefront_null->lo_base || hi > wf_aligner->wavefront_null->hi_base) {
+  if (lo < wf_aligner->wavefront_null->lo || hi > wf_aligner->wavefront_null->hi) {
     // Expand and leave some leeway
     const int proposed_lo = (lo*3)/2;
     const int proposed_hi = (hi*3)/2;

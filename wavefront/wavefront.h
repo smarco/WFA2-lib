@@ -70,8 +70,6 @@ typedef struct {
   bool null;                           // Is null interval?
   int lo;                              // Effective lowest diagonal (inclusive)
   int hi;                              // Effective highest diagonal (inclusive)
-  int lo_base;                         // Lowest diagonal before reduction (inclusive)
-  int hi_base;                         // Highest diagonal before reduction (inclusive)
   // Alignment reaching ends
   int k_alignment_end;                 // Wavefront reaching the end of the alignment
   // Wavefront elements

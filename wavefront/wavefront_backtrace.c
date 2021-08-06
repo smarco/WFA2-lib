@@ -101,8 +101,8 @@ int64_t wavefronts_backtrace_misms(
   if (score < 0) return WAVEFRONT_OFFSET_NULL;
   wavefront_t* const mwavefront = wf_aligner->mwavefronts[score];
   if (mwavefront != NULL &&
-      mwavefront->lo_base <= k &&
-      k <= mwavefront->hi_base) {
+      mwavefront->lo <= k &&
+      k <= mwavefront->hi) {
     return BACKTRACE_PIGGYBACK_SET(mwavefront->offsets[k]+1,backtrace_M);
   } else {
     return WAVEFRONT_OFFSET_NULL;
@@ -142,8 +142,8 @@ int64_t wavefronts_backtrace_del1_open(
   if (score < 0) return WAVEFRONT_OFFSET_NULL;
   wavefront_t* const mwavefront = wf_aligner->mwavefronts[score];
   if (mwavefront != NULL &&
-      mwavefront->lo_base <= k+1 &&
-      k+1 <= mwavefront->hi_base) {
+      mwavefront->lo <= k+1 &&
+      k+1 <= mwavefront->hi) {
     return BACKTRACE_PIGGYBACK_SET(mwavefront->offsets[k+1],backtrace_D1_open);
   } else {
     return WAVEFRONT_OFFSET_NULL;
@@ -156,8 +156,8 @@ int64_t wavefronts_backtrace_del2_open(
   if (score < 0) return WAVEFRONT_OFFSET_NULL;
   wavefront_t* const mwavefront = wf_aligner->mwavefronts[score];
   if (mwavefront != NULL &&
-      mwavefront->lo_base <= k+1 &&
-      k+1 <= mwavefront->hi_base) {
+      mwavefront->lo <= k+1 &&
+      k+1 <= mwavefront->hi) {
     return BACKTRACE_PIGGYBACK_SET(mwavefront->offsets[k+1],backtrace_D2_open);
   } else {
     return WAVEFRONT_OFFSET_NULL;
@@ -170,8 +170,8 @@ int64_t wavefronts_backtrace_del1_ext(
   if (score < 0) return WAVEFRONT_OFFSET_NULL;
   wavefront_t* const d1wavefront = wf_aligner->d1wavefronts[score];
   if (d1wavefront != NULL &&
-      d1wavefront->lo_base <= k+1 &&
-      k+1 <= d1wavefront->hi_base) {
+      d1wavefront->lo <= k+1 &&
+      k+1 <= d1wavefront->hi) {
     return BACKTRACE_PIGGYBACK_SET(d1wavefront->offsets[k+1],backtrace_D1_ext);
   } else {
     return WAVEFRONT_OFFSET_NULL;
@@ -184,8 +184,8 @@ int64_t wavefronts_backtrace_del2_ext(
   if (score < 0) return WAVEFRONT_OFFSET_NULL;
   wavefront_t* const d2wavefront = wf_aligner->d2wavefronts[score];
   if (d2wavefront != NULL &&
-      d2wavefront->lo_base <= k+1 &&
-      k+1 <= d2wavefront->hi_base) {
+      d2wavefront->lo <= k+1 &&
+      k+1 <= d2wavefront->hi) {
     return BACKTRACE_PIGGYBACK_SET(d2wavefront->offsets[k+1],backtrace_D2_ext);
   } else {
     return WAVEFRONT_OFFSET_NULL;
@@ -201,8 +201,8 @@ int64_t wavefronts_backtrace_ins1_open(
   if (score < 0) return WAVEFRONT_OFFSET_NULL;
   wavefront_t* const mwavefront = wf_aligner->mwavefronts[score];
   if (mwavefront != NULL &&
-      mwavefront->lo_base <= k-1 &&
-      k-1 <= mwavefront->hi_base) {
+      mwavefront->lo <= k-1 &&
+      k-1 <= mwavefront->hi) {
     return BACKTRACE_PIGGYBACK_SET(mwavefront->offsets[k-1]+1,backtrace_I1_open);
   } else {
     return WAVEFRONT_OFFSET_NULL;
@@ -215,8 +215,8 @@ int64_t wavefronts_backtrace_ins2_open(
   if (score < 0) return WAVEFRONT_OFFSET_NULL;
   wavefront_t* const mwavefront = wf_aligner->mwavefronts[score];
   if (mwavefront != NULL &&
-      mwavefront->lo_base <= k-1 &&
-      k-1 <= mwavefront->hi_base) {
+      mwavefront->lo <= k-1 &&
+      k-1 <= mwavefront->hi) {
     return BACKTRACE_PIGGYBACK_SET(mwavefront->offsets[k-1]+1,backtrace_I2_open);
   } else {
     return WAVEFRONT_OFFSET_NULL;
@@ -229,8 +229,8 @@ int64_t wavefronts_backtrace_ins1_ext(
   if (score < 0) return WAVEFRONT_OFFSET_NULL;
   wavefront_t* const i1wavefront = wf_aligner->i1wavefronts[score];
   if (i1wavefront != NULL &&
-      i1wavefront->lo_base <= k-1 &&
-      k-1 <= i1wavefront->hi_base) {
+      i1wavefront->lo <= k-1 &&
+      k-1 <= i1wavefront->hi) {
     return BACKTRACE_PIGGYBACK_SET(i1wavefront->offsets[k-1]+1,backtrace_I1_ext);
   } else {
     return WAVEFRONT_OFFSET_NULL;
@@ -243,8 +243,8 @@ int64_t wavefronts_backtrace_ins2_ext(
   if (score < 0) return WAVEFRONT_OFFSET_NULL;
   wavefront_t* const i2wavefront = wf_aligner->i2wavefronts[score];
   if (i2wavefront != NULL &&
-      i2wavefront->lo_base <= k-1 &&
-      k-1 <= i2wavefront->hi_base) {
+      i2wavefront->lo <= k-1 &&
+      k-1 <= i2wavefront->hi) {
     return BACKTRACE_PIGGYBACK_SET(i2wavefront->offsets[k-1]+1,backtrace_I2_ext);
   } else {
     return WAVEFRONT_OFFSET_NULL;
