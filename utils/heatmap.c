@@ -48,7 +48,7 @@ heatmap_t* heatmap_new(
     const int max_h,
     const int resolution_points) {
   // Alloc
-  heatmap_t* const heatmap = malloc(sizeof(heatmap_t));
+  heatmap_t* const heatmap = (heatmap_t*)malloc(sizeof(heatmap_t));
   // Configure
   heatmap->type = type;
   heatmap->min_v = min_v;
@@ -69,10 +69,10 @@ heatmap_t* heatmap_new(
     heatmap->num_columns = (float)h_range/heatmap->binning_factor;
   }
   // Allocate matrix
-  heatmap->values = malloc(heatmap->num_rows*sizeof(int*));
+  heatmap->values = (int**)malloc(heatmap->num_rows*sizeof(int*));
   int i;
   for (i=0;i<heatmap->num_rows;++i) {
-    heatmap->values[i] = malloc(heatmap->num_columns*sizeof(int)); // Allocate row
+    heatmap->values[i] = (int*)malloc(heatmap->num_columns*sizeof(int)); // Allocate row
   }
   // Clear
   heatmap_clear(heatmap);
