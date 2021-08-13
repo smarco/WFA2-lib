@@ -245,15 +245,18 @@ void wavefront_reduce(
     const int text_length,
     const int score) {
   // Parameters
-  const distance_metric_t distance_metric = wf_aligner->distance_metric;
+  wavefront_components_t* const wf_components = &wf_aligner->wf_components;
+  const distance_metric_t distance_metric = wf_aligner->penalties.distance_metric;
   const int min_wavefront_length = wf_aligner->reduction.min_wavefront_length;
   const int max_distance_threshold = wf_aligner->reduction.max_distance_threshold;
   const int alignment_k = WAVEFRONT_DIAGONAL(text_length,pattern_length);
   // Fetch m-wavefront
-  wavefront_t* const mwavefront = wf_aligner->mwavefronts[score];
+  wavefront_t* const mwavefront = wf_components->mwavefronts[score];
   if (mwavefront==NULL) return;
   if ((mwavefront->hi - mwavefront->lo + 1) < min_wavefront_length) return;
   // Reduce m-wavefront
+  const int lo_base = mwavefront->lo;
+  const int hi_base = mwavefront->hi;
   if (wf_aligner->alignment_form.span == alignment_end2end) {
     wavefront_reduce_wavefront_end2end(
         wf_aligner,mwavefront,
@@ -284,15 +287,21 @@ void wavefront_reduce(
     mwavefront->null = true; // FIXME  FIXME  FIXME  FIXME
     fprintf(stderr,"wavefront_reduce_wavefront_end2end::Impossible situation\n"); exit(-1);
   }
+  // Plot
+  if (wf_aligner->plot_params.plot_enabled) {
+    wavefront_plot_reduction(wf_aligner,score,
+        lo_base,mwavefront->lo,hi_base,mwavefront->hi);
+  }
+  // Equate other wavefronts
   if (distance_metric <= gap_lineal) return;
   // Reduce the other wavefronts (same dimensions as M-reduced)
-  wavefront_t* const i1wavefront = wf_aligner->i1wavefronts[score];
-  wavefront_t* const d1wavefront = wf_aligner->d1wavefronts[score];
+  wavefront_t* const i1wavefront = wf_components->i1wavefronts[score];
+  wavefront_t* const d1wavefront = wf_components->d1wavefronts[score];
   wavefront_reduce_equate(i1wavefront,mwavefront);
   wavefront_reduce_equate(d1wavefront,mwavefront);
   if (distance_metric == gap_affine) return;
-  wavefront_t* const i2wavefront = wf_aligner->i2wavefronts[score];
-  wavefront_t* const d2wavefront = wf_aligner->d2wavefronts[score];
+  wavefront_t* const i2wavefront = wf_components->i2wavefronts[score];
+  wavefront_t* const d2wavefront = wf_components->d2wavefronts[score];
   wavefront_reduce_equate(i2wavefront,mwavefront);
   wavefront_reduce_equate(d2wavefront,mwavefront);
 }

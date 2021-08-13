@@ -99,7 +99,7 @@ int64_t wavefronts_backtrace_misms(
     const int score,
     const int k) {
   if (score < 0) return WAVEFRONT_OFFSET_NULL;
-  wavefront_t* const mwavefront = wf_aligner->mwavefronts[score];
+  wavefront_t* const mwavefront = wf_aligner->wf_components.mwavefronts[score];
   if (mwavefront != NULL &&
       mwavefront->lo <= k &&
       k <= mwavefront->hi) {
@@ -140,7 +140,7 @@ int64_t wavefronts_backtrace_del1_open(
     const int score,
     const int k) {
   if (score < 0) return WAVEFRONT_OFFSET_NULL;
-  wavefront_t* const mwavefront = wf_aligner->mwavefronts[score];
+  wavefront_t* const mwavefront = wf_aligner->wf_components.mwavefronts[score];
   if (mwavefront != NULL &&
       mwavefront->lo <= k+1 &&
       k+1 <= mwavefront->hi) {
@@ -154,7 +154,7 @@ int64_t wavefronts_backtrace_del2_open(
     const int score,
     const int k) {
   if (score < 0) return WAVEFRONT_OFFSET_NULL;
-  wavefront_t* const mwavefront = wf_aligner->mwavefronts[score];
+  wavefront_t* const mwavefront = wf_aligner->wf_components.mwavefronts[score];
   if (mwavefront != NULL &&
       mwavefront->lo <= k+1 &&
       k+1 <= mwavefront->hi) {
@@ -168,7 +168,7 @@ int64_t wavefronts_backtrace_del1_ext(
     const int score,
     const int k) {
   if (score < 0) return WAVEFRONT_OFFSET_NULL;
-  wavefront_t* const d1wavefront = wf_aligner->d1wavefronts[score];
+  wavefront_t* const d1wavefront = wf_aligner->wf_components.d1wavefronts[score];
   if (d1wavefront != NULL &&
       d1wavefront->lo <= k+1 &&
       k+1 <= d1wavefront->hi) {
@@ -182,7 +182,7 @@ int64_t wavefronts_backtrace_del2_ext(
     const int score,
     const int k) {
   if (score < 0) return WAVEFRONT_OFFSET_NULL;
-  wavefront_t* const d2wavefront = wf_aligner->d2wavefronts[score];
+  wavefront_t* const d2wavefront = wf_aligner->wf_components.d2wavefronts[score];
   if (d2wavefront != NULL &&
       d2wavefront->lo <= k+1 &&
       k+1 <= d2wavefront->hi) {
@@ -199,7 +199,7 @@ int64_t wavefronts_backtrace_ins1_open(
     const int score,
     const int k) {
   if (score < 0) return WAVEFRONT_OFFSET_NULL;
-  wavefront_t* const mwavefront = wf_aligner->mwavefronts[score];
+  wavefront_t* const mwavefront = wf_aligner->wf_components.mwavefronts[score];
   if (mwavefront != NULL &&
       mwavefront->lo <= k-1 &&
       k-1 <= mwavefront->hi) {
@@ -213,7 +213,7 @@ int64_t wavefronts_backtrace_ins2_open(
     const int score,
     const int k) {
   if (score < 0) return WAVEFRONT_OFFSET_NULL;
-  wavefront_t* const mwavefront = wf_aligner->mwavefronts[score];
+  wavefront_t* const mwavefront = wf_aligner->wf_components.mwavefronts[score];
   if (mwavefront != NULL &&
       mwavefront->lo <= k-1 &&
       k-1 <= mwavefront->hi) {
@@ -227,7 +227,7 @@ int64_t wavefronts_backtrace_ins1_ext(
     const int score,
     const int k) {
   if (score < 0) return WAVEFRONT_OFFSET_NULL;
-  wavefront_t* const i1wavefront = wf_aligner->i1wavefronts[score];
+  wavefront_t* const i1wavefront = wf_aligner->wf_components.i1wavefronts[score];
   if (i1wavefront != NULL &&
       i1wavefront->lo <= k-1 &&
       k-1 <= i1wavefront->hi) {
@@ -241,7 +241,7 @@ int64_t wavefronts_backtrace_ins2_ext(
     const int score,
     const int k) {
   if (score < 0) return WAVEFRONT_OFFSET_NULL;
-  wavefront_t* const i2wavefront = wf_aligner->i2wavefronts[score];
+  wavefront_t* const i2wavefront = wf_aligner->wf_components.i2wavefronts[score];
   if (i2wavefront != NULL &&
       i2wavefront->lo <= k-1 &&
       k-1 <= i2wavefront->hi) {
@@ -272,7 +272,7 @@ void wavefront_backtrace_affine(
     const int alignment_k,
     const wf_offset_t alignment_offset) {
   // Parameters
-  const distance_metric_t distance_metric = wf_aligner->distance_metric;
+  const distance_metric_t distance_metric = wf_aligner->penalties.distance_metric;
   const wavefronts_penalties_t* const wavefront_penalties = &(wf_aligner->penalties);
   cigar_t* const cigar = &wf_aligner->cigar;
   // Set starting location

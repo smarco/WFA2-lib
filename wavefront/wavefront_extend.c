@@ -45,7 +45,7 @@ void wavefront_extend_packed(
     const int text_length,
     const int score) {
   // Fetch m-wavefront
-  wavefront_t* const mwavefront = wf_aligner->mwavefronts[score];
+  wavefront_t* const mwavefront = wf_aligner->wf_components.mwavefronts[score];
   if (mwavefront==NULL) return;
   // Extend diagonally each wavefront point
   wf_offset_t* const offsets = mwavefront->offsets;
@@ -92,7 +92,7 @@ bool wavefront_extend_packed_endsfree(
     const int text_length,
     const int score) {
   // Fetch m-wavefront
-  wavefront_t* const mwavefront = wf_aligner->mwavefronts[score];
+  wavefront_t* const mwavefront = wf_aligner->wf_components.mwavefronts[score];
   if (mwavefront==NULL) return false;
   // Extend diagonally each wavefront point
   const int pattern_end_free = wf_aligner->alignment_form.pattern_end_free;
@@ -180,7 +180,7 @@ void wavefront_extend_end2end(
     const int text_length,
     int score) {
   // Modular wavefront
-  if (wf_aligner->memory_modular) score = score % wf_aligner->max_score_scope;
+  if (wf_aligner->wf_components.memory_modular) score = score % wf_aligner->wf_components.max_score_scope;
   // Extend wavefront
   wavefront_extend_packed(
       wf_aligner,pattern,pattern_length,
@@ -198,7 +198,7 @@ void wavefront_extend_endsfree(
     const int text_length,
     int score) {
   // Modular wavefront
-  if (wf_aligner->memory_modular) score = score % wf_aligner->max_score_scope;
+  if (wf_aligner->wf_components.memory_modular) score = score % wf_aligner->wf_components.max_score_scope;
   // Extend wavefront
   const bool end_reached = wavefront_extend_packed_endsfree(
       wf_aligner,pattern,pattern_length,

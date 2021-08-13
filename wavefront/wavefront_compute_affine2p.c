@@ -528,8 +528,8 @@ void wavefront_compute_affine2p(
   // Allocate wavefronts
   wavefront_aligner_allocate_output(wf_aligner,&wavefront_set,score,lo,hi);
   // Compute next wavefront
-  if (wf_aligner->bt_piggyback) {
-    wavefront_compute_affine2p_idm_piggyback(&wavefront_set,lo,hi,wf_aligner->bt_buffer);
+  if (wf_aligner->wf_components.bt_piggyback) {
+    wavefront_compute_affine2p_idm_piggyback(&wavefront_set,lo,hi,wf_aligner->wf_components.bt_buffer);
   } else {
     wavefront_compute_affine2p_idm(&wavefront_set,lo,hi);
   }

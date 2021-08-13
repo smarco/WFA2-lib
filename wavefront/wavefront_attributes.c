@@ -32,6 +32,14 @@
 #include "wavefront_attributes.h"
 
 /*
+ * Config
+ */
+#define WF_MAX_SCORE                             INT_MAX /* Unlimited */
+#define WF_LIMIT_PROBE_INTERVAL_DEFAULT              256
+#define WF_MAX_MEMORY_DEFAULT                 UINT64_MAX /* Unlimited */
+#define WF_MAX_MEMORY_RESIDENT_DEFAULT  BUFFER_SIZE_256M
+
+/*
  * Default parameters
  */
 wavefront_aligner_attr_t wavefront_aligner_attr_default = {
@@ -77,6 +85,20 @@ wavefront_aligner_attr_t wavefront_aligner_attr_default = {
     .low_memory = false,
     // MM
     .mm_allocator = NULL, // Use private MM
-    // Limits
-    .max_memory_used = WF_MAX_MEMORY_DEFAULT // Unlimited
+    // Display
+    .plot_params = {
+        .plot_enabled = false,
+        .resolution_points = 2000,
+        .min_v = -1,
+        .max_v = -1,
+        .min_h = -1,
+        .max_h = -1,
+    },
+    // System
+    .system = {
+        .limit_probe_interval = WF_LIMIT_PROBE_INTERVAL_DEFAULT,
+        .max_memory_used = WF_MAX_MEMORY_DEFAULT,
+        .max_resident_memory = WF_MAX_MEMORY_RESIDENT_DEFAULT,
+        .verbose = false,
+    },
 };

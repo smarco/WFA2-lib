@@ -37,6 +37,16 @@
 #include "gap_affine2p/affine2p_penalties.h"
 
 /*
+ * Distance metrics
+ */
+typedef enum {
+  edit          = 0,
+  gap_lineal    = 1,
+  gap_affine    = 2,
+  gap_affine_2p = 3
+} distance_metric_t;
+
+/*
  * Penalty adaptation strategy
  */
 typedef enum {
@@ -48,6 +58,7 @@ typedef enum {
  * Wavefront Penalties
  */
 typedef struct {
+  distance_metric_t distance_metric;  // Alignment metric/distance used
   // int match;          // (M = 0)
   int mismatch;          // (X > 0)
   int gap_opening1;      // (O1 > 0)
@@ -59,6 +70,8 @@ typedef struct {
 /*
  * Penalties adjustment
  */
+void wavefronts_penalties_set_edit(
+    wavefronts_penalties_t* const wavefronts_penalties);
 void wavefronts_penalties_set_lineal(
     wavefronts_penalties_t* const wavefronts_penalties,
     lineal_penalties_t* const lineal_penalties,
@@ -71,5 +84,12 @@ void wavefronts_penalties_set_affine2p(
     wavefronts_penalties_t* const wavefronts_penalties,
     affine2p_penalties_t* const affine2p_penalties,
     const wf_penalties_strategy_type penalties_strategy);
+
+/*
+ * Display
+ */
+void wavefronts_penalties_print(
+    FILE* const stream,
+    wavefronts_penalties_t* const wavefronts_penalties);
 
 #endif /* WAVEFRONT_WAVEFRONT_PENALTIES_H_ */

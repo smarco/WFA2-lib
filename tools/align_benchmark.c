@@ -49,11 +49,6 @@
 #include "wavefront/wavefront_align.h"
 
 /*
- * Configuration
- */
-#define BENCHMARK_INIT_SEQ_LENGTH 1000
-
-/*
  * Algorithms
  */
 typedef enum {
@@ -106,6 +101,7 @@ typedef struct {
   bool check_alignments;
   int check_metric;
   int check_bandwidth;
+  int plot;
   bool verbose;
 } benchmark_args;
 benchmark_args parameters = {
@@ -155,6 +151,7 @@ benchmark_args parameters = {
   .check_metric = ALIGN_DEBUG_CHECK_DISTANCE_METRIC_GAP_AFFINE,
   .check_bandwidth = -1,
   .progress = 10000,
+  .plot = 0,
   .verbose = false
 };
 
@@ -163,8 +160,12 @@ benchmark_args parameters = {
  */
 void align_pairwise_test() {
   // Patters & Texts
-  char * pattern = "GATTACA";
-  char * text = "GATCACTA";
+//  char * pattern = "GATTACA";
+//  char * text = "GATCACTA";
+//    char * pattern = "GCAGAGAATTACGACCGGCTCGCTGAATTGCGAAG";
+//    char * text = "GCGAGAATTACGACCGGCTCGCTGAATTGCGCGAAG";
+  char* pattern = "GCAGAGAATTACGACCGGCTCGCTGAATTGCGAGAAACAACCCTGTCACGTTCAGTCTGTAGGAGAGACTACCTAGAGTGCTGAAATTGGGTACTTCCTTATCGTGATAACGTAGTCGTAACTCTGAATAATAGGTATGATAGTCCGGTGGATCCGTGTGTAGTGAGGTCTTCGGTACCTTTATCCCAACTTGGGATCTTTTGCGCAGGCGCCGAGAGGAAGTGCGTAATTTGGAATATCCCTGTACTGAATGTCTGCAGAACTGCTGGGATATGTATTGTTGGTAGGCGAGTGCGTAACTACTAATATGTTGCGGGAATTAGGGTAGACATGGTGGGTGCGCAATGTAGTAGCGCATAACAATGTGAGCGAAAACAGAACTATATCCTCCCCCAACTCACAACAATCTAGAATACTCGGTAACGACTTTTCTATACGGATACTTGCGTACTACAGGGGGGGTAAAGTTACAACCCGATTTCTTCGGTGGTACTCCAACTATACACGGCCCCTCCAAAATGTTTGACTATTCGTGGAACGGTACACGCGGAACAAAAGACCTTTGCGTGTGATGGTAACGTCTCCTGGCGATCTGACCTTCGTAAGACTCATTTACTTAAGATAAGACGGGGCCAGGGAATACCACAGAGCTTTGTTTCCGTTAAATTGTTGTCTAGAGGTACGTAGGTT";
+  char* text = "GCGAGAATTACGACCGGCTCGCTGAATTGCGCGAAGCAAGCCCTGTCTCTTCGTCTGCGTACGGTATGTATTCCCATAGTGATCAACCACTTGGCCAGCGGGGCTTGAGGGGCTGGCTTGCTATCCCCAGAGAGTAGGCCCCTATGTGCAGATTAGCCTGGTAGGAGAGACACCTAGAGTGCAGAATCGTGGGTACTTCCTTATCGTTTAACATATCGTAACTCTGACATAATAGGTAGTGATATGTCCGGTGGAATCCCTGGTTCAGCGTGAGGTCTTTCGGTACCTTATCCCATTGGGGATTCGTATGCCGCAGGGCGCCAGAGGAGTGCGTAATTGGGAAAATCCTTGCCATGAATGTCTGGCAGAACTGATGGATGCGTATTGTTGTGTATGCGGGTGCGAACTACTAATATGTTGCATGCAATTAGGGGGACGCATGGTGGGTGCGCAATGTAGTAGCGCTAACAATGTGAGCGGAAAACAGAACTTGTACTCCCCCAACTCAAGACACTAGAATACTCGGGTAACGGATTTTCTATACGATTTACTTCCGTACTCCAGGGGGGTCGGGTAAACGCAATCTTTGATGGTCAGTATAGGGACAGGCATCGTTGCGGTTCGGATGAGATCACATCAATATTTCCAATAATGCTCAATCTTTCTAAAAAGTTACGAACCCGATTTCTTTCGGTGGTCGTCCAAATATTACAGCCCCTCCAAAGTGTTGACTTTCGTGAAACCGGTACCGCGAACAAAAGACTTTGCGGTGTATGTTAACTCTCCTGTCGATCTGACCTTCGTAAGACTCGTTTACTTAAGTAAGAAAAACACTGACAATTCATCATTCTTCGTGGAATGGCAGTATATTGGTCGTGGCTCACGGTCCTCCGCGCAGGGGCGCTATTTGAAGCCAAAGTATCGGTTACGATCCGGCCCAGGGAATACCACAGAGCATTTGTTTTCCGTAAATTGTTGTCTAGAGGTCGTCGGTT";
 
   // MMAllocator
   mm_allocator_t* const mm_allocator = mm_allocator_new(BUFFER_SIZE_8M);
@@ -183,43 +184,85 @@ void align_pairwise_test() {
       .gap_opening2 = 7000,
       .gap_extension2 = 3000,
   };
-  /*
-   * SWG 2P
-   */
-  // Allocate
-  affine2p_matrix_t matrix;
-  affine2p_matrix_allocate(&matrix,strlen(pattern)+1,strlen(text)+1,mm_allocator);
-  cigar_t cigar;
-  cigar_allocate(&cigar,strlen(pattern)+strlen(text),mm_allocator);
-  // Align
-  affine2p_dp_compute(
-      &matrix,&affine2p_penalties,
-      pattern,strlen(pattern),
-      text,strlen(text),&cigar);
-  cigar_print_pretty(stderr,
-      pattern,strlen(pattern),text,strlen(text),
-      &cigar,mm_allocator);
-  fprintf(stderr,"SCORE: %d \n",cigar_score_gap_affine2p(&cigar,&affine2p_penalties));
-  // Free
-  affine2p_matrix_free(&matrix,mm_allocator);
-  cigar_free(&cigar);
+  // Ends
+  const int pattern_begin_free = 0;
+  const int pattern_end_free = 0;
+  const int text_begin_free = 0;
+  const int text_end_free = 0;
+//  const int pattern_begin_free = 20;
+//  const int pattern_end_free = 20;
+//  const int text_begin_free = 20;
+//  const int text_end_free = 20;
+  const bool endsfree =
+      pattern_begin_free>0 ||
+      pattern_end_free>0   ||
+      text_begin_free>0    ||
+      text_end_free>0;
+
+//  /*
+//   * SWG
+//   */
+//  // Allocate
+//  affine_matrix_t matrix;
+//  affine_matrix_allocate(&matrix,strlen(pattern)+1,strlen(text)+1,mm_allocator);
+//  cigar_t cigar;
+//  cigar_allocate(&cigar,strlen(pattern)+strlen(text),mm_allocator);
+//  // Align
+//  swg_compute_endsfree(
+//      &matrix,&affine_penalties,
+//      pattern,strlen(pattern),text,strlen(text),
+//      pattern_begin_free,pattern_end_free,
+//      text_begin_free,text_end_free,&cigar);
+//  cigar_print_pretty(stderr,
+//      pattern,strlen(pattern),text,strlen(text),
+//      &cigar,mm_allocator);
+//  fprintf(stderr,"SCORE: %d \n",cigar_score_gap_affine(&cigar,&affine_penalties));
+//  // Free
+//  affine_matrix_free(&matrix,mm_allocator);
+//  cigar_free(&cigar);
+
+//  /*
+//   * SWG 2P
+//   */
+//  // Allocate
+//  affine2p_matrix_t matrix;
+//  affine2p_matrix_allocate(&matrix,strlen(pattern)+1,strlen(text)+1,mm_allocator);
+//  cigar_t cigar;
+//  cigar_allocate(&cigar,strlen(pattern)+strlen(text),mm_allocator);
+//  // Align
+//  affine2p_dp_compute(
+//      &matrix,&affine2p_penalties,
+//      pattern,strlen(pattern),
+//      text,strlen(text),&cigar);
+//  cigar_print_pretty(stderr,
+//      pattern,strlen(pattern),text,strlen(text),
+//      &cigar,mm_allocator);
+//  fprintf(stderr,"SCORE: %d \n",cigar_score_gap_affine2p(&cigar,&affine2p_penalties));
+//  // Free
+//  affine2p_matrix_free(&matrix,mm_allocator);
+//  cigar_free(&cigar);
 
   /*
-   * Gap-Affine 2P
+   * Gap-Affine
    */
   // Allocate
   wavefront_aligner_attr_t attributes = wavefront_aligner_attr_default;
   attributes.distance_metric = gap_affine;
   attributes.affine_penalties = affine_penalties;
   // attributes.affine2p_penalties = affine2p_penalties;
-  attributes.reduction.reduction_strategy = wavefront_reduction_none; // wavefront_reduction_adaptive
+  attributes.reduction.reduction_strategy = wavefront_reduction_adaptive; //wavefront_reduction_none; // wavefront_reduction_adaptive
   attributes.reduction.min_wavefront_length = 10;
   attributes.reduction.max_distance_threshold = 50;
   attributes.alignment_scope = compute_alignment; // compute_score
   attributes.low_memory = false;
+  attributes.alignment_form.span = (endsfree) ? alignment_endsfree : alignment_end2end;
+  attributes.alignment_form.pattern_begin_free = pattern_begin_free;
+  attributes.alignment_form.pattern_end_free = pattern_end_free;
+  attributes.alignment_form.text_begin_free = text_begin_free;
+  attributes.alignment_form.text_end_free = text_end_free;
+  attributes.plot_params.plot_enabled = true;
   attributes.mm_allocator = mm_allocator;
-  wavefront_aligner_t* const wf_aligner =
-      wavefront_aligner_new(strlen(pattern),strlen(text),&attributes);
+  wavefront_aligner_t* const wf_aligner = wavefront_aligner_new(&attributes);
   // Align
   wavefront_align(wf_aligner,
       pattern,strlen(pattern),text,strlen(text));
@@ -228,6 +271,12 @@ void align_pairwise_test() {
       pattern,strlen(pattern),text,strlen(text),
       &wf_aligner->cigar,mm_allocator);
   fprintf(stderr,"SCORE: %d \n",cigar_score_gap_affine2p(&wf_aligner->cigar,&affine2p_penalties));
+  // Plot
+  if (attributes.plot_params.plot_enabled) {
+    FILE* const wf_plot = fopen("test.wfa","w");
+    wavefront_plot_print(wf_plot,wf_aligner);
+    fclose(wf_plot);
+  }
   // Free
   wavefront_aligner_delete(wf_aligner);
   mm_allocator_delete(mm_allocator);
@@ -286,8 +335,11 @@ wavefront_aligner_t* align_benchmark_configure_wf(
   } else {
     attributes.alignment_form.span = alignment_end2end;
   }
+  // Misc
+  attributes.plot_params.plot_enabled = (parameters.plot > 0);
+  attributes.plot_params.resolution_points = parameters.plot;
   // Allocate
-  return wavefront_aligner_new(BENCHMARK_INIT_SEQ_LENGTH,BENCHMARK_INIT_SEQ_LENGTH,&attributes);
+  return wavefront_aligner_new(&attributes);
 }
 void align_benchmark_configure(
     align_input_t* const align_input) {
@@ -344,7 +396,7 @@ bool align_benchmark_read_input(
   return true;
 }
 /*
- * Report
+ * Display
  */
 void align_benchmark_print_progress(
     align_input_t* const align_input,
@@ -369,6 +421,17 @@ void align_benchmark_print_results(
     const bool print_wf_stats = (parameters.algorithm == alignment_gap_affine_wavefront);
     benchmark_print_stats(stderr,align_input,print_wf_stats);
   }
+}
+void align_benchmark_plot_wf(
+    align_input_t* const align_input,
+    const int seq_id) {
+  // Setup filename
+  char filename[100];
+  sprintf(filename,"%s.seq%03d.wfa",parameters.input_filename,seq_id);
+  // Open file
+  FILE* const wf_plot = fopen(filename,"w");
+  wavefront_plot_print(wf_plot,align_input->wf_aligner);
+  fclose(wf_plot);
 }
 /*
  * Benchmark
@@ -442,6 +505,8 @@ void align_benchmark() {
       align_benchmark_print_progress(&align_input,seqs_processed);
     }
     // DEBUG mm_allocator_print(stderr,align_input.mm_allocator,true);
+    // Plot
+    if (parameters.plot > 0) align_benchmark_plot_wf(&align_input,seqs_processed);
   }
   timer_stop(&(parameters.timer_global));
   // Print benchmark results
@@ -500,6 +565,7 @@ void usage() {
       "          --check|c 'correct'|'score'|'alignment'                    \n"
       "          --check-distance 'edit'|'gap-lineal'|'gap-affine'          \n"
       "          --check-bandwidth <INT>                                    \n"
+      "          --plot                                                     \n"
       "          --help|h                                                   \n");
 }
 void parse_arguments(int argc,char** argv) {
@@ -524,6 +590,7 @@ void parse_arguments(int argc,char** argv) {
     { "check", optional_argument, 0, 'c' },
     { "check-distance", required_argument, 0, 2000 },
     { "check-bandwidth", required_argument, 0, 2001 },
+    { "plot", optional_argument, 0, 2002 },
     { "verbose", no_argument, 0, 'v' },
     { "help", no_argument, 0, 'h' },
     { 0, 0, 0, 0 } };
@@ -713,6 +780,9 @@ void parse_arguments(int argc,char** argv) {
       break;
     case 2001: // --check-bandwidth
       parameters.check_bandwidth = atoi(optarg);
+      break;
+    case 2002: // --plot
+      parameters.plot = (optarg==NULL) ? 1000 : atoi(optarg);
       break;
     case 'v':
       parameters.verbose = true;

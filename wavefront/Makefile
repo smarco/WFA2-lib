@@ -20,6 +20,7 @@ MODULES=wavefront_align \
         wavefront_extend \
         wavefront_pcigar \
         wavefront_penalties \
+        wavefront_plot \
         wavefront_reduction \
         wavefront_slab \
         wavefront

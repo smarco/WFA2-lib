@@ -44,7 +44,7 @@ typedef struct {
   // Attributes
   bool allocate_backtrace;
   // Wavefront Slabs
-  int max_wavefront_elements;   // Maximum wf-elements allocated (max. wf. size)
+  int wf_elements_allocated;    // Maximum wf-elements allocated (max. wf. size)
   vector_t* wavefronts;         // All wavefronts (wavefront_t*)
   vector_t* wavefronts_free;    // Free wavefronts (wavefront_t*)
   // Stats
@@ -63,7 +63,7 @@ typedef enum {
  * Setup
  */
 wavefront_slab_t* wavefront_slab_new(
-    const int init_max_wavefront_elements,
+    const int wf_elements_allocated,
     const bool allocate_backtrace,
     mm_allocator_t* const mm_allocator);
 void wavefront_slab_reap(
@@ -71,7 +71,7 @@ void wavefront_slab_reap(
     const wf_slab_reap_mode_t reap_mode);
 void wavefront_slab_resize(
     wavefront_slab_t* const wavefront_slab,
-    const int max_wavefront_elements);
+    const int wf_elements_allocated);
 void wavefront_slab_clear(
     wavefront_slab_t* const wavefront_slab);
 void wavefront_slab_delete(

@@ -26,47 +26,76 @@
  *
  * PROJECT: Wavefront Alignments Algorithms
  * AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
- * DESCRIPTION: Support functions for wavefront reduction strategies
+ * DESCRIPTION: WaveFront-Alignment module for plot
  */
 
-#ifndef WAVEFRONT_REDUCTION_H_
-#define WAVEFRONT_REDUCTION_H_
+#ifndef WAVEFRONT_PLOT_H_
+#define WAVEFRONT_PLOT_H_
 
 #include "utils/commons.h"
+#include "utils/heatmap.h"
+#include "wavefront/wavefront_penalties.h"
 
 // Wavefront ahead definition
 typedef struct _wavefront_aligner_t wavefront_aligner_t;
 
 /*
- * Wavefront Reduction
+ * Wavefront Display
  */
-typedef enum {
-  wavefront_reduction_none,
-  wavefront_reduction_adaptive,
-} wavefront_reduction_type;
 typedef struct {
-  wavefront_reduction_type reduction_strategy; // Reduction strategy
-  int min_wavefront_length;                    // Adaptive: Minimum wavefronts length to reduce
-  int max_distance_threshold;                  // Adaptive: Maximum distance between offsets allowed
-} wavefront_reduction_t;
+  // Display enabled
+  bool plot_enabled;
+  // Resolution and range
+  int resolution_points;
+  int min_v;
+  int max_v;
+  int min_h;
+  int max_h;
+} wavefront_plot_params_t;
+typedef struct {
+  // Wavefront components
+  heatmap_t* m_heatmap;
+  heatmap_t* i1_heatmap;
+  heatmap_t* d1_heatmap;
+  heatmap_t* i2_heatmap;
+  heatmap_t* d2_heatmap;
+  // Alignment behavior
+  heatmap_t* behavior_heatmap;
+} wavefront_plot_t;
 
 /*
  * Setup
  */
-void wavefront_reduction_set_none(
-    wavefront_reduction_t* const wavefront_reduction);
-void wavefront_reduction_set_adaptive(
-    wavefront_reduction_t* const wavefront_reduction,
-    const int min_wavefront_length,
-    const int max_distance_threshold);
-
-/*
- * Reduce wavefront
- */
-void wavefront_reduce(
-    wavefront_aligner_t* const wf_aligner,
+void wavefront_plot_allocate(
+    wavefront_plot_t* const wf_plot,
+    const distance_metric_t distance_metric,
     const int pattern_length,
     const int text_length,
-    const int score);
+    wavefront_plot_params_t* const plot_params);
+void wavefront_plot_free(
+    wavefront_plot_t* const wf_plot);
 
-#endif /* WAVEFRONT_REDUCTION_H_ */
+/*
+ * Accessors
+ */
+void wavefront_plot(
+    wavefront_aligner_t* const wf_aligner,
+    char* const pattern,
+    char* const text,
+    const int score);
+void wavefront_plot_reduction(
+    wavefront_aligner_t* const wf_aligner,
+    const int score,
+    const int lo_base,
+    const int lo_reduced,
+    const int hi_base,
+    const int hi_reduced);
+
+/*
+ * Display
+ */
+void wavefront_plot_print(
+    FILE* const stream,
+    wavefront_aligner_t* const wf_aligner);
+
+#endif /* WAVEFRONT_PLOT_H_ */

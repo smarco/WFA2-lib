@@ -26,47 +26,66 @@
  *
  * PROJECT: Wavefront Alignments Algorithms
  * AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
- * DESCRIPTION: Support functions for wavefront reduction strategies
  */
 
-#ifndef WAVEFRONT_REDUCTION_H_
-#define WAVEFRONT_REDUCTION_H_
+#ifndef HEATMAP_H_
+#define HEATMAP_H_
 
 #include "utils/commons.h"
 
-// Wavefront ahead definition
-typedef struct _wavefront_aligner_t wavefront_aligner_t;
-
 /*
- * Wavefront Reduction
+ * Heatmap
  */
 typedef enum {
-  wavefront_reduction_none,
-  wavefront_reduction_adaptive,
-} wavefront_reduction_type;
+  heatmap_min,   // Min value stays
+  heatmap_max,   // Max value stays
+  heatmap_value, // Last value set stays
+} heatmap_type;
 typedef struct {
-  wavefront_reduction_type reduction_strategy; // Reduction strategy
-  int min_wavefront_length;                    // Adaptive: Minimum wavefronts length to reduce
-  int max_distance_threshold;                  // Adaptive: Maximum distance between offsets allowed
-} wavefront_reduction_t;
+  // Configuration
+  heatmap_type type;
+  // Dimensions
+  int num_rows;
+  int num_columns;
+  // Range
+  int min_v;
+  int max_v;
+  int min_h;
+  int max_h;
+  float binning_factor;
+  // Data
+  int** values;
+} heatmap_t;
 
 /*
  * Setup
  */
-void wavefront_reduction_set_none(
-    wavefront_reduction_t* const wavefront_reduction);
-void wavefront_reduction_set_adaptive(
-    wavefront_reduction_t* const wavefront_reduction,
-    const int min_wavefront_length,
-    const int max_distance_threshold);
+heatmap_t* heatmap_new(
+    const heatmap_type type,
+    const int min_v,
+    const int max_v,
+    const int min_h,
+    const int max_h,
+    const int resolution_points);
+void heatmap_clear(
+    heatmap_t* const heatmap);
+void heatmap_delete(
+    heatmap_t* const heatmap);
 
 /*
- * Reduce wavefront
+ * Accessors
  */
-void wavefront_reduce(
-    wavefront_aligner_t* const wf_aligner,
-    const int pattern_length,
-    const int text_length,
-    const int score);
+void heatmap_set(
+    heatmap_t* const heatmap,
+    const int v,
+    const int h,
+    const int value);
 
-#endif /* WAVEFRONT_REDUCTION_H_ */
+/*
+ * Display
+ */
+void heatmap_print(
+    FILE* const stream,
+    heatmap_t* const heatmap);
+
+#endif /* HEATMAP_H_ */

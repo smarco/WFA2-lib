@@ -33,6 +33,7 @@
 #define WAVEFRONT_ALIGNER_H_
 
 #include "utils/commons.h"
+#include "utils/heatmap.h"
 #include "system/profiler_counter.h"
 #include "system/profiler_timer.h"
 #include "system/mm_allocator.h"
@@ -41,61 +42,46 @@
 #include "wavefront_slab.h"
 #include "wavefront_penalties.h"
 #include "wavefront_attributes.h"
+#include "wavefront_components.h"
 
 /*
  * Wavefront Aligner
  */
-typedef struct {
+typedef struct _wavefront_aligner_t {
   // Dimensions
   int pattern_length;                          // Pattern length
   int text_length;                             // Text length
-  int max_score_scope;                         // Maximum score-difference between dependent wavefronts
   // Alignment Attributes
-  distance_metric_t distance_metric;           // Alignment metric/distance used
   alignment_scope_t alignment_scope;           // Alignment scope (score only or full-CIGAR)
   alignment_form_t alignment_form;             // Alignment form (end-to-end/ends-free)
   wavefronts_penalties_t penalties;            // Alignment penalties
-  // Wavefront Attributes
   wavefront_reduction_t reduction;             // Reduction parameters
-  bool memory_modular;                         // Memory strategy (modular wavefronts)
-  bool bt_piggyback;                           // Backtrace Piggyback
   // Wavefront components
-  int num_wavefronts;                          // Total number of allocated wavefronts
-  wavefront_t** mwavefronts;                   // M-wavefronts
-  wavefront_t** i1wavefronts;                  // I1-wavefronts
-  wavefront_t** i2wavefronts;                  // I2-wavefronts
-  wavefront_t** d1wavefronts;                  // D1-wavefronts
-  wavefront_t** d2wavefronts;                  // D2-wavefronts
-  wavefront_t* wavefront_null;                 // Null wavefront (orthogonal reading)
-  wavefront_t* wavefront_victim;               // Dummy wavefront (orthogonal writing)
+  wavefront_components_t wf_components;        // Wavefront components
   // CIGAR
   cigar_t cigar;                               // Alignment CIGAR
-  wf_backtrace_buffer_t* bt_buffer;            // Backtrace Buffer
   // MM
   bool mm_allocator_own;                       // Ownership of MM-Allocator
   mm_allocator_t* mm_allocator;                // MM-Allocator
   wavefront_slab_t* wavefront_slab;            // MM-Wavefront-Slab (Allocates/Reuses the individual wavefronts)
-  // Limits
-  int limit_probe_interval;                    // Score-ticks to check limits
-  uint64_t max_memory_used;                    // Maximum memory allowed to used before quit
-  uint64_t max_resident_memory;                // Maximum memory allowed to be buffered before reap
+  // Display
+  wavefront_plot_params_t plot_params;         // Wavefront plot parameters
+  wavefront_plot_t wf_plot;                    // Wavefront plot
+  // System
+  alignment_system_t system;                   // System related parameters
 } wavefront_aligner_t;
 
 /*
  * Setup
  */
 wavefront_aligner_t* wavefront_aligner_new(
-    const int pattern_length,
-    const int text_length,
     wavefront_aligner_attr_t* attributes);
-void wavefront_aligner_reap(
-    wavefront_aligner_t* const wf_aligner);
-void wavefront_aligner_clear(
-    wavefront_aligner_t* const wf_aligner);
 void wavefront_aligner_resize(
     wavefront_aligner_t* const wf_aligner,
     const int pattern_length,
     const int text_length);
+void wavefront_aligner_reap(
+    wavefront_aligner_t* const wf_aligner);
 void wavefront_aligner_delete(
     wavefront_aligner_t* const wf_aligner);
 

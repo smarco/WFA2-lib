@@ -68,20 +68,23 @@ typedef enum {
 typedef struct {
   // Dimensions
   bool null;                           // Is null interval?
-  int lo;                              // Effective lowest diagonal (inclusive)
-  int hi;                              // Effective highest diagonal (inclusive)
+  int lo;                              // Lowest diagonal (inclusive)
+  int hi;                              // Highest diagonal (inclusive)
   // Alignment reaching ends
   int k_alignment_end;                 // Wavefront reaching the end of the alignment
   // Wavefront elements
   wf_offset_t* offsets;                // Offsets (k-centered)
   pcigar_t* bt_pcigar;                 // Backtrace-block (k-centered)
   block_idx_t* bt_prev;                // Backtrace-block previous index (k-centered)
-  // Internals
-  wavefront_status_type status;        // Wavefront status (memory state)
-  int max_wavefront_elements;          // Maximum wf-elements allocated (max. wf. size)
+  // Memory internals
   wf_offset_t* offsets_mem;            // Offsets base memory
   pcigar_t* bt_pcigar_mem;             // Backtrace-block (base memory)
   block_idx_t* bt_prev_mem;            // Backtrace-block previous index (base memory)
+  // Slab internals
+  wavefront_status_type status;        // Wavefront status (memory state)
+  int wf_elements_allocated;           // Maximum wf-elements allocated (max. wf. size)
+  int wf_elements_used_min;            // Minimum diagonal-element used (inclusive)
+  int wf_elements_used_max;            // Maximum diagonal-element used (inclusive)
 } wavefront_t;
 
 /*
@@ -109,12 +112,12 @@ typedef struct {
  */
 void wavefront_allocate(
     wavefront_t* const wavefront,
-    const int max_wavefront_elements,
+    const int wf_elements_allocated,
     const bool allocate_backtrace,
     mm_allocator_t* const mm_allocator);
 void wavefront_resize(
     wavefront_t* const wavefront,
-    const int max_wavefront_elements,
+    const int wf_elements_allocated,
     mm_allocator_t* const mm_allocator);
 void wavefront_free(
     wavefront_t* const wavefront,

@@ -233,6 +233,18 @@ void wf_backtrace_buffer_recover_cigar(
   cigar->end_offset = cigar_buffer - cigar->operations;
 }
 /*
+ * Compact
+ */
+void wf_backtrace_buffer_mark_backtrace(
+    wf_backtrace_buffer_t* const bt_buffer,
+    const block_idx_t idx_last) {
+
+}
+void wf_backtrace_buffer_compact(
+    wf_backtrace_buffer_t* const bt_buffer) {
+
+}
+/*
  * Utils
  */
 uint64_t wf_backtrace_buffer_get_size(

@@ -32,10 +32,11 @@
 #ifndef WAVEFRONT_DISPLAY_H_
 #define WAVEFRONT_DISPLAY_H_
 
-/*
- * Includes
- */
-#include "wavefront_aligner.h"
+#include "utils/commons.h"
+#include "utils/heatmap.h"
+
+// Wavefront ahead definition
+typedef struct _wavefront_aligner_t wavefront_aligner_t;
 
 /*
  * Display

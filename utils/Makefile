@@ -9,6 +9,7 @@ FOLDER_BUILD=../build
 ###############################################################################
 MODULES=commons \
         dna_text \
+        heatmap \
         string_padded \
         vector
 

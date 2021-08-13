@@ -54,16 +54,6 @@ typedef struct {
 } cigar_t;
 
 /*
- * Distance metrics
- */
-typedef enum {
-  edit          = 0,
-  gap_lineal    = 1,
-  gap_affine    = 2,
-  gap_affine_2p = 3
-} distance_metric_t;
-
-/*
  * Setup
  */
 void cigar_allocate(

@@ -30,8 +30,12 @@
  */
 
 #include "wavefront_display.h"
+#include "wavefront_aligner.h"
 #include "wavefront_compute.h"
 
+/*
+ * Constants
+ */
 #define WF_DISPLAY_YLABEL_LENGTH 8
 
 /*
@@ -57,34 +61,35 @@ void wavefront_display_compute_limits(
     int* const out_max_k,
     int* const out_min_k) {
   // Parameters
-  const distance_metric_t distance_metric = wf_aligner->distance_metric;
+  wavefront_components_t* const wf_components = &wf_aligner->wf_components;
+  const distance_metric_t distance_metric = wf_aligner->penalties.distance_metric;
   // Compute min/max k
   int i, max_k=0, min_k=0;
   for (i=score_begin;i<=score_end;++i) {
-    const int s = (wf_aligner->memory_modular) ? i%wf_aligner->max_score_scope : i;
-    wavefront_t* const mwavefront = wf_aligner->mwavefronts[s];
+    const int s = (wf_components->memory_modular) ? i%wf_components->max_score_scope : i;
+    wavefront_t* const mwavefront = wf_components->mwavefronts[s];
     if (mwavefront != NULL) {
       max_k = MAX(max_k,mwavefront->hi);
       min_k = MIN(min_k,mwavefront->lo);
     }
     if (distance_metric==edit || distance_metric==gap_lineal) continue;
-    wavefront_t* const i1wavefront = wf_aligner->i1wavefronts[s];
+    wavefront_t* const i1wavefront = wf_components->i1wavefronts[s];
     if (i1wavefront != NULL) {
       max_k = MAX(max_k,i1wavefront->hi);
       min_k = MIN(min_k,i1wavefront->lo);
     }
-    wavefront_t* const d1wavefront = wf_aligner->d1wavefronts[s];
+    wavefront_t* const d1wavefront = wf_components->d1wavefronts[s];
     if (d1wavefront != NULL) {
       max_k = MAX(max_k,d1wavefront->hi);
       min_k = MIN(min_k,d1wavefront->lo);
     }
     if (distance_metric==gap_affine) continue;
-    wavefront_t* const i2wavefront = wf_aligner->i2wavefronts[s];
+    wavefront_t* const i2wavefront = wf_components->i2wavefronts[s];
     if (i2wavefront != NULL) {
       max_k = MAX(max_k,i2wavefront->hi);
       min_k = MIN(min_k,i2wavefront->lo);
     }
-    wavefront_t* const d2wavefront = wf_aligner->d2wavefronts[s];
+    wavefront_t* const d2wavefront = wf_components->d2wavefronts[s];
     if (d2wavefront != NULL) {
       max_k = MAX(max_k,d2wavefront->hi);
       min_k = MIN(min_k,d2wavefront->lo);
@@ -202,8 +207,9 @@ void wavefront_aligner_print_block(
     const int score_end,
     int bt_length) {
   // Parameters
-  const distance_metric_t distance_metric = wf_aligner->distance_metric;
-  if (!wf_aligner->bt_piggyback) bt_length = 0; // Check BT
+  wavefront_components_t* const wf_components = &wf_aligner->wf_components;
+  const distance_metric_t distance_metric = wf_aligner->penalties.distance_metric;
+  if (!wf_components->bt_piggyback) bt_length = 0; // Check BT
   // Compute dinmensions
   int max_k, min_k;
   wavefront_display_compute_limits(wf_aligner,score_begin,score_end,&max_k,&min_k);
@@ -216,19 +222,19 @@ void wavefront_aligner_print_block(
     // Traverse all scores
     int i;
     for (i=score_begin;i<=score_end;++i) {
-      const int s = (wf_aligner->memory_modular) ? i%wf_aligner->max_score_scope : i;
+      const int s = (wf_components->memory_modular) ? i%wf_components->max_score_scope : i;
       fprintf(stream,"|");
       // Fetch wavefront
-      wavefront_t* const mwavefront = wf_aligner->mwavefronts[s];
+      wavefront_t* const mwavefront = wf_components->mwavefronts[s];
       wavefront_display_print_element(stream,wf_aligner,mwavefront,k,bt_length);
       if (distance_metric==edit || distance_metric==gap_lineal) continue;
-      wavefront_t* const i1wavefront = wf_aligner->i1wavefronts[s];
-      wavefront_t* const d1wavefront = wf_aligner->d1wavefronts[s];
+      wavefront_t* const i1wavefront = wf_components->i1wavefronts[s];
+      wavefront_t* const d1wavefront = wf_components->d1wavefronts[s];
       wavefront_display_print_element(stream,wf_aligner,i1wavefront,k,bt_length);
       wavefront_display_print_element(stream,wf_aligner,d1wavefront,k,bt_length);
       if (distance_metric==gap_affine) continue;
-      wavefront_t* const i2wavefront = wf_aligner->i2wavefronts[s];
-      wavefront_t* const d2wavefront = wf_aligner->d2wavefronts[s];
+      wavefront_t* const i2wavefront = wf_components->i2wavefronts[s];
+      wavefront_t* const d2wavefront = wf_components->d2wavefronts[s];
       wavefront_display_print_element(stream,wf_aligner,i2wavefront,k,bt_length);
       wavefront_display_print_element(stream,wf_aligner,d2wavefront,k,bt_length);
     }
@@ -253,5 +259,8 @@ void wavefront_aligner_print(
     if (block_score_end == score_end) break;
   }
 }
+
+
+
 
 
