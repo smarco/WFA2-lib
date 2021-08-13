@@ -71,12 +71,17 @@ typedef struct {
  * Alignment system configuration
  */
 typedef struct {
-  // Limits
-  int limit_probe_interval;     // Score-ticks to check limits
-  uint64_t max_memory_used;     // Maximum memory allowed to used before quit
-  uint64_t max_resident_memory; // Maximum memory allowed to be buffered before reap
+  // Global
+  int global_probe_interval;          // Score-ticks interval to check any limits
+  // BT-Buffer compacting
+  int bt_compact_probe_interval;      // Score-ticks interval to check BT-buffer compacting
+  uint64_t bt_compact_max_memory;     // Maximum BT-buffer memory (allowed before trying compacting)
+  uint64_t bt_compact_max_memory_eff; // Effective maximum BT-buffer memory
+  // Memory
+  uint64_t max_memory_used;           // Maximum memory allowed to used before quit
+  uint64_t max_memory_resident;       // Maximum memory allowed to be buffered before reap
   // Misc
-  bool verbose;                 // Verbose (regulates messages during alignment)
+  bool verbose;                       // Verbose (regulates messages during alignment)
 } alignment_system_t;
 
 /*

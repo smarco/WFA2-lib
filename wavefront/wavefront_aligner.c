@@ -86,6 +86,17 @@ void wavefront_set_reduction(
   }
 }
 /*
+ * System
+ */
+void wavefront_set_alignment_system(
+    wavefront_aligner_t* const wf_aligner,
+    alignment_system_t* const system) {
+  // Copy all parameters
+  wf_aligner->system = *system;
+  // Reset effective limits
+  wf_aligner->system.bt_compact_max_memory_eff = wf_aligner->system.bt_compact_max_memory;
+}
+/*
  * Setup
  */
 wavefront_aligner_t* wavefront_aligner_new(
@@ -132,7 +143,7 @@ wavefront_aligner_t* wavefront_aligner_new(
         &wf_aligner->plot_params);
   }
   // System
-  wf_aligner->system = attributes->system;
+  wavefront_set_alignment_system(wf_aligner,&attributes->system);
   // Return
   return wf_aligner;
 }
@@ -158,6 +169,8 @@ void wavefront_aligner_resize(
         pattern_length,text_length,
         &wf_aligner->plot_params);
   }
+  // System
+  wavefront_set_alignment_system(wf_aligner,&wf_aligner->system);
 }
 //void wavefront_aligner_clear(
 //    wavefront_aligner_t* const wf_aligner) {
@@ -243,9 +256,46 @@ uint64_t wavefront_aligner_get_size(
   wavefront_components_t* const wf_components = &wf_aligner->wf_components;
   // Compute size
   const uint64_t bt_buffer_size = (wf_components->bt_buffer) ?
-      wf_backtrace_buffer_get_size(wf_components->bt_buffer) : 0;
+      wf_backtrace_buffer_get_size_allocated(wf_components->bt_buffer) : 0;
   const uint64_t slab_size = wavefront_slab_get_size(wf_aligner->wavefront_slab);
   return bt_buffer_size + slab_size;
+}
+/*
+ * Display
+ */
+void wavefront_aligner_print_status(
+    FILE* const stream,
+    wavefront_aligner_t* const wf_aligner,
+    const int score) {
+  // Parameters
+  wavefront_components_t* const wf_components = &wf_aligner->wf_components;
+  // Approximate progress
+  const int dist_total = MAX(wf_aligner->text_length,wf_aligner->pattern_length);
+  const int s = (wf_components->memory_modular) ? score%wf_components->max_score_scope : score;
+  wavefront_t* const wavefront = wf_components->mwavefronts[s];
+  int dist_max = -1, wf_len = -1, k;
+  if (wavefront!=NULL) {
+    wf_offset_t* const offsets = wavefront->offsets;
+    for (k=wavefront->lo;k<=wavefront->hi;++k) {
+      const int v = WAVEFRONT_V(k,offsets[k]);
+      const int h = WAVEFRONT_H(k,offsets[k]);
+      const int dist = MAX(v,h);
+      dist_max = MAX(dist_max,dist);
+    }
+    wf_len = wavefront->hi-wavefront->lo+1;
+  }
+  // Memory used
+  const uint64_t slab_size = wavefront_slab_get_size(wf_aligner->wavefront_slab);
+  const uint64_t bt_buffer_used = (wf_components->bt_buffer) ?
+      wf_backtrace_buffer_get_size_used(wf_components->bt_buffer) : 0;
+  // Print one-line status
+  fprintf(stream,
+      "[WFA] Score %d (~ %2.3f%% aligned). "
+      "Memory used (WF-Slab,BT-buffer)=(%lu MB,%lu MB). "
+      "Wavefronts ~ %2.3f Moffsets\n",
+      score,(dist_max>=0) ? (100.0f*(float)dist_max/(float)dist_total) : -1.0f,
+      CONVERT_B_TO_MB(slab_size),CONVERT_B_TO_MB(bt_buffer_used),
+      (wf_len>=0) ? (float)wf_len/1000000.0f : -1.0f);
 }
 
 

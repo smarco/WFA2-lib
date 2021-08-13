@@ -91,4 +91,12 @@ void wavefront_components_resize_null__victim(
     const int lo,
     const int hi);
 
+/*
+ * Compact
+ */
+void wavefront_components_compact_bt_buffer(
+    wavefront_components_t* const wf_components,
+    const int score,
+    const bool verbose);
+
 #endif /* WAVEFRONT_WAVEFRONT_COMPONENTS_H_ */

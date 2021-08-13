@@ -66,19 +66,19 @@ void wavefronts_penalties_set_lineal(
   wavefronts_penalties->distance_metric = gap_lineal;
   // Check base penalties
   if (lineal_penalties->match > 0) {
-    fprintf(stderr,"Match score must be negative or zero (M=%d)\n",lineal_penalties->match);
+    fprintf(stderr,"[WFA::Penalties] Match score must be negative or zero (M=%d)\n",lineal_penalties->match);
     exit(1);
   } else if (lineal_penalties->mismatch <= 0 ||
             lineal_penalties->deletion <= 0 ||
             lineal_penalties->insertion <= 0) {
-    fprintf(stderr,"Penalties must be strictly positive (X=%d,D=%d,I=%d). "
+    fprintf(stderr,"[WFA::Penalties] Penalties must be strictly positive (X=%d,D=%d,I=%d). "
                    "Must be (X>0,D>0,I>0)\n",
         lineal_penalties->mismatch,
         lineal_penalties->deletion,
         lineal_penalties->insertion);
     exit(1);
   } else if (lineal_penalties->deletion != lineal_penalties->insertion) {
-    fprintf(stderr,"At the moment, Insertion/Deletion penalties must be equal (D==I)\n");
+    fprintf(stderr,"[WFA::Penalties] At the moment, Insertion/Deletion penalties must be equal (D==I)\n");
     exit(1);
   }
   // Copy base penalties
@@ -102,12 +102,12 @@ void wavefronts_penalties_set_affine(
   wavefronts_penalties->distance_metric = gap_affine;
   // Check base penalties
   if (affine_penalties->match > 0) {
-    fprintf(stderr,"Match score must be negative or zero (M=%d)\n",affine_penalties->match);
+    fprintf(stderr,"[WFA::Penalties] Match score must be negative or zero (M=%d)\n",affine_penalties->match);
     exit(1);
   } else if (affine_penalties->mismatch <= 0 ||
              affine_penalties->gap_opening <= 0 ||
              affine_penalties->gap_extension <= 0) {
-    fprintf(stderr,"Penalties must be strictly positive (X=%d,O=%d,E=%d). "
+    fprintf(stderr,"[WFA::Penalties] Penalties must be strictly positive (X=%d,O=%d,E=%d). "
                    "Must be (X>0,O>0,E>0)\n",
         affine_penalties->mismatch,
         affine_penalties->gap_opening,
@@ -135,14 +135,14 @@ void wavefronts_penalties_set_affine2p(
   wavefronts_penalties->distance_metric = gap_affine_2p;
   // Check base penalties
   if (affine2p_penalties->match > 0) {
-    fprintf(stderr,"Match score must be negative or zero (M=%d)\n",affine2p_penalties->match);
+    fprintf(stderr,"[WFA::Penalties] Match score must be negative or zero (M=%d)\n",affine2p_penalties->match);
     exit(1);
   } else if (affine2p_penalties->mismatch <= 0 ||
              affine2p_penalties->gap_opening1 <= 0 ||
              affine2p_penalties->gap_extension1 <= 0 ||
              affine2p_penalties->gap_opening2 <= 0 ||
              affine2p_penalties->gap_extension2 <= 0) {
-    fprintf(stderr,"Penalties must be strictly positive (X=%d,O1=%d,E1=%d,O2=%d,E2=%d). "
+    fprintf(stderr,"[WFA::Penalties] Penalties must be strictly positive (X=%d,O1=%d,E1=%d,O2=%d,E2=%d). "
                    "Must be (X>0,O1>0,E1>0,O1>0,E1>0)\n",
         affine2p_penalties->mismatch,
         affine2p_penalties->gap_opening1,

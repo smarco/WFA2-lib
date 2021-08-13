@@ -72,7 +72,7 @@ void wavefronts_backtrace_valid_location(
       (v >= 0 && v <= wf_aligner->pattern_length &&
        h >= 0 && h <= wf_aligner->text_length);
   if (!valid_location) {
-    fprintf(stderr,"wavefronts_backtrace_valid_location:: Impossible situation\n"); exit(1);
+    fprintf(stderr,"[WFA::Backtrace] Invalid location\n"); exit(1); // TODO: Impossible situation
   }
 }
 void wavefronts_backtrace_add_trailing_gap(
@@ -123,7 +123,7 @@ void wavefronts_backtrace_matches(
     const int v = WAVEFRONT_V(k,offset);
     const int h = WAVEFRONT_H(k,offset);
     if (pattern[v-1] != text[h-1]) { // Check match
-      fprintf(stderr,"Backtrace error: Not a match traceback\n");
+      fprintf(stderr,"[WFA::Backtrace] Checking a match-traceback error (mismatching bases)\n");
       exit(1);
     }
     --offset; // Update state
@@ -353,7 +353,7 @@ void wavefront_backtrace_affine(
         break;
       }
       default:
-        fprintf(stderr,"Wavefront-Backtrace. Wrong type trace.1\n");
+        fprintf(stderr,"[WFA::Backtrace] Wrong type trace.1\n");
         exit(1);
         break;
     }
@@ -408,7 +408,7 @@ void wavefront_backtrace_affine(
         matrix_type = affine2p_matrix_D2;
         break;
       default:
-        fprintf(stderr,"Wavefront-Backtrace. Wrong type trace.2 \n");
+        fprintf(stderr,"[WFA::Backtrace] Wrong type trace.2 \n");
         exit(1);
         break;
     }
@@ -432,7 +432,7 @@ void wavefront_backtrace_affine(
         ++k;
         break;
       default:
-        fprintf(stderr,"Wavefront-Backtrace. Wrong type trace.3\n");
+        fprintf(stderr,"[WFA::Backtrace] Wrong type trace.3\n");
         exit(1);
         break;
     }

@@ -285,13 +285,20 @@ void wavefront_reduce(
   // Check hi/lo range
   if (mwavefront->lo > mwavefront->hi) {
     mwavefront->null = true; // FIXME  FIXME  FIXME  FIXME
-    fprintf(stderr,"wavefront_reduce_wavefront_end2end::Impossible situation\n"); exit(-1);
+    fprintf(stderr,"[WFA::Reduction] wavefront_reduce_wavefront_end2end::Impossible situation\n"); exit(-1);
   }
   // Plot
   if (wf_aligner->plot_params.plot_enabled) {
     wavefront_plot_reduction(wf_aligner,score,
         lo_base,mwavefront->lo,hi_base,mwavefront->hi);
   }
+  // DEBUG
+  //  if (wf_aligner->system.verbose) {
+  //    const int wf_length_base = hi_base-lo_base+1;
+  //    const int wf_length_reduced = mwavefront->hi-mwavefront->lo+1;
+  //    fprintf(stderr,"[WFA::Reduction] Reduction from %d to %d offsets (%2.2f%%)\n",
+  //        wf_length_base,wf_length_reduced,100.0f*(float)wf_length_reduced/(float)wf_length_base);
+  //  }
   // Equate other wavefronts
   if (distance_metric <= gap_lineal) return;
   // Reduce the other wavefronts (same dimensions as M-reduced)

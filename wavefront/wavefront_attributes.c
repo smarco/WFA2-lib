@@ -32,14 +32,6 @@
 #include "wavefront_attributes.h"
 
 /*
- * Config
- */
-#define WF_MAX_SCORE                             INT_MAX /* Unlimited */
-#define WF_LIMIT_PROBE_INTERVAL_DEFAULT              256
-#define WF_MAX_MEMORY_DEFAULT                 UINT64_MAX /* Unlimited */
-#define WF_MAX_MEMORY_RESIDENT_DEFAULT  BUFFER_SIZE_256M
-
-/*
  * Default parameters
  */
 wavefront_aligner_attr_t wavefront_aligner_attr_default = {
@@ -52,7 +44,7 @@ wavefront_aligner_attr_t wavefront_aligner_attr_default = {
         .pattern_end_free = 0,
         .text_begin_free = 0,
         .text_end_free = 0,
-        .max_alignment_score = WF_MAX_SCORE, // Unlimited
+        .max_alignment_score = INT_MAX, // Unlimited
     },
     // Penalties
     .lineal_penalties = {
@@ -96,9 +88,11 @@ wavefront_aligner_attr_t wavefront_aligner_attr_default = {
     },
     // System
     .system = {
-        .limit_probe_interval = WF_LIMIT_PROBE_INTERVAL_DEFAULT,
-        .max_memory_used = WF_MAX_MEMORY_DEFAULT,
-        .max_resident_memory = WF_MAX_MEMORY_RESIDENT_DEFAULT,
+        .global_probe_interval = 2000,
+        .bt_compact_probe_interval = 6000,
+        .bt_compact_max_memory = BUFFER_SIZE_256M,
+        .max_memory_used = UINT64_MAX, // Unlimited
+        .max_memory_resident = BUFFER_SIZE_256M,
         .verbose = false,
     },
 };

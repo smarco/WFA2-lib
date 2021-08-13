@@ -117,4 +117,12 @@ void wavefront_aligner_set_max_memory_used(
 uint64_t wavefront_aligner_get_size(
     wavefront_aligner_t* const wf_aligner);
 
+/*
+ * Display
+ */
+void wavefront_aligner_print_status(
+    FILE* const stream,
+    wavefront_aligner_t* const wf_aligner,
+    const int current_score);
+
 #endif /* WAVEFRONT_ALIGNER_H_ */

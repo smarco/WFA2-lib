@@ -49,7 +49,7 @@ void wavefront_form_endsfree_check(
       form->pattern_end_free > pattern_length ||
       form->text_begin_free > text_length ||
       form->text_end_free > text_length) {
-    fprintf(stderr,"Ends-free parameters must be not larger than the sequences' length "
+    fprintf(stderr,"[WFA] Ends-free parameters must be not larger than the sequences "
         "(P0=%d,Pf=%d,T0=%d,Tf=%d). Must be (P0<=|P|,Pf<=|P|,T0<=|T|,Tf<=|T|) where (|P|,|T|)=(%d,%d)\n",
         form->pattern_begin_free,form->pattern_end_free,
         form->text_begin_free,form->text_end_free,
@@ -63,16 +63,34 @@ void wavefront_form_endsfree_check(
 int wavefront_align_reached_limits(
     wavefront_aligner_t* const wf_aligner,
     const int score) {
-  // Check probing interval
-  // if (score % wf_aligner->limit_probe_interval == 0) return 0;
   // Check alignment-score limit
   if (score >= wf_aligner->alignment_form.max_alignment_score) {
     wf_aligner->cigar.score = wf_aligner->alignment_form.max_alignment_score;
     return WF_ALIGN_MAX_SCORE;
   }
-  // Check memory used
+  // Global probing interval
+  alignment_system_t* const system = &wf_aligner->system;
+  if ((score%system->global_probe_interval) != 0) return 0;
+  if (system->verbose) wavefront_aligner_print_status(stderr,wf_aligner,score); // DEBUG
+  // BT-Buffer
+  wavefront_components_t*const wf_components = &wf_aligner->wf_components;
+  if (wf_components->bt_buffer!=NULL && (score%system->bt_compact_probe_interval)==0) {
+    uint64_t bt_memory = wf_backtrace_buffer_get_size_used(wf_components->bt_buffer);
+    // Check BT-buffer memory
+    if (bt_memory > system->bt_compact_max_memory_eff) {
+      // Compact BT-buffer
+      wavefront_components_compact_bt_buffer(wf_components,score,wf_aligner->system.verbose);
+      // Set new buffer limit
+      bt_memory = wf_backtrace_buffer_get_size_used(wf_components->bt_buffer);
+      uint64_t proposed_mem = (double)bt_memory * TELESCOPIC_FACTOR;
+      if (proposed_mem < system->bt_compact_max_memory) proposed_mem = system->bt_compact_max_memory;
+      if (proposed_mem > system->max_memory_used) proposed_mem = system->bt_compact_max_memory_eff;
+      system->bt_compact_max_memory_eff = proposed_mem;
+    }
+  }
+  // Check overall memory used
   const uint64_t wf_memory_used = wavefront_aligner_get_size(wf_aligner);
-  if (wf_memory_used > wf_aligner->system.max_memory_used) {
+  if (wf_memory_used > system->max_memory_used) {
     return WF_ALIGN_OOM;
   }
   // Otherwise OK
@@ -90,7 +108,7 @@ void wavefront_align_end2end_initialize(
   wf_components->mwavefronts[0] = wavefront_slab_allocate(wf_aligner->wavefront_slab,0,0);
   wf_components->mwavefronts[0]->offsets[0] = 0;
   if (wf_components->bt_piggyback) {
-    wf_backtrace_buffer_store_starting_block(
+    wf_backtrace_buffer_store_block_init(
         wf_components->bt_buffer,0,0,
         &(wf_components->mwavefronts[0]->bt_pcigar[0]),
         &(wf_components->mwavefronts[0]->bt_prev[0]));
@@ -163,7 +181,7 @@ void wavefront_align_endsfree_initialize(
       wf_aligner->wavefront_slab,-pattern_begin_free,text_begin_free);
   wf_components->mwavefronts[0]->offsets[0] = 0;
   if (wf_components->bt_piggyback) {
-    wf_backtrace_buffer_store_starting_block(
+    wf_backtrace_buffer_store_block_init(
         wf_components->bt_buffer,0,0,
         &(wf_components->mwavefronts[0]->bt_pcigar[0]),
         &(wf_components->mwavefronts[0]->bt_prev[0]));
@@ -174,7 +192,7 @@ void wavefront_align_endsfree_initialize(
     const int k = WAVEFRONT_DIAGONAL(h,0);
     wf_components->mwavefronts[0]->offsets[k] = WAVEFRONT_OFFSET(h,0);
     if (wf_components->bt_piggyback) {
-      wf_backtrace_buffer_store_starting_block(
+      wf_backtrace_buffer_store_block_init(
           wf_components->bt_buffer,0,h,
           &(wf_components->mwavefronts[0]->bt_pcigar[k]),
           &(wf_components->mwavefronts[0]->bt_prev[k]));
@@ -186,7 +204,7 @@ void wavefront_align_endsfree_initialize(
     const int k = WAVEFRONT_DIAGONAL(0,v);
     wf_components->mwavefronts[0]->offsets[k] = WAVEFRONT_OFFSET(0,v);
     if (wf_components->bt_piggyback) {
-      wf_backtrace_buffer_store_starting_block(
+      wf_backtrace_buffer_store_block_init(
           wf_components->bt_buffer,v,0,
           &(wf_components->mwavefronts[0]->bt_pcigar[k]),
           &(wf_components->mwavefronts[0]->bt_prev[k]));
@@ -314,7 +332,7 @@ int wavefront_align(
     case gap_affine: wavefront_align_compute = &wavefront_compute_affine; break;
     case gap_affine_2p: wavefront_align_compute = &wavefront_compute_affine2p; break;
     default:
-      fprintf(stderr,"Distance function not implemented yet\n"); exit(1);
+      fprintf(stderr,"[WFA] Distance function not implemented yet\n"); exit(1);
       break;
   }
   if (wf_aligner->alignment_form.span == alignment_end2end) {
@@ -338,7 +356,7 @@ int wavefront_align(
   strings_padded_delete(sequences);
   // Reap if maximum resident memory is reached
   const uint64_t wf_memory_used = wavefront_aligner_get_size(wf_aligner);
-  const bool reap_memory = wf_memory_used > wf_aligner->system.max_resident_memory;
+  const bool reap_memory = wf_memory_used > wf_aligner->system.max_memory_resident;
   if (reap_memory) wavefront_aligner_reap(wf_aligner);
   // Return
   return status;

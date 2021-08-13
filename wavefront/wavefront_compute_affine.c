@@ -296,13 +296,13 @@ void wavefront_compute_affine_idm_piggyback_offload(
   int k;
   for (k=lo;k<=hi;++k) {
     if (PCIGAR_IS_ALMOST_FULL(out_i1_bt_pcigar[k])) {
-      wf_backtrace_buffer_store_block(bt_buffer,out_i1_bt_pcigar+k,out_i1_bt_prev+k);
+      wf_backtrace_buffer_store_block_bt(bt_buffer,out_i1_bt_pcigar+k,out_i1_bt_prev+k);
     }
     if (PCIGAR_IS_ALMOST_FULL(out_d1_bt_pcigar[k])) {
-      wf_backtrace_buffer_store_block(bt_buffer,out_d1_bt_pcigar+k,out_d1_bt_prev+k);
+      wf_backtrace_buffer_store_block_bt(bt_buffer,out_d1_bt_pcigar+k,out_d1_bt_prev+k);
     }
     if (PCIGAR_IS_ALMOST_FULL(out_m_bt_pcigar[k])) {
-      wf_backtrace_buffer_store_block(bt_buffer,out_m_bt_pcigar+k,out_m_bt_prev+k);
+      wf_backtrace_buffer_store_block_bt(bt_buffer,out_m_bt_pcigar+k,out_m_bt_prev+k);
     }
   }
 }

@@ -85,23 +85,24 @@ typedef struct {
   int min_wavefront_length;
   int max_distance_threshold;
   bool low_memory;
-  // Other parameters
-  int bandwidth;
   bool endsfree;
   int pattern_begin_free;
   int text_begin_free;
   int pattern_end_free;
   int text_end_free;
-  // Profile
-  profiler_timer_t timer_global;
-  int progress;
-  // Check
+  // Misc
+  int bandwidth;
   bool check_correct;
   bool check_score;
   bool check_alignments;
   int check_metric;
   int check_bandwidth;
   int plot;
+  // Profile
+  profiler_timer_t timer_global;
+  // System
+  uint64_t max_memory;
+  int progress;
   bool verbose;
 } benchmark_args;
 benchmark_args parameters = {
@@ -137,21 +138,22 @@ benchmark_args parameters = {
   .min_wavefront_length = 10,
   .max_distance_threshold = 50,
   .low_memory = false,
-  // Other parameters
-  .bandwidth = 10,
   .endsfree = false,
   .pattern_begin_free = 0,
   .text_begin_free = 0,
   .pattern_end_free = 0,
   .text_end_free = 0,
-  // Check
+  // Misc
+  .bandwidth = 10,
+  .check_bandwidth = -1,
   .check_correct = false,
   .check_score = false,
   .check_alignments = false,
   .check_metric = ALIGN_DEBUG_CHECK_DISTANCE_METRIC_GAP_AFFINE,
-  .check_bandwidth = -1,
-  .progress = 10000,
   .plot = 0,
+  // System
+  .max_memory = UINT64_MAX,
+  .progress = 10000,
   .verbose = false
 };
 
@@ -162,10 +164,8 @@ void align_pairwise_test() {
   // Patters & Texts
 //  char * pattern = "GATTACA";
 //  char * text = "GATCACTA";
-//    char * pattern = "GCAGAGAATTACGACCGGCTCGCTGAATTGCGAAG";
-//    char * text = "GCGAGAATTACGACCGGCTCGCTGAATTGCGCGAAG";
-  char* pattern = "GCAGAGAATTACGACCGGCTCGCTGAATTGCGAGAAACAACCCTGTCACGTTCAGTCTGTAGGAGAGACTACCTAGAGTGCTGAAATTGGGTACTTCCTTATCGTGATAACGTAGTCGTAACTCTGAATAATAGGTATGATAGTCCGGTGGATCCGTGTGTAGTGAGGTCTTCGGTACCTTTATCCCAACTTGGGATCTTTTGCGCAGGCGCCGAGAGGAAGTGCGTAATTTGGAATATCCCTGTACTGAATGTCTGCAGAACTGCTGGGATATGTATTGTTGGTAGGCGAGTGCGTAACTACTAATATGTTGCGGGAATTAGGGTAGACATGGTGGGTGCGCAATGTAGTAGCGCATAACAATGTGAGCGAAAACAGAACTATATCCTCCCCCAACTCACAACAATCTAGAATACTCGGTAACGACTTTTCTATACGGATACTTGCGTACTACAGGGGGGGTAAAGTTACAACCCGATTTCTTCGGTGGTACTCCAACTATACACGGCCCCTCCAAAATGTTTGACTATTCGTGGAACGGTACACGCGGAACAAAAGACCTTTGCGTGTGATGGTAACGTCTCCTGGCGATCTGACCTTCGTAAGACTCATTTACTTAAGATAAGACGGGGCCAGGGAATACCACAGAGCTTTGTTTCCGTTAAATTGTTGTCTAGAGGTACGTAGGTT";
-  char* text = "GCGAGAATTACGACCGGCTCGCTGAATTGCGCGAAGCAAGCCCTGTCTCTTCGTCTGCGTACGGTATGTATTCCCATAGTGATCAACCACTTGGCCAGCGGGGCTTGAGGGGCTGGCTTGCTATCCCCAGAGAGTAGGCCCCTATGTGCAGATTAGCCTGGTAGGAGAGACACCTAGAGTGCAGAATCGTGGGTACTTCCTTATCGTTTAACATATCGTAACTCTGACATAATAGGTAGTGATATGTCCGGTGGAATCCCTGGTTCAGCGTGAGGTCTTTCGGTACCTTATCCCATTGGGGATTCGTATGCCGCAGGGCGCCAGAGGAGTGCGTAATTGGGAAAATCCTTGCCATGAATGTCTGGCAGAACTGATGGATGCGTATTGTTGTGTATGCGGGTGCGAACTACTAATATGTTGCATGCAATTAGGGGGACGCATGGTGGGTGCGCAATGTAGTAGCGCTAACAATGTGAGCGGAAAACAGAACTTGTACTCCCCCAACTCAAGACACTAGAATACTCGGGTAACGGATTTTCTATACGATTTACTTCCGTACTCCAGGGGGGTCGGGTAAACGCAATCTTTGATGGTCAGTATAGGGACAGGCATCGTTGCGGTTCGGATGAGATCACATCAATATTTCCAATAATGCTCAATCTTTCTAAAAAGTTACGAACCCGATTTCTTTCGGTGGTCGTCCAAATATTACAGCCCCTCCAAAGTGTTGACTTTCGTGAAACCGGTACCGCGAACAAAAGACTTTGCGGTGTATGTTAACTCTCCTGTCGATCTGACCTTCGTAAGACTCGTTTACTTAAGTAAGAAAAACACTGACAATTCATCATTCTTCGTGGAATGGCAGTATATTGGTCGTGGCTCACGGTCCTCCGCGCAGGGGCGCTATTTGAAGCCAAAGTATCGGTTACGATCCGGCCCAGGGAATACCACAGAGCATTTGTTTTCCGTAAATTGTTGTCTAGAGGTCGTCGGTT";
+    char * pattern = "GCAGAGAATTACGACCGGCTCGCTGAATTGCGAAG";
+    char * text = "GCGAGAATTACGACCGGCTCGCTGAATTGCGCGAAG";
 
   // MMAllocator
   mm_allocator_t* const mm_allocator = mm_allocator_new(BUFFER_SIZE_8M);
@@ -338,6 +338,8 @@ wavefront_aligner_t* align_benchmark_configure_wf(
   // Misc
   attributes.plot_params.plot_enabled = (parameters.plot > 0);
   attributes.plot_params.resolution_points = parameters.plot;
+  attributes.system.verbose = parameters.verbose;
+  attributes.system.max_memory_used = parameters.max_memory;
   // Allocate
   return wavefront_aligner_new(&attributes);
 }
@@ -558,14 +560,15 @@ void usage() {
       "          --maximum-difference-distance <INT>                        \n"
       "          --low-memory                                               \n"
       "          --ends-free P0,Pf,T0,Tf                                    \n"
-      "        [Other parameters]                                           \n"
-      "          --bandwidth <INT>                                          \n"
       "        [Misc]                                                       \n"
-      "          --progress|P <integer>                                     \n"
+      "          --bandwidth <INT>                                          \n"
       "          --check|c 'correct'|'score'|'alignment'                    \n"
       "          --check-distance 'edit'|'gap-lineal'|'gap-affine'          \n"
       "          --check-bandwidth <INT>                                    \n"
       "          --plot                                                     \n"
+      "        [System]                                                     \n"
+      "          --max-memory <bytes>                                       \n"
+      "          --progress|P <integer>                                     \n"
       "          --help|h                                                   \n");
 }
 void parse_arguments(int argc,char** argv) {
@@ -582,15 +585,16 @@ void parse_arguments(int argc,char** argv) {
     { "minimum-wavefront-length", required_argument, 0, 1002 },
     { "maximum-difference-distance", required_argument, 0, 1003 },
     { "low-memory", no_argument, 0, 1004 },
-    /* Other parameters */
-    { "bandwidth", required_argument, 0, 3000 },
-    { "ends-free", required_argument, 0, 3001 },
+    { "ends-free", required_argument, 0, 1005 },
     /* Misc */
-    { "progress", required_argument, 0, 'P' },
+    { "bandwidth", required_argument, 0, 2000 },
     { "check", optional_argument, 0, 'c' },
-    { "check-distance", required_argument, 0, 2000 },
-    { "check-bandwidth", required_argument, 0, 2001 },
-    { "plot", optional_argument, 0, 2002 },
+    { "check-distance", required_argument, 0, 2001 },
+    { "check-bandwidth", required_argument, 0, 2002 },
+    { "plot", optional_argument, 0, 2003 },
+    /* System */
+    { "max-memory", required_argument, 0, 3000 },
+    { "progress", required_argument, 0, 'P' },
     { "verbose", no_argument, 0, 'v' },
     { "help", no_argument, 0, 'h' },
     { 0, 0, 0, 0 } };
@@ -720,13 +724,7 @@ void parse_arguments(int argc,char** argv) {
     case 1004: // --low-memory
       parameters.low_memory = true;
       break;
-    /*
-     * Other parameters
-     */
-    case 3000: // --bandwidth
-      parameters.bandwidth = atoi(optarg);
-      break;
-    case 3001: { // --ends-free P0,Pf,T0,Tf
+    case 1005: { // --ends-free P0,Pf,T0,Tf
       parameters.endsfree = true;
       char* sentinel = strtok(optarg,",");
       parameters.pattern_begin_free = atoi(sentinel);
@@ -741,8 +739,8 @@ void parse_arguments(int argc,char** argv) {
     /*
      * Misc
      */
-    case 'P':
-      parameters.progress = atoi(optarg);
+    case 2000: // --bandwidth
+      parameters.bandwidth = atoi(optarg);
       break;
     case 'c':
       if (optarg ==  NULL) { // default = score
@@ -766,7 +764,7 @@ void parse_arguments(int argc,char** argv) {
         exit(1);
       }
       break;
-    case 2000: // --check-distance
+    case 2001: // --check-distance
       if (strcasecmp(optarg,"edit")==0) { // default = edit
         parameters.check_metric = ALIGN_DEBUG_CHECK_DISTANCE_METRIC_EDIT;
       } else if (strcasecmp(optarg,"gap-lineal")==0) {
@@ -778,11 +776,20 @@ void parse_arguments(int argc,char** argv) {
         exit(1);
       }
       break;
-    case 2001: // --check-bandwidth
+    case 2002: // --check-bandwidth
       parameters.check_bandwidth = atoi(optarg);
       break;
-    case 2002: // --plot
+    case 2003: // --plot
       parameters.plot = (optarg==NULL) ? 1000 : atoi(optarg);
+      break;
+    /*
+     * System
+     */
+    case 3000:
+      parameters.max_memory = atol(optarg);
+      break;
+    case 'P':
+      parameters.progress = atoi(optarg);
       break;
     case 'v':
       parameters.verbose = true;
