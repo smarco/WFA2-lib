@@ -271,15 +271,17 @@ void wavefront_aligner_print_status(
   wavefront_components_t* const wf_components = &wf_aligner->wf_components;
   // Approximate progress
   const int dist_total = MAX(wf_aligner->text_length,wf_aligner->pattern_length);
-  const int s = (wf_components->memory_modular) ? score%wf_components->max_score_scope : score;
-  wavefront_t* const wavefront = wf_components->mwavefronts[s];
+  int s = (wf_components->memory_modular) ? score%wf_components->max_score_scope : score;
+  wavefront_t* wavefront = wf_components->mwavefronts[s];
+  if (wavefront==NULL && s>0) {
+    s = (wf_components->memory_modular) ? (score-1)%wf_components->max_score_scope : (score-1);
+    wavefront = wf_components->mwavefronts[s];
+  }
   int dist_max = -1, wf_len = -1, k;
   if (wavefront!=NULL) {
     wf_offset_t* const offsets = wavefront->offsets;
     for (k=wavefront->lo;k<=wavefront->hi;++k) {
-      const int v = WAVEFRONT_V(k,offsets[k]);
-      const int h = WAVEFRONT_H(k,offsets[k]);
-      const int dist = MAX(v,h);
+      const int dist = MAX(WAVEFRONT_V(k,offsets[k]),WAVEFRONT_H(k,offsets[k]));
       dist_max = MAX(dist_max,dist);
     }
     wf_len = wavefront->hi-wavefront->lo+1;

@@ -86,4 +86,11 @@ void wavefront_aligner_allocate_output(
     const int lo,
     const int hi);
 
+/*
+ * Trim wavefronts ends
+ */
+void wavefront_aligner_trim_ends(
+    wavefront_aligner_t* const wf_aligner,
+    int score);
+
 #endif /* WAVEFRONT_COMPUTE_H_ */

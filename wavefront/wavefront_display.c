@@ -64,7 +64,7 @@ void wavefront_display_compute_limits(
   wavefront_components_t* const wf_components = &wf_aligner->wf_components;
   const distance_metric_t distance_metric = wf_aligner->penalties.distance_metric;
   // Compute min/max k
-  int i, max_k=0, min_k=0;
+  int i, max_k=INT_MIN, min_k=INT_MAX;
   for (i=score_begin;i<=score_end;++i) {
     const int s = (wf_components->memory_modular) ? i%wf_components->max_score_scope : i;
     wavefront_t* const mwavefront = wf_components->mwavefronts[s];

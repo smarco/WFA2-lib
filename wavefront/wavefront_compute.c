@@ -259,6 +259,59 @@ void wavefront_aligner_allocate_output(
     wf_components->d2wavefronts[score] = NULL;
   }
 }
+/*
+ * Trim wavefronts ends
+ */
+void wavefront_aligner_trim_ends_wf(
+    wavefront_aligner_t* const wf_aligner,
+    wavefront_t* const wavefront) {
+  // Parameters
+  const int pattern_length = wf_aligner->pattern_length;
+  const int text_length = wf_aligner->text_length;
+  wf_offset_t* const offsets = wavefront->offsets;
+  // Trim from hi
+  int k;
+  const int lo = wavefront->lo;
+  for (k=wavefront->hi;k>=lo;--k) {
+    // Fetch offset
+    const wf_offset_t offset = offsets[k];
+    // Check boundaries
+    const uint32_t h = WAVEFRONT_H(k,offset); // Make unsigned to avoid checking negative
+    const uint32_t v = WAVEFRONT_V(k,offset); // Make unsigned to avoid checking negative
+    if (h <= text_length && v <= pattern_length) break;
+  }
+  wavefront->hi = k; // Set new hi
+  // Trim from lo
+  const int hi = wavefront->hi;
+  for (k=wavefront->lo;k<=hi;++k) {
+    // Fetch offset
+    const wf_offset_t offset = offsets[k];
+    // Check boundaries
+    const uint32_t h = WAVEFRONT_H(k,offset); // Make unsigned to avoid checking negative
+    const uint32_t v = WAVEFRONT_V(k,offset); // Make unsigned to avoid checking negative
+    if (h <= text_length && v <= pattern_length) break;
+  }
+  wavefront->lo = k; // Set new lo
+}
+void wavefront_aligner_trim_ends(
+    wavefront_aligner_t* const wf_aligner,
+    int score) {
+  // Parameters
+  wavefront_components_t* const wf_components = &wf_aligner->wf_components;
+  const distance_metric_t distance_metric = wf_aligner->penalties.distance_metric;
+  // Modular wavefront
+  if (wf_components->memory_modular) {
+    score = score % wf_components->max_score_scope;
+  }
+  // Free
+  if (wf_components->mwavefronts[score]) wavefront_aligner_trim_ends_wf(wf_aligner,wf_components->mwavefronts[score]);
+  if (distance_metric==gap_lineal) return;
+  if (wf_components->i1wavefronts[score]) wavefront_aligner_trim_ends_wf(wf_aligner,wf_components->i1wavefronts[score]);
+  if (wf_components->d1wavefronts[score]) wavefront_aligner_trim_ends_wf(wf_aligner,wf_components->d1wavefronts[score]);
+  if (distance_metric==gap_affine) return;
+  if (wf_components->i2wavefronts[score]) wavefront_aligner_trim_ends_wf(wf_aligner,wf_components->i2wavefronts[score]);
+  if (wf_components->d2wavefronts[score]) wavefront_aligner_trim_ends_wf(wf_aligner,wf_components->d2wavefronts[score]);
+}
 
 
 
