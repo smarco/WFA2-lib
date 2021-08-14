@@ -92,7 +92,6 @@ void wf_backtrace_buffer_clear(
     wf_backtrace_buffer_t* const bt_buffer) {
   bt_buffer->segment_idx = 0;
   bt_buffer->segment_pos = 0;
-  vector_set_used(bt_buffer->segments,1);
 }
 void wf_backtrace_buffer_reap(
     wf_backtrace_buffer_t* const bt_buffer) {
