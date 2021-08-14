@@ -553,7 +553,7 @@ void usage() {
       "        [Penalties]                                                  \n"
       "          --lineal-penalties|p M,X,I,D                               \n"
       "          --affine-penalties|g M,X,O,E                               \n"
-      "          --affine2p-penalties|g M,X,O1,E1,O2,E2                     \n"
+      "          --affine2p-penalties M,X,O1,E1,O2,E2                       \n"
       "        [Wavefront parameters]                                       \n"
       "          --score-only                                               \n"
       "          --minimum-wavefront-length <INT>                           \n"

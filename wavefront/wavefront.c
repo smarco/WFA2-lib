@@ -125,7 +125,8 @@ void wavefront_init_null(
     wavefront->offsets_mem[i] = WAVEFRONT_OFFSET_NULL;
   }
   if (wavefront->bt_pcigar_mem) {
-    memset(wavefront->bt_pcigar_mem,0,wavefront->wf_elements_allocated*sizeof(pcigar_t));
+    memset(wavefront->bt_pcigar_mem,0,wf_elements_allocated*sizeof(pcigar_t));
+    memset(wavefront->bt_prev_mem,0,wf_elements_allocated*sizeof(block_idx_t));
   }
   // Internals
   wavefront->wf_elements_used_min = lo; // To keep track of limits

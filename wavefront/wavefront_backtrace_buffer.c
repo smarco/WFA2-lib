@@ -34,7 +34,7 @@
 /*
  * Config
  */
-#define BT_BUFFER_SEGMENT_LENGTH BUFFER_SIZE_4M
+#define BT_BUFFER_SEGMENT_LENGTH BUFFER_SIZE_1M
 
 #define BT_BUFFER_IDX(segment_idx,segment_pos) ((segment_idx)*BT_BUFFER_SEGMENT_LENGTH) + (segment_pos)
 
@@ -250,9 +250,7 @@ void wf_backtrace_buffer_mark_backtrace(
   // Traverse-back the BT-blocks while not marked
   wf_backtrace_block_t bt_block_last = { .prev_idx = bt_block_idx };
   wf_backtrace_block_t* bt_block = &bt_block_last;
-  //fprintf(stdout,"--\n");
   while (!WF_BACKTRACE_BLOCK_IS_MARKED(bt_block->prev_idx)) {
-    //fprintf(stdout,"%d\n",bt_block->prev_idx);
     const block_idx_t prev_idx = bt_block->prev_idx;
     bt_block->prev_idx = WF_BACKTRACE_BLOCK_MARK(prev_idx);
     bt_block = wf_backtrace_buffer_get_block(bt_buffer,prev_idx);
@@ -309,8 +307,9 @@ void wf_backtrace_buffer_compact_marked(
   if (verbose) {
     const block_idx_t max_block_idx_compacted =
         BT_BUFFER_IDX(bt_buffer_compacted->segment_idx,bt_buffer_compacted->segment_pos);
-    fprintf(stderr,"[WFA::BacktraceBuffer] Compacted from %d to %d bts (%2.2f%%)\n",
-        max_block_idx_full,max_block_idx_compacted,
+    fprintf(stderr,"[WFA::BacktraceBuffer] Compacted from %lu MB to %lu MB (%2.2f%%)\n",
+        CONVERT_B_TO_MB(max_block_idx_full*sizeof(wf_backtrace_block_t)),
+        CONVERT_B_TO_MB(max_block_idx_compacted*sizeof(wf_backtrace_block_t)),
         100.0f*(float)max_block_idx_compacted/(float)max_block_idx_full);
   }
 }

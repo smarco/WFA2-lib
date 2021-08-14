@@ -195,7 +195,6 @@ void wavefront_compute_affine2p_idm_piggyback_bounded(
     const wf_offset_t ins1_o = WF_COND_FETCH_INC(m_open1,k-1,1);
     const wf_offset_t ins1_e = WF_COND_FETCH_INC(i1_ext,k-1,1);
     const wf_offset_t ins1 = MAX(ins1_o,ins1_e);
-    out_i1_bt_pcigar[k] = 0;
     if (ins1 >= 0) {
       if (ins1 == ins1_e) {
         out_i1_bt_pcigar[k] = PCIGAR_PUSH_BACK_INS(i1_ext_bt_pcigar[k-1]);
@@ -204,13 +203,15 @@ void wavefront_compute_affine2p_idm_piggyback_bounded(
         out_i1_bt_pcigar[k] = PCIGAR_PUSH_BACK_INS(m_open1_bt_pcigar[k-1]);
         out_i1_bt_prev[k] = m_open1_bt_prev[k-1];
       }
+    } else {
+      out_i1_bt_pcigar[k] = 0;
+      out_i1_bt_prev[k] = 0;
     }
     out_i1[k] = ins1;
     // Update I2
     const wf_offset_t ins2_o = WF_COND_FETCH_INC(m_open2,k-1,1);
     const wf_offset_t ins2_e = WF_COND_FETCH_INC(i2_ext,k-1,1);
     const wf_offset_t ins2 = MAX(ins2_o,ins2_e);
-    out_i2_bt_pcigar[k] = 0;
     if (ins2 >= 0) {
       if (ins2 == ins2_e) {
         out_i2_bt_pcigar[k] = PCIGAR_PUSH_BACK_INS(i2_ext_bt_pcigar[k-1]);
@@ -219,6 +220,9 @@ void wavefront_compute_affine2p_idm_piggyback_bounded(
         out_i2_bt_pcigar[k] = PCIGAR_PUSH_BACK_INS(m_open2_bt_pcigar[k-1]);
         out_i2_bt_prev[k] = m_open2_bt_prev[k-1];
       }
+    } else {
+      out_i2_bt_pcigar[k] = 0;
+      out_i2_bt_prev[k] = 0;
     }
     out_i2[k] = ins2;
     // Update I
@@ -230,7 +234,6 @@ void wavefront_compute_affine2p_idm_piggyback_bounded(
     const wf_offset_t del1_o = WF_COND_FETCH(m_open1,k+1);
     const wf_offset_t del1_e = WF_COND_FETCH(d1_ext,k+1);
     const wf_offset_t del1 = MAX(del1_o,del1_e);
-    out_d1_bt_pcigar[k] = 0;
     if (del1 >= 0) {
       if (del1 == del1_e) {
         out_d1_bt_pcigar[k] = PCIGAR_PUSH_BACK_DEL(d1_ext_bt_pcigar[k+1]);
@@ -239,13 +242,15 @@ void wavefront_compute_affine2p_idm_piggyback_bounded(
         out_d1_bt_pcigar[k] = PCIGAR_PUSH_BACK_DEL(m_open1_bt_pcigar[k+1]);
         out_d1_bt_prev[k] = m_open1_bt_prev[k+1];
       }
+    } else {
+      out_d1_bt_pcigar[k] = 0;
+      out_d1_bt_prev[k] = 0;
     }
     out_d1[k] = del1;
     // Update D2
     const wf_offset_t del2_o = WF_COND_FETCH(m_open2,k+1);
     const wf_offset_t del2_e = WF_COND_FETCH(d2_ext,k+1);
     const wf_offset_t del2 = MAX(del2_o,del2_e);
-    out_d2_bt_pcigar[k] = 0;
     if (del2 >= 0) {
       if (del2 == del2_e) {
         out_d2_bt_pcigar[k] = PCIGAR_PUSH_BACK_DEL(d2_ext_bt_pcigar[k+1]);
@@ -254,6 +259,9 @@ void wavefront_compute_affine2p_idm_piggyback_bounded(
         out_d2_bt_pcigar[k] = PCIGAR_PUSH_BACK_DEL(m_open2_bt_pcigar[k+1]);
         out_d2_bt_prev[k] = m_open2_bt_prev[k+1];
       }
+    } else {
+      out_d2_bt_pcigar[k] = 0;
+      out_d2_bt_prev[k] = 0;
     }
     out_d2[k] = del2;
     // Update D
@@ -261,7 +269,6 @@ void wavefront_compute_affine2p_idm_piggyback_bounded(
     // Update M
     const wf_offset_t sub = WF_COND_FETCH_INC(m_sub,k,1);
     const wf_offset_t max = MAX(del,MAX(sub,ins));
-    out_m_bt_pcigar[k] = 0;
     if (max >= 0) {
       if (max == sub) {
         out_m_bt_pcigar[k] = m_sub_bt_pcigar[k];
@@ -282,6 +289,9 @@ void wavefront_compute_affine2p_idm_piggyback_bounded(
       // Coming from I/D -> X is fake to represent gap-close
       // Coming from M -> X is real to represent mismatch
       out_m_bt_pcigar[k] = PCIGAR_PUSH_BACK_MISMS(out_m_bt_pcigar[k]);
+    } else {
+      out_m_bt_pcigar[k] = 0;
+      out_m_bt_prev[k] = 0;
     }
     out_m[k] = max;
   }
@@ -444,22 +454,28 @@ void wavefront_compute_affine2p_idm_piggyback_offload(
   block_idx_t* const out_d1_bt_prev = wavefront_set->out_d1wavefront->bt_prev;
   pcigar_t* const out_d2_bt_pcigar  = wavefront_set->out_d2wavefront->bt_pcigar;
   block_idx_t* const out_d2_bt_prev = wavefront_set->out_d2wavefront->bt_prev;
+  // Out Offsets
+  wf_offset_t* const out_m  = wavefront_set->out_mwavefront->offsets;
+  wf_offset_t* const out_i1 = wavefront_set->out_i1wavefront->offsets;
+  wf_offset_t* const out_i2 = wavefront_set->out_i2wavefront->offsets;
+  wf_offset_t* const out_d1 = wavefront_set->out_d1wavefront->offsets;
+  wf_offset_t* const out_d2 = wavefront_set->out_d2wavefront->offsets;
   // Check PCIGAR buffers full and off-load if needed
   int k;
   for (k=lo;k<=hi;++k) {
-    if (PCIGAR_IS_ALMOST_FULL(out_i1_bt_pcigar[k])) {
+    if (PCIGAR_IS_ALMOST_FULL(out_i1_bt_pcigar[k]) && out_i1[k]>=0) {
       wf_backtrace_buffer_store_block_bt(bt_buffer,out_i1_bt_pcigar+k,out_i1_bt_prev+k);
     }
-    if (PCIGAR_IS_ALMOST_FULL(out_i2_bt_pcigar[k])) {
+    if (PCIGAR_IS_ALMOST_FULL(out_i2_bt_pcigar[k]) && out_i2[k]>=0) {
       wf_backtrace_buffer_store_block_bt(bt_buffer,out_i2_bt_pcigar+k,out_i2_bt_prev+k);
     }
-    if (PCIGAR_IS_ALMOST_FULL(out_d1_bt_pcigar[k])) {
+    if (PCIGAR_IS_ALMOST_FULL(out_d1_bt_pcigar[k]) && out_d1[k]>=0) {
       wf_backtrace_buffer_store_block_bt(bt_buffer,out_d1_bt_pcigar+k,out_d1_bt_prev+k);
     }
-    if (PCIGAR_IS_ALMOST_FULL(out_d2_bt_pcigar[k])) {
+    if (PCIGAR_IS_ALMOST_FULL(out_d2_bt_pcigar[k]) && out_d2[k]>=0) {
       wf_backtrace_buffer_store_block_bt(bt_buffer,out_d2_bt_pcigar+k,out_d2_bt_prev+k);
     }
-    if (PCIGAR_IS_ALMOST_FULL(out_m_bt_pcigar[k])) {
+    if (PCIGAR_IS_ALMOST_FULL(out_m_bt_pcigar[k]) && out_m[k]>=0) {
       wf_backtrace_buffer_store_block_bt(bt_buffer,out_m_bt_pcigar+k,out_m_bt_prev+k);
     }
   }
