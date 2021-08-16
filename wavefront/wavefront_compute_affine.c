@@ -355,10 +355,6 @@ void wavefront_compute_affine_idm_piggyback(
  */
 void wavefront_compute_affine(
     wavefront_aligner_t* const wf_aligner,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
     const int score) {
   // Select wavefronts
   wavefront_set_t wavefront_set;

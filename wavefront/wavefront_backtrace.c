@@ -110,8 +110,6 @@ int64_t wavefronts_backtrace_misms(
 }
 void wavefronts_backtrace_matches(
     wavefront_aligner_t* const wf_aligner,
-    const char* const pattern,
-    const char* const text,
     const int k,
     wf_offset_t offset,
     const int num_matches,
@@ -122,7 +120,7 @@ void wavefronts_backtrace_matches(
 #ifdef WAVEFRONT_DEBUG
     const int v = WAVEFRONT_V(k,offset);
     const int h = WAVEFRONT_H(k,offset);
-    if (pattern[v-1] != text[h-1]) { // Check match
+    if (wf_aligner->pattern[v-1] != wf_aligner->text[h-1]) { // Check match
       fprintf(stderr,"[WFA::Backtrace] Checking a match-traceback error (mismatching bases)\n");
       exit(1);
     }
@@ -264,14 +262,12 @@ void wavefront_backtrace_lineal(
 }
 void wavefront_backtrace_affine(
     wavefront_aligner_t* const wf_aligner,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
     const int alignment_score,
     const int alignment_k,
     const wf_offset_t alignment_offset) {
   // Parameters
+  const int pattern_length = wf_aligner->pattern_length;
+  const int text_length = wf_aligner->text_length;
   const distance_metric_t distance_metric = wf_aligner->penalties.distance_metric;
   const wavefronts_penalties_t* const wavefront_penalties = &(wf_aligner->penalties);
   cigar_t* const cigar = &wf_aligner->cigar;
@@ -361,7 +357,7 @@ void wavefront_backtrace_affine(
     if (matrix_type == affine2p_matrix_M) {
       const int max_offset = BACKTRACE_PIGGYBACK_GET_OFFSET(max_all);
       const int num_matches = offset - max_offset;
-      wavefronts_backtrace_matches(wf_aligner,pattern,text,k,offset,num_matches,cigar);
+      wavefronts_backtrace_matches(wf_aligner,k,offset,num_matches,cigar);
       offset = max_offset;
       // Update coordinates
       v = WAVEFRONT_V(k,offset);
@@ -444,7 +440,7 @@ void wavefront_backtrace_affine(
   if (v > 0 && h > 0) { // score == 0
     // Account for beginning series of matches
     const int num_matches = MIN(v,h);
-    wavefronts_backtrace_matches(wf_aligner,pattern,text,k,offset,num_matches,cigar);
+    wavefronts_backtrace_matches(wf_aligner,k,offset,num_matches,cigar);
     v -= num_matches;
     h -= num_matches;
   }

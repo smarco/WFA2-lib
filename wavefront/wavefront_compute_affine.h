@@ -39,10 +39,6 @@
  */
 void wavefront_compute_affine(
     wavefront_aligner_t* const wf_aligner,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
     const int score);
 
 #endif /* WAVEFRONT_COMPUTE_AFFINE_H_ */

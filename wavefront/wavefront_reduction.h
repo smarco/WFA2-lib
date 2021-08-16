@@ -65,8 +65,6 @@ void wavefront_reduction_set_adaptive(
  */
 void wavefront_reduce(
     wavefront_aligner_t* const wf_aligner,
-    const int pattern_length,
-    const int text_length,
     const int score);
 
 #endif /* WAVEFRONT_REDUCTION_H_ */

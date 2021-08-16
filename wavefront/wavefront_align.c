@@ -122,12 +122,12 @@ void wavefront_align_end2end_initialize(
 }
 bool wavefront_align_end2end_terminate(
     wavefront_aligner_t* const wf_aligner,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
     const int score_final) {
   // Parameters
+  const char* const pattern = wf_aligner->pattern;
+  const int pattern_length = wf_aligner->pattern_length;
+  const char* const text = wf_aligner->text;
+  const int text_length = wf_aligner->text_length;
   wavefront_components_t* const wf_components = &wf_aligner->wf_components;
   const int alignment_k = WAVEFRONT_DIAGONAL(text_length,pattern_length);
   const wf_offset_t alignment_offset = WAVEFRONT_OFFSET(text_length,pattern_length);
@@ -157,9 +157,7 @@ bool wavefront_align_end2end_terminate(
           &wf_aligner->cigar);
     } else {
       // Backtrace alignment
-      wavefront_backtrace_affine(wf_aligner,
-          pattern,pattern_length,text,text_length,
-          score,alignment_k,alignment_offset);
+      wavefront_backtrace_affine(wf_aligner,score,alignment_k,alignment_offset);
     }
   }
   // Set score & finish
@@ -220,12 +218,12 @@ void wavefront_align_endsfree_initialize(
 }
 bool wavefront_align_endsfree_terminate(
     wavefront_aligner_t* const wf_aligner,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
     const int score_final) {
   // Parameters
+  const char* const pattern = wf_aligner->pattern;
+  const int pattern_length = wf_aligner->pattern_length;
+  const char* const text = wf_aligner->text;
+  const int text_length = wf_aligner->text_length;
   wavefront_components_t* const wf_components = &wf_aligner->wf_components;
   int score = score_final;
   // Check wavefront
@@ -251,9 +249,7 @@ bool wavefront_align_endsfree_terminate(
           &wf_aligner->cigar);
     } else {
       // Backtrace alignment
-      wavefront_backtrace_affine(wf_aligner,
-          pattern,pattern_length,text,text_length,
-          score,alignment_k,alignment_offset);
+      wavefront_backtrace_affine(wf_aligner,score,alignment_k,alignment_offset);
     }
   }
   // Set score & finish
@@ -267,14 +263,12 @@ int wavefront_align_sequences(
     wavefront_aligner_t* const wf_aligner,
     strings_padded_t* const sequences,
     void (*wavefront_align_initialize)(wavefront_aligner_t*),
-    bool (*wavefront_align_terminate)(wavefront_aligner_t* const,const char* const,const int,const char* const,const int,const int),
-    void (*wavefront_align_compute)(wavefront_aligner_t* const,const char* const,const int,const char* const,const int,const int),
-    void (*wavefront_align_extend)(wavefront_aligner_t* const,const char* const,const int,const char* const,const int,const int)) {
+    bool (*wavefront_align_terminate)(wavefront_aligner_t* const,const int),
+    void (*wavefront_align_compute)(wavefront_aligner_t* const,const int),
+    void (*wavefront_align_extend)(wavefront_aligner_t* const,const int)) {
   // Parameters
-  char* const pattern = sequences->pattern_padded;
-  const int pattern_length = sequences->pattern_length;
-  char* const text = sequences->text_padded;
-  const int text_length = sequences->text_length;
+  char* const pattern = wf_aligner->pattern;
+  char* const text = wf_aligner->text;
   const bool plot = wf_aligner->plot_params.plot_enabled;
   // Initialize wavefront
   (*wavefront_align_initialize)(wf_aligner);
@@ -284,12 +278,12 @@ int wavefront_align_sequences(
   int score = 0;
   while (true) {
     // Exact extend s-wavefront
-    (*wavefront_align_extend)(wf_aligner,pattern,pattern_length,text,text_length,score);
+    (*wavefront_align_extend)(wf_aligner,score);
     // Check termination condition
-    if ((*wavefront_align_terminate)(wf_aligner,pattern,pattern_length,text,text_length,score)) break;
+    if ((*wavefront_align_terminate)(wf_aligner,score)) break;
     // Compute (s+1)-wavefront
     ++score;
-    (*wavefront_align_compute)(wf_aligner,pattern,pattern_length,text,text_length,score);
+    (*wavefront_align_compute)(wf_aligner,score);
     // Probe limits
     if (score >= wf_aligner->alignment_form.max_alignment_score) {
       wf_aligner->cigar.score = wf_aligner->alignment_form.max_alignment_score;
@@ -322,11 +316,14 @@ int wavefront_align(
       strings_padded_new_rhomb(
           pattern,pattern_length,text,text_length,
           WAVEFRONT_PADDING,wf_aligner->mm_allocator);
+  // Set sequences
+  wf_aligner->pattern = sequences->pattern_padded;
+  wf_aligner->text = sequences->text_padded;
   // Wavefront functions
   void (*wavefront_align_initialize)(wavefront_aligner_t*);
-  bool (*wavefront_align_terminate)(wavefront_aligner_t* const,const char* const,const int,const char* const,const int,const int);
-  void (*wavefront_align_compute)(wavefront_aligner_t* const,const char* const,const int,const char* const,const int,const int);
-  void (*wavefront_align_extend)(wavefront_aligner_t* const,const char* const,const int,const char* const,const int,const int);
+  bool (*wavefront_align_terminate)(wavefront_aligner_t* const,const int);
+  void (*wavefront_align_compute)(wavefront_aligner_t* const,const int);
+  void (*wavefront_align_extend)(wavefront_aligner_t* const,const int);
   // Select wavefront functions
   switch (wf_aligner->penalties.distance_metric) {
     case gap_affine: wavefront_align_compute = &wavefront_compute_affine; break;

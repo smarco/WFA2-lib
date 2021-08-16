@@ -241,10 +241,10 @@ void wavefront_reduce_equate(
 }
 void wavefront_reduce(
     wavefront_aligner_t* const wf_aligner,
-    const int pattern_length,
-    const int text_length,
     const int score) {
   // Parameters
+  const int pattern_length = wf_aligner->pattern_length;
+  const int text_length = wf_aligner->text_length;
   wavefront_components_t* const wf_components = &wf_aligner->wf_components;
   const distance_metric_t distance_metric = wf_aligner->penalties.distance_metric;
   const int min_wavefront_length = wf_aligner->reduction.min_wavefront_length;

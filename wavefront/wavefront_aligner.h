@@ -48,8 +48,10 @@
  * Wavefront Aligner
  */
 typedef struct _wavefront_aligner_t {
-  // Dimensions
+  // Sequences
+  char* pattern;                               // Pattern sequence (padded)
   int pattern_length;                          // Pattern length
+  char* text;                                  // Text sequence (padded)
   int text_length;                             // Text length
   // Alignment Attributes
   alignment_scope_t alignment_scope;           // Alignment scope (score only or full-CIGAR)

@@ -44,17 +44,9 @@
  */
 void wavefront_extend_end2end(
     wavefront_aligner_t* const wf_aligner,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
     int score);
 void wavefront_extend_endsfree(
     wavefront_aligner_t* const wf_aligner,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
     int score);
 
 #endif /* WAVEFRONT_EXTEND_H_ */

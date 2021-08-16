@@ -5,7 +5,7 @@
 # DESCRIPTION: WFA unitary tests (for performance & correcness)
 # USAGE: ./wfa.utest.run.sh
 
-# Utest for length=1K
+# Utest for length=100
 \time -v ./bin/align_benchmark -a gap-affine-wfa -i ../data/sim.l100.n100K.e2.seq -o sim.l100.e2.W.alg                &> sim.l100.e2.W.log
 \time -v ./bin/align_benchmark -a gap-affine-wfa -i ../data/sim.l100.n100K.e2.seq --low-memory -o sim.l100.e2.Wl.alg  &> sim.l100.e2.Wl.log
 \time -v ./bin/align_benchmark -a gap-affine-wfa-adaptive -i ../data/sim.l100.n100K.e2.seq -o sim.l100.e2.Wa.alg      &> sim.l100.e2.Wa.log
@@ -19,3 +19,4 @@
 \time -v ./bin/align_benchmark -a gap-affine-wfa -i ../data/sim.l10K.n1K.e20.seq -o sim.l10K.e20.W.alg -P 100         &> sim.l10K.e20.W.log
 \time -v ./bin/align_benchmark -a gap-affine-wfa -i ../data/sim.l10K.n1K.e20.seq --low-memory -o sim.l10K.e20.Wl.alg  &> sim.l10K.e20.Wl.log
 \time -v ./bin/align_benchmark -a gap-affine-wfa-adaptive -i ../data/sim.l10K.n1K.e20.seq -o sim.l10K.e20.Wa.alg      &> sim.l10K.e20.Wa.log
+
