@@ -237,55 +237,61 @@ void wavefront_compute_affine_idm_piggyback_unbounded(
     // Update I1
     const wf_offset_t ins1_o = m_open1[k-1];
     const wf_offset_t ins1_e = i1_ext[k-1];
-    wf_offset_t ins1;
-    if (ins1_e >= ins1_o) { // MAX (predicated by the compiler)
-      ins1 = ins1_e + 1;
-      out_i1_bt_pcigar[k] = PCIGAR_PUSH_BACK_INS(i1_ext_bt_pcigar[k-1]);
-      out_i1_bt_prev[k] = i1_ext_bt_prev[k-1];
-    } else {
-      ins1 = ins1_o + 1;
-      out_i1_bt_pcigar[k] = PCIGAR_PUSH_BACK_INS(m_open1_bt_pcigar[k-1]);
-      out_i1_bt_prev[k] = m_open1_bt_prev[k-1];
-    }
+    const bool cond_ins1 = (ins1_e >= ins1_o);
+    const wf_offset_t ins1 = (cond_ins1) ? ins1_e+1 : ins1_o+1;
+    const block_idx_t ins1_bt = (cond_ins1) ? i1_ext_bt_prev[k-1] : m_open1_bt_prev[k-1];
+    pcigar_t ins1_pcigar = (cond_ins1) ? i1_ext_bt_pcigar[k-1] : m_open1_bt_pcigar[k-1];
+    ins1_pcigar = PCIGAR_PUSH_BACK_INS(ins1_pcigar);
+    out_i1_bt_pcigar[k] = ins1_pcigar;
+    out_i1_bt_prev[k] = ins1_bt;
     out_i1[k] = ins1;
     // Update D1
     const wf_offset_t del1_o = m_open1[k+1];
     const wf_offset_t del1_e = d1_ext[k+1];
-    wf_offset_t del1;
-    if (del1_e >= del1_o) { // MAX (predicated by the compiler)
-      del1 = del1_e;
-      out_d1_bt_pcigar[k] = PCIGAR_PUSH_BACK_DEL(d1_ext_bt_pcigar[k+1]);
-      out_d1_bt_prev[k] = d1_ext_bt_prev[k+1];
-    } else {
-      del1 = del1_o;
-      out_d1_bt_pcigar[k] = PCIGAR_PUSH_BACK_DEL(m_open1_bt_pcigar[k+1]);
-      out_d1_bt_prev[k] = m_open1_bt_prev[k+1];
-    }
+    const bool cond_del1 = (del1_e >= del1_o);
+    const wf_offset_t del1 = (cond_del1) ? del1_e : del1_o;
+    const block_idx_t del1_bt = (cond_del1) ? d1_ext_bt_prev[k+1] : m_open1_bt_prev[k+1];
+    pcigar_t del1_pcigar = (cond_del1) ? d1_ext_bt_pcigar[k+1] : m_open1_bt_pcigar[k+1];
+    del1_pcigar = PCIGAR_PUSH_BACK_DEL(del1_pcigar);
+    out_d1_bt_pcigar[k] = del1_pcigar;
+    out_d1_bt_prev[k] = del1_bt;
     out_d1[k] = del1;
+    // Update Indel1
+    const bool cond_indel1 = (del1 >= ins1);
+    const wf_offset_t indel1 = (cond_indel1) ? del1 : ins1;
+    const pcigar_t indel1_pcigar = (cond_indel1) ? del1_pcigar : ins1_pcigar;
+    const block_idx_t indel1_bt = (cond_indel1) ? del1_bt : ins1_bt;
     // Update M
     const wf_offset_t sub = m_sub[k] + 1;
-    const wf_offset_t max = MAX(del1,MAX(sub,ins1));
-    if (max == ins1) {
-      out_m_bt_pcigar[k] = out_i1_bt_pcigar[k];
-      out_m_bt_prev[k] = out_i1_bt_prev[k];
-    }
-    if (max == del1) {
-      out_m_bt_pcigar[k] = out_d1_bt_pcigar[k];
-      out_m_bt_prev[k] = out_d1_bt_prev[k];
-    }
-    if (max == sub) {
-      out_m_bt_pcigar[k] = m_sub_bt_pcigar[k];
-      out_m_bt_prev[k] = m_sub_bt_prev[k];
-    }
+    const bool cond_misms = (sub >= indel1);
+    const wf_offset_t misms = (cond_misms) ? sub : indel1;
+    const pcigar_t misms_pcigar = (cond_misms) ? m_sub_bt_pcigar[k] : indel1_pcigar;
+    const block_idx_t misms_bt = (cond_misms) ? m_sub_bt_prev[k] : indel1_bt;
     // Coming from I/D -> X is fake to represent gap-close
     // Coming from M -> X is real to represent mismatch
-    out_m_bt_pcigar[k] = PCIGAR_PUSH_BACK_MISMS(out_m_bt_pcigar[k]);
-    out_m[k] = max;
+    out_m_bt_pcigar[k] = PCIGAR_PUSH_BACK_MISMS(misms_pcigar);
+    out_m_bt_prev[k] = misms_bt;
+    out_m[k] = misms;
   }
 }
 /*
  * Wavefront Propagate Backtrace (attending the Piggyback)
  */
+#define WAVEFRONT_COMPUTE_BT_BUFFER_OFFLOAD(offsets,bt_pcigar,bt_prev,k) \
+  const int predicated_next = (offsets[k]>=0); \
+  /* Store */ \
+  bt_block_mem->pcigar = bt_pcigar[k]; \
+  bt_block_mem->prev_idx = bt_prev[k]; \
+  bt_block_mem += predicated_next; \
+  /* Reset */ \
+  bt_pcigar[k] = 0; \
+  bt_prev[k] = current_pos; \
+  current_pos += predicated_next; \
+  /* Update pos */ \
+  if (current_pos >= max_pos) { \
+    wf_backtrace_buffer_add_used(bt_buffer,current_pos-global_pos); \
+    global_pos = wf_backtrace_buffer_get_mem(bt_buffer,&bt_block_mem,&bt_blocks_available); \
+  }
 void wavefront_compute_affine_idm_piggyback_offload(
     const wavefront_set_t* const wavefront_set,
     const int lo,
@@ -316,6 +322,70 @@ void wavefront_compute_affine_idm_piggyback_offload(
     }
   }
 }
+//void wavefront_compute_affine_idm_piggyback_offload(
+//    const wavefront_set_t* const wavefront_set,
+//    const int lo,
+//    const int hi,
+//    wf_backtrace_buffer_t* const bt_buffer) {
+//  // Parameters
+//  pcigar_t* const out_m_bt_pcigar   = wavefront_set->out_mwavefront->bt_pcigar;
+//  block_idx_t* const out_m_bt_prev  = wavefront_set->out_mwavefront->bt_prev;
+//  pcigar_t* const out_i1_bt_pcigar  = wavefront_set->out_i1wavefront->bt_pcigar;
+//  block_idx_t* const out_i1_bt_prev = wavefront_set->out_i1wavefront->bt_prev;
+//  pcigar_t* const out_d1_bt_pcigar  = wavefront_set->out_d1wavefront->bt_pcigar;
+//  block_idx_t* const out_d1_bt_prev = wavefront_set->out_d1wavefront->bt_prev;
+//  // Out Offsets
+//  wf_offset_t* const out_m  = wavefront_set->out_mwavefront->offsets;
+//  wf_offset_t* const out_i1 = wavefront_set->out_i1wavefront->offsets;
+//  wf_offset_t* const out_d1 = wavefront_set->out_d1wavefront->offsets;
+//  // Fetch BT-buffer free memory
+//  int bt_blocks_available;
+//  wf_backtrace_block_t* bt_block_mem;
+//  block_idx_t global_pos = wf_backtrace_buffer_get_mem(bt_buffer,&bt_block_mem,&bt_blocks_available);
+//  block_idx_t current_pos = global_pos;
+//  const int max_pos = current_pos + bt_blocks_available;
+//  // Check PCIGAR buffers full and off-load if needed
+//  int k;
+//  for (k=lo;k+3<=hi;k+=4) {
+//    // Shortcut
+//    const pcigar_t cigar_comb =
+//        out_i1_bt_pcigar[k]   | out_d1_bt_pcigar[k]   | out_m_bt_pcigar[k] |
+//        out_i1_bt_pcigar[k+1] | out_d1_bt_pcigar[k+1] | out_m_bt_pcigar[k+1] |
+//        out_i1_bt_pcigar[k+2] | out_d1_bt_pcigar[k+2] | out_m_bt_pcigar[k+2] |
+//        out_i1_bt_pcigar[k+3] | out_d1_bt_pcigar[k+3] | out_m_bt_pcigar[k+3];
+//    if (PCIGAR_IS_ALMOST_FULL(cigar_comb)) {
+//      int j;
+//      for (j=0;j<4;++j) {
+//        if (PCIGAR_IS_ALMOST_FULL(out_i1_bt_pcigar[k+j])) {
+//          WAVEFRONT_COMPUTE_BT_BUFFER_OFFLOAD(out_i1,out_i1_bt_pcigar,out_i1_bt_prev,k+j);
+//        }
+//        if (PCIGAR_IS_ALMOST_FULL(out_d1_bt_pcigar[k+j])) {
+//          WAVEFRONT_COMPUTE_BT_BUFFER_OFFLOAD(out_d1,out_d1_bt_pcigar,out_d1_bt_prev,k+j);
+//        }
+//        if (PCIGAR_IS_ALMOST_FULL(out_m_bt_pcigar[k+j])) {
+//          WAVEFRONT_COMPUTE_BT_BUFFER_OFFLOAD(out_m,out_m_bt_pcigar,out_m_bt_prev,k+j);
+//        }
+//      }
+//    }
+//  }
+//  for (;k<=hi;++k) {
+//    // Shortcut
+//    const pcigar_t cigar_comb = out_i1_bt_pcigar[k] | out_d1_bt_pcigar[k] | out_m_bt_pcigar[k];
+//    if (PCIGAR_IS_ALMOST_FULL(cigar_comb)) {
+//      // Offload
+//      if (PCIGAR_IS_ALMOST_FULL(out_i1_bt_pcigar[k])) {
+//        WAVEFRONT_COMPUTE_BT_BUFFER_OFFLOAD(out_i1,out_i1_bt_pcigar,out_i1_bt_prev,k);
+//      }
+//      if (PCIGAR_IS_ALMOST_FULL(out_d1_bt_pcigar[k])) {
+//        WAVEFRONT_COMPUTE_BT_BUFFER_OFFLOAD(out_d1,out_d1_bt_pcigar,out_d1_bt_prev,k);
+//      }
+//      if (PCIGAR_IS_ALMOST_FULL(out_m_bt_pcigar[k])) {
+//        WAVEFRONT_COMPUTE_BT_BUFFER_OFFLOAD(out_m,out_m_bt_pcigar,out_m_bt_prev,k);
+//      }
+//    }
+//  }
+//  wf_backtrace_buffer_add_used(bt_buffer,current_pos-global_pos);
+//}
 /*
  * Compute Wavefront (IDM)
  */
@@ -347,7 +417,7 @@ void wavefront_compute_affine_idm_piggyback(
   wavefront_compute_affine_idm_piggyback_unbounded(wavefront_set,max_lo,min_hi);
   // Compute wavefronts (epilogue)
   wavefront_compute_affine_idm_piggyback_bounded(wavefront_set,min_hi+1,hi);
-  // Offload Backtrace
+  // Offload backtrace
   wavefront_compute_affine_idm_piggyback_offload(wavefront_set,lo,hi,bt_buffer);
 }
 /*

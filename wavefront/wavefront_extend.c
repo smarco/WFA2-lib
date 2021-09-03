@@ -36,60 +36,9 @@
 
 /*
  * Wavefront offset extension comparing characters
+ *   // TODO Avoid register spilling in x86
  */
-void wavefront_extend_packed(
-    wavefront_aligner_t* const wf_aligner,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
-    const int score) {
-  // Fetch m-wavefront
-  wavefront_t* const mwavefront = wf_aligner->wf_components.mwavefronts[score];
-  if (mwavefront==NULL) return;
-  // Extend diagonally each wavefront point
-  wf_offset_t* const offsets = mwavefront->offsets;
-  const int lo = mwavefront->lo;
-  const int hi = mwavefront->hi;
-  int k;
-  for (k=lo;k<=hi;++k) {
-    // Fetch offset & positions
-    //   - No offset should be out of boundaries !(h>tlen,v>plen)
-    //   - if (h==tlen,v==plen) extension won't increment (sentinels)
-    wf_offset_t offset = offsets[k];
-    const uint32_t h = WAVEFRONT_H(k,offset); // Make unsigned to avoid checking negative
-    if (h > text_length) {
-      offsets[k] = WAVEFRONT_OFFSET_NULL;
-      continue;
-    }
-    const uint32_t v = WAVEFRONT_V(k,offset); // Make unsigned to avoid checking negative
-    if (v > pattern_length) {
-      offsets[k] = WAVEFRONT_OFFSET_NULL;
-      continue;
-    }
-    // Fetch pattern/text blocks
-    uint64_t* pattern_blocks = (uint64_t*)(pattern+v);
-    uint64_t* text_blocks = (uint64_t*)(text+h);
-    // Compare 64-bits blocks
-    uint64_t cmp = *pattern_blocks ^ *text_blocks;
-    while (__builtin_expect(!cmp,0)) {
-      // Increment offset (full block)
-      offset += 8;
-      // Next blocks
-      ++pattern_blocks;
-      ++text_blocks;
-      // Compare
-      cmp = *pattern_blocks ^ *text_blocks;
-    }
-    // Count equal characters
-    const int equal_right_bits = __builtin_ctzl(cmp);
-    const int equal_chars = DIV_FLOOR(equal_right_bits,8);
-    offset += equal_chars;
-    // Update offset
-    offsets[k] = offset;
-  }
-}
-bool wavefront_extend_packed_endsfree(
+bool wavefront_extend_packed(
     wavefront_aligner_t* const wf_aligner,
     const int score,
     const bool endsfree) {
@@ -174,7 +123,7 @@ void wavefront_extend_end2end(
   // Modular wavefront
   if (wf_aligner->wf_components.memory_modular) score = score % wf_aligner->wf_components.max_score_scope;
   // Extend wavefront
-  wavefront_extend_packed_endsfree(wf_aligner,score,false);
+  wavefront_extend_packed(wf_aligner,score,false);
   // Reduce wavefront adaptively
   if (wf_aligner->reduction.reduction_strategy == wavefront_reduction_adaptive) {
     wavefront_reduce(wf_aligner,score);
@@ -186,7 +135,7 @@ void wavefront_extend_endsfree(
   // Modular wavefront
   if (wf_aligner->wf_components.memory_modular) score = score % wf_aligner->wf_components.max_score_scope;
   // Extend wavefront
-  const bool end_reached = wavefront_extend_packed_endsfree(wf_aligner,score,true);
+  const bool end_reached = wavefront_extend_packed(wf_aligner,score,true);
   // Reduce wavefront adaptively
   if (!end_reached && wf_aligner->reduction.reduction_strategy == wavefront_reduction_adaptive) {
     wavefront_reduce(wf_aligner,score);

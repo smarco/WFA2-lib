@@ -5,6 +5,8 @@
 # DESCRIPTION: WFA unitary tests (for performance & correcness)
 # USAGE: ./wfa.utest.run.sh
 
+rm *.log *.alg
+
 # Utest for length=100
 \time -v ./bin/align_benchmark -a gap-affine-wfa -i ../data/sim.l100.n100K.e2.seq -o sim.l100.e2.W.alg                &> sim.l100.e2.W.log
 \time -v ./bin/align_benchmark -a gap-affine-wfa -i ../data/sim.l100.n100K.e2.seq --low-memory -o sim.l100.e2.Wl.alg  &> sim.l100.e2.Wl.log

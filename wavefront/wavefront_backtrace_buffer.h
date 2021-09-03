@@ -60,8 +60,10 @@ typedef struct {
  * Backtrace Buffer
  */
 typedef struct {
-  int segment_idx;      // Current segment idx
-  int segment_pos;      // Current free position within segment
+  // Locator
+  int segment_idx;                  // Current segment idx
+  int segment_pos;                  // Current free position within segment
+  wf_backtrace_block_t* block_next; // Next block free
   // Buffer
   vector_t* segments;   // Memory segments (wf_backtrace_block_t*)
   vector_t* palignment; // Temporal buffer to store final alignment (pcigar_t)
@@ -80,6 +82,17 @@ void wf_backtrace_buffer_reap(
     wf_backtrace_buffer_t* const bt_buffer);
 void wf_backtrace_buffer_delete(
     wf_backtrace_buffer_t* const bt_buffer);
+
+/*
+ * Accessors
+ */
+void wf_backtrace_buffer_add_used(
+    wf_backtrace_buffer_t* const bt_buffer,
+    const int used);
+block_idx_t wf_backtrace_buffer_get_mem(
+    wf_backtrace_buffer_t* const bt_buffer,
+    wf_backtrace_block_t** const bt_block_mem,
+    int* const bt_blocks_available);
 
 /*
  * Store blocks

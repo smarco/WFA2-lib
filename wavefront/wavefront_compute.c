@@ -104,31 +104,41 @@ void wavefront_compute_limits_dense(
 wavefront_t* wavefront_components_get_mwavefront(
     wavefront_components_t* const wf_components,
     const int score) {
-  return (score < 0 || wf_components->mwavefronts[score] == NULL) ?
+  return (score < 0 ||
+          wf_components->mwavefronts[score] == NULL ||
+          wf_components->mwavefronts[score]->null) ?
       wf_components->wavefront_null : wf_components->mwavefronts[score];
 }
 wavefront_t* wavefront_components_get_i1wavefront(
     wavefront_components_t* const wf_components,
     const int score) {
-  return (score < 0 || wf_components->i1wavefronts[score] == NULL) ?
+  return (score < 0 ||
+          wf_components->i1wavefronts[score] == NULL ||
+          wf_components->i1wavefronts[score]->null) ?
       wf_components->wavefront_null : wf_components->i1wavefronts[score];
 }
 wavefront_t* wavefront_components_get_i2wavefront(
     wavefront_components_t* const wf_components,
     const int score) {
-  return (score < 0 || wf_components->i2wavefronts[score] == NULL) ?
+  return (score < 0 ||
+          wf_components->i2wavefronts[score] == NULL ||
+          wf_components->i2wavefronts[score]->null) ?
       wf_components->wavefront_null : wf_components->i2wavefronts[score];
 }
 wavefront_t* wavefront_components_get_d1wavefront(
     wavefront_components_t* const wf_components,
     const int score) {
-  return (score < 0 || wf_components->d1wavefronts[score] == NULL) ?
+  return (score < 0 ||
+          wf_components->d1wavefronts[score] == NULL ||
+          wf_components->d1wavefronts[score]->null) ?
       wf_components->wavefront_null : wf_components->d1wavefronts[score];
 }
 wavefront_t* wavefront_components_get_d2wavefront(
     wavefront_components_t* const wf_components,
     const int score) {
-  return (score < 0 || wf_components->d2wavefronts[score] == NULL) ?
+  return (score < 0 ||
+          wf_components->d2wavefronts[score] == NULL ||
+          wf_components->d2wavefronts[score]->null) ?
       wf_components->wavefront_null : wf_components->d2wavefronts[score];
 }
 void wavefront_aligner_fetch_input(
