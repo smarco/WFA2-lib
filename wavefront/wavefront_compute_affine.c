@@ -277,21 +277,6 @@ void wavefront_compute_affine_idm_piggyback_unbounded(
 /*
  * Wavefront Propagate Backtrace (attending the Piggyback)
  */
-#define WAVEFRONT_COMPUTE_BT_BUFFER_OFFLOAD(offsets,bt_pcigar,bt_prev,k) \
-  const int predicated_next = (offsets[k]>=0); \
-  /* Store */ \
-  bt_block_mem->pcigar = bt_pcigar[k]; \
-  bt_block_mem->prev_idx = bt_prev[k]; \
-  bt_block_mem += predicated_next; \
-  /* Reset */ \
-  bt_pcigar[k] = 0; \
-  bt_prev[k] = current_pos; \
-  current_pos += predicated_next; \
-  /* Update pos */ \
-  if (current_pos >= max_pos) { \
-    wf_backtrace_buffer_add_used(bt_buffer,current_pos-global_pos); \
-    global_pos = wf_backtrace_buffer_get_mem(bt_buffer,&bt_block_mem,&bt_blocks_available); \
-  }
 void wavefront_compute_affine_idm_piggyback_offload(
     const wavefront_set_t* const wavefront_set,
     const int lo,
@@ -322,6 +307,21 @@ void wavefront_compute_affine_idm_piggyback_offload(
     }
   }
 }
+//#define WAVEFRONT_COMPUTE_BT_BUFFER_OFFLOAD(offsets,bt_pcigar,bt_prev,k) \
+//  const int predicated_next = (offsets[k]>=0); \
+//  /* Store */ \
+//  bt_block_mem->pcigar = bt_pcigar[k]; \
+//  bt_block_mem->prev_idx = bt_prev[k]; \
+//  bt_block_mem += predicated_next; \
+//  /* Reset */ \
+//  bt_pcigar[k] = 0; \
+//  bt_prev[k] = current_pos; \
+//  current_pos += predicated_next; \
+//  /* Update pos */ \
+//  if (current_pos >= max_pos) { \
+//    wf_backtrace_buffer_add_used(bt_buffer,current_pos-global_pos); \
+//    global_pos = wf_backtrace_buffer_get_mem(bt_buffer,&bt_block_mem,&bt_blocks_available); \
+//  }
 //void wavefront_compute_affine_idm_piggyback_offload(
 //    const wavefront_set_t* const wavefront_set,
 //    const int lo,

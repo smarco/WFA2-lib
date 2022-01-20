@@ -74,12 +74,12 @@ strings_padded_t* strings_padded_new(
   // Add padding
   strings_padded_add_padding(
       pattern,pattern_length,
-      pattern_begin_padding_length,pattern_end_padding_length,'X',
+      pattern_begin_padding_length,pattern_end_padding_length,'?',
       &(strings_padded->pattern_padded_buffer),
       &(strings_padded->pattern_padded),mm_allocator);
   strings_padded_add_padding(
       text,text_length,
-      text_begin_padding_length,text_end_padding_length,'Y',
+      text_begin_padding_length,text_end_padding_length,'!',
       &(strings_padded->text_padded_buffer),
       &(strings_padded->text_padded),mm_allocator);
   // Return
@@ -104,12 +104,12 @@ strings_padded_t* strings_padded_new_rhomb(
   // Add padding
   strings_padded_add_padding(
       pattern,pattern_length,
-      pattern_begin_padding_length,pattern_end_padding_length,'X',
+      pattern_begin_padding_length,pattern_end_padding_length,'?',
       &(strings_padded->pattern_padded_buffer),
       &(strings_padded->pattern_padded),mm_allocator);
   strings_padded_add_padding(
       text,text_length,
-      text_begin_padding_length,text_end_padding_length,'Y',
+      text_begin_padding_length,text_end_padding_length,'!',
       &(strings_padded->text_padded_buffer),
       &(strings_padded->text_padded),mm_allocator);
   // Set lengths

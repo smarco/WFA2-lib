@@ -61,8 +61,6 @@ void score_matrix_free(
     mm_allocator_free(mm_allocator,score_matrix->columns[h]);
   }
   mm_allocator_free(mm_allocator,score_matrix->columns);
-  // Handler
-  mm_allocator_free(mm_allocator,score_matrix);
 }
 /*
  * Display

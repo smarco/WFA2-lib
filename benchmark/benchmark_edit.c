@@ -56,9 +56,13 @@ void benchmark_edit_dp(
       align_input->pattern,pattern_length,
       align_input->text,text_length,&cigar);
   timer_stop(&align_input->timer);
-  // Debug alignment
+  // DEBUG
   if (align_input->debug_flags) {
     benchmark_check_alignment(align_input,&cigar);
+  }
+  if (align_input->output_file) {
+    const int score = cigar_score_edit(&cigar);
+    benchmark_print_alignment_short(align_input->output_file,score,&cigar);
   }
   // Free
   score_matrix_free(&score_matrix);
@@ -86,9 +90,13 @@ void benchmark_edit_dp_banded(
       align_input->text,text_length,
       bandwidth,&cigar);
   timer_stop(&align_input->timer);
-  // Debug alignment
+  // DEBUG
   if (align_input->debug_flags) {
     benchmark_check_alignment(align_input,&cigar);
+  }
+  if (align_input->output_file) {
+    const int score = cigar_score_edit(&cigar);
+    benchmark_print_alignment_short(align_input->output_file,score,&cigar);
   }
   // Free
   score_matrix_free(&score_matrix);

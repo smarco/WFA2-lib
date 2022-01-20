@@ -292,9 +292,10 @@ void wavefront_aligner_print_status(
       wf_backtrace_buffer_get_size_used(wf_components->bt_buffer) : 0;
   // Print one-line status
   fprintf(stream,
-      "[WFA] Score %d (~ %2.3f%% aligned). "
-      "Memory used (WF-Slab,BT-buffer)=(%lu MB,%lu MB). "
+      "[WFA] SequenceLength=(%d,%d) Score %d (~ %2.3f%% aligned). "
+      "MemoryUsed(WF-Slab,BT-buffer)=(%lu MB,%lu MB). "
       "Wavefronts ~ %2.3f Moffsets\n",
+      wf_aligner->pattern_length,wf_aligner->text_length,
       score,(dist_max>=0) ? (100.0f*(float)dist_max/(float)dist_total) : -1.0f,
       CONVERT_B_TO_MB(slab_size),CONVERT_B_TO_MB(bt_buffer_used),
       (wf_len>=0) ? (float)wf_len/1000000.0f : -1.0f);

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 # PROJECT: Wavefront Alignments Algorithms
 # LICENCE: MIT License 
 # AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
@@ -22,3 +22,6 @@ rm *.log *.alg
 \time -v ./bin/align_benchmark -a gap-affine-wfa -i ../data/sim.l10K.n1K.e20.seq --low-memory -o sim.l10K.e20.Wl.alg  &> sim.l10K.e20.Wl.log
 \time -v ./bin/align_benchmark -a gap-affine-wfa-adaptive -i ../data/sim.l10K.n1K.e20.seq -o sim.l10K.e20.Wa.alg      &> sim.l10K.e20.Wa.log
 
+# Utest for length=10K (gap-affine2p)
+\time -v ./bin/align_benchmark -a gap-affine2p-wfa -i ../data/sim.l10K.n1K.e20.seq -o sim.l10K.e20.2pW.alg -P 100               &> sim.l10K.e20.2pW.log
+#\time -v ./bin/align_benchmark -a gap-affine2p-wfa -i ../data/sim.l10K.n1K.e20.seq --low-memory -o sim.l10K.e20.2pWl.alg -P 100 &> sim.l10K.e20.2pWl.log

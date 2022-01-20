@@ -295,7 +295,7 @@ int wavefront_align_sequences(
     // PROFILE
     if (plot) wavefront_plot(wf_aligner,pattern,text,score);
     // DEBUG
-    //wavefront_aligner_print(stderr,wf_aligner,score,score,2,32);
+    //wavefront_aligner_print(stderr,wf_aligner,0,score,12,32);
   }
   // Return OK
   return WF_ALIGN_SUCCESSFUL;
