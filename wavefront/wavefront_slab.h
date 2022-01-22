@@ -82,8 +82,8 @@ void wavefront_slab_delete(
  */
 wavefront_t* wavefront_slab_allocate(
     wavefront_slab_t* const wavefront_slab,
-    const int lo,
-    const int hi);
+    const int min_lo,
+    const int max_hi);
 void wavefront_slab_free(
     wavefront_slab_t* const wavefront_slab,
     wavefront_t* const wavefront);

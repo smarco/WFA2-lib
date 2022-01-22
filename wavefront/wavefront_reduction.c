@@ -233,10 +233,13 @@ void wavefront_reduce_wavefront_endsfree_text(
 void wavefront_reduce_equate(
     wavefront_t* const wavefront_dst,
     wavefront_t* const wavefront_src) {
-  if (wavefront_dst!=NULL) {
+  if (wavefront_dst != NULL) {
     if (wavefront_src->lo > wavefront_dst->lo) wavefront_dst->lo = wavefront_src->lo;
     if (wavefront_src->hi < wavefront_dst->hi) wavefront_dst->hi = wavefront_src->hi;
     if (wavefront_dst->lo > wavefront_dst->hi) wavefront_dst->null = true;
+    // Save min/max WF initialized
+    wavefront_dst->wf_elements_init_min = wavefront_dst->lo;
+    wavefront_dst->wf_elements_init_max = wavefront_dst->hi;
   }
 }
 void wavefront_reduce(
@@ -282,6 +285,9 @@ void wavefront_reduce(
           max_distance_threshold,alignment_k);
     }
   }
+  // Save min/max WF initialized
+  mwavefront->wf_elements_init_min = mwavefront->lo;
+  mwavefront->wf_elements_init_max = mwavefront->hi;
   // Check hi/lo range
   if (mwavefront->lo > mwavefront->hi) { // FIXME: This will never occur, convince yourself
     fprintf(stderr,"[WFA::Reduction] wavefront_reduce_wavefront_end2end::Impossible situation\n"); exit(-1);

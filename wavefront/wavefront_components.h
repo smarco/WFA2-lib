@@ -44,9 +44,12 @@ typedef struct {
   // Configuration
   bool memory_modular;                         // Memory strategy (modular wavefronts)
   bool bt_piggyback;                           // Backtrace Piggyback
-  // Wavefronts
+  // Wavefronts dimensions
   int num_wavefronts;                          // Total number of allocated wavefronts
   int max_score_scope;                         // Maximum score-difference between dependent wavefronts
+  int historic_max_hi;                         // Maximum WF hi-limit seen during current alignment
+  int historic_min_lo;                         // Minimum WF lo-limit seen during current alignment
+  // Wavefronts
   wavefront_t** mwavefronts;                   // M-wavefronts
   wavefront_t** i1wavefronts;                  // I1-wavefronts
   wavefront_t** i2wavefronts;                  // I2-wavefronts

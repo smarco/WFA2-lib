@@ -53,7 +53,7 @@ typedef int32_t wf_offset_t;
 #define WAVEFRONT_H(k,offset)         (offset)
 #define WAVEFRONT_DIAGONAL(h,v)      ((h)-(v))
 #define WAVEFRONT_OFFSET(h,v)              (h)
-#define WAVEFRONT_LENGTH(lo,hi)  ((hi)-(lo)+2)
+#define WAVEFRONT_LENGTH(lo,hi)  ((hi)-(lo)+1) // (lo/hi inclusive and +1 for WF[0])
 
 #define WAVEFRONT_DIAGONAL_NULL        INT_MAX
 
@@ -70,8 +70,8 @@ typedef struct {
   bool null;                           // Is null interval?
   int lo;                              // Lowest diagonal (inclusive)
   int hi;                              // Highest diagonal (inclusive)
-  // Alignment reaching ends
-  int k_alignment_end;                 // Wavefront reaching the end of the alignment
+  int k_alignment_end;                 // Mark WF's diagonal that reached the end of the alignment (semi-global)
+  int bt_occupancy_max;                // Maximum number of pcigar-ops stored on the Backtrace-block
   // Wavefront elements
   wf_offset_t* offsets;                // Offsets (k-centered)
   pcigar_t* bt_pcigar;                 // Backtrace-block (k-centered)
@@ -82,9 +82,11 @@ typedef struct {
   block_idx_t* bt_prev_mem;            // Backtrace-block previous index (base memory)
   // Slab internals
   wavefront_status_type status;        // Wavefront status (memory state)
-  int wf_elements_allocated;           // Maximum wf-elements allocated (max. wf. size)
-  int wf_elements_used_min;            // Minimum diagonal-element used (inclusive)
-  int wf_elements_used_max;            // Maximum diagonal-element used (inclusive)
+  int wf_elements_allocated;           // Total wf-elements allocated (max. wf. size)
+  int wf_elements_allocated_min;       // Minimum diagonal-element wf-element allocated
+  int wf_elements_allocated_max;       // Maximum diagonal-element wf-element allocated
+  int wf_elements_init_min;            // Minimum diagonal-element initialized (inclusive)
+  int wf_elements_init_max;            // Maximum diagonal-element initialized (inclusive)
 } wavefront_t;
 
 /*
@@ -128,13 +130,21 @@ void wavefront_free(
  */
 void wavefront_init(
     wavefront_t* const wavefront,
-    const int lo,
-    const int hi);
+    const int min_lo,
+    const int max_hi);
 void wavefront_init_null(
     wavefront_t* const wavefront,
-    const int lo,
-    const int hi);
+    const int min_lo,
+    const int max_hi);
 void wavefront_init_victim(
+    wavefront_t* const wavefront,
+    const int min_lo,
+    const int max_hi);
+
+/*
+ * Accessors
+ */
+void wavefront_set_limits(
     wavefront_t* const wavefront,
     const int lo,
     const int hi);

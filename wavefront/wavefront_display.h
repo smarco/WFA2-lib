@@ -46,7 +46,7 @@ void wavefront_aligner_print(
     wavefront_aligner_t* const wf_aligner,
     const int score_begin,
     const int score_end,
-    const int wf_block_num,
-    const int wf_bt_length);
+    const int num_wfs_per_row,
+    const int backtrace_length);
 
 #endif /* WAVEFRONT_DISPLAY_H_ */

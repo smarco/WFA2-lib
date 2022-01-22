@@ -104,15 +104,23 @@ void wavefront_align_end2end_initialize(
   // Parameters
   wavefront_components_t* const wf_components = &wf_aligner->wf_components;
   const distance_metric_t distance_metric = wf_aligner->penalties.distance_metric;
+  const int max_score_scope = wf_components->max_score_scope;
   // Init wavefronts
-  wf_components->mwavefronts[0] = wavefront_slab_allocate(wf_aligner->wavefront_slab,0,0);
+  const int effective_lo = -(max_score_scope+1);
+  const int effective_hi = (max_score_scope+1);
+  wf_components->mwavefronts[0] = wavefront_slab_allocate(
+      wf_aligner->wavefront_slab,effective_lo,effective_hi);
   wf_components->mwavefronts[0]->offsets[0] = 0;
+  wf_components->mwavefronts[0]->lo = 0;
+  wf_components->mwavefronts[0]->hi = 0;
+  // Store initial BT-piggypack element
   if (wf_components->bt_piggyback) {
     wf_backtrace_buffer_store_block_init(
         wf_components->bt_buffer,0,0,
         &(wf_components->mwavefronts[0]->bt_pcigar[0]),
         &(wf_components->mwavefronts[0]->bt_prev[0]));
   }
+  // Nullify unused WFs
   if (distance_metric==edit || distance_metric==gap_lineal) return;
   wf_components->d1wavefronts[0] = NULL;
   wf_components->i1wavefronts[0] = NULL;
@@ -174,10 +182,16 @@ void wavefront_align_endsfree_initialize(
   const distance_metric_t distance_metric = wf_aligner->penalties.distance_metric;
   const int text_begin_free = wf_aligner->alignment_form.text_begin_free;
   const int pattern_begin_free = wf_aligner->alignment_form.pattern_begin_free;
-  // Allocate wavefronts zero
+  const int max_score_scope = wf_components->max_score_scope;
+  // Init wavefront zero
+  const int effective_lo = -pattern_begin_free - (max_score_scope+1);
+  const int effective_hi = text_begin_free + (max_score_scope+1);
   wf_components->mwavefronts[0] = wavefront_slab_allocate(
-      wf_aligner->wavefront_slab,-pattern_begin_free,text_begin_free);
+      wf_aligner->wavefront_slab,effective_lo,effective_hi);
   wf_components->mwavefronts[0]->offsets[0] = 0;
+  wf_components->mwavefronts[0]->lo = -pattern_begin_free;
+  wf_components->mwavefronts[0]->hi = text_begin_free;
+  // Store initial BT-piggypack element
   if (wf_components->bt_piggyback) {
     wf_backtrace_buffer_store_block_init(
         wf_components->bt_buffer,0,0,
@@ -208,7 +222,7 @@ void wavefront_align_endsfree_initialize(
           &(wf_components->mwavefronts[0]->bt_prev[k]));
     }
   }
-  // Init other wavefronts
+  // Nullify unused WFs
   if (distance_metric==edit || distance_metric==gap_lineal) return;
   wf_components->d1wavefronts[0] = NULL;
   wf_components->i1wavefronts[0] = NULL;
@@ -295,7 +309,7 @@ int wavefront_align_sequences(
     // PROFILE
     if (plot) wavefront_plot(wf_aligner,pattern,text,score);
     // DEBUG
-    //wavefront_aligner_print(stderr,wf_aligner,0,score,12,32);
+    //wavefront_aligner_print(stderr,wf_aligner,0,score,6,0);
   }
   // Return OK
   return WF_ALIGN_SUCCESSFUL;

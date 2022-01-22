@@ -249,13 +249,13 @@ void wavefront_aligner_print(
     wavefront_aligner_t* const wf_aligner,
     const int score_begin,
     const int score_end,
-    const int wf_block_num,
-    const int wf_bt_length) {
+    const int num_wfs_per_row,
+    const int backtrace_length) {
   // Print wavefronts by chunks
   int s;
-  for (s=score_begin;s<=score_end;s+=wf_block_num-1) {
-    const int block_score_end = MIN(s+wf_block_num-1,score_end);
-    wavefront_aligner_print_block(stream,wf_aligner,s,block_score_end,wf_bt_length);
+  for (s=score_begin;s<=score_end;s+=num_wfs_per_row-1) {
+    const int block_score_end = MIN(s+num_wfs_per_row-1,score_end);
+    wavefront_aligner_print_block(stream,wf_aligner,s,block_score_end,backtrace_length);
     if (block_score_end == score_end) break;
   }
 }

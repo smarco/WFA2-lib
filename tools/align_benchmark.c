@@ -172,9 +172,9 @@ void align_pairwise_test() {
   // Penalties
   affine_penalties_t affine_penalties = {
       .match = 0,
-      .mismatch = 4,
-      .gap_opening = 6,
-      .gap_extension = 2,
+      .mismatch = 2,//4, //9,
+      .gap_opening = 3, //6 //13,
+      .gap_extension = 1,
   };
   affine2p_penalties_t affine2p_penalties = {
       .match = 0,
@@ -250,7 +250,7 @@ void align_pairwise_test() {
   attributes.distance_metric = gap_affine;
   attributes.affine_penalties = affine_penalties;
   // attributes.affine2p_penalties = affine2p_penalties;
-  attributes.reduction.reduction_strategy = wavefront_reduction_adaptive; //wavefront_reduction_none; // wavefront_reduction_adaptive
+  attributes.reduction.reduction_strategy = wavefront_reduction_none; // wavefront_reduction_adaptive; //
   attributes.reduction.min_wavefront_length = 10;
   attributes.reduction.max_distance_threshold = 50;
   attributes.alignment_scope = compute_alignment; // compute_score

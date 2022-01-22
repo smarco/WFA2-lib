@@ -22,6 +22,7 @@ rm *.log *.alg
 \time -v ./bin/align_benchmark -a gap-affine-wfa -i ../data/sim.l10K.n1K.e20.seq --low-memory -o sim.l10K.e20.Wl.alg  &> sim.l10K.e20.Wl.log
 \time -v ./bin/align_benchmark -a gap-affine-wfa-adaptive -i ../data/sim.l10K.n1K.e20.seq -o sim.l10K.e20.Wa.alg      &> sim.l10K.e20.Wa.log
 
-# Utest for length=10K (gap-affine2p)
-\time -v ./bin/align_benchmark -a gap-affine2p-wfa -i ../data/sim.l10K.n1K.e20.seq -o sim.l10K.e20.2pW.alg -P 100               &> sim.l10K.e20.2pW.log
-#\time -v ./bin/align_benchmark -a gap-affine2p-wfa -i ../data/sim.l10K.n1K.e20.seq --low-memory -o sim.l10K.e20.2pWl.alg -P 100 &> sim.l10K.e20.2pWl.log
+# Other
+\time -v ./bin/align_benchmark -a gap-affine-wfa   -i ../data/sim.l100K.n1.e10.seq -o sim.l100K.e10.Wl.alg --low-memory &> sim.l100K.e10.Wl.log
+\time -v ./bin/align_benchmark -a gap-affine2p-wfa -i ../data/sim.l1K.n10K.e20.seq -o sim.l1K.e20.2pW.alg -P 100        &> sim.l1K.e20.2pW.log
+

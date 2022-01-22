@@ -86,70 +86,80 @@ void wavefront_free(
  */
 void wavefront_init(
     wavefront_t* const wavefront,
-    const int lo,
-    const int hi) {
+    const int min_lo,
+    const int max_hi) {
   // Configure limits
   wavefront->null = false;
-  wavefront->lo = lo;
-  wavefront->hi = hi;
+  wavefront->lo =  1;
+  wavefront->hi = -1;
   wavefront->k_alignment_end = WAVEFRONT_DIAGONAL_NULL;
+  wavefront->bt_occupancy_max = 0;
   // Setup elements
-  wavefront->offsets = wavefront->offsets_mem - lo; // Center at k=0
+  wavefront->offsets = wavefront->offsets_mem - min_lo; // Center at k=0
   if (wavefront->bt_pcigar_mem) {
-    wavefront->bt_pcigar = wavefront->bt_pcigar_mem - lo; // Center at k=0
-    wavefront->bt_prev = wavefront->bt_prev_mem - lo; // Center at k=0
+    wavefront->bt_pcigar = wavefront->bt_pcigar_mem - min_lo; // Center at k=0
+    wavefront->bt_prev = wavefront->bt_prev_mem - min_lo; // Center at k=0
   }
   // Internals
-  wavefront->wf_elements_used_min = lo;
-  wavefront->wf_elements_used_max = hi;
+  wavefront->wf_elements_allocated_min = min_lo;
+  wavefront->wf_elements_allocated_max = max_hi;
+  wavefront->wf_elements_init_min = 0;
+  wavefront->wf_elements_init_max = 0;
 }
 void wavefront_init_null(
     wavefront_t* const wavefront,
-    const int lo,
-    const int hi) {
+    const int min_lo,
+    const int max_hi) {
   // Configure limits
   wavefront->null = true;
   wavefront->lo =  1;
   wavefront->hi = -1;
   wavefront->k_alignment_end = WAVEFRONT_DIAGONAL_NULL;
+  wavefront->bt_occupancy_max = 0;
   // Setup elements
-  wavefront->offsets = wavefront->offsets_mem - lo; // Center at k=0
+  wavefront->offsets = wavefront->offsets_mem - min_lo; // Center at k=0
   if (wavefront->bt_pcigar_mem) {
-    wavefront->bt_pcigar = wavefront->bt_pcigar_mem - lo; // Center at k=0
-    wavefront->bt_prev = wavefront->bt_prev_mem - lo; // Center at k=0
+    wavefront->bt_pcigar = wavefront->bt_pcigar_mem - min_lo; // Center at k=0
+    wavefront->bt_prev = wavefront->bt_prev_mem - min_lo; // Center at k=0
   }
   // Initialize
-  const int wf_elements_allocated = wavefront->wf_elements_allocated;
+  const int wf_elements = WAVEFRONT_LENGTH(min_lo,max_hi);
   int i;
-  for (i=0;i<wf_elements_allocated;++i) {
+  for (i=0;i<wf_elements;++i) {
     wavefront->offsets_mem[i] = WAVEFRONT_OFFSET_NULL;
   }
   if (wavefront->bt_pcigar_mem) {
-    memset(wavefront->bt_pcigar_mem,0,wf_elements_allocated*sizeof(pcigar_t));
-    memset(wavefront->bt_prev_mem,0,wf_elements_allocated*sizeof(block_idx_t));
+    memset(wavefront->bt_pcigar_mem,0,wf_elements*sizeof(pcigar_t));
+    memset(wavefront->bt_prev_mem,0,wf_elements*sizeof(block_idx_t));
   }
   // Internals
-  wavefront->wf_elements_used_min = lo; // To keep track of limits
-  wavefront->wf_elements_used_max = hi; // To keep track of limits
+  wavefront->wf_elements_allocated_min = min_lo;
+  wavefront->wf_elements_allocated_max = max_hi;
+  wavefront->wf_elements_init_min = min_lo;
+  wavefront->wf_elements_init_max = max_hi;
 }
 void wavefront_init_victim(
     wavefront_t* const wavefront,
+    const int min_lo,
+    const int max_hi) {
+  // Delegate init
+  wavefront_init(wavefront,min_lo,max_hi);
+  // Set Null
+  wavefront->null = true;
+}
+/*
+ * Accessors
+ */
+void wavefront_set_limits(
+    wavefront_t* const wavefront,
     const int lo,
     const int hi) {
-  // Configure limits
-  wavefront->null = true;
-  wavefront->lo =  1;
-  wavefront->hi = -1;
-  wavefront->k_alignment_end = WAVEFRONT_DIAGONAL_NULL;
-  // Setup offsets
-  wavefront->offsets = wavefront->offsets_mem - lo; // Center at k=0
-  if (wavefront->bt_pcigar_mem) {
-    wavefront->bt_pcigar = wavefront->bt_pcigar_mem - lo; // Center at k=0
-    wavefront->bt_prev = wavefront->bt_prev_mem - lo; // Center at k=0
-  }
-  // Internals
-  wavefront->wf_elements_used_min = lo; // To keep track of limits
-  wavefront->wf_elements_used_max = hi; // To keep track of limits
+  // Set effective limits
+  wavefront->lo = lo;
+  wavefront->hi = hi;
+  // Set initialization limits (all elms beyond are treated as Nulls)
+  wavefront->wf_elements_init_min = lo;
+  wavefront->wf_elements_init_max = hi;
 }
 /*
  * Utils

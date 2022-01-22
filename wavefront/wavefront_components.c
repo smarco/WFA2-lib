@@ -47,12 +47,12 @@ void wavefront_components_dimensions_edit(
     const int max_text_length,
     int* const max_score_scope,
     int* const num_wavefronts) {
+  // Compute max-scope
+  *max_score_scope = 2;
   // Dimensions
   if (wf_components->memory_modular) {
-    *max_score_scope = 2;
     *num_wavefronts = 2;
   } else {
-    *max_score_scope = -1;
     *num_wavefronts = MAX(max_pattern_length,max_text_length);
   }
 }
@@ -63,15 +63,15 @@ void wavefront_components_dimensions_lineal(
     const int max_text_length,
     int* const max_score_scope,
     int* const num_wavefronts) {
+  // Compute max-scope
+  *max_score_scope = MAX(penalties->mismatch,penalties->gap_opening1) + 1;
   // Dimensions
   if (wf_components->memory_modular) {
-    *max_score_scope = MAX(penalties->mismatch,penalties->gap_opening1) + 1;
     *num_wavefronts = *max_score_scope;
   } else {
     const int abs_seq_diff = ABS(max_pattern_length-max_text_length);
     const int max_score_misms = MIN(max_pattern_length,max_text_length) * penalties->mismatch;
     const int max_score_indel = penalties->gap_opening1 * abs_seq_diff;
-    *max_score_scope = -1;
     *num_wavefronts = max_score_misms + max_score_indel;
   }
 }
@@ -82,16 +82,16 @@ void wavefront_components_dimensions_affine(
     const int max_text_length,
     int* const max_score_scope,
     int* const num_wavefronts) {
+  // Compute max-scope
+  const int max_score_scope_indel = penalties->gap_opening1+penalties->gap_extension1;
+  *max_score_scope = MAX(max_score_scope_indel,penalties->mismatch) + 1;
   // Dimensions
   if (wf_components->memory_modular) {
-    const int max_score_scope_indel = penalties->gap_opening1+penalties->gap_extension1;
-    *max_score_scope = MAX(max_score_scope_indel,penalties->mismatch) + 1;
     *num_wavefronts = *max_score_scope;
   } else {
     const int abs_seq_diff = ABS(max_pattern_length-max_text_length);
     const int max_score_misms = MIN(max_pattern_length,max_text_length) * penalties->mismatch;
     const int max_score_indel = penalties->gap_opening1 + abs_seq_diff * penalties->gap_extension1;
-    *max_score_scope = -1;
     *num_wavefronts = max_score_misms + max_score_indel;
   }
 }
@@ -102,12 +102,13 @@ void wavefront_components_dimensions_affine2p(
     const int max_text_length,
     int* const max_score_scope,
     int* const num_wavefronts) {
+  // Compute max-scope
+  const int max_score_scope_indel =
+      MAX(penalties->gap_opening1+penalties->gap_extension1,
+          penalties->gap_opening2+penalties->gap_extension2);
+  *max_score_scope = MAX(max_score_scope_indel,penalties->mismatch) + 1;
   // Dimensions
   if (wf_components->memory_modular) {
-    const int max_score_scope_indel =
-        MAX(penalties->gap_opening1+penalties->gap_extension1,
-            penalties->gap_opening2+penalties->gap_extension2);
-    *max_score_scope = MAX(max_score_scope_indel,penalties->mismatch) + 1;
     *num_wavefronts = *max_score_scope;
   } else {
     const int abs_seq_diff = ABS(max_pattern_length-max_text_length);
@@ -115,7 +116,6 @@ void wavefront_components_dimensions_affine2p(
     const int max_score_indel1 = penalties->gap_opening1 + abs_seq_diff * penalties->gap_extension1;
     const int max_score_indel2 = penalties->gap_opening2 + abs_seq_diff * penalties->gap_extension2;
     const int max_score_indel = MIN(max_score_indel1,max_score_indel2);
-    *max_score_scope = -1;
     *num_wavefronts = max_score_misms + max_score_indel;
   }
 }
@@ -126,6 +126,7 @@ void wavefront_components_dimensions(
     const int max_text_length,
     int* const max_score_scope,
     int* const num_wavefronts) {
+  // Switch attending to distance-metric
   switch (penalties->distance_metric) {
     case edit:
       wavefront_components_dimensions_edit(
@@ -152,6 +153,9 @@ void wavefront_components_dimensions(
           max_score_scope,num_wavefronts);
       break;
   }
+  // Clear historic
+  wf_components->historic_max_hi = 0;
+  wf_components->historic_min_lo = 0;
 }
 /*
  * Setup
@@ -204,12 +208,12 @@ void wavefront_components_allocate(
       &wf_components->num_wavefronts);
   wavefront_components_allocate_wf(wf_components,
       max_pattern_length,max_text_length,penalties->distance_metric);
-  // Allocate victim wavefront
+  // Allocate victim wavefront (outside slab)
   wavefront_t* const wavefront_victim = mm_allocator_alloc(mm_allocator,wavefront_t);
   wavefront_allocate(wavefront_victim,WF_NULL_INIT_LENGTH,bt_piggyback,mm_allocator);
   wavefront_init_victim(wavefront_victim,WF_NULL_INIT_LO,WF_NULL_INIT_HI);
   wf_components->wavefront_victim = wavefront_victim;
-  // Allocate null wavefront
+  // Allocate null wavefront (outside slab)
   wavefront_t* const wavefront_null = mm_allocator_alloc(mm_allocator,wavefront_t);
   wavefront_allocate(wavefront_null,WF_NULL_INIT_LENGTH,bt_piggyback,mm_allocator);
   wavefront_init_null(wavefront_null,WF_NULL_INIT_LO,WF_NULL_INIT_HI);
@@ -234,6 +238,8 @@ void wavefront_components_clear(
     if (wf_components->i2wavefronts) memset(wf_components->i2wavefronts,0,wf_size);
     if (wf_components->d2wavefronts) memset(wf_components->d2wavefronts,0,wf_size);
   }
+  wf_components->historic_max_hi = 0;
+  wf_components->historic_min_lo = 0;
   // BT-Buffer
   if (wf_components->bt_buffer) wf_backtrace_buffer_clear(wf_components->bt_buffer);
 }
@@ -294,8 +300,8 @@ void wavefront_components_resize_null__victim(
     const int lo,
     const int hi) {
   // Resize null/victim wavefronts (if needed)
-  if (lo-1 < wf_components->wavefront_null->wf_elements_used_min ||
-      hi+1 > wf_components->wavefront_null->wf_elements_used_max) {
+  if (lo-1 < wf_components->wavefront_null->wf_elements_init_min ||
+      hi+1 > wf_components->wavefront_null->wf_elements_init_max) {
     // Parameters
     mm_allocator_t* const mm_allocator = wf_components->mm_allocator;
     // Expand and leave some leeway

@@ -546,7 +546,7 @@ void wavefront_compute_affine2p(
     wavefront_compute_affine2p_idm(&wavefront_set,lo,hi);
   }
   // Trim wavefront ends
-  wavefront_aligner_trim_ends(wf_aligner,score);
+  wavefront_aligner_trim_ends(wf_aligner,&wavefront_set);
 }
 
 
