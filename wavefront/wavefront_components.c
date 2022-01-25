@@ -30,6 +30,7 @@
  */
 
 #include "wavefront_components.h"
+#include "utils/bitmap.h"
 
 /*
  * Configuration
@@ -321,6 +322,7 @@ void wavefront_components_resize_null__victim(
  */
 void wavefront_components_mark_backtrace(
     wf_backtrace_buffer_t* const bt_buffer,
+    bitmap_t* const bitmap,
     wavefront_t* const wavefront) {
   // Parameters
   wf_offset_t* const offsets = wavefront->offsets;
@@ -330,43 +332,47 @@ void wavefront_components_mark_backtrace(
   // Mark all wavefront backtraces
   int k;
   for (k=lo;k<=hi;++k) {
-    if (offsets[k]>=0) wf_backtrace_buffer_mark_backtrace(bt_buffer,bt_prev[k]);
+    if (offsets[k]>=0) wf_backtrace_buffer_mark_backtrace(bt_buffer,bt_prev[k],bitmap);
   }
 }
 void wavefront_components_mark_wavefronts(
     wavefront_components_t* const wf_components,
+    bitmap_t* const bitmap,
     const int score) {
   // Parameters
   wf_backtrace_buffer_t* const bt_buffer = wf_components->bt_buffer;
   // Mark Active Working Set (AWS)
+  const int max_score_scope = wf_components->max_score_scope;
   int i;
-  for (i=0;i<wf_components->max_score_scope;++i) {
+  for (i=0;i<max_score_scope;++i) {
     // Compute score
     const int score_mod = (score-i) % wf_components->max_score_scope;
     // Mark M-wavefront
     wavefront_t* const mwavefront = wf_components->mwavefronts[score_mod];
-    if (mwavefront!=NULL) wavefront_components_mark_backtrace(bt_buffer,mwavefront);
+    if (mwavefront!=NULL) wavefront_components_mark_backtrace(bt_buffer,bitmap,mwavefront);
     // Mark (I1/D1)-wavefronts
     if (wf_components->i1wavefronts != NULL) {
       wavefront_t* const i1wavefront = wf_components->i1wavefronts[score_mod];
-      if (i1wavefront!=NULL) wavefront_components_mark_backtrace(bt_buffer,i1wavefront);
+      if (i1wavefront!=NULL) wavefront_components_mark_backtrace(bt_buffer,bitmap,i1wavefront);
       wavefront_t* const d1wavefront = wf_components->d1wavefronts[score_mod];
-      if (d1wavefront!=NULL) wavefront_components_mark_backtrace(bt_buffer,d1wavefront);
+      if (d1wavefront!=NULL) wavefront_components_mark_backtrace(bt_buffer,bitmap,d1wavefront);
       // Mark (I2/D2)-wavefronts
       if (wf_components->i2wavefronts != NULL) {
         wavefront_t* const i2wavefront = wf_components->i2wavefronts[score_mod];
-        if (i2wavefront!=NULL) wavefront_components_mark_backtrace(bt_buffer,i2wavefront);
+        if (i2wavefront!=NULL) wavefront_components_mark_backtrace(bt_buffer,bitmap,i2wavefront);
         wavefront_t* const d2wavefront = wf_components->d2wavefronts[score_mod];
-        if (d2wavefront!=NULL) wavefront_components_mark_backtrace(bt_buffer,d2wavefront);
+        if (d2wavefront!=NULL) wavefront_components_mark_backtrace(bt_buffer,bitmap,d2wavefront);
       }
     }
   }
+  // Update counters in marked bitmap
+  bitmap_update_counters(bitmap);
 }
 /*
  * Translate block-idxs
  */
 void wavefront_components_translate_idx(
-    wf_backtrace_buffer_t* const bt_buffer,
+    bitmap_t* const bitmap,
     wavefront_t* const wavefront) {
   // Parameters
   wf_offset_t* const offsets = wavefront->offsets;
@@ -376,34 +382,37 @@ void wavefront_components_translate_idx(
   // Translate all wavefront block-idxs
   int k;
   for (k=lo;k<=hi;++k) {
-    if (offsets[k]>=0) bt_prev[k] = wf_backtrace_buffer_translate_idx(bt_buffer,bt_prev[k]);
+    if (offsets[k]>=0) {
+      bt_prev[k] = (bt_prev[k]==WF_BTBLOCK_IDX_NULL) ?
+          WF_BTBLOCK_IDX_NULL : bitmap_erank(bitmap,bt_prev[k]);
+    }
   }
 }
 void wavefront_components_translate_wavefronts(
     wavefront_components_t* const wf_components,
+    bitmap_t* const bitmap,
     const int score) {
-  // Parameters
-  wf_backtrace_buffer_t* const bt_buffer = wf_components->bt_buffer;
   // Mark Active Working Set (AWS)
+  const int max_score_scope = wf_components->max_score_scope;
   int i;
-  for (i=0;i<wf_components->max_score_scope;++i) {
+  for (i=0;i<max_score_scope;++i) {
     // Compute score
     const int score_mod = (score-i) % wf_components->max_score_scope;
     // Mark M-wavefront
     wavefront_t* const mwavefront = wf_components->mwavefronts[score_mod];
-    if (mwavefront!=NULL) wavefront_components_translate_idx(bt_buffer,mwavefront);
+    if (mwavefront!=NULL) wavefront_components_translate_idx(bitmap,mwavefront);
     // Mark (I1/D1)-wavefronts
     if (wf_components->i1wavefronts != NULL) {
       wavefront_t* const i1wavefront = wf_components->i1wavefronts[score_mod];
-      if (i1wavefront!=NULL) wavefront_components_translate_idx(bt_buffer,i1wavefront);
+      if (i1wavefront!=NULL) wavefront_components_translate_idx(bitmap,i1wavefront);
       wavefront_t* const d1wavefront = wf_components->d1wavefronts[score_mod];
-      if (d1wavefront!=NULL) wavefront_components_translate_idx(bt_buffer,d1wavefront);
+      if (d1wavefront!=NULL) wavefront_components_translate_idx(bitmap,d1wavefront);
       // Mark (I2/D2)-wavefronts
       if (wf_components->i2wavefronts != NULL) {
         wavefront_t* const i2wavefront = wf_components->i2wavefronts[score_mod];
-        if (i2wavefront!=NULL) wavefront_components_translate_idx(bt_buffer,i2wavefront);
+        if (i2wavefront!=NULL) wavefront_components_translate_idx(bitmap,i2wavefront);
         wavefront_t* const d2wavefront = wf_components->d2wavefronts[score_mod];
-        if (d2wavefront!=NULL) wavefront_components_translate_idx(bt_buffer,d2wavefront);
+        if (d2wavefront!=NULL) wavefront_components_translate_idx(bitmap,d2wavefront);
       }
     }
   }
@@ -416,18 +425,17 @@ void wavefront_components_compact_bt_buffer(
     const int score,
     const bool verbose) {
   // Parameters
-  wf_backtrace_buffer_t* const bt_buffer_full = wf_components->bt_buffer;
+  wf_backtrace_buffer_t* const bt_buffer = wf_components->bt_buffer;
+  const uint64_t bt_buffer_used = wf_backtrace_buffer_get_used(bt_buffer);
+  // Allocate bitmap
+  bitmap_t* const bitmap = bitmap_new(bt_buffer_used,wf_components->mm_allocator);
   // Mark Active Working Set (AWS)
-  wavefront_components_mark_wavefronts(wf_components,score);
-  // Create new BT-Buffer
-  wf_backtrace_buffer_t* const bt_buffer_compacted =
-      wf_backtrace_buffer_new(wf_components->mm_allocator);
-  // Compact marked blocks (leave new idx on the old blocks)
-  wf_backtrace_buffer_compact_marked(bt_buffer_full,bt_buffer_compacted,verbose);
+  wavefront_components_mark_wavefronts(wf_components,bitmap,score);
+  // Compact marked blocks (also translates idxs to compacted positions)
+  wf_backtrace_buffer_compact_marked(bt_buffer,bitmap,verbose);
   // Translate Active Working Set (AWS)
-  wavefront_components_translate_wavefronts(wf_components,score);
-  // Replace BT-Buffer
-  wf_components->bt_buffer = bt_buffer_compacted;
-  wf_backtrace_buffer_delete(bt_buffer_full);
+  wavefront_components_translate_wavefronts(wf_components,bitmap,score);
+  // Free
+  bitmap_delete(bitmap);
 }
 

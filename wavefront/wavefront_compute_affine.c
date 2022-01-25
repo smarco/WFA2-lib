@@ -66,9 +66,21 @@ void wavefront_compute_affine_idm_piggyback_offload_wf(
   // Check PCIGAR buffers full and off-load if needed
   int k;
   for (k=lo;k<=hi;++k) {
-    // if (PCIGAR_IS_ALMOST_FULL(out_bt_pcigar[k])) {
+    // if (PCIGAR_IS_ALMOST_FULL(out_bt_pcigar[k]) && out_offsets[k]>=0) {
     if (PCIGAR_IS_HALF_FULL(out_bt_pcigar[k]) && out_offsets[k]>=0) {
-      WAVEFRONT_COMPUTE_BT_BUFFER_OFFLOAD(out_offsets,out_bt_pcigar,out_bt_prev,k);
+      // Store
+      bt_block_mem->pcigar = out_bt_pcigar[k];
+      bt_block_mem->prev_idx = out_bt_prev[k];
+      bt_block_mem++;
+      // Reset
+      out_bt_pcigar[k] = 0;
+      out_bt_prev[k] = current_pos;
+      current_pos++;
+      // Update pos
+      if (current_pos >= max_pos) {
+        wf_backtrace_buffer_add_used(bt_buffer,current_pos-global_pos);
+        global_pos = wf_backtrace_buffer_get_mem(bt_buffer,&bt_block_mem,&bt_blocks_available);
+      }
     }
   }
   wf_backtrace_buffer_add_used(bt_buffer,current_pos-global_pos);
@@ -156,6 +168,7 @@ void wavefront_compute_affine_idm(
 }
 /*
  * Compute Kernel (Piggyback)
+ *   Scratchpad https://godbolt.org/z/16h39jfPb
  */
 //void wavefront_compute_affine_idm_piggyback(
 //    const wavefront_set_t* const wavefront_set,

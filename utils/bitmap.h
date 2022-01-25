@@ -26,11 +26,11 @@
  *
  * PROJECT: Wavefront Alignments Algorithms
  * AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
- * DESCRIPTION: Padded string module to avoid handling corner conditions
+ * DESCRIPTION: Basic bitmap datastructure (static)
  */
 
-#ifndef STRING_PADDED_H_
-#define STRING_PADDED_H_
+#ifndef BITMAP_H_
+#define BITMAP_H_
 
 /*
  * Includes
@@ -38,40 +38,53 @@
 #include "utils/commons.h"
 #include "system/mm_allocator.h"
 
+#define BITMAP_BLOCK_ELEMENTS 64
+#define BITMAP_BLOCK_MASK     0x0000000000000001ul
+
 /*
- * Strings Padded
+ * Bitmap
  */
 typedef struct {
-  // Dimensions
-  int pattern_length;
-  int text_length;
-  // Padded strings
-  char* pattern_padded;
-  char* text_padded;
+  uint64_t counter;
+  uint64_t bitmap;
+} bitmap_block_t;
+typedef struct {
+  // Bitmap
+  uint64_t num_blocks;
+  bitmap_block_t* bitmap_blocks;
   // MM
-  char* pattern_padded_buffer;
-  char* text_padded_buffer;
   mm_allocator_t* mm_allocator;
-} strings_padded_t;
+} bitmap_t;
 
 /*
- * Strings (text/pattern) padded
+ * Setup
  */
-strings_padded_t* strings_padded_new(
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
-    const int padding_length,
+bitmap_t* bitmap_new(
+    const uint64_t length,
     mm_allocator_t* const mm_allocator);
-strings_padded_t* strings_padded_new_rhomb(
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
-    const int padding_length,
-    mm_allocator_t* const mm_allocator);
-void strings_padded_delete(
-    strings_padded_t* const strings_padded);
+void bitmap_delete(
+    bitmap_t* const bitmap);
 
-#endif /* STRING_PADDED_H_ */
+/*
+ * Accessors
+ */
+void bitmap_set(
+    bitmap_t* const bitmap,
+    const uint64_t pos);
+bool bitmap_is_set(
+    bitmap_t* const bitmap,
+    const uint64_t pos);
+bool bitmap_check__set(
+    bitmap_t* const bitmap,
+    const uint64_t pos);
+
+/*
+ * Rank
+ */
+void bitmap_update_counters(
+    bitmap_t* const bitmap);
+uint64_t bitmap_erank(
+    bitmap_t* const bitmap,
+    const uint64_t pos);
+
+#endif /* BITMAP_H_ */

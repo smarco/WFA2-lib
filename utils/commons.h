@@ -259,4 +259,15 @@ uint64_t rand_iid(const uint64_t min,const uint64_t max);
   #define PRAGMA_LOOP_VECTORIZE _Pragma("ivdep")
 #endif
 
+/*
+ * Popcount macros
+ */
+#define POPCOUNT_64(word64) __builtin_popcountll((word64))
+#define POPCOUNT_32(word32) __builtin_popcount((word32))
+
+/*
+ * Prefetch macros
+ */
+#define PREFETCH(ADDR) __builtin_prefetch(((const char*)ADDR),0,0)
+
 #endif /* COMMONS_H_ */
