@@ -47,7 +47,7 @@ void wavefront_allocate(
     wavefront->bt_pcigar_mem = mm_allocator_calloc(
         mm_allocator,wf_elements_allocated,pcigar_t,false);
     wavefront->bt_prev_mem = mm_allocator_calloc(
-        mm_allocator,wf_elements_allocated,block_idx_t,false);
+        mm_allocator,wf_elements_allocated,bt_block_idx_t,false);
   } else {
     wavefront->bt_pcigar_mem = NULL;
   }
@@ -69,7 +69,7 @@ void wavefront_resize(
     wavefront->bt_pcigar_mem = mm_allocator_calloc(
         mm_allocator,wf_elements_allocated,pcigar_t,false);
     wavefront->bt_prev_mem = mm_allocator_calloc(
-        mm_allocator,wf_elements_allocated,block_idx_t,false);
+        mm_allocator,wf_elements_allocated,bt_block_idx_t,false);
   }
 }
 void wavefront_free(
@@ -128,9 +128,9 @@ void wavefront_init_null(
   for (i=0;i<wf_elements;++i) {
     wavefront->offsets_mem[i] = WAVEFRONT_OFFSET_NULL;
   }
-  if (wavefront->bt_pcigar_mem) {
+  if (wavefront->bt_pcigar_mem) { // TODO: Really needed?
     memset(wavefront->bt_pcigar_mem,0,wf_elements*sizeof(pcigar_t));
-    memset(wavefront->bt_prev_mem,0,wf_elements*sizeof(block_idx_t));
+    memset(wavefront->bt_prev_mem,0,wf_elements*sizeof(bt_block_idx_t));
   }
   // Internals
   wavefront->wf_elements_allocated_min = min_lo;
@@ -168,7 +168,7 @@ uint64_t wavefront_get_size(
     wavefront_t* const wavefront) {
   uint64_t total_size = wavefront->wf_elements_allocated*sizeof(wf_offset_t);
   if (wavefront->bt_pcigar_mem) {
-    total_size += wavefront->wf_elements_allocated*(sizeof(pcigar_t)+sizeof(block_idx_t));
+    total_size += wavefront->wf_elements_allocated*(sizeof(pcigar_t)+sizeof(bt_block_idx_t));
   }
   return total_size;
 }

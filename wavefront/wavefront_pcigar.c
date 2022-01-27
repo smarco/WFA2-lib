@@ -56,7 +56,7 @@ char matches_lut[8] = "MMMMMMMM";
 int pcigar_get_length(
     const pcigar_t pcigar) {
   int cigar_length = PCIGAR_MAX_LENGTH;
-  if (!PCIGAR_IS_FULL(pcigar)) {
+  if (!PCIGAR_IS_UTILISED(pcigar,PCIGAR_FULL_MASK)) {
     const int free_slots = PCIGAR_FREE_SLOTS(pcigar);
     cigar_length -= free_slots;
   }
@@ -67,7 +67,7 @@ int pcigar_unpack(
     char* cigar_buffer) {
   // Compute pcigar length and shift to the end of the word
   int pcigar_length = PCIGAR_MAX_LENGTH;
-  if (!PCIGAR_IS_FULL(pcigar)) {
+  if (!PCIGAR_IS_UTILISED(pcigar,PCIGAR_FULL_MASK)) {
     const int free_slots = PCIGAR_FREE_SLOTS(pcigar);
     pcigar_length -= free_slots;
     pcigar <<= free_slots*2;
@@ -143,7 +143,7 @@ void pcigar_recover(
   char* const cigar_buffer_base = cigar_buffer;
   // Compute pcigar length and shift to the end of the word
   int pcigar_length = PCIGAR_MAX_LENGTH;
-  if (!PCIGAR_IS_FULL(pcigar)) {
+  if (!PCIGAR_IS_UTILISED(pcigar,PCIGAR_FULL_MASK)) {
     const int free_slots = PCIGAR_FREE_SLOTS(pcigar);
     pcigar_length -= free_slots;
     pcigar <<= free_slots*2;

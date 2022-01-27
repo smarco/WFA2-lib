@@ -106,8 +106,8 @@ wavefront_aligner_t* wavefront_aligner_new(
   const int text_length = TEXT_LENGTH_INIT;
   if (attributes == NULL) attributes = &wavefront_aligner_attr_default;
   const bool score_only = (attributes->alignment_scope == compute_score);
-  const bool memory_modular = attributes->low_memory || score_only;
-  const bool bt_piggyback = attributes->low_memory && !score_only;
+  const bool memory_modular = (attributes->memory_mode > 0) || score_only;
+  const bool bt_piggyback = (attributes->memory_mode > 0) && !score_only;
   // MM
   mm_allocator_t* mm_allocator = attributes->mm_allocator;
   bool mm_allocator_own = false;
@@ -126,6 +126,8 @@ wavefront_aligner_t* wavefront_aligner_new(
   wf_aligner->alignment_scope = attributes->alignment_scope;
   wf_aligner->alignment_form = attributes->alignment_form;
   wavefront_set_penalties(wf_aligner,attributes); // Set penalties
+  // Memory mode
+  wf_aligner->memory_mode = attributes->memory_mode;
   // Reduction strategy
   wavefront_set_reduction(wf_aligner,attributes);
   // Wavefront components

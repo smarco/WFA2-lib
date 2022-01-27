@@ -35,6 +35,20 @@
 #include "wavefront_aligner.h"
 
 /*
+ * Compute Kernels
+ */
+void wavefront_compute_affine_idm(
+    wavefront_aligner_t* const wf_aligner,
+    const wavefront_set_t* const wavefront_set,
+    const int lo,
+    const int hi);
+void wavefront_compute_affine_idm_piggyback(
+    wavefront_aligner_t* const wf_aligner,
+    const wavefront_set_t* const wavefront_set,
+    const int lo,
+    const int hi);
+
+/*
  * Compute wavefront (gap-affine)
  */
 void wavefront_compute_affine(

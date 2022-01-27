@@ -84,7 +84,7 @@ typedef struct {
   wavefront_reduction_type reduction_type;
   int min_wavefront_length;
   int max_distance_threshold;
-  bool low_memory;
+  wavefront_memory_t memory_mode;
   bool endsfree;
   int pattern_begin_free;
   int text_begin_free;
@@ -137,7 +137,7 @@ benchmark_args parameters = {
   .reduction_type = wavefront_reduction_none,
   .min_wavefront_length = 10,
   .max_distance_threshold = 50,
-  .low_memory = false,
+  .memory_mode = wavefront_memory_full,
   .endsfree = false,
   .pattern_begin_free = 0,
   .text_begin_free = 0,
@@ -254,7 +254,7 @@ void align_pairwise_test() {
   attributes.reduction.min_wavefront_length = 10;
   attributes.reduction.max_distance_threshold = 50;
   attributes.alignment_scope = compute_alignment; // compute_score
-  attributes.low_memory = false;
+  attributes.memory_mode = wavefront_memory_full;
   attributes.alignment_form.span = (endsfree) ? alignment_endsfree : alignment_end2end;
   attributes.alignment_form.pattern_begin_free = pattern_begin_free;
   attributes.alignment_form.pattern_end_free = pattern_end_free;
@@ -289,7 +289,7 @@ wavefront_aligner_t* align_benchmark_configure_wf(
     mm_allocator_t* const mm_allocator) {
   // Set attributes
   wavefront_aligner_attr_t attributes = wavefront_aligner_attr_default;
-  attributes.low_memory = parameters.low_memory;
+  attributes.memory_mode = parameters.memory_mode;
   attributes.mm_allocator = mm_allocator;
   if (parameters.score_only) {
     attributes.alignment_scope = compute_score;
@@ -558,7 +558,7 @@ void usage() {
       "          --score-only                                               \n"
       "          --minimum-wavefront-length <INT>                           \n"
       "          --maximum-difference-distance <INT>                        \n"
-      "          --low-memory                                               \n"
+      "          --memory-mode 'full'|'high'|'med'|'low'                    \n"
       "          --ends-free P0,Pf,T0,Tf                                    \n"
       "        [Misc]                                                       \n"
       "          --bandwidth <INT>                                          \n"
@@ -584,7 +584,7 @@ void parse_arguments(int argc,char** argv) {
     { "score-only", no_argument, 0, 1001 },
     { "minimum-wavefront-length", required_argument, 0, 1002 },
     { "maximum-difference-distance", required_argument, 0, 1003 },
-    { "low-memory", no_argument, 0, 1004 },
+    { "memory-mode", required_argument, 0, 1004 },
     { "ends-free", required_argument, 0, 1005 },
     /* Misc */
     { "bandwidth", required_argument, 0, 2000 },
@@ -721,8 +721,19 @@ void parse_arguments(int argc,char** argv) {
     case 1003: // --maximum-difference-distance
       parameters.max_distance_threshold = atoi(optarg);
       break;
-    case 1004: // --low-memory
-      parameters.low_memory = true;
+    case 1004: // --memory-mode 'full'|'high'|'med'|'low'
+      if (strcmp(optarg,"full")==0) {
+        parameters.memory_mode = wavefront_memory_high;
+      } else if (strcmp(optarg,"high")==0) {
+        parameters.memory_mode = wavefront_memory_high;
+      } else if (strcmp(optarg,"med")==0) {
+        parameters.memory_mode = wavefront_memory_high;
+      } else if (strcmp(optarg,"low")==0) {
+        parameters.memory_mode = wavefront_memory_high;
+      } else {
+        fprintf(stderr,"Option '--memory-mode' must be in {'full','high','med','low'}\n");
+        exit(1);
+      }
       break;
     case 1005: { // --ends-free P0,Pf,T0,Tf
       parameters.endsfree = true;

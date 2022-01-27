@@ -58,6 +58,7 @@ typedef struct _wavefront_aligner_t {
   alignment_form_t alignment_form;             // Alignment form (end-to-end/ends-free)
   wavefronts_penalties_t penalties;            // Alignment penalties
   wavefront_reduction_t reduction;             // Reduction parameters
+  wavefront_memory_t memory_mode;              // Wavefront memory strategy (modular wavefronts and piggyback)
   // Wavefront components
   wavefront_components_t wf_components;        // Wavefront components
   // CIGAR

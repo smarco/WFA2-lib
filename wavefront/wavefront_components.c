@@ -326,7 +326,7 @@ void wavefront_components_mark_backtrace(
     wavefront_t* const wavefront) {
   // Parameters
   wf_offset_t* const offsets = wavefront->offsets;
-  block_idx_t* const bt_prev = wavefront->bt_prev;
+  bt_block_idx_t* const bt_prev = wavefront->bt_prev;
   const int lo = wavefront->lo;
   const int hi = wavefront->hi;
   // Mark all wavefront backtraces
@@ -376,15 +376,15 @@ void wavefront_components_translate_idx(
     wavefront_t* const wavefront) {
   // Parameters
   wf_offset_t* const offsets = wavefront->offsets;
-  block_idx_t* const bt_prev = wavefront->bt_prev;
+  bt_block_idx_t* const bt_prev = wavefront->bt_prev;
   const int lo = wavefront->lo;
   const int hi = wavefront->hi;
   // Translate all wavefront block-idxs
   int k;
   for (k=lo;k<=hi;++k) {
     if (offsets[k]>=0) {
-      bt_prev[k] = (bt_prev[k]==WF_BTBLOCK_IDX_NULL) ?
-          WF_BTBLOCK_IDX_NULL : bitmap_erank(bitmap,bt_prev[k]);
+      bt_prev[k] = (bt_prev[k]==BT_BLOCK_IDX_NULL) ?
+          BT_BLOCK_IDX_NULL : bitmap_erank(bitmap,bt_prev[k]);
     }
   }
 }

@@ -35,6 +35,9 @@ CC_XFLAGS=-march=native -fopt-info-vec-optimized
 ###############################################################################
 all: $(OBJS)
 
+$(FOLDER_BUILD)/wavefront_compute.o : wavefront_compute.c
+	$(CC) $(CC_FLAGS) $(CC_XFLAGS) -I$(FOLDER_ROOT) -c $< -o $@
+
 $(FOLDER_BUILD)/wavefront_compute_affine.o : wavefront_compute_affine.c
 	$(CC) $(CC_FLAGS) $(CC_XFLAGS) -I$(FOLDER_ROOT) -c $< -o $@
 

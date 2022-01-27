@@ -53,23 +53,14 @@ bool wavefront_extend_packed(
   const int hi = mwavefront->hi;
   int k;
   for (k=lo;k<=hi;++k) {
-    // Fetch offset & positions
+    // Check offset & positions
     //   - No offset should be out of boundaries !(h>tlen,v>plen)
     //   - if (h==tlen,v==plen) extension won't increment (sentinels)
     wf_offset_t offset = offsets[k];
-    const uint32_t h = WAVEFRONT_H(k,offset); // Make unsigned to avoid checking negative
-    if (h > text_length) {
-      offsets[k] = WAVEFRONT_OFFSET_NULL;
-      continue;
-    }
-    const uint32_t v = WAVEFRONT_V(k,offset); // Make unsigned to avoid checking negative
-    if (v > pattern_length) {
-      offsets[k] = WAVEFRONT_OFFSET_NULL;
-      continue;
-    }
+    if (offset == WAVEFRONT_OFFSET_NULL) continue;
     // Fetch pattern/text blocks
-    uint64_t* pattern_blocks = (uint64_t*)(wf_aligner->pattern+v);
-    uint64_t* text_blocks = (uint64_t*)(wf_aligner->text+h);
+    uint64_t* pattern_blocks = (uint64_t*)(wf_aligner->pattern+WAVEFRONT_V(k,offset));
+    uint64_t* text_blocks = (uint64_t*)(wf_aligner->text+WAVEFRONT_H(k,offset));
     // Compare 64-bits blocks
     uint64_t cmp = *pattern_blocks ^ *text_blocks;
     while (__builtin_expect(cmp==0,0)) {

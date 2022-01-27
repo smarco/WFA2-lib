@@ -34,7 +34,7 @@
 /*
  * Config
  */
-#define BT_BUFFER_SEGMENT_LENGTH BUFFER_SIZE_1M
+#define BT_BUFFER_SEGMENT_LENGTH BUFFER_SIZE_2M
 
 #define BT_BUFFER_IDX(segment_idx,segment_offset) ((segment_idx)*BT_BUFFER_SEGMENT_LENGTH) + (segment_offset)
 
@@ -43,9 +43,9 @@
  */
 void wf_backtrace_buffer_segment_add(
     wf_backtrace_buffer_t* const bt_buffer) {
-  wf_backtrace_block_t* const bt_segment = mm_allocator_calloc(
-      bt_buffer->mm_allocator,BT_BUFFER_SEGMENT_LENGTH,wf_backtrace_block_t,false);
-  vector_insert(bt_buffer->segments,bt_segment,wf_backtrace_block_t*);
+  bt_block_t* const bt_segment = mm_allocator_calloc(
+      bt_buffer->mm_allocator,BT_BUFFER_SEGMENT_LENGTH,bt_block_t,false);
+  vector_insert(bt_buffer->segments,bt_segment,bt_block_t*);
 }
 void wf_backtrace_buffer_segment_reserve(
     wf_backtrace_buffer_t* const bt_buffer) {
@@ -56,15 +56,14 @@ void wf_backtrace_buffer_segment_reserve(
   if (bt_buffer->segment_idx >= vector_get_used(bt_buffer->segments)) {
     // Check segment position
     const uint64_t block_idx = ((uint64_t)bt_buffer->segment_idx+1) * BT_BUFFER_SEGMENT_LENGTH;
-    if (block_idx >= WF_BTBLOCK_IDX_NULL) {
+    if (block_idx >= BT_BLOCK_IDX_MAX) {
       fprintf(stderr,"[WFA::BacktraceBuffer] Reached maximum addressable index"); exit(-1);
     }
     // Add segment
     wf_backtrace_buffer_segment_add(bt_buffer);
   }
   // Set pointer to next block free
-  wf_backtrace_block_t** const segments =
-      vector_get_mem(bt_buffer->segments,wf_backtrace_block_t*);
+  bt_block_t** const segments = vector_get_mem(bt_buffer->segments,bt_block_t*);
   bt_buffer->block_next = segments[bt_buffer->segment_idx];
 }
 /*
@@ -79,11 +78,11 @@ wf_backtrace_buffer_t* wf_backtrace_buffer_new(
   // Initialize
   bt_buffer->segment_idx = 0;
   bt_buffer->segment_offset = 0;
-  bt_buffer->segments = vector_new(10,wf_backtrace_block_t*);
+  bt_buffer->segments = vector_new(10,bt_block_t*);
   wf_backtrace_buffer_segment_add(bt_buffer); // Add initial segment
   bt_buffer->alignment_init_pos = vector_new(100,wf_backtrace_init_pos_t);
   bt_buffer->alignment_packed = vector_new(100,pcigar_t);
-  bt_buffer->block_next = vector_get_mem(bt_buffer->segments,wf_backtrace_block_t*)[0];
+  bt_buffer->block_next = vector_get_mem(bt_buffer->segments,bt_block_t*)[0];
   // Return
   return bt_buffer;
 }
@@ -91,15 +90,14 @@ void wf_backtrace_buffer_clear(
     wf_backtrace_buffer_t* const bt_buffer) {
   bt_buffer->segment_idx = 0;
   bt_buffer->segment_offset = 0;
-  bt_buffer->block_next = vector_get_mem(bt_buffer->segments,wf_backtrace_block_t*)[0];
+  bt_buffer->block_next = vector_get_mem(bt_buffer->segments,bt_block_t*)[0];
   vector_clear(bt_buffer->alignment_init_pos);
 }
 void wf_backtrace_buffer_reap(
     wf_backtrace_buffer_t* const bt_buffer) {
   // Reap segments beyond the first
   const int num_segments = vector_get_used(bt_buffer->segments);
-  wf_backtrace_block_t** const segments =
-      vector_get_mem(bt_buffer->segments,wf_backtrace_block_t*);
+  bt_block_t** const segments = vector_get_mem(bt_buffer->segments,bt_block_t*);
   int i;
   for (i=1;i<num_segments;++i) {
     mm_allocator_free(bt_buffer->mm_allocator,segments[i]);
@@ -108,14 +106,13 @@ void wf_backtrace_buffer_reap(
   // Clear
   bt_buffer->segment_idx = 0;
   bt_buffer->segment_offset = 0;
-  bt_buffer->block_next = vector_get_mem(bt_buffer->segments,wf_backtrace_block_t*)[0];
+  bt_buffer->block_next = vector_get_mem(bt_buffer->segments,bt_block_t*)[0];
 }
 void wf_backtrace_buffer_delete(
     wf_backtrace_buffer_t* const bt_buffer) {
   // Free segments
   const int num_segments = vector_get_used(bt_buffer->segments);
-  wf_backtrace_block_t** const segments =
-      vector_get_mem(bt_buffer->segments,wf_backtrace_block_t*);
+  bt_block_t** const segments = vector_get_mem(bt_buffer->segments,bt_block_t*);
   int i;
   for (i=0;i<num_segments;++i) {
     mm_allocator_free(bt_buffer->mm_allocator,segments[i]);
@@ -129,14 +126,13 @@ void wf_backtrace_buffer_delete(
 /*
  * Accessors
  */
-wf_backtrace_block_t* wf_backtrace_buffer_get_block(
+bt_block_t* wf_backtrace_buffer_get_block(
     wf_backtrace_buffer_t* const bt_buffer,
-    const block_idx_t block_idx) {
+    const bt_block_idx_t block_idx) {
   // Compute location
   const int segment_idx = block_idx / BT_BUFFER_SEGMENT_LENGTH;
   const int segment_offset = block_idx % BT_BUFFER_SEGMENT_LENGTH;
-  wf_backtrace_block_t** const segments =
-      vector_get_mem(bt_buffer->segments,wf_backtrace_block_t*);
+  bt_block_t** const segments = vector_get_mem(bt_buffer->segments,bt_block_t*);
   return &(segments[segment_idx][segment_offset]);
 }
 void wf_backtrace_buffer_add_used(
@@ -150,9 +146,9 @@ void wf_backtrace_buffer_add_used(
     wf_backtrace_buffer_segment_reserve(bt_buffer);
   }
 }
-block_idx_t wf_backtrace_buffer_get_mem(
+bt_block_idx_t wf_backtrace_buffer_get_mem(
     wf_backtrace_buffer_t* const bt_buffer,
-    wf_backtrace_block_t** const bt_block_mem,
+    bt_block_t** const bt_block_mem,
     int* const bt_blocks_available) {
   // Parameters
   const int segment_idx = bt_buffer->segment_idx;
@@ -169,7 +165,7 @@ block_idx_t wf_backtrace_buffer_get_mem(
 void wf_backtrace_buffer_store_block(
     wf_backtrace_buffer_t* const bt_buffer,
     const pcigar_t pcigar,
-    const block_idx_t prev_idx) {
+    const bt_block_idx_t prev_idx) {
   // Store BT-block
   bt_buffer->block_next->pcigar = pcigar;
   bt_buffer->block_next->prev_idx = prev_idx;
@@ -181,25 +177,10 @@ void wf_backtrace_buffer_store_block(
     wf_backtrace_buffer_segment_reserve(bt_buffer);
   }
 }
-void wf_backtrace_buffer_store_block_bt(
-    wf_backtrace_buffer_t* const bt_buffer,
-    pcigar_t* const pcigar,
-    block_idx_t* const prev_idx) {
-  // Parameters
-  const int segment_idx = bt_buffer->segment_idx;
-  const int segment_offset = bt_buffer->segment_offset;
-  // Store BT-block
-  wf_backtrace_buffer_store_block(bt_buffer,*pcigar,*prev_idx);
-  // Reset pcigar & set current position
-  *pcigar = 0;
-  *prev_idx = BT_BUFFER_IDX(segment_idx,segment_offset);
-}
-void wf_backtrace_buffer_store_block_init(
+bt_block_idx_t wf_backtrace_buffer_init_block(
     wf_backtrace_buffer_t* const bt_buffer,
     const int v,
-    const int h,
-    pcigar_t* const pcigar,
-    block_idx_t* const prev_idx) {
+    const int h) {
   // Parameters
   const int segment_idx = bt_buffer->segment_idx;
   const int segment_offset = bt_buffer->segment_offset;
@@ -208,10 +189,9 @@ void wf_backtrace_buffer_store_block_init(
   wf_backtrace_init_pos_t init_pos = { .v = v, .h = h };
   vector_insert(bt_buffer->alignment_init_pos,init_pos,wf_backtrace_init_pos_t);
   // Store BT-block (Index to initial position,NULL prev)
-  wf_backtrace_buffer_store_block(bt_buffer,init_position_offset,WF_BTBLOCK_IDX_NULL);
-  // Set current position
-  *pcigar = 0;
-  *prev_idx = BT_BUFFER_IDX(segment_idx,segment_offset);
+  wf_backtrace_buffer_store_block(bt_buffer,init_position_offset,BT_BLOCK_IDX_NULL);
+  // Return current index
+  return BT_BUFFER_IDX(segment_idx,segment_offset);
 }
 /*
  * Recover CIGAR
@@ -225,18 +205,18 @@ void wf_backtrace_buffer_recover_cigar(
     const int alignment_k,
     const int alignment_offset,
     const pcigar_t pcigar_last,
-    const block_idx_t prev_idx_last,
+    const bt_block_idx_t prev_idx_last,
     cigar_t* const cigar) {
   // Clear temporal buffer
   vector_t* const alignment_packed = bt_buffer->alignment_packed;
   vector_clear(alignment_packed);
   // Traverse-back the BT-blocks and store all the pcigars
-  wf_backtrace_block_t bt_block_last = {
+  bt_block_t bt_block_last = {
       .pcigar = pcigar_last,
       .prev_idx = prev_idx_last
   };
-  wf_backtrace_block_t* bt_block = &bt_block_last;
-  while (bt_block->prev_idx != WF_BTBLOCK_IDX_NULL) {
+  bt_block_t* bt_block = &bt_block_last;
+  while (bt_block->prev_idx != BT_BLOCK_IDX_NULL) {
     vector_insert(alignment_packed,bt_block->pcigar,pcigar_t);
     bt_block = wf_backtrace_buffer_get_block(bt_buffer,bt_block->prev_idx);
   }
@@ -288,16 +268,16 @@ void wf_backtrace_buffer_recover_cigar(
  */
 void wf_backtrace_buffer_mark_backtrace(
     wf_backtrace_buffer_t* const bt_buffer,
-    const block_idx_t bt_block_idx,
+    const bt_block_idx_t bt_block_idx,
     bitmap_t* const bitmap) {
   // Traverse-back the BT-blocks while not marked
-  wf_backtrace_block_t bt_block_last = { .prev_idx = bt_block_idx };
-  wf_backtrace_block_t* bt_block = &bt_block_last;
+  bt_block_t bt_block_last = { .prev_idx = bt_block_idx };
+  bt_block_t* bt_block = &bt_block_last;
   // Check marked and fetch previous (until already marked or NULL is found)
-  while (bt_block->prev_idx!=WF_BTBLOCK_IDX_NULL &&
+  while (bt_block->prev_idx!=BT_BLOCK_IDX_NULL &&
         !bitmap_check__set(bitmap,bt_block->prev_idx)) {
     // Fetch previous BT-block
-    const block_idx_t prev_idx = bt_block->prev_idx;
+    const bt_block_idx_t prev_idx = bt_block->prev_idx;
     bt_block = wf_backtrace_buffer_get_block(bt_buffer,prev_idx);
   }
 }
@@ -307,22 +287,22 @@ void wf_backtrace_buffer_compact_marked(
     const bool verbose) {
   // Parameters
   const int num_segments = vector_get_used(bt_buffer->segments);
-  wf_backtrace_block_t** const segments = vector_get_mem(bt_buffer->segments,wf_backtrace_block_t*);
+  bt_block_t** const segments = vector_get_mem(bt_buffer->segments,bt_block_t*);
   // Sentinels
-  block_idx_t read_segidx = 0, read_offset = 0, read_global_pos = 0;
-  block_idx_t write_segidx = 0, write_offset = 0, write_global_pos = 0;
-  wf_backtrace_block_t* read_block = segments[0];
-  wf_backtrace_block_t* write_block = segments[0];
+  bt_block_idx_t read_segidx = 0, read_offset = 0, read_global_pos = 0;
+  bt_block_idx_t write_segidx = 0, write_offset = 0, write_global_pos = 0;
+  bt_block_t* read_block = segments[0];
+  bt_block_t* write_block = segments[0];
   // Traverse all BT-blocks from the beginning (stored marked)
-  const block_idx_t max_block_idx = BT_BUFFER_IDX(bt_buffer->segment_idx,bt_buffer->segment_offset);
+  const bt_block_idx_t max_block_idx = BT_BUFFER_IDX(bt_buffer->segment_idx,bt_buffer->segment_offset);
   while (read_global_pos < max_block_idx) {
     // Check marked block
     if (bitmap_is_set(bitmap,read_global_pos)) {
       // Store pcigar in compacted BT-buffer
       write_block->pcigar = read_block->pcigar;
       // Translate and store index in compacted BT-buffer
-      write_block->prev_idx = (read_block->prev_idx==WF_BTBLOCK_IDX_NULL) ?
-          WF_BTBLOCK_IDX_NULL : bitmap_erank(bitmap,read_block->prev_idx);
+      write_block->prev_idx = (read_block->prev_idx==BT_BLOCK_IDX_NULL) ?
+          BT_BLOCK_IDX_NULL : bitmap_erank(bitmap,read_block->prev_idx);
       // Next write
       ++write_offset; ++write_block; ++write_global_pos;
       if (write_offset >= BT_BUFFER_SEGMENT_LENGTH) {
@@ -347,8 +327,8 @@ void wf_backtrace_buffer_compact_marked(
   // DEBUG
   if (verbose) {
     fprintf(stderr,"[WFA::BacktraceBuffer] Compacted from %lu MB to %lu MB (%2.2f%%)\n",
-        CONVERT_B_TO_MB(read_global_pos*sizeof(wf_backtrace_block_t)),
-        CONVERT_B_TO_MB(write_global_pos*sizeof(wf_backtrace_block_t)),
+        CONVERT_B_TO_MB(read_global_pos*sizeof(bt_block_t)),
+        CONVERT_B_TO_MB(write_global_pos*sizeof(bt_block_t)),
         100.0f*(float)write_global_pos/(float)read_global_pos);
   }
 }
@@ -357,18 +337,18 @@ void wf_backtrace_buffer_compact_marked(
  */
 uint64_t wf_backtrace_buffer_get_used(
     wf_backtrace_buffer_t* const bt_buffer) {
-  const block_idx_t max_block_idx = BT_BUFFER_IDX(bt_buffer->segment_idx,bt_buffer->segment_offset);
+  const bt_block_idx_t max_block_idx = BT_BUFFER_IDX(bt_buffer->segment_idx,bt_buffer->segment_offset);
   return max_block_idx;
 }
 uint64_t wf_backtrace_buffer_get_size_allocated(
     wf_backtrace_buffer_t* const bt_buffer) {
   const uint64_t segments_used = vector_get_used(bt_buffer->segments);
-  return segments_used*BT_BUFFER_SEGMENT_LENGTH*sizeof(wf_backtrace_block_t);
+  return segments_used*BT_BUFFER_SEGMENT_LENGTH*sizeof(bt_block_t);
 }
 uint64_t wf_backtrace_buffer_get_size_used(
     wf_backtrace_buffer_t* const bt_buffer) {
-  const block_idx_t max_block_idx = BT_BUFFER_IDX(bt_buffer->segment_idx,bt_buffer->segment_offset);
-  return max_block_idx*sizeof(wf_backtrace_block_t);
+  const bt_block_idx_t max_block_idx = BT_BUFFER_IDX(bt_buffer->segment_idx,bt_buffer->segment_offset);
+  return max_block_idx*sizeof(bt_block_t);
 }
 
 

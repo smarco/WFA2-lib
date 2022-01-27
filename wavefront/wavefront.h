@@ -40,6 +40,7 @@
  * Wavefront Offset
  */
 typedef int32_t wf_offset_t;
+typedef uint32_t wf_unsigned_offset_t;
 
 /*
  * Constants
@@ -50,10 +51,10 @@ typedef int32_t wf_offset_t;
  * Translate k and offset to coordinates h,v
  */
 #define WAVEFRONT_V(k,offset)   ((offset)-(k))
-#define WAVEFRONT_H(k,offset)         (offset)
-#define WAVEFRONT_DIAGONAL(h,v)      ((h)-(v))
-#define WAVEFRONT_OFFSET(h,v)              (h)
-#define WAVEFRONT_LENGTH(lo,hi)  ((hi)-(lo)+1) // (lo/hi inclusive and +1 for WF[0])
+#define WAVEFRONT_H(k,offset)   (offset)
+#define WAVEFRONT_DIAGONAL(h,v) ((h)-(v))
+#define WAVEFRONT_OFFSET(h,v)   (h)
+#define WAVEFRONT_LENGTH(lo,hi) ((hi)-(lo)+1) // (lo/hi inclusive and +1 for WF[0])
 
 #define WAVEFRONT_DIAGONAL_NULL        INT_MAX
 
@@ -74,12 +75,12 @@ typedef struct {
   int bt_occupancy_max;                // Maximum number of pcigar-ops stored on the Backtrace-block
   // Wavefront elements
   wf_offset_t* offsets;                // Offsets (k-centered)
-  pcigar_t* bt_pcigar;                 // Backtrace-block (k-centered)
-  block_idx_t* bt_prev;                // Backtrace-block previous index (k-centered)
+  pcigar_t* bt_pcigar;                 // Backtrace-block pcigar (k-centered)
+  bt_block_idx_t* bt_prev;             // Backtrace-block previous-index (k-centered)
   // Memory internals
   wf_offset_t* offsets_mem;            // Offsets base memory
   pcigar_t* bt_pcigar_mem;             // Backtrace-block (base memory)
-  block_idx_t* bt_prev_mem;            // Backtrace-block previous index (base memory)
+  bt_block_idx_t* bt_prev_mem;         // Backtrace-block previous-index (base memory)
   // Slab internals
   wavefront_status_type status;        // Wavefront status (memory state)
   int wf_elements_allocated;           // Total wf-elements allocated (max. wf. size)
@@ -94,9 +95,9 @@ typedef struct {
  */
 typedef struct {
   /* In Wavefronts*/
-  wavefront_t* in_mwavefront_sub;
-  wavefront_t* in_mwavefront_gap1;
-  wavefront_t* in_mwavefront_gap2;
+  wavefront_t* in_mwavefront_misms;
+  wavefront_t* in_mwavefront_open1;
+  wavefront_t* in_mwavefront_open2;
   wavefront_t* in_i1wavefront_ext;
   wavefront_t* in_i2wavefront_ext;
   wavefront_t* in_d1wavefront_ext;

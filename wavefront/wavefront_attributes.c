@@ -74,7 +74,7 @@ wavefront_aligner_attr_t wavefront_aligner_attr_default = {
         .max_distance_threshold = 50,
     },
     // Memory model
-    .low_memory = false,
+    .memory_mode = wavefront_memory_full,
     // MM
     .mm_allocator = NULL, // Use private MM
     // Display

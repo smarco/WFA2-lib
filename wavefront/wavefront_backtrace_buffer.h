@@ -32,7 +32,7 @@
 #ifndef WAVEFRONT_BACKTRACE_BUFFER_H_
 #define WAVEFRONT_BACKTRACE_BUFFER_H_
 
-#include <alignment/cigar.h>
+#include "alignment/cigar.h"
 #include "utils/commons.h"
 #include "utils/vector.h"
 #include "utils/bitmap.h"
@@ -40,16 +40,20 @@
 #include "wavefront_pcigar.h"
 
 /*
- * Backtrace Block
+ * Separated Backtrace Block
  */
-typedef uint32_t block_idx_t; // Up to 2^31 references (~32GB of not-compactable pCIGARs)
-#define WF_BTBLOCK_IDX_NULL   UINT32_MAX
+typedef uint32_t bt_block_idx_t; // Up to 2^31 references (~32GB of not-compactable pCIGARs)
+#define BT_BLOCK_IDX_MAX   UINT32_MAX
+#define BT_BLOCK_IDX_NULL  UINT32_MAX
 
 typedef struct {
   pcigar_t pcigar;            // Packed CIGAR
-  block_idx_t prev_idx;       // Index of the previous CIGAR-block
-} __attribute__((packed)) wf_backtrace_block_t;
+  bt_block_idx_t prev_idx;    // Index of the previous BT-block
+} __attribute__((packed)) bt_block_t;
 
+/*
+ * Backtrace initial positions
+ */
 typedef struct {
   int v;
   int h;
@@ -62,9 +66,9 @@ typedef struct {
   // Locator
   int segment_idx;                  // Current segment idx
   int segment_offset;               // Current free position within segment
-  wf_backtrace_block_t* block_next; // Next block free
+  bt_block_t* block_next;           // Next BT-block free
   // Buffers
-  vector_t* segments;               // Memory segments (wf_backtrace_block_t*)
+  vector_t* segments;               // Memory segments (bt_block_t*)
   vector_t* alignment_init_pos;     // Buffer to store alignment's initial coordinates (h,v) (wf_backtrace_init_pos_t)
   vector_t* alignment_packed;       // Temporal buffer to store final alignment (pcigar_t)
   // MM
@@ -89,24 +93,18 @@ void wf_backtrace_buffer_delete(
 void wf_backtrace_buffer_add_used(
     wf_backtrace_buffer_t* const bt_buffer,
     const int used);
-block_idx_t wf_backtrace_buffer_get_mem(
+bt_block_idx_t wf_backtrace_buffer_get_mem(
     wf_backtrace_buffer_t* const bt_buffer,
-    wf_backtrace_block_t** const bt_block_mem,
+    bt_block_t** const bt_block_mem,
     int* const bt_blocks_available);
 
 /*
  * Store blocks
  */
-void wf_backtrace_buffer_store_block_bt(
-    wf_backtrace_buffer_t* const bt_buffer,
-    pcigar_t* const pcigar,
-    block_idx_t* const prev_idx);
-void wf_backtrace_buffer_store_block_init(
+bt_block_idx_t wf_backtrace_buffer_init_block(
     wf_backtrace_buffer_t* const bt_buffer,
     const int v,
-    const int h,
-    pcigar_t* const pcigar,
-    block_idx_t* const prev_idx);
+    const int h);
 
 /*
  * Recover CIGAR
@@ -120,7 +118,7 @@ void wf_backtrace_buffer_recover_cigar(
     const int alignment_k,
     const int alignment_offset,
     const pcigar_t pcigar_last,
-    const block_idx_t prev_idx_last,
+    const bt_block_idx_t prev_idx_last,
     cigar_t* const cigar);
 
 /*
@@ -128,7 +126,7 @@ void wf_backtrace_buffer_recover_cigar(
  */
 void wf_backtrace_buffer_mark_backtrace(
     wf_backtrace_buffer_t* const bt_buffer,
-    const block_idx_t bt_block_idx,
+    const bt_block_idx_t bt_block_idx,
     bitmap_t* const bitmap);
 void wf_backtrace_buffer_compact_marked(
     wf_backtrace_buffer_t* const bt_buffer,

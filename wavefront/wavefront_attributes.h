@@ -85,6 +85,16 @@ typedef struct {
 } alignment_system_t;
 
 /*
+ * Low-memory modes
+ */
+typedef enum {
+  wavefront_memory_full = 0, // High-memore mode (fastest, stores all WFs explicitly)
+  wavefront_memory_high = 1, // Succing-memory mode (fast, offloads multiple BT-blocks -- even empty)
+  wavefront_memory_med  = 2, // Succing-memory mode (medium, offloads half-full BT-blocks)
+  wavefront_memory_low  = 3, // Succing-memory mode (slow, offloads only full BT-blocks)
+} wavefront_memory_t;
+
+/*
  * Wavefront Aligner Attributes
  */
 typedef struct {
@@ -99,7 +109,7 @@ typedef struct {
   // Reduction strategy
   wavefront_reduction_t reduction;           // Wavefront reduction
   // Memory model
-  bool low_memory;                           // Use low-memory strategy (modular wavefronts and piggyback)
+  wavefront_memory_t memory_mode;            // Wavefront memory strategy (modular wavefronts and piggyback)
   // External MM (instead of allocating one inside)
   mm_allocator_t* mm_allocator;              // MM-Allocator
   // Display

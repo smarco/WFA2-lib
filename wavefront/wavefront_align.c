@@ -115,10 +115,9 @@ void wavefront_align_end2end_initialize(
   wf_components->mwavefronts[0]->hi = 0;
   // Store initial BT-piggypack element
   if (wf_components->bt_piggyback) {
-    wf_backtrace_buffer_store_block_init(
-        wf_components->bt_buffer,0,0,
-        &(wf_components->mwavefronts[0]->bt_pcigar[0]),
-        &(wf_components->mwavefronts[0]->bt_prev[0]));
+    const bt_block_idx_t block_idx = wf_backtrace_buffer_init_block(wf_components->bt_buffer,0,0);
+    wf_components->mwavefronts[0]->bt_pcigar[0] = 0;
+    wf_components->mwavefronts[0]->bt_prev[0] = block_idx;
   }
   // Nullify unused WFs
   if (distance_metric==edit || distance_metric==gap_lineal) return;
@@ -150,6 +149,8 @@ bool wavefront_align_end2end_terminate(
   // Check offset
   const wf_offset_t offset = offsets[alignment_k];
   if (offset < alignment_offset) return false; // end2end termination condition
+  // DEBUG
+  // wavefront_aligner_print(stderr,wf_aligner,0,score_final,6,0);
   // Retrieve alignment
   if (wf_aligner->alignment_scope == compute_score) {
     cigar_clear(&wf_aligner->cigar);
@@ -165,7 +166,7 @@ bool wavefront_align_end2end_terminate(
           &wf_aligner->cigar);
     } else {
       // Backtrace alignment
-      wavefront_backtrace_affine(wf_aligner,score,alignment_k,alignment_offset);
+      wavefront_backtrace_affine(wf_aligner,score_final,alignment_k,alignment_offset);
     }
   }
   // Set score & finish
@@ -193,10 +194,9 @@ void wavefront_align_endsfree_initialize(
   wf_components->mwavefronts[0]->hi = text_begin_free;
   // Store initial BT-piggypack element
   if (wf_components->bt_piggyback) {
-    wf_backtrace_buffer_store_block_init(
-        wf_components->bt_buffer,0,0,
-        &(wf_components->mwavefronts[0]->bt_pcigar[0]),
-        &(wf_components->mwavefronts[0]->bt_prev[0]));
+    const bt_block_idx_t block_idx = wf_backtrace_buffer_init_block(wf_components->bt_buffer,0,0);
+    wf_components->mwavefronts[0]->bt_pcigar[0] = 0;
+    wf_components->mwavefronts[0]->bt_prev[0] = block_idx;
   }
   // Init text begin-free
   int h;
@@ -204,10 +204,9 @@ void wavefront_align_endsfree_initialize(
     const int k = WAVEFRONT_DIAGONAL(h,0);
     wf_components->mwavefronts[0]->offsets[k] = WAVEFRONT_OFFSET(h,0);
     if (wf_components->bt_piggyback) {
-      wf_backtrace_buffer_store_block_init(
-          wf_components->bt_buffer,0,h,
-          &(wf_components->mwavefronts[0]->bt_pcigar[k]),
-          &(wf_components->mwavefronts[0]->bt_prev[k]));
+      const bt_block_idx_t block_idx = wf_backtrace_buffer_init_block(wf_components->bt_buffer,0,h);
+      wf_components->mwavefronts[0]->bt_pcigar[k] = 0;
+      wf_components->mwavefronts[0]->bt_prev[k] = block_idx;
     }
   }
   // Init pattern begin-free
@@ -216,10 +215,9 @@ void wavefront_align_endsfree_initialize(
     const int k = WAVEFRONT_DIAGONAL(0,v);
     wf_components->mwavefronts[0]->offsets[k] = WAVEFRONT_OFFSET(0,v);
     if (wf_components->bt_piggyback) {
-      wf_backtrace_buffer_store_block_init(
-          wf_components->bt_buffer,v,0,
-          &(wf_components->mwavefronts[0]->bt_pcigar[k]),
-          &(wf_components->mwavefronts[0]->bt_prev[k]));
+      const bt_block_idx_t block_idx = wf_backtrace_buffer_init_block(wf_components->bt_buffer,v,0);
+      wf_components->mwavefronts[0]->bt_pcigar[k] = 0;
+      wf_components->mwavefronts[0]->bt_prev[k] = block_idx;
     }
   }
   // Nullify unused WFs
@@ -246,6 +244,8 @@ bool wavefront_align_endsfree_terminate(
   if (mwavefront==NULL) return false;
   // Check end reached
   if (mwavefront->k_alignment_end==WAVEFRONT_DIAGONAL_NULL) return false;
+  // DEBUG
+  //wavefront_aligner_print(stderr,wf_aligner,0,score_final,6,0);
   // Retrieve alignment
   if (wf_aligner->alignment_scope == compute_score) {
     cigar_clear(&wf_aligner->cigar);
