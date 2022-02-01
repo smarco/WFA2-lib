@@ -94,7 +94,24 @@ void wavefront_set_alignment_system(
   // Copy all parameters
   wf_aligner->system = *system;
   // Reset effective limits
-  wf_aligner->system.bt_compact_max_memory_eff = wf_aligner->system.bt_compact_max_memory;
+  if (system->max_memory_compact == -1 || system->max_memory_resident == -1) {
+    switch (wf_aligner->memory_mode) {
+      case wavefront_memory_high:
+        wf_aligner->system.max_memory_compact = BUFFER_SIZE_2G;
+        wf_aligner->system.max_memory_resident = BUFFER_SIZE_2G + BUFFER_SIZE_256M;
+        break;
+      case wavefront_memory_med:
+        wf_aligner->system.max_memory_compact = BUFFER_SIZE_1G;
+        wf_aligner->system.max_memory_resident = BUFFER_SIZE_1G + BUFFER_SIZE_256M;
+        break;
+      case wavefront_memory_low:
+        wf_aligner->system.max_memory_compact = BUFFER_SIZE_256M;
+        wf_aligner->system.max_memory_resident = 2*BUFFER_SIZE_256M;
+        break;
+      default:
+        break;
+    }
+  }
 }
 /*
  * Setup
@@ -130,6 +147,11 @@ wavefront_aligner_t* wavefront_aligner_new(
   wf_aligner->memory_mode = attributes->memory_mode;
   // Reduction strategy
   wavefront_set_reduction(wf_aligner,attributes);
+  // Custom matching functions
+  if (wf_aligner->match_func != NULL) {
+    wf_aligner->match_func = attributes->match_func;
+    wf_aligner->match_func_arguments = attributes->match_func_arguments;
+  }
   // Wavefront components
   wavefront_components_allocate(
       &wf_aligner->wf_components,pattern_length,text_length,
@@ -174,15 +196,6 @@ void wavefront_aligner_resize(
   // System
   wavefront_set_alignment_system(wf_aligner,&wf_aligner->system);
 }
-//void wavefront_aligner_clear(
-//    wavefront_aligner_t* const wf_aligner) {
-//  // Wavefront components
-//  wavefront_components_clear(&wf_aligner->wf_components);
-//  // CIGAR
-//  cigar_clear(&wf_aligner->cigar);
-//  // Slab
-//  wavefront_slab_clear(wf_aligner->wavefront_slab);
-//}
 void wavefront_aligner_reap(
     wavefront_aligner_t* const wf_aligner) {
   // Wavefront components
@@ -244,10 +257,14 @@ void wavefront_aligner_set_max_alignment_score(
     const int max_alignment_score) {
   wf_aligner->alignment_form.max_alignment_score = max_alignment_score;
 }
-void wavefront_aligner_set_max_memory_used(
+void wavefront_aligner_set_max_memory(
     wavefront_aligner_t* const wf_aligner,
-    const uint64_t max_memory_used) {
-  wf_aligner->system.max_memory_used = max_memory_used;
+    const uint64_t max_memory_compact,
+    const uint64_t max_memory_resident,
+    const uint64_t max_memory_abort) {
+  wf_aligner->system.max_memory_compact = max_memory_compact;
+  wf_aligner->system.max_memory_resident = max_memory_resident;
+  wf_aligner->system.max_memory_abort = max_memory_abort;
 }
 /*
  * Utils

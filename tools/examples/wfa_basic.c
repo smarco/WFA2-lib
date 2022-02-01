@@ -43,8 +43,7 @@ int main(int argc,char* argv[]) {
   attributes.affine_penalties.gap_opening = 6;
   attributes.affine_penalties.gap_extension = 2;
   // Initialize Wavefront Aligner
-  wavefront_aligner_t* const wf_aligner =
-      wavefront_aligner_new(strlen(pattern),strlen(text),&attributes);
+  wavefront_aligner_t* const wf_aligner = wavefront_aligner_new(&attributes);
   // Align
   wavefront_align(wf_aligner,pattern,strlen(pattern),text,strlen(text));
   fprintf(stderr,"WFA-Alignemnt returns score %d\n",wf_aligner->cigar.score);

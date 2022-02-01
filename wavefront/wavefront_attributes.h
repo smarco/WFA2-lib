@@ -66,22 +66,21 @@ typedef struct {
   // Limits
   int max_alignment_score; // Maximum score allowed before quit
 } alignment_form_t;
+typedef bool (*alignment_match_funct_t)(int,int,void*);
 
 /*
  * Alignment system configuration
  */
 typedef struct {
-  // Global
-  int global_probe_interval;          // Score-ticks interval to check any limits
-  // BT-Buffer compacting
-  int bt_compact_probe_interval;      // Score-ticks interval to check BT-buffer compacting
-  uint64_t bt_compact_max_memory;     // Maximum BT-buffer memory (allowed before trying compacting)
-  uint64_t bt_compact_max_memory_eff; // Effective maximum BT-buffer memory
+  // Probing intervals
+  int probe_interval_global;     // Score-ticks interval to check any limits
+  int probe_interval_compact;    // Score-ticks interval to check BT-buffer compacting
   // Memory
-  uint64_t max_memory_used;           // Maximum memory allowed to used before quit
-  uint64_t max_memory_resident;       // Maximum memory allowed to be buffered before reap
+  uint64_t max_memory_compact;   // Maximum BT-buffer memory allowed before trying compacting
+  uint64_t max_memory_resident;  // Maximum memory allowed to be buffered before reap
+  uint64_t max_memory_abort;     // Maximum memory allowed to be used before aborting alignment
   // Misc
-  bool verbose;                       // Verbose (regulates messages during alignment)
+  bool verbose;                  // Verbose (regulates messages during alignment)
 } alignment_system_t;
 
 /*
@@ -99,23 +98,26 @@ typedef enum {
  */
 typedef struct {
   // Distance model
-  distance_metric_t distance_metric;         // Alignment metric/distance used
-  alignment_scope_t alignment_scope;         // Alignment scope (score only or full-CIGAR)
-  alignment_form_t alignment_form;           // Alignment mode (end-to-end/ends-free)
+  distance_metric_t distance_metric;       // Alignment metric/distance used
+  alignment_scope_t alignment_scope;       // Alignment scope (score only or full-CIGAR)
+  alignment_form_t alignment_form;         // Alignment mode (end-to-end/ends-free)
   // Penalties
-  lineal_penalties_t lineal_penalties;       // Gap-lineal penalties (placeholder)
-  affine_penalties_t affine_penalties;       // Gap-affine penalties (placeholder)
-  affine2p_penalties_t affine2p_penalties;   // Gap-affine-2p penalties (placeholder)
+  lineal_penalties_t lineal_penalties;     // Gap-lineal penalties (placeholder)
+  affine_penalties_t affine_penalties;     // Gap-affine penalties (placeholder)
+  affine2p_penalties_t affine2p_penalties; // Gap-affine-2p penalties (placeholder)
   // Reduction strategy
-  wavefront_reduction_t reduction;           // Wavefront reduction
+  wavefront_reduction_t reduction;         // Wavefront reduction
   // Memory model
-  wavefront_memory_t memory_mode;            // Wavefront memory strategy (modular wavefronts and piggyback)
+  wavefront_memory_t memory_mode;          // Wavefront memory strategy (modular wavefronts and piggyback)
+  // Custom function to compare sequences
+  alignment_match_funct_t match_func;      // Custom matching function (match(v,h,args))
+  void* match_func_arguments;              // Generic arguments passed to matching function (args)
   // External MM (instead of allocating one inside)
-  mm_allocator_t* mm_allocator;              // MM-Allocator
+  mm_allocator_t* mm_allocator;            // MM-Allocator
   // Display
-  wavefront_plot_params_t plot_params;       // Wavefront plot
+  wavefront_plot_params_t plot_params;     // Wavefront plot
   // System
-  alignment_system_t system;                 // System related parameters
+  alignment_system_t system;               // System related parameters
 } wavefront_aligner_attr_t;
 
 /*

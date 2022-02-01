@@ -138,10 +138,8 @@ void benchmark_gap_affine_swg_banded(
 void benchmark_gap_affine_wavefront(
     align_input_t* const align_input,
     affine_penalties_t* const penalties) {
-  // Clear & resize
+  // Parameters
   wavefront_aligner_t* const wf_aligner = align_input->wf_aligner;
-  wavefront_aligner_resize(wf_aligner,
-      align_input->pattern_length,align_input->text_length);
   // Align
   timer_start(&align_input->timer);
   wavefront_align(wf_aligner,

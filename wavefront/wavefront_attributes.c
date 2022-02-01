@@ -46,6 +46,9 @@ wavefront_aligner_attr_t wavefront_aligner_attr_default = {
         .text_end_free = 0,
         .max_alignment_score = INT_MAX, // Unlimited
     },
+    // Custom matching functions
+    .match_func = NULL,           // Use default match-compare function
+    .match_func_arguments = NULL, // No arguments
     // Penalties
     .lineal_penalties = {
         .match = 0,
@@ -88,11 +91,11 @@ wavefront_aligner_attr_t wavefront_aligner_attr_default = {
     },
     // System
     .system = {
-        .global_probe_interval = 2000,
-        .bt_compact_probe_interval = 6000,
-        .bt_compact_max_memory = BUFFER_SIZE_256M,
-        .max_memory_used = UINT64_MAX, // Unlimited
-        .max_memory_resident = BUFFER_SIZE_256M,
+        .probe_interval_global = 2000,
+        .probe_interval_compact = 6000,
+        .max_memory_compact = -1,  // Automatically set based on memory-mode
+        .max_memory_resident = -1, // Automatically set based on memory-mode
+        .max_memory_abort = UINT64_MAX, // Unlimited
         .verbose = false,
     },
 };

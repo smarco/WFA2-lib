@@ -62,28 +62,29 @@ void bitmap_delete(
  */
 void bitmap_set(
     bitmap_t* const bitmap,
-    const uint64_t pos) {
+    const uint64_t position) {
   // Locate block
-  const uint64_t block_num = pos / BITMAP_BLOCK_ELEMENTS;
-  const uint64_t block_pos = pos % BITMAP_BLOCK_ELEMENTS;
+  const uint64_t block_num = position / BITMAP_BLOCK_ELEMENTS;
+  const uint64_t block_pos = position % BITMAP_BLOCK_ELEMENTS;
   // Set bitmap
   bitmap->bitmap_blocks[block_num].bitmap |= (BITMAP_BLOCK_MASK << block_pos);
 }
 bool bitmap_is_set(
     bitmap_t* const bitmap,
-    const uint64_t pos) {
+    const uint64_t position) {
   // Locate block
-  const uint64_t block_num = pos / BITMAP_BLOCK_ELEMENTS;
-  const uint64_t block_pos = pos % BITMAP_BLOCK_ELEMENTS;
+  const uint64_t block_num = position / BITMAP_BLOCK_ELEMENTS;
+  const uint64_t block_pos = position % BITMAP_BLOCK_ELEMENTS;
   // Set bitmap
   return bitmap->bitmap_blocks[block_num].bitmap & (BITMAP_BLOCK_MASK << block_pos);
 }
+
 bool bitmap_check__set(
     bitmap_t* const bitmap,
-    const uint64_t pos) {
+    const uint64_t position) {
   // Locate block
-  const uint64_t block_num = pos / BITMAP_BLOCK_ELEMENTS;
-  const uint64_t block_pos = pos % BITMAP_BLOCK_ELEMENTS;
+  const uint64_t block_num = position / BITMAP_BLOCK_ELEMENTS;
+  const uint64_t block_pos = position % BITMAP_BLOCK_ELEMENTS;
   // Check bit set
   if (bitmap->bitmap_blocks[block_num].bitmap & (BITMAP_BLOCK_MASK << block_pos)) {
     return true; // Return true (it was set)
@@ -111,10 +112,10 @@ void bitmap_update_counters(
 }
 uint64_t bitmap_erank(
     bitmap_t* const bitmap,
-    const uint64_t pos) {
+    const uint64_t position) {
   // Locate block
-  const uint64_t block_num = pos / BITMAP_BLOCK_ELEMENTS;
-  const uint64_t block_pos = pos % BITMAP_BLOCK_ELEMENTS;
+  const uint64_t block_num = position / BITMAP_BLOCK_ELEMENTS;
+  const uint64_t block_pos = position % BITMAP_BLOCK_ELEMENTS;
   // Compute e(xclusive)rank (number of bits set to one before the given position, not included)
   bitmap_block_t* const bitmap_block = bitmap->bitmap_blocks + block_num;
   const uint64_t bitmap_masked = (block_pos!=0) ? bitmap_block->bitmap << (BITMAP_BLOCK_ELEMENTS - block_pos) : 0;

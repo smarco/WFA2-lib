@@ -49,29 +49,32 @@
  */
 typedef struct _wavefront_aligner_t {
   // Sequences
-  char* pattern;                               // Pattern sequence (padded)
-  int pattern_length;                          // Pattern length
-  char* text;                                  // Text sequence (padded)
-  int text_length;                             // Text length
+  char* pattern;                           // Pattern sequence (padded)
+  int pattern_length;                      // Pattern length
+  char* text;                              // Text sequence (padded)
+  int text_length;                         // Text length
   // Alignment Attributes
-  alignment_scope_t alignment_scope;           // Alignment scope (score only or full-CIGAR)
-  alignment_form_t alignment_form;             // Alignment form (end-to-end/ends-free)
-  wavefronts_penalties_t penalties;            // Alignment penalties
-  wavefront_reduction_t reduction;             // Reduction parameters
-  wavefront_memory_t memory_mode;              // Wavefront memory strategy (modular wavefronts and piggyback)
+  alignment_scope_t alignment_scope;       // Alignment scope (score only or full-CIGAR)
+  alignment_form_t alignment_form;         // Alignment form (end-to-end/ends-free)
+  wavefronts_penalties_t penalties;        // Alignment penalties
+  wavefront_reduction_t reduction;         // Reduction parameters
+  wavefront_memory_t memory_mode;          // Wavefront memory strategy (modular wavefronts and piggyback)
+  // Custom function to compare sequences
+  alignment_match_funct_t match_func;      // Custom matching function (match(v,h,args))
+  void* match_func_arguments;              // Generic arguments passed to matching function (args)
   // Wavefront components
-  wavefront_components_t wf_components;        // Wavefront components
+  wavefront_components_t wf_components;    // Wavefront components
   // CIGAR
-  cigar_t cigar;                               // Alignment CIGAR
+  cigar_t cigar;                           // Alignment CIGAR
   // MM
-  bool mm_allocator_own;                       // Ownership of MM-Allocator
-  mm_allocator_t* mm_allocator;                // MM-Allocator
-  wavefront_slab_t* wavefront_slab;            // MM-Wavefront-Slab (Allocates/Reuses the individual wavefronts)
+  bool mm_allocator_own;                   // Ownership of MM-Allocator
+  mm_allocator_t* mm_allocator;            // MM-Allocator
+  wavefront_slab_t* wavefront_slab;        // MM-Wavefront-Slab (Allocates/Reuses the individual wavefronts)
   // Display
-  wavefront_plot_params_t plot_params;         // Wavefront plot parameters
-  wavefront_plot_t wf_plot;                    // Wavefront plot
+  wavefront_plot_params_t plot_params;     // Wavefront plot parameters
+  wavefront_plot_t wf_plot;                // Wavefront plot
   // System
-  alignment_system_t system;                   // System related parameters
+  alignment_system_t system;               // System related parameters
 } wavefront_aligner_t;
 
 /*
@@ -110,9 +113,11 @@ void wavefront_aligner_set_reduction_adaptive(
 void wavefront_aligner_set_max_alignment_score(
     wavefront_aligner_t* const wf_aligner,
     const int max_alignment_score);
-void wavefront_aligner_set_max_memory_used(
+void wavefront_aligner_set_max_memory(
     wavefront_aligner_t* const wf_aligner,
-    const uint64_t max_memory_used);
+    const uint64_t max_memory_compact,
+    const uint64_t max_memory_resident,
+    const uint64_t max_memory_abort);
 
 /*
  * Utils

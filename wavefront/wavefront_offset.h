@@ -26,35 +26,34 @@
  *
  * PROJECT: Wavefront Alignments Algorithms
  * AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
- * DESCRIPTION: WFA Sample-Code
+ * DESCRIPTION: WaveFront offset type and utils
  */
 
-#include "wavefront/wavefront_align.h"
+#ifndef WAVEFRONT_OFFSET_H_
+#define WAVEFRONT_OFFSET_H_
 
-int main(int argc,char* argv[]) {
-  // Patter & Text
-  char* pattern = "TCTTTACTCGCGCGTTTCTTACTCGCGCGTTGGAGAAATACAATAGTGGAGAAATACAATAGTTTTTTTTTTTT";
-  char* text    = "TTTTTTCTATACTGCGCGTTTTCTATACTCGCGCGTTGGAGAAATACAATAGTGGAGAAATAAAATAGT";
-  // Configure alignment attributes
-  wavefront_aligner_attr_t attributes = wavefront_aligner_attr_default;
-  attributes.distance_metric = gap_affine;
-  attributes.affine_penalties.match = 0;
-  attributes.affine_penalties.mismatch = 4;
-  attributes.affine_penalties.gap_opening = 6;
-  attributes.affine_penalties.gap_extension = 2;
-  // Initialize Wavefront Aligner
-  wavefront_aligner_t* const wf_aligner = wavefront_aligner_new(&attributes);
-  // Repeat alignment (for the sake of it)
-  int i;
-  for (i=0;i<100000;++i) {
-    // Align
-    wavefront_align(wf_aligner,pattern,strlen(pattern),text,strlen(text));
-    // Report
-    if ((i%1000) == 0) {
-      fprintf(stderr,"... done %d alignments\n",i);
-    }
-  }
-  fprintf(stderr,"... done %d alignments\n",100000);
-  // Free
-  wavefront_aligner_delete(wf_aligner);
-}
+#include "utils/commons.h"
+
+/*
+ * Wavefront Offset
+ */
+typedef int32_t wf_offset_t;
+typedef uint32_t wf_unsigned_offset_t;
+
+/*
+ * Constants
+ */
+#define WAVEFRONT_OFFSET_NULL (INT32_MIN/2) // TODO Check occurrences and make sure (off < 0) == NULL
+
+/*
+ * Translate k and offset to coordinates h,v
+ */
+#define WAVEFRONT_V(k,offset)   ((offset)-(k))
+#define WAVEFRONT_H(k,offset)   (offset)
+#define WAVEFRONT_DIAGONAL(h,v) ((h)-(v))
+#define WAVEFRONT_OFFSET(h,v)   (h)
+#define WAVEFRONT_LENGTH(lo,hi) ((hi)-(lo)+1) // (lo/hi inclusive and +1 for WF[0])
+
+#define WAVEFRONT_DIAGONAL_NULL INT_MAX
+
+#endif /* WAVEFRONT_OFFSET_H_ */

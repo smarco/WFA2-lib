@@ -42,6 +42,22 @@
 #define BITMAP_BLOCK_MASK     0x0000000000000001ul
 
 /*
+ * Utils
+ */
+#define BITMAP_PREFETCH_BLOCK(bm,position) \
+  PREFETCH(bm->bitmap_blocks+(position/BITMAP_BLOCK_ELEMENTS))
+
+#define BITMAP_GET_BLOCK(bm,position,block_bitmap_ptr) \
+  const uint64_t block_num = position / BITMAP_BLOCK_ELEMENTS; \
+  uint64_t* const block_bitmap_ptr = &(bm->bitmap_blocks[block_num].bitmap)
+
+#define BM_BLOCK_IS_SET(block_bitmap,position) \
+  (block_bitmap & (BITMAP_BLOCK_MASK << (position % BITMAP_BLOCK_ELEMENTS)))
+
+#define BM_BLOCK_SET(block_bitmap,position) \
+  (block_bitmap |= (BITMAP_BLOCK_MASK << (position % BITMAP_BLOCK_ELEMENTS)))
+
+/*
  * Bitmap
  */
 typedef struct {

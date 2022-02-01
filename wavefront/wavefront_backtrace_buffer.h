@@ -38,6 +38,7 @@
 #include "utils/bitmap.h"
 #include "system/mm_allocator.h"
 #include "wavefront_pcigar.h"
+#include "wavefront_offset.h"
 
 /*
  * Separated Backtrace Block
@@ -70,7 +71,9 @@ typedef struct {
   // Buffers
   vector_t* segments;               // Memory segments (bt_block_t*)
   vector_t* alignment_init_pos;     // Buffer to store alignment's initial coordinates (h,v) (wf_backtrace_init_pos_t)
+  // Internal buffers
   vector_t* alignment_packed;       // Temporal buffer to store final alignment (pcigar_t)
+  vector_t* prefetch_blocks_idxs;   // Temporal buffer to store blocks_idxs (bt_block_idx_t)
   // MM
   mm_allocator_t* mm_allocator;
 } wf_backtrace_buffer_t;
@@ -128,6 +131,13 @@ void wf_backtrace_buffer_mark_backtrace(
     wf_backtrace_buffer_t* const bt_buffer,
     const bt_block_idx_t bt_block_idx,
     bitmap_t* const bitmap);
+void wf_backtrace_buffer_mark_backtrace_batch(
+    wf_backtrace_buffer_t* const bt_buffer,
+    wf_offset_t* const offsets,
+    bt_block_idx_t* const bt_block_idxs,
+    const int num_block_idxs,
+    bitmap_t* const bitmap);
+
 void wf_backtrace_buffer_compact_marked(
     wf_backtrace_buffer_t* const bt_buffer,
     bitmap_t* const bitmap,

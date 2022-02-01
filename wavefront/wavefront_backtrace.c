@@ -278,7 +278,7 @@ void wavefront_backtrace_affine(
   int h = WAVEFRONT_H(k,alignment_offset);
   int v = WAVEFRONT_V(k,alignment_offset);
   wf_offset_t offset = alignment_offset;
-  wavefronts_backtrace_valid_location(wf_aligner,k,offset); // FIXME: Remove this check
+  // DEBUG wavefronts_backtrace_valid_location(wf_aligner,k,offset);
   // Account for ending insertions/deletions
   cigar->end_offset = cigar->max_operations - 1;
   cigar->begin_offset = cigar->max_operations - 2;

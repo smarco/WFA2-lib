@@ -339,7 +339,7 @@ wavefront_aligner_t* align_benchmark_configure_wf(
   attributes.plot_params.plot_enabled = (parameters.plot > 0);
   attributes.plot_params.resolution_points = parameters.plot;
   attributes.system.verbose = parameters.verbose;
-  attributes.system.max_memory_used = parameters.max_memory;
+  attributes.system.max_memory_abort = parameters.max_memory;
   // Allocate
   return wavefront_aligner_new(&attributes);
 }

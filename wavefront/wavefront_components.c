@@ -329,11 +329,9 @@ void wavefront_components_mark_backtrace(
   bt_block_idx_t* const bt_prev = wavefront->bt_prev;
   const int lo = wavefront->lo;
   const int hi = wavefront->hi;
-  // Mark all wavefront backtraces
-  int k;
-  for (k=lo;k<=hi;++k) {
-    if (offsets[k]>=0) wf_backtrace_buffer_mark_backtrace(bt_buffer,bt_prev[k],bitmap);
-  }
+  // Mark all wavefront backtraces (batch mode)
+  wf_backtrace_buffer_mark_backtrace_batch(
+      bt_buffer,offsets+lo,bt_prev+lo,hi-lo+1,bitmap);
 }
 void wavefront_components_mark_wavefronts(
     wavefront_components_t* const wf_components,

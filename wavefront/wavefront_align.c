@@ -70,27 +70,27 @@ int wavefront_align_reached_limits(
   }
   // Global probing interval
   alignment_system_t* const system = &wf_aligner->system;
-  if ((score%system->global_probe_interval) != 0) return 0;
+  if ((score%system->probe_interval_global) != 0) return 0;
   if (system->verbose) wavefront_aligner_print_status(stderr,wf_aligner,score); // DEBUG
   // BT-Buffer
   wavefront_components_t*const wf_components = &wf_aligner->wf_components;
-  if (wf_components->bt_buffer!=NULL && (score%system->bt_compact_probe_interval)==0) {
+  if (wf_components->bt_buffer!=NULL && (score%system->probe_interval_compact)==0) {
     uint64_t bt_memory = wf_backtrace_buffer_get_size_used(wf_components->bt_buffer);
     // Check BT-buffer memory
-    if (bt_memory > system->bt_compact_max_memory_eff) {
+    if (bt_memory > system->max_memory_compact) {
       // Compact BT-buffer
       wavefront_components_compact_bt_buffer(wf_components,score,wf_aligner->system.verbose);
       // Set new buffer limit
       bt_memory = wf_backtrace_buffer_get_size_used(wf_components->bt_buffer);
       uint64_t proposed_mem = (double)bt_memory * TELESCOPIC_FACTOR;
-      if (proposed_mem < system->bt_compact_max_memory) proposed_mem = system->bt_compact_max_memory;
-      if (proposed_mem > system->max_memory_used) proposed_mem = system->bt_compact_max_memory_eff;
-      system->bt_compact_max_memory_eff = proposed_mem;
+      if (system->max_memory_compact < proposed_mem && proposed_mem < system->max_memory_abort) {
+        proposed_mem = system->max_memory_compact;
+      }
     }
   }
   // Check overall memory used
   const uint64_t wf_memory_used = wavefront_aligner_get_size(wf_aligner);
-  if (wf_memory_used > system->max_memory_used) {
+  if (wf_memory_used > system->max_memory_abort) {
     return WF_ALIGN_OOM;
   }
   // Otherwise OK
@@ -346,7 +346,8 @@ int wavefront_align(
       fprintf(stderr,"[WFA] Distance function not implemented yet\n"); exit(1);
       break;
   }
-  if (wf_aligner->alignment_form.span == alignment_end2end) {
+  const bool end2end = (wf_aligner->alignment_form.span == alignment_end2end);
+  if (end2end) {
     wavefront_align_initialize = &wavefront_align_end2end_initialize;
     wavefront_align_terminate = &wavefront_align_end2end_terminate;
     wavefront_align_extend = &wavefront_extend_end2end;
@@ -355,6 +356,9 @@ int wavefront_align(
     wavefront_align_initialize = &wavefront_align_endsfree_initialize;
     wavefront_align_terminate = &wavefront_align_endsfree_terminate;
     wavefront_align_extend = &wavefront_extend_endsfree;
+  }
+  if (wf_aligner->match_func != NULL) {
+    wavefront_align_extend = &wavefront_extend_custom;
   }
   // Wavefront align sequences
   const int status = wavefront_align_sequences(

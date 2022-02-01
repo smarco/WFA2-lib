@@ -28,7 +28,7 @@ MODULES=wavefront_align \
 SRCS=$(addsuffix .c, $(MODULES))
 OBJS=$(addprefix $(FOLDER_BUILD)/, $(SRCS:.c=.o))
 
-CC_XFLAGS=-march=native -fopt-info-vec-optimized
+CC_XFLAGS=-fopt-info-vec-optimized
 
 ###############################################################################
 # Rules

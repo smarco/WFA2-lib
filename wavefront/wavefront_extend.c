@@ -35,10 +35,37 @@
 #include "wavefront_reduction.h"
 
 /*
- * Wavefront offset extension comparing characters
- *   // TODO Avoid register spilling in x86
+ * Wavefront ends-free check boundaries (detect end of alignment)
  */
-bool wavefront_extend_packed(
+bool wavefront_extend_endsfree_check_boundaries(
+    wavefront_aligner_t* const wf_aligner,
+    const wf_offset_t offset,
+    const int k) {
+  // Parameters
+  const int pattern_length = wf_aligner->pattern_length;
+  const int text_length = wf_aligner->text_length;
+  // Check ends-free reaching boundaries
+  const int h_pos = WAVEFRONT_H(k,offset);
+  const int v_pos = WAVEFRONT_V(k,offset);
+  if (h_pos >= text_length) { // Text is aligned
+    // Is Pattern end-free?
+    const int pattern_left = pattern_length - v_pos;
+    const int pattern_end_free = wf_aligner->alignment_form.pattern_end_free;
+    if (pattern_left <= pattern_end_free) return true; // Quit (we are done)
+  }
+  if (v_pos >= pattern_length) { // Pattern is aligned
+    // Is text end-free?
+    const int text_left = text_length - h_pos;
+    const int text_end_free = wf_aligner->alignment_form.text_end_free;
+    if (text_left <= text_end_free) return true; // Quit (we are done)
+  }
+  // Not done
+  return false;
+}
+/*
+ * Wavefront offset extension comparing characters
+ */
+bool wavefront_extend_matches_packed(
     wavefront_aligner_t* const wf_aligner,
     const int score,
     const bool endsfree) {
@@ -46,8 +73,6 @@ bool wavefront_extend_packed(
   wavefront_t* const mwavefront = wf_aligner->wf_components.mwavefronts[score];
   if (mwavefront==NULL) return false;
   // Extend diagonally each wavefront point
-  const int pattern_length = wf_aligner->pattern_length;
-  const int text_length = wf_aligner->text_length;
   wf_offset_t* const offsets = mwavefront->offsets;
   const int lo = mwavefront->lo;
   const int hi = mwavefront->hi;
@@ -79,27 +104,44 @@ bool wavefront_extend_packed(
     // Update offset
     offsets[k] = offset;
     // Check ends-free reaching boundaries
-    if (endsfree) {
-      const int h_pos = WAVEFRONT_H(k,offset);
-      const int v_pos = WAVEFRONT_V(k,offset);
-      if (h_pos >= text_length) { // Text is aligned
-        // Is Pattern end-free?
-        const int pattern_left = pattern_length - v_pos;
-        const int pattern_end_free = wf_aligner->alignment_form.pattern_end_free;
-        if (pattern_left <= pattern_end_free) {
-          mwavefront->k_alignment_end = k;
-          return true; // Quit (we are done)
-        }
-      }
-      if (v_pos >= pattern_length) { // Pattern is aligned
-        // Is text end-free?
-        const int text_left = text_length - h_pos;
-        const int text_end_free = wf_aligner->alignment_form.text_end_free;
-        if (text_left <= text_end_free) {
-          mwavefront->k_alignment_end = k;
-          return true; // Quit (we are done)
-        }
-      }
+    if (endsfree && wavefront_extend_endsfree_check_boundaries(wf_aligner,offset,k)) {
+      mwavefront->k_alignment_end = k;
+      return true; // Quit (we are done)
+    }
+  }
+  // No end reached
+  return false;
+}
+bool wavefront_extend_matches_custom(
+    wavefront_aligner_t* const wf_aligner,
+    const int score,
+    const bool endsfree) {
+  // Fetch m-wavefront
+  wavefront_t* const mwavefront = wf_aligner->wf_components.mwavefronts[score];
+  if (mwavefront==NULL) return false;
+  // Parameters (custom matching function)
+  alignment_match_funct_t match_func = wf_aligner->match_func;
+  void* const func_arguments = wf_aligner->match_func_arguments;
+  // Extend diagonally each wavefront point
+  wf_offset_t* const offsets = mwavefront->offsets;
+  const int lo = mwavefront->lo;
+  const int hi = mwavefront->hi;
+  int k;
+  for (k=lo;k<=hi;++k) {
+    // Check offset
+    wf_offset_t offset = offsets[k];
+    if (offset == WAVEFRONT_OFFSET_NULL) continue;
+    // Count equal characters
+    int h = 0, v = 0;
+    while (match_func(v,h,func_arguments)) {
+      h++; v++; offset++;
+    }
+    // Update offset
+    offsets[k] = offset;
+    // Check ends-free reaching boundaries
+    if (endsfree && wavefront_extend_endsfree_check_boundaries(wf_aligner,offset,k)) {
+      mwavefront->k_alignment_end = k;
+      return true; // Quit (we are done)
     }
   }
   // No end reached
@@ -114,7 +156,7 @@ void wavefront_extend_end2end(
   // Modular wavefront
   if (wf_aligner->wf_components.memory_modular) score = score % wf_aligner->wf_components.max_score_scope;
   // Extend wavefront
-  wavefront_extend_packed(wf_aligner,score,false);
+  wavefront_extend_matches_packed(wf_aligner,score,false);
   // Reduce wavefront adaptively
   if (wf_aligner->reduction.reduction_strategy == wavefront_reduction_adaptive) {
     wavefront_reduce(wf_aligner,score);
@@ -126,7 +168,20 @@ void wavefront_extend_endsfree(
   // Modular wavefront
   if (wf_aligner->wf_components.memory_modular) score = score % wf_aligner->wf_components.max_score_scope;
   // Extend wavefront
-  const bool end_reached = wavefront_extend_packed(wf_aligner,score,true);
+  const bool end_reached = wavefront_extend_matches_packed(wf_aligner,score,true);
+  // Reduce wavefront adaptively
+  if (!end_reached && wf_aligner->reduction.reduction_strategy == wavefront_reduction_adaptive) {
+    wavefront_reduce(wf_aligner,score);
+  }
+}
+void wavefront_extend_custom(
+    wavefront_aligner_t* const wf_aligner,
+    int score) {
+  // Modular wavefront
+  if (wf_aligner->wf_components.memory_modular) score = score % wf_aligner->wf_components.max_score_scope;
+  // Extend wavefront
+  const bool endsfree = (wf_aligner->alignment_form.span == alignment_endsfree);
+  const bool end_reached = wavefront_extend_matches_custom(wf_aligner,score,endsfree);
   // Reduce wavefront adaptively
   if (!end_reached && wf_aligner->reduction.reduction_strategy == wavefront_reduction_adaptive) {
     wavefront_reduce(wf_aligner,score);

@@ -34,29 +34,8 @@
 
 #include "utils/commons.h"
 #include "system/mm_allocator.h"
+#include "wavefront_offset.h"
 #include "wavefront_backtrace_buffer.h"
-
-/*
- * Wavefront Offset
- */
-typedef int32_t wf_offset_t;
-typedef uint32_t wf_unsigned_offset_t;
-
-/*
- * Constants
- */
-#define WAVEFRONT_OFFSET_NULL (INT32_MIN/2) // TODO (+1 for I/D) Silently increases NULL offsets
-
-/*
- * Translate k and offset to coordinates h,v
- */
-#define WAVEFRONT_V(k,offset)   ((offset)-(k))
-#define WAVEFRONT_H(k,offset)   (offset)
-#define WAVEFRONT_DIAGONAL(h,v) ((h)-(v))
-#define WAVEFRONT_OFFSET(h,v)   (h)
-#define WAVEFRONT_LENGTH(lo,hi) ((hi)-(lo)+1) // (lo/hi inclusive and +1 for WF[0])
-
-#define WAVEFRONT_DIAGONAL_NULL        INT_MAX
 
 /*
  * Wavefront

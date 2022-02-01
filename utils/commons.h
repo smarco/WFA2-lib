@@ -268,6 +268,6 @@ uint64_t rand_iid(const uint64_t min,const uint64_t max);
 /*
  * Prefetch macros
  */
-#define PREFETCH(ADDR) __builtin_prefetch(((const char*)ADDR),0,0)
+#define PREFETCH(ADDR) __builtin_prefetch(((const char*)ADDR))
 
 #endif /* COMMONS_H_ */

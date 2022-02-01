@@ -47,8 +47,7 @@ int main(int argc,char* argv[]) {
   attributes.reduction.min_wavefront_length = 10;
   attributes.reduction.max_distance_threshold = 50;
   // Initialize Wavefront Aligner
-  wavefront_aligner_t* const wf_aligner =
-      wavefront_aligner_new(strlen(pattern),strlen(text),&attributes);
+  wavefront_aligner_t* const wf_aligner = wavefront_aligner_new(&attributes);
   // Align
   wavefront_align(wf_aligner,pattern,strlen(pattern),text,strlen(text));
   fprintf(stderr,"WFA-Alignemnt returns score %d\n",wf_aligner->cigar.score);

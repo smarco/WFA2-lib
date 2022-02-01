@@ -26,7 +26,7 @@
  *
  * PROJECT: Wavefront Alignments Algorithms
  * AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
- * DESCRIPTION: WFA Sample-Code
+ * DESCRIPTION: WFA C++ Sample-Code
  */
 
 #include <iostream>
@@ -43,11 +43,11 @@ int main(int argc,char* argv[]) {
   // Create a WFAligner
   WFAlignerGapAffine aligner(4,6,2);
   // Align
-  aligner.align(pattern,text);
-  cout << "WFA-Alignemnt returns score " << aligner.get_alignment_score() << endl;
+  aligner.alignGlobal(pattern,text);
+  cout << "WFA-Alignemnt returns score " << aligner.getAlignmentScore() << endl;
 
   // Print CIGAR
-  string cigar = aligner.get_alignment_cigar();
+  string cigar = aligner.getAlignmentCigar();
   cout << "PATTERN: " << pattern  << endl;
   cout << "TEXT: " << text  << endl;
   cout << "CIGAR: " << cigar  << endl;

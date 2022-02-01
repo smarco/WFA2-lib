@@ -33,7 +33,12 @@ SUBDIRS=alignment \
        
 LIB_WFA=$(FOLDER_BUILD)/libwfa.a
 
-all: CC_FLAGS+=-O3
+release: CC_FLAGS+=-O3 -march=native -flto
+release: MODE=all
+release: setup
+release: $(SUBDIRS) lib_wfa tools
+
+all: CC_FLAGS+=-O3 -march=native #-flto
 all: MODE=all
 all: setup
 all: $(SUBDIRS) lib_wfa tools
