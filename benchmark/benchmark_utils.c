@@ -92,13 +92,17 @@ void benchmark_print_alignment(
         cigar_correct,align_input->mm_allocator);
   }
 }
-void benchmark_print_alignment_short(
+void benchmark_print_alignment_output(
     FILE* const stream,
+    align_input_t* const align_input,
     const int score,
     cigar_t* const cigar) {
-  fprintf(stream,"%d ",score);
-  cigar_print(stream,cigar,true);
-  fprintf(stream,"\n");
+  fprintf(stream,"%d\t",align_input->pattern_length);
+  fprintf(stream,"%d\t",align_input->text_length);
+  fprintf(stream,"%d\t",score);
+  cigar_print(stream,cigar,true); fprintf(stream,"\t");
+  fprintf(stream,"%s\t",align_input->pattern);
+  fprintf(stream,"%s\n",align_input->text);
 }
 /*
  * Stats

@@ -60,8 +60,8 @@ typedef struct _wavefront_aligner_t {
   wavefront_reduction_t reduction;         // Reduction parameters
   wavefront_memory_t memory_mode;          // Wavefront memory strategy (modular wavefronts and piggyback)
   // Custom function to compare sequences
-  alignment_match_funct_t match_func;      // Custom matching function (match(v,h,args))
-  void* match_func_arguments;              // Generic arguments passed to matching function (args)
+  alignment_match_funct_t match_funct;     // Custom matching function (match(v,h,args))
+  void* match_funct_arguments;             // Generic arguments passed to matching function (args)
   // Wavefront components
   wavefront_components_t wf_components;    // Wavefront components
   // CIGAR
@@ -109,6 +109,11 @@ void wavefront_aligner_set_reduction_adaptive(
     wavefront_aligner_t* const wf_aligner,
     const int min_wavefront_length,
     const int max_distance_threshold);
+
+void wavefront_aligner_set_match_funct(
+    wavefront_aligner_t* const wf_aligner,
+    int (*match_funct)(int,int,void*),
+    void* const match_funct_arguments);
 
 void wavefront_aligner_set_max_alignment_score(
     wavefront_aligner_t* const wf_aligner,

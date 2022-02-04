@@ -26,33 +26,44 @@
  *
  * PROJECT: Wavefront Alignments Algorithms
  * AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
- * DESCRIPTION: WaveFront alignment module for sequence pairwise alignment
+ * DESCRIPTION: WFA C++ Sample-Code
  */
 
-#ifndef WAVEFRONT_ALIGN_H_
-#define WAVEFRONT_ALIGN_H_
+#include <iostream>
+#include <string>
+#include "bindings/cpp/WFAligner.hpp"
 
-#include "wavefront_aligner.h"
-#include "wavefront_display.h" // For convenience
+using namespace std;
+using namespace wfa;
 
-/*
- * Error codes & messages
- */
-#define WF_ALIGN_SUCCESSFUL   0
-#define WF_ALIGN_MAX_SCORE   -1
-#define WF_ALIGN_OOM         -2
+// Patter & Text
+int pattern[] = {100, 102, 104, 99, 43,     56, 78, 190, 22};
+int text[]    = {100,      104, 99, 43, 33, 56, 78,  11, 22};
 
-extern char* wf_error_msg[3];
-char* wavefront_align_strerror(const int wf_error_code);
+const int patternLength = sizeof(pattern)/sizeof(int);
+const int textLength = sizeof(text)/sizeof(int);
 
-/*
- * Wavefront Alignment
- */
-int wavefront_align(
-    wavefront_aligner_t* const wf_aligner,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length);
+int match_function(
+    int v,
+    int h,
+    void* arguments) {
+  // Check boundaries
+  if (v > patternLength || h > textLength) return false;
+  // Compare arrays
+  return (pattern[v] == text[h]);
+}
 
-#endif /* WAVEFRONT_ALIGN_H_ */
+int main(int argc,char* argv[]) {
+  // Create a WFAligner
+  WFAlignerGapAffine aligner(1,0,1);
+  aligner.setMatchFunct(match_function,NULL);
+  // Align
+  aligner.alignEnd2End(patternLength,textLength);
+  cout << "WFA-Alignment returns score " << aligner.getAlignmentScore() << endl;
+
+  // Print CIGAR
+  string cigar = aligner.getAlignmentCigar();
+  cout << "PATTERN: " << pattern  << endl;
+  cout << "TEXT: " << text  << endl;
+  cout << "CIGAR: " << cigar  << endl;
+}

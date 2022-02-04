@@ -120,8 +120,8 @@ bool wavefront_extend_matches_custom(
   wavefront_t* const mwavefront = wf_aligner->wf_components.mwavefronts[score];
   if (mwavefront==NULL) return false;
   // Parameters (custom matching function)
-  alignment_match_funct_t match_func = wf_aligner->match_func;
-  void* const func_arguments = wf_aligner->match_func_arguments;
+  alignment_match_funct_t match_funct = wf_aligner->match_funct;
+  void* const func_arguments = wf_aligner->match_funct_arguments;
   // Extend diagonally each wavefront point
   wf_offset_t* const offsets = mwavefront->offsets;
   const int lo = mwavefront->lo;
@@ -132,8 +132,9 @@ bool wavefront_extend_matches_custom(
     wf_offset_t offset = offsets[k];
     if (offset == WAVEFRONT_OFFSET_NULL) continue;
     // Count equal characters
-    int h = 0, v = 0;
-    while (match_func(v,h,func_arguments)) {
+    int v = WAVEFRONT_V(k,offset);
+    int h = WAVEFRONT_H(k,offset);
+    while (match_funct(v,h,func_arguments)) {
       h++; v++; offset++;
     }
     // Update offset

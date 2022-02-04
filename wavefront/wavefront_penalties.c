@@ -105,10 +105,10 @@ void wavefronts_penalties_set_affine(
     fprintf(stderr,"[WFA::Penalties] Match score must be negative or zero (M=%d)\n",affine_penalties->match);
     exit(1);
   } else if (affine_penalties->mismatch <= 0 ||
-             affine_penalties->gap_opening <= 0 ||
+             affine_penalties->gap_opening < 0 ||
              affine_penalties->gap_extension <= 0) {
-    fprintf(stderr,"[WFA::Penalties] Penalties must be strictly positive (X=%d,O=%d,E=%d). "
-                   "Must be (X>0,O>0,E>0)\n",
+    fprintf(stderr,"[WFA::Penalties] Penalties must be positive (X=%d,O=%d,E=%d). "
+                   "Must be (X>0,O>=0,E>0)\n",
         affine_penalties->mismatch,
         affine_penalties->gap_opening,
         affine_penalties->gap_extension);

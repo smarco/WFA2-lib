@@ -47,8 +47,8 @@ wavefront_aligner_attr_t wavefront_aligner_attr_default = {
         .max_alignment_score = INT_MAX, // Unlimited
     },
     // Custom matching functions
-    .match_func = NULL,           // Use default match-compare function
-    .match_func_arguments = NULL, // No arguments
+    .match_funct = NULL,           // Use default match-compare function
+    .match_funct_arguments = NULL, // No arguments
     // Penalties
     .lineal_penalties = {
         .match = 0,

@@ -67,7 +67,8 @@
 /*
  * Macro Utils (Stringify)
  */
-#define QUOTE(value) #value
+#define STRINGIFY_(a) #a
+#define STRINGIFY(a) STRINGIFY_(a)
 #define SWAP(a,b) do {__typeof__(a) aux = a; a = b; b = aux;} while (0)
 
 /*
@@ -227,14 +228,6 @@ uint64_t rand_iid(const uint64_t min,const uint64_t max);
 #define GET_HEX_DIGIT(character) (IS_NUMBER(character) ? GET_DIGIT(character) : (toupper(character) - 'A' + 10))
 
 /*
- * Printing
- */
-#define PRINT_CHAR_REP(stream,character,times) { \
-  int i; \
-  for (i=0;i<times;++i) fprintf(stream,"%c",character); \
-}
-
-/*
  * Math
  */
 #define BOUNDED_SUBTRACTION(minuend,subtrahend,limit) (((minuend)>((limit)+(subtrahend))) ? (minuend)-(subtrahend):(limit))
@@ -247,6 +240,9 @@ uint64_t rand_iid(const uint64_t min,const uint64_t max);
 #define DIVC_CEIL(NUMERATOR,DENOMINATOR)  ((DENOMINATOR) ? DIV_CEIL(NUMERATOR,DENOMINATOR) :(0))
 
 #define TELESCOPIC_FACTOR (3.0/2.0)
+
+uint32_t nominal_prop_u32(const uint32_t base,const double factor);
+uint64_t nominal_prop_u64(const uint64_t base,const double factor);
 
 /*
  * Vectorize
@@ -269,5 +265,13 @@ uint64_t rand_iid(const uint64_t min,const uint64_t max);
  * Prefetch macros
  */
 #define PREFETCH(ADDR) __builtin_prefetch(((const char*)ADDR))
+
+/*
+ * Display
+ */
+#define PRINT_CHAR_REP(stream,character,times) { \
+  int i; \
+  for (i=0;i<times;++i) fprintf(stream,"%c",character); \
+}
 
 #endif /* COMMONS_H_ */

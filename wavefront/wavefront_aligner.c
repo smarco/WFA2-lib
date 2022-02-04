@@ -148,9 +148,9 @@ wavefront_aligner_t* wavefront_aligner_new(
   // Reduction strategy
   wavefront_set_reduction(wf_aligner,attributes);
   // Custom matching functions
-  if (wf_aligner->match_func != NULL) {
-    wf_aligner->match_func = attributes->match_func;
-    wf_aligner->match_func_arguments = attributes->match_func_arguments;
+  if (wf_aligner->match_funct != NULL) {
+    wf_aligner->match_funct = attributes->match_funct;
+    wf_aligner->match_funct_arguments = attributes->match_funct_arguments;
   }
   // Wavefront components
   wavefront_components_allocate(
@@ -251,6 +251,13 @@ void wavefront_aligner_set_reduction_adaptive(
     const int max_distance_threshold) {
   wavefront_reduction_set_adaptive(&wf_aligner->reduction,
       min_wavefront_length,max_distance_threshold);
+}
+void wavefront_aligner_set_match_funct(
+    wavefront_aligner_t* const wf_aligner,
+    int (*match_funct)(int,int,void*),
+    void* const match_funct_arguments) {
+  wf_aligner->match_funct = match_funct;
+  wf_aligner->match_funct_arguments = match_funct_arguments;
 }
 void wavefront_aligner_set_max_alignment_score(
     wavefront_aligner_t* const wf_aligner,

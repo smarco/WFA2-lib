@@ -86,10 +86,10 @@ typedef struct {
   int max_distance_threshold;
   wavefront_memory_t memory_mode;
   bool endsfree;
-  int pattern_begin_free;
-  int text_begin_free;
-  int pattern_end_free;
-  int text_end_free;
+  double pattern_begin_free;
+  double text_begin_free;
+  double pattern_end_free;
+  double text_end_free;
   // Misc
   int bandwidth;
   bool check_correct;
@@ -139,10 +139,10 @@ benchmark_args parameters = {
   .max_distance_threshold = 50,
   .memory_mode = wavefront_memory_full,
   .endsfree = false,
-  .pattern_begin_free = 0,
-  .text_begin_free = 0,
-  .pattern_end_free = 0,
-  .text_end_free = 0,
+  .pattern_begin_free = 0.0,
+  .text_begin_free = 0.0,
+  .pattern_end_free = 0.0,
+  .text_end_free = 0.0,
   // Misc
   .bandwidth = 10,
   .check_bandwidth = -1,
@@ -326,15 +326,7 @@ wavefront_aligner_t* align_benchmark_configure_wf(
       break;
   }
   // Select alignment form
-  if (parameters.endsfree) {
-    attributes.alignment_form.span = alignment_endsfree;
-    attributes.alignment_form.pattern_begin_free = parameters.pattern_begin_free;
-    attributes.alignment_form.text_begin_free = parameters.text_begin_free;
-    attributes.alignment_form.pattern_end_free = parameters.pattern_end_free;
-    attributes.alignment_form.text_end_free = parameters.text_end_free;
-  } else {
-    attributes.alignment_form.span = alignment_end2end;
-  }
+  attributes.alignment_form.span = (parameters.endsfree) ? alignment_endsfree : alignment_end2end;
   // Misc
   attributes.plot_params.plot_enabled = (parameters.plot > 0);
   attributes.plot_params.resolution_points = parameters.plot;
@@ -455,6 +447,8 @@ void align_benchmark() {
   }
   align_benchmark_configure(&align_input);
   // Read-align loop
+  int pattern_begin_free = 0, pattern_end_free = 0;
+  int text_begin_free = 0, text_end_free = 0;
   int seqs_processed = 0, progress = 0;
   while (true) {
     // Read input sequence-pair
@@ -462,6 +456,17 @@ void align_benchmark() {
         input_file,&line1,&line2,&line1_allocated,
         &line2_allocated,seqs_processed,&align_input);
     if (!input_read) break;
+    // Sequence-dependent configuration
+    if (parameters.endsfree) {
+      const int plen = align_input.pattern_length;
+      const int tlen = align_input.text_length;
+      pattern_begin_free = nominal_prop_u32(plen,parameters.pattern_begin_free);
+      pattern_end_free = nominal_prop_u32(plen,parameters.pattern_end_free);
+      text_begin_free = nominal_prop_u32(tlen,parameters.text_begin_free);
+      text_end_free = nominal_prop_u32(tlen,parameters.text_end_free);
+      wavefront_aligner_set_alignment_free_ends(align_input.wf_aligner,
+          pattern_begin_free,pattern_end_free,text_begin_free,text_end_free);
+    }
     // Align queries using DP
     switch (parameters.algorithm) {
       case alignment_edit_dp:
@@ -479,8 +484,7 @@ void align_benchmark() {
       case alignment_gap_affine_swg_endsfree:
         benchmark_gap_affine_swg_endsfree(
             &align_input,&parameters.affine_penalties,
-            parameters.pattern_begin_free,parameters.pattern_begin_free,
-            parameters.text_begin_free,parameters.text_end_free);
+            pattern_begin_free,pattern_end_free,text_begin_free,text_end_free);
         break;
       case alignment_gap_affine_swg_banded:
         benchmark_gap_affine_swg_banded(&align_input,
@@ -738,13 +742,13 @@ void parse_arguments(int argc,char** argv) {
     case 1005: { // --ends-free P0,Pf,T0,Tf
       parameters.endsfree = true;
       char* sentinel = strtok(optarg,",");
-      parameters.pattern_begin_free = atoi(sentinel);
+      parameters.pattern_begin_free = atof(sentinel);
       sentinel = strtok(NULL,",");
-      parameters.pattern_end_free = atoi(sentinel);
+      parameters.pattern_end_free = atof(sentinel);
       sentinel = strtok(NULL,",");
-      parameters.text_begin_free = atoi(sentinel);
+      parameters.text_begin_free = atof(sentinel);
       sentinel = strtok(NULL,",");
-      parameters.text_end_free = atoi(sentinel);
+      parameters.text_end_free = atof(sentinel);
       break;
     }
     /*

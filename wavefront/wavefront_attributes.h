@@ -66,7 +66,7 @@ typedef struct {
   // Limits
   int max_alignment_score; // Maximum score allowed before quit
 } alignment_form_t;
-typedef bool (*alignment_match_funct_t)(int,int,void*);
+typedef int (*alignment_match_funct_t)(int,int,void*);
 
 /*
  * Alignment system configuration
@@ -110,8 +110,8 @@ typedef struct {
   // Memory model
   wavefront_memory_t memory_mode;          // Wavefront memory strategy (modular wavefronts and piggyback)
   // Custom function to compare sequences
-  alignment_match_funct_t match_func;      // Custom matching function (match(v,h,args))
-  void* match_func_arguments;              // Generic arguments passed to matching function (args)
+  alignment_match_funct_t match_funct;     // Custom matching function (match(v,h,args))
+  void* match_funct_arguments;             // Generic arguments passed to matching function (args)
   // External MM (instead of allocating one inside)
   mm_allocator_t* mm_allocator;            // MM-Allocator
   // Display

@@ -38,6 +38,20 @@
 #include "wavefront_backtrace.h"
 
 /*
+ * Error messages
+ */
+char* wf_error_msg[] =
+{
+  /* WF_ALIGN_SUCCESSFUL */ "[WFA] Alignment successful",
+  /* WF_ALIGN_MAX_SCORE */  "[WFA] Alignment failed. Maximum score reached",
+  /* WF_ALIGN_OOM */        "[WFA] Alignment failed. Maximum memory threshold reached",
+};
+char* wavefront_align_strerror(
+    const int wf_error_code) {
+  return wf_error_msg[-wf_error_code];
+}
+
+/*
  * Checks
  */
 void wavefront_form_endsfree_check(
@@ -275,7 +289,6 @@ bool wavefront_align_endsfree_terminate(
  */
 int wavefront_align_sequences(
     wavefront_aligner_t* const wf_aligner,
-    strings_padded_t* const sequences,
     void (*wavefront_align_initialize)(wavefront_aligner_t*),
     bool (*wavefront_align_terminate)(wavefront_aligner_t* const,const int),
     void (*wavefront_align_compute)(wavefront_aligner_t* const,const int),
@@ -326,13 +339,19 @@ int wavefront_align(
   // Resize wavefront aligner
   wavefront_aligner_resize(wf_aligner,pattern_length,text_length);
   // Init padded strings
-  strings_padded_t* const sequences =
-      strings_padded_new_rhomb(
-          pattern,pattern_length,text,text_length,
-          WAVEFRONT_PADDING,wf_aligner->mm_allocator);
-  // Set sequences
-  wf_aligner->pattern = sequences->pattern_padded;
-  wf_aligner->text = sequences->text_padded;
+  strings_padded_t* const sequences = NULL;
+  if (wf_aligner->match_funct == NULL) {
+    // Set sequences
+    strings_padded_t* const sequences =
+        strings_padded_new_rhomb(
+            pattern,pattern_length,text,text_length,
+            WAVEFRONT_PADDING,wf_aligner->mm_allocator);
+    wf_aligner->pattern = sequences->pattern_padded;
+    wf_aligner->text = sequences->text_padded;
+  } else {
+    wf_aligner->pattern = NULL;
+    wf_aligner->text = NULL;
+  }
   // Wavefront functions
   void (*wavefront_align_initialize)(wavefront_aligner_t*);
   bool (*wavefront_align_terminate)(wavefront_aligner_t* const,const int);
@@ -357,18 +376,18 @@ int wavefront_align(
     wavefront_align_terminate = &wavefront_align_endsfree_terminate;
     wavefront_align_extend = &wavefront_extend_endsfree;
   }
-  if (wf_aligner->match_func != NULL) {
+  if (wf_aligner->match_funct != NULL) {
     wavefront_align_extend = &wavefront_extend_custom;
   }
   // Wavefront align sequences
   const int status = wavefront_align_sequences(
-      wf_aligner,sequences,
+      wf_aligner,
       wavefront_align_initialize,
       wavefront_align_terminate,
       wavefront_align_compute,
       wavefront_align_extend);
   // Free padded strings
-  strings_padded_delete(sequences);
+  if (sequences!=NULL) strings_padded_delete(sequences);
   // Reap if maximum resident memory is reached
   const uint64_t wf_memory_used = wavefront_aligner_get_size(wf_aligner);
   const bool reap_memory = wf_memory_used > wf_aligner->system.max_memory_resident;

@@ -102,8 +102,9 @@ void benchmark_print_alignment(
     cigar_t* const cigar_computed,
     const int score_correct,
     cigar_t* const cigar_correct);
-void benchmark_print_alignment_short(
+void benchmark_print_alignment_output(
     FILE* const stream,
+    align_input_t* const align_input,
     const int score,
     cigar_t* const cigar);
 
