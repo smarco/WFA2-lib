@@ -280,11 +280,10 @@ void wf_backtrace_buffer_recover_cigar(
     cigar_buffer += cigar_block_length;
   }
   // Account for last stroke of matches
-  const int num_matches = pcigar_recover_extend(
-      pattern,pattern_length,text,text_length,v,h,cigar_buffer);
+  const int num_matches = MIN(pattern_length-v,text_length-h);
+  for (i=0;i<num_matches;++i) {*cigar_buffer = 'M'; ++cigar_buffer;};
   v += num_matches;
   h += num_matches;
-  cigar_buffer += num_matches;
   // Account for last stroke of insertion/deletion
   while (h < text_length) {*cigar_buffer = 'I'; ++cigar_buffer; ++h;};
   while (v < pattern_length) {*cigar_buffer = 'D'; ++cigar_buffer; ++v;};
