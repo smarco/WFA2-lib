@@ -71,11 +71,7 @@ void benchmark_gap_affine_swg(
 }
 void benchmark_gap_affine_swg_endsfree(
     align_input_t* const align_input,
-    affine_penalties_t* const penalties,
-    const int pattern_begin_free,
-    const int pattern_end_free,
-    const int text_begin_free,
-    const int text_end_free) {
+    affine_penalties_t* const penalties) {
   // Allocate
   affine_matrix_t affine_matrix;
   affine_matrix_allocate(
@@ -90,8 +86,8 @@ void benchmark_gap_affine_swg_endsfree(
   swg_compute_endsfree(&affine_matrix,penalties,
       align_input->pattern,align_input->pattern_length,
       align_input->text,align_input->text_length,
-      pattern_begin_free,pattern_begin_free,
-      text_begin_free,text_end_free,&cigar);
+      align_input->pattern_begin_free,align_input->pattern_begin_free,
+      align_input->text_begin_free,align_input->text_end_free,&cigar);
   timer_stop(&align_input->timer);
   // DEBUG
   if (align_input->debug_flags) {

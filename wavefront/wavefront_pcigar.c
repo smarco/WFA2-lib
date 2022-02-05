@@ -125,6 +125,26 @@ int pcigar_recover_extend(
   // Return total matches
   return num_matches;
 }
+int pcigar_recover_extend_custom(
+    const int pattern_length,
+    const int text_length,
+    alignment_match_funct_t const match_funct,
+    void* const match_funct_arguments,
+    int v,
+    int h,
+    char* cigar_buffer) {
+  int num_matches = 0;
+  while (v < pattern_length && h < text_length) {
+    // Check match
+    if (!match_funct(v,h,match_funct_arguments)) break;
+    ++v; ++h;
+    // Increment matches
+    *cigar_buffer = 'M';
+    ++cigar_buffer;
+    ++num_matches;
+  }
+  return num_matches;
+}
 /*
  * PCIGAR recover
  */
@@ -134,6 +154,8 @@ void pcigar_recover(
     const int pattern_length,
     const char* const text,
     const int text_length,
+    alignment_match_funct_t const match_funct,
+    void* const match_funct_arguments,
     int* const v_pos,
     int* const h_pos,
     char* cigar_buffer,
@@ -154,8 +176,15 @@ void pcigar_recover(
   for (i=0;i<pcigar_length;++i) {
     // Extend exact-matches
     if (matrix_type == affine_matrix_M) { // Extend only on the M-wavefront
-      const int num_matches = pcigar_recover_extend(
-          pattern,pattern_length,text,text_length,v,h,cigar_buffer);
+      int num_matches;
+      if (match_funct != NULL) { // Custom extend-match function
+        num_matches = pcigar_recover_extend_custom(
+            pattern_length,text_length,
+            match_funct,match_funct_arguments,v,h,cigar_buffer);
+      } else {
+        num_matches = pcigar_recover_extend(
+            pattern,pattern_length,text,text_length,v,h,cigar_buffer);
+      }
       // Update location
       v += num_matches;
       h += num_matches;

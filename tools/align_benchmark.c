@@ -65,7 +65,13 @@ typedef enum {
   alignment_gap_affine2p_dp,
   alignment_gap_affine2p_wavefront
 } alignment_algorithm_type;
-
+bool align_benchmark_is_wavefront(
+    const alignment_algorithm_type algorithm) {
+  return algorithm == alignment_edit_wavefront ||
+         algorithm == alignment_gap_lineal_wavefront ||
+         algorithm == alignment_gap_affine_wavefront ||
+         algorithm == alignment_gap_affine2p_wavefront;
+}
 /*
  * Generic parameters
  */
@@ -79,17 +85,20 @@ typedef struct {
   lineal_penalties_t lineal_penalties;
   affine_penalties_t affine_penalties;
   affine2p_penalties_t affine2p_penalties;
+  // Alignment form
+  bool endsfree;
+  double pattern_begin_free;
+  double text_begin_free;
+  double pattern_end_free;
+  double text_end_free;
   // Wavefront parameters
   bool score_only;
   wavefront_reduction_type reduction_type;
   int min_wavefront_length;
   int max_distance_threshold;
   wavefront_memory_t memory_mode;
-  bool endsfree;
-  double pattern_begin_free;
-  double text_begin_free;
-  double pattern_end_free;
-  double text_end_free;
+  alignment_match_funct_t match_funct;
+  void* match_funct_arguments;
   // Misc
   int bandwidth;
   bool check_correct;
@@ -132,17 +141,20 @@ benchmark_args parameters = {
       .gap_opening2 = 24,
       .gap_extension2 = 1,
   },
+  // Alignment form
+  .endsfree = false,
+  .pattern_begin_free = 0.0,
+  .text_begin_free = 0.0,
+  .pattern_end_free = 0.0,
+  .text_end_free = 0.0,
   // Wavefront parameters
   .score_only = false,
   .reduction_type = wavefront_reduction_none,
   .min_wavefront_length = 10,
   .max_distance_threshold = 50,
   .memory_mode = wavefront_memory_full,
-  .endsfree = false,
-  .pattern_begin_free = 0.0,
-  .text_begin_free = 0.0,
-  .pattern_end_free = 0.0,
-  .text_end_free = 0.0,
+  .match_funct = NULL,
+  .match_funct_arguments = NULL,
   // Misc
   .bandwidth = 10,
   .check_bandwidth = -1,
@@ -282,6 +294,23 @@ void align_pairwise_test() {
   mm_allocator_delete(mm_allocator);
 }
 /*
+ * Simplest Extend-matching function (for testing purposes)
+ */
+typedef struct {
+  char* pattern;
+  int pattern_length;
+  char* text;
+  int text_length;
+} match_function_params_t;
+match_function_params_t match_function_params;
+int match_function(int v,int h,void* arguments) {
+  // Extract parameters
+  match_function_params_t* match_arguments = (match_function_params_t*)arguments;
+  // Check match
+  if (v > match_arguments->pattern_length || h > match_arguments->text_length) return 0;
+  return (match_arguments->pattern[v] == match_arguments->text[h]);
+}
+/*
  * Configuration
  */
 wavefront_aligner_t* align_benchmark_configure_wf(
@@ -328,6 +357,10 @@ wavefront_aligner_t* align_benchmark_configure_wf(
   // Select alignment form
   attributes.alignment_form.span = (parameters.endsfree) ? alignment_endsfree : alignment_end2end;
   // Misc
+  if (parameters.match_funct_arguments != NULL) {
+    attributes.match_funct = parameters.match_funct;
+    attributes.match_funct_arguments = parameters.match_funct_arguments;
+  }
   attributes.plot_params.plot_enabled = (parameters.plot > 0);
   attributes.plot_params.resolution_points = parameters.plot;
   attributes.system.verbose = parameters.verbose;
@@ -335,10 +368,12 @@ wavefront_aligner_t* align_benchmark_configure_wf(
   // Allocate
   return wavefront_aligner_new(&attributes);
 }
-void align_benchmark_configure(
+void align_benchmark_configure_global(
     align_input_t* const align_input) {
   // Clear
   benchmark_align_input_clear(align_input);
+  // Alignment form
+  align_input->ends_free = parameters.endsfree;
   // Output
   if (parameters.output_filename == NULL) {
     align_input->output_file = NULL;
@@ -347,7 +382,12 @@ void align_benchmark_configure(
   }
   // MM
   align_input->mm_allocator = mm_allocator_new(BUFFER_SIZE_8M);
-  align_input->wf_aligner = align_benchmark_configure_wf(align_input,align_input->mm_allocator);
+  // WFA
+  if (align_benchmark_is_wavefront(parameters.algorithm)) {
+    align_input->wf_aligner = align_benchmark_configure_wf(align_input,align_input->mm_allocator);
+  } else {
+    align_input->wf_aligner = NULL;
+  }
   // PROFILE/STATS
   timer_reset(&align_input->timer);
   // DEBUG
@@ -360,6 +400,30 @@ void align_benchmark_configure(
   align_input->check_affine_penalties = &parameters.affine_penalties;
   align_input->check_bandwidth = parameters.check_bandwidth;
   align_input->verbose = parameters.verbose;
+}
+void align_benchmark_configure_local(
+    align_input_t* const align_input) {
+  // Ends-free configuration
+  if (parameters.endsfree) {
+    const int plen = align_input->pattern_length;
+    const int tlen = align_input->text_length;
+    align_input->pattern_begin_free = nominal_prop_u32(plen,parameters.pattern_begin_free);
+    align_input->pattern_end_free = nominal_prop_u32(plen,parameters.pattern_end_free);
+    align_input->text_begin_free = nominal_prop_u32(tlen,parameters.text_begin_free);
+    align_input->text_end_free = nominal_prop_u32(tlen,parameters.text_end_free);
+    if (align_benchmark_is_wavefront(parameters.algorithm)) {
+      wavefront_aligner_set_alignment_free_ends(align_input->wf_aligner,
+          align_input->pattern_begin_free,align_input->pattern_end_free,
+          align_input->text_begin_free,align_input->text_end_free);
+    }
+  }
+  // Custom extend-match function
+  if (parameters.match_funct != NULL) {
+    match_function_params.pattern = align_input->pattern;
+    match_function_params.pattern_length = align_input->pattern_length;
+    match_function_params.text = align_input->text;
+    match_function_params.text_length = align_input->text_length;
+  }
 }
 /*
  * I/O
@@ -445,10 +509,9 @@ void align_benchmark() {
     fprintf(stderr,"Input file '%s' couldn't be opened\n",parameters.input_filename);
     exit(1);
   }
-  align_benchmark_configure(&align_input);
+  // Global configuration
+  align_benchmark_configure_global(&align_input);
   // Read-align loop
-  int pattern_begin_free = 0, pattern_end_free = 0;
-  int text_begin_free = 0, text_end_free = 0;
   int seqs_processed = 0, progress = 0;
   while (true) {
     // Read input sequence-pair
@@ -457,16 +520,7 @@ void align_benchmark() {
         &line2_allocated,seqs_processed,&align_input);
     if (!input_read) break;
     // Sequence-dependent configuration
-    if (parameters.endsfree) {
-      const int plen = align_input.pattern_length;
-      const int tlen = align_input.text_length;
-      pattern_begin_free = nominal_prop_u32(plen,parameters.pattern_begin_free);
-      pattern_end_free = nominal_prop_u32(plen,parameters.pattern_end_free);
-      text_begin_free = nominal_prop_u32(tlen,parameters.text_begin_free);
-      text_end_free = nominal_prop_u32(tlen,parameters.text_end_free);
-      wavefront_aligner_set_alignment_free_ends(align_input.wf_aligner,
-          pattern_begin_free,pattern_end_free,text_begin_free,text_end_free);
-    }
+    align_benchmark_configure_local(&align_input);
     // Align queries using DP
     switch (parameters.algorithm) {
       case alignment_edit_dp:
@@ -483,8 +537,7 @@ void align_benchmark() {
         break;
       case alignment_gap_affine_swg_endsfree:
         benchmark_gap_affine_swg_endsfree(
-            &align_input,&parameters.affine_penalties,
-            pattern_begin_free,pattern_end_free,text_begin_free,text_end_free);
+            &align_input,&parameters.affine_penalties);
         break;
       case alignment_gap_affine_swg_banded:
         benchmark_gap_affine_swg_banded(&align_input,
@@ -564,6 +617,7 @@ void usage() {
       "          --maximum-difference-distance <INT>                        \n"
       "          --memory-mode 'full'|'high'|'med'|'low'                    \n"
       "          --ends-free P0,Pf,T0,Tf                                    \n"
+      "          --custom-match-funct                                       \n"
       "        [Misc]                                                       \n"
       "          --bandwidth <INT>                                          \n"
       "          --check|c 'correct'|'score'|'alignment'                    \n"
@@ -590,6 +644,7 @@ void parse_arguments(int argc,char** argv) {
     { "maximum-difference-distance", required_argument, 0, 1003 },
     { "memory-mode", required_argument, 0, 1004 },
     { "ends-free", required_argument, 0, 1005 },
+    { "custom-match-funct", no_argument, 0, 1006 },
     /* Misc */
     { "bandwidth", required_argument, 0, 2000 },
     { "check", optional_argument, 0, 'c' },
@@ -727,13 +782,13 @@ void parse_arguments(int argc,char** argv) {
       break;
     case 1004: // --memory-mode 'full'|'high'|'med'|'low'
       if (strcmp(optarg,"full")==0) {
-        parameters.memory_mode = wavefront_memory_high;
+        parameters.memory_mode = wavefront_memory_full;
       } else if (strcmp(optarg,"high")==0) {
         parameters.memory_mode = wavefront_memory_high;
       } else if (strcmp(optarg,"med")==0) {
-        parameters.memory_mode = wavefront_memory_high;
+        parameters.memory_mode = wavefront_memory_med;
       } else if (strcmp(optarg,"low")==0) {
-        parameters.memory_mode = wavefront_memory_high;
+        parameters.memory_mode = wavefront_memory_low;
       } else {
         fprintf(stderr,"Option '--memory-mode' must be in {'full','high','med','low'}\n");
         exit(1);
@@ -751,6 +806,10 @@ void parse_arguments(int argc,char** argv) {
       parameters.text_end_free = atof(sentinel);
       break;
     }
+    case 1006: // --custom-match-funct
+      parameters.match_funct = match_function;
+      parameters.match_funct_arguments = &match_function_params;
+      break;
     /*
      * Misc
      */

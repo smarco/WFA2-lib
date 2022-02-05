@@ -66,6 +66,25 @@ typedef struct {
   // Limits
   int max_alignment_score; // Maximum score allowed before quit
 } alignment_form_t;
+
+/*
+ * Custom extend-match function, e.g.:
+ *
+ *   typedef struct {
+ *     char* pattern;
+ *     int pattern_length;
+ *     char* text;
+ *     int text_length;
+ *   } match_function_params_t;
+ *
+ *   int match_function(int v,int h,void* arguments) {
+ *     // Extract parameters
+ *     match_function_params_t* match_arguments = (match_function_params_t*)arguments;
+ *     // Check match
+ *     if (v > match_arguments->pattern_length || h > match_arguments->text_length) return 0;
+ *     return (match_arguments->pattern[v] == match_arguments->text[h]);
+ *   }
+ */
 typedef int (*alignment_match_funct_t)(int,int,void*);
 
 /*

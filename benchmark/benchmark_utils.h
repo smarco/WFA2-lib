@@ -60,10 +60,16 @@ typedef struct {
   int pattern_length;
   char* text;
   int text_length;
+  // Alignment form
+  bool ends_free;
+  int pattern_begin_free;
+  int text_begin_free;
+  int pattern_end_free;
+  int text_end_free;
   // Output
   FILE* output_file;
   // MM
-  wavefront_aligner_t* wf_aligner; // WF-Aligner (Pre-allocated)
+  wavefront_aligner_t* wf_aligner;
   mm_allocator_t* mm_allocator;
   // PROFILE/STATS
   profiler_timer_t timer;

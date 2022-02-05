@@ -48,7 +48,7 @@ int match_function(
     int h,
     void* arguments) {
   // Check boundaries
-  if (v > patternLength || h > textLength) return false;
+  if (v > patternLength || h > textLength) return 0;
   // Compare arrays
   return (pattern[v] == text[h]);
 }

@@ -39,6 +39,7 @@
 #include "system/mm_allocator.h"
 #include "wavefront_pcigar.h"
 #include "wavefront_offset.h"
+#include "wavefront_attributes.h"
 
 /*
  * Separated Backtrace Block
@@ -118,6 +119,8 @@ void wf_backtrace_buffer_recover_cigar(
     const int pattern_length,
     const char* const text,
     const int text_length,
+    alignment_match_funct_t const match_funct,
+    void* const match_funct_arguments,
     const int alignment_k,
     const int alignment_offset,
     const pcigar_t pcigar_last,

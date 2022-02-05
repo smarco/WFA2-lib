@@ -34,6 +34,7 @@
 
 #include "utils/commons.h"
 #include "gap_affine/affine_matrix.h"
+#include "wavefront_attributes.h"
 
 /*
  * Configuration
@@ -89,20 +90,14 @@ int pcigar_unpack(
 /*
  * PCIGAR recover
  */
-int pcigar_recover_extend(
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
-    int v,
-    int h,
-    char* cigar_buffer);
 void pcigar_recover(
     pcigar_t pcigar,
     const char* const pattern,
     const int pattern_length,
     const char* const text,
     const int text_length,
+    alignment_match_funct_t const match_funct,
+    void* const match_funct_arguments,
     int* const v_pos,
     int* const h_pos,
     char* cigar_buffer,

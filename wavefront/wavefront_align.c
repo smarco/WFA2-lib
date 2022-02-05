@@ -174,6 +174,7 @@ bool wavefront_align_end2end_terminate(
       wf_backtrace_buffer_recover_cigar(
           wf_components->bt_buffer,
           pattern,pattern_length,text,text_length,
+          wf_aligner->match_funct,wf_aligner->match_funct,
           alignment_k,alignment_offset,
           mwavefront->bt_pcigar[alignment_k],
           mwavefront->bt_prev[alignment_k],
@@ -271,6 +272,7 @@ bool wavefront_align_endsfree_terminate(
       wf_backtrace_buffer_recover_cigar(
           wf_components->bt_buffer,
           pattern,pattern_length,text,text_length,
+          wf_aligner->match_funct,wf_aligner->match_funct,
           alignment_k,alignment_offset,
           mwavefront->bt_pcigar[alignment_k],
           mwavefront->bt_prev[alignment_k],
