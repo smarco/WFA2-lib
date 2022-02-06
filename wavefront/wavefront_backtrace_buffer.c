@@ -434,7 +434,7 @@ void wf_backtrace_buffer_compact_marked(
   bt_buffer->block_next = write_block;
   // DEBUG
   if (verbose) {
-    fprintf(stderr,"[WFA::BacktraceBuffer] Compacted from %lu MB to %lu MB (%2.2f%%)\n",
+    fprintf(stderr,"[WFA::BacktraceBuffer] Compacted from %lu MB to %lu MB (%2.2f%%)",
         CONVERT_B_TO_MB(read_global_pos*sizeof(bt_block_t)),
         CONVERT_B_TO_MB(write_global_pos*sizeof(bt_block_t)),
         100.0f*(float)write_global_pos/(float)read_global_pos);

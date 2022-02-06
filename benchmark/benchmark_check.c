@@ -146,8 +146,10 @@ void benchmark_check_alignment(
     } else { // ALIGN_DEBUG_CHECK_DISTANCE_METRIC_EDIT
       benchmark_check_alignment_edit(align_input,cigar_computed);
     }
+    // TODO Implement ALIGN_DEBUG_CHECK_DISTANCE_METRIC_GAP_AFFINE_2P
   } else {
     // Delegate check alignment
+    // TODO Revise this to compute score based on proper algorithm
     const int score_computed = cigar_score_edit(cigar_computed);
     benchmark_check_alignment_using_solution(
         align_input,cigar_computed,score_computed,NULL,-1);

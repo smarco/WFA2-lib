@@ -47,6 +47,9 @@ void benchmark_align_input_clear(
   align_input->text_begin_free = 0;
   align_input->pattern_end_free = 0;
   align_input->text_end_free = 0;
+  // Output
+  align_input->output_file = NULL;
+  align_input->output_full = false;
   // Accuracy Stats
   counter_reset(&(align_input->align));
   counter_reset(&(align_input->align_correct));
@@ -98,17 +101,26 @@ void benchmark_print_alignment(
         cigar_correct,align_input->mm_allocator);
   }
 }
-void benchmark_print_alignment_output(
+void benchmark_print_output_lite(
     FILE* const stream,
     align_input_t* const align_input,
     const int score,
     cigar_t* const cigar) {
-  fprintf(stream,"%d\t",align_input->pattern_length);
-  fprintf(stream,"%d\t",align_input->text_length);
-  fprintf(stream,"%d\t",score);
-  cigar_print(stream,cigar,true); fprintf(stream,"\t");
-  fprintf(stream,"%s\t",align_input->pattern);
-  fprintf(stream,"%s\n",align_input->text);
+  fprintf(stream,"%d ",score);
+  cigar_print(stream,cigar,true);
+  fprintf(stream,"\n");
+}
+void benchmark_print_output_full(
+    FILE* const stream,
+    align_input_t* const align_input,
+    const int score,
+    cigar_t* const cigar) {
+  fprintf(stream,"%d\t",align_input->pattern_length); // Pattern length
+  fprintf(stream,"%d\t",align_input->text_length); // Text length
+  fprintf(stream,"%d\t",score); // Alignment score
+  cigar_print(stream,cigar,true); fprintf(stream,"\t"); // CIGAR
+  fprintf(stream,"%s\t",align_input->pattern); // Pattern sequence
+  fprintf(stream,"%s\n",align_input->text); // Text sequence
 }
 /*
  * Stats
@@ -138,9 +150,4 @@ void benchmark_print_stats(
   fprintf(stream,"   => CIGAR.Deletions      ");
   counter_print(stream,&align_input->align_del,&align_input->align_bases,"bases     ",true);
 }
-
-
-
-
-
 

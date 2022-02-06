@@ -34,6 +34,7 @@
 
 #include "utils/commons.h"
 #include "utils/heatmap.h"
+#include "system/profiler_timer.h"
 
 // Wavefront ahead definition
 typedef struct _wavefront_aligner_t wavefront_aligner_t;
@@ -48,5 +49,32 @@ void wavefront_aligner_print(
     const int score_end,
     const int num_wfs_per_row,
     const int backtrace_length);
+
+/*
+ * Debug
+ */
+void wavefront_report_lite(
+    FILE* const stream,
+    wavefront_aligner_t* const wf_aligner,
+    const char* const pattern,
+    const int pattern_length,
+    const char* const text,
+    const int text_length,
+    const int wf_status,
+    const uint64_t wf_memory_used,
+    profiler_timer_t* const timer);
+void wavefront_report_verbose_begin(
+    FILE* const stream,
+    wavefront_aligner_t* const wf_aligner,
+    const char* const pattern,
+    const int pattern_length,
+    const char* const text,
+    const int text_length);
+void wavefront_report_verbose_end(
+    FILE* const stream,
+    wavefront_aligner_t* const wf_aligner,
+    const int wf_status,
+    const uint64_t wf_memory_used,
+    profiler_timer_t* const timer);
 
 #endif /* WAVEFRONT_DISPLAY_H_ */

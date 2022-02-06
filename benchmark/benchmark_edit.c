@@ -60,9 +60,15 @@ void benchmark_edit_dp(
   if (align_input->debug_flags) {
     benchmark_check_alignment(align_input,&cigar);
   }
+  // Output
   if (align_input->output_file) {
     const int score = cigar_score_edit(&cigar);
-    benchmark_print_alignment_output(align_input->output_file,align_input,score,&cigar);
+    FILE* const output_file = align_input->output_file;
+    if (align_input->output_full) {
+      benchmark_print_output_full(output_file,align_input,score,&cigar);
+    } else {
+      benchmark_print_output_lite(output_file,align_input,score,&cigar);
+    }
   }
   // Free
   score_matrix_free(&score_matrix);
@@ -94,9 +100,15 @@ void benchmark_edit_dp_banded(
   if (align_input->debug_flags) {
     benchmark_check_alignment(align_input,&cigar);
   }
+  // Output
   if (align_input->output_file) {
     const int score = cigar_score_edit(&cigar);
-    benchmark_print_alignment_output(align_input->output_file,align_input,score,&cigar);
+    FILE* const output_file = align_input->output_file;
+    if (align_input->output_full) {
+      benchmark_print_output_full(output_file,align_input,score,&cigar);
+    } else {
+      benchmark_print_output_lite(output_file,align_input,score,&cigar);
+    }
   }
   // Free
   score_matrix_free(&score_matrix);

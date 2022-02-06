@@ -259,6 +259,103 @@ void wavefront_aligner_print(
     if (block_score_end == score_end) break;
   }
 }
+/*
+ * Debug
+ */
+void wavefront_report_lite(
+    FILE* const stream,
+    wavefront_aligner_t* const wf_aligner,
+    const char* const pattern,
+    const int pattern_length,
+    const char* const text,
+    const int text_length,
+    const int wf_status,
+    const uint64_t wf_memory_used,
+    profiler_timer_t* const timer) {
+  fprintf(stream,"[WFA::Debug]");
+  // Sequences
+  fprintf(stream,"\t%d",-wf_aligner->cigar.score);
+  fprintf(stream,"\t%d\t%d",pattern_length,text_length);
+  fprintf(stream,"\t%s\t",(wf_status==0) ? "OK" : "FAIL");
+  timer_print_total(stream,timer);
+  fprintf(stream,"\t%luMB\t",CONVERT_B_TO_MB(wf_memory_used));
+  cigar_print(stream,&wf_aligner->cigar,true);
+  if (wf_aligner->match_funct != NULL) {
+    fprintf(stream,"\t-\t-");
+  } else {
+    fprintf(stream,"\t%s\t%s",pattern,text);
+  }
+  fprintf(stream,"\n");
+}
+void wavefront_report_verbose_begin(
+    FILE* const stream,
+    wavefront_aligner_t* const wf_aligner,
+    const char* const pattern,
+    const int pattern_length,
+    const char* const text,
+    const int text_length) {
+  // Input sequences
+  fprintf(stream,"[WFA::Debug] WFA-Alignment\n");
+  if (wf_aligner->match_funct != NULL) {
+    fprintf(stream,"[WFA::Debug]\tPattern\t%d\tcustom-funct()\n",pattern_length);
+    fprintf(stream,"[WFA::Debug]\tText\t%d\tcustom-funct()\n",text_length);
+  } else {
+    fprintf(stream,"[WFA::Debug]\tPattern\t%d\t%s\n",pattern_length,pattern);
+    fprintf(stream,"[WFA::Debug]\tText\t%d\t%s\n",text_length,text);
+  }
+  // Alignment scope/form
+  fprintf(stream,"[WFA::Debug]\tScope\t%s\n",
+      (wf_aligner->alignment_scope == compute_score) ? "score" : "alignment");
+  if (wf_aligner->alignment_form.span == alignment_end2end) {
+    fprintf(stream,"[WFA::Debug]\tForm\t(end2end)\n");
+  } else {
+    fprintf(stream,"[WFA::Debug]\tForm\t(endsfree,%d,%d,%d,%d)\n",
+        wf_aligner->alignment_form.pattern_begin_free,
+        wf_aligner->alignment_form.pattern_end_free,
+        wf_aligner->alignment_form.text_begin_free,
+        wf_aligner->alignment_form.text_end_free);
+  }
+  fprintf(stream,"[WFA::Debug]\tMax-score\t%d\n",
+      wf_aligner->alignment_form.max_alignment_score);
+  // Penalties
+  fprintf(stream,"[WFA::Debug]\tPenalties\t");
+  wavefronts_penalties_print(stream,&wf_aligner->penalties);
+  fprintf(stream,"\n");
+  // Reduction
+  if (wf_aligner->reduction.reduction_strategy == wavefront_reduction_none) {
+    fprintf(stream,"[WFA::Debug]\tReduction\tnone\n");
+  } else if (wf_aligner->reduction.reduction_strategy == wavefront_reduction_adaptive) {
+    fprintf(stream,"[WFA::Debug]\tReduction\t(adaptive,%d,%d)\n",
+        wf_aligner->reduction.min_wavefront_length,
+        wf_aligner->reduction.max_distance_threshold);
+  }
+  // Memory mode
+  fprintf(stream,"[WFA::Debug]\tMemory.mode\t(%d,%luMB,%luMB,%luMB)\n",
+      wf_aligner->memory_mode,
+      CONVERT_B_TO_MB(wf_aligner->system.max_memory_compact),
+      CONVERT_B_TO_MB(wf_aligner->system.max_memory_resident),
+      CONVERT_B_TO_MB(wf_aligner->system.max_memory_abort));
+}
+void wavefront_report_verbose_end(
+    FILE* const stream,
+    wavefront_aligner_t* const wf_aligner,
+    const int wf_status,
+    const uint64_t wf_memory_used,
+    profiler_timer_t* const timer) {
+  fprintf(stream,"[WFA::Debug]\tFinish.status\t%d\n",wf_status);
+  fprintf(stream,"[WFA::Debug]\tTime.taken\t");
+  timer_print_total(stream,timer);
+  fprintf(stream,"\n");
+  fprintf(stream,"[WFA::Debug]\tMemory.used\t%luMB\n",CONVERT_B_TO_MB(wf_memory_used));
+  fprintf(stream,"[WFA::Debug]\tWFA.score\t%d\n",-wf_aligner->cigar.score);
+  fprintf(stream,"[WFA::Debug]\tWFA.cigar\t");
+  cigar_print(stream,&wf_aligner->cigar,true);
+  fprintf(stream,"\n");
+  fprintf(stream,"[WFA::Debug]\tWFA.components (wfs=%d,maxlo=%d,maxhi=%d)\n",
+      wf_aligner->wf_components.num_wavefronts,
+      wf_aligner->wf_components.historic_min_lo,
+      wf_aligner->wf_components.historic_max_hi);
+}
 
 
 

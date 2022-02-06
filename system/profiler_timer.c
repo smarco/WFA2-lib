@@ -107,10 +107,9 @@ uint64_t timer_get_variance(const profiler_timer_t* const timer) {
 uint64_t timer_get_stddev(const profiler_timer_t* const timer) {
   return counter_get_stddev(&timer->time_ns);
 }
-void timer_print(
+void timer_print_total(
     FILE* const stream,
-    const profiler_timer_t* const timer,
-    const profiler_timer_t* const ref_timer) {
+    const profiler_timer_t* const timer) {
   const uint64_t total_time_ns = timer_get_total_ns(timer);
   // Print Total
   if (total_time_ns >= 60000000000ull) {
@@ -124,6 +123,14 @@ void timer_print(
   } else {
     fprintf(stream,"%7" PRIu64 " ns",total_time_ns);
   }
+}
+void timer_print(
+    FILE* const stream,
+    const profiler_timer_t* const timer,
+    const profiler_timer_t* const ref_timer) {
+  const uint64_t total_time_ns = timer_get_total_ns(timer);
+  // Print Total
+  timer_print_total(stream,timer);
   // Print percentage wrt reference
   if (ref_timer!=NULL) {
     if (total_time_ns==0) {

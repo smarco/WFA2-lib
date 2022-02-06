@@ -96,6 +96,6 @@ wavefront_aligner_attr_t wavefront_aligner_attr_default = {
         .max_memory_compact = -1,  // Automatically set based on memory-mode
         .max_memory_resident = -1, // Automatically set based on memory-mode
         .max_memory_abort = UINT64_MAX, // Unlimited
-        .verbose = false,
+        .verbose = 0, // Quiet
     },
 };

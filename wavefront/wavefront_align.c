@@ -85,7 +85,9 @@ int wavefront_align_reached_limits(
   // Global probing interval
   alignment_system_t* const system = &wf_aligner->system;
   if ((score%system->probe_interval_global) != 0) return 0;
-  if (system->verbose) wavefront_aligner_print_status(stderr,wf_aligner,score); // DEBUG
+  if (system->verbose) {
+    wavefront_aligner_print_status(stderr,wf_aligner,score); // DEBUG
+  }
   // BT-Buffer
   wavefront_components_t*const wf_components = &wf_aligner->wf_components;
   if (wf_components->bt_buffer!=NULL && (score%system->probe_interval_compact)==0) {
@@ -174,7 +176,7 @@ bool wavefront_align_end2end_terminate(
       wf_backtrace_buffer_recover_cigar(
           wf_components->bt_buffer,
           pattern,pattern_length,text,text_length,
-          wf_aligner->match_funct,wf_aligner->match_funct,
+          wf_aligner->match_funct,wf_aligner->match_funct_arguments,
           alignment_k,alignment_offset,
           mwavefront->bt_pcigar[alignment_k],
           mwavefront->bt_prev[alignment_k],
@@ -338,6 +340,15 @@ int wavefront_align(
     const int pattern_length,
     const char* const text,
     const int text_length) {
+  // DEBUG
+  profiler_timer_t timer;
+  if (wf_aligner->system.verbose >= 2) {
+    timer_reset(&timer);
+    timer_start(&timer);
+    if (wf_aligner->system.verbose >= 3) {
+      wavefront_report_verbose_begin(stderr,wf_aligner,pattern,pattern_length,text,text_length);
+    }
+  }
   // Resize wavefront aligner
   wavefront_aligner_resize(wf_aligner,pattern_length,text_length);
   // Init padded strings
@@ -382,7 +393,7 @@ int wavefront_align(
     wavefront_align_extend = &wavefront_extend_custom;
   }
   // Wavefront align sequences
-  const int status = wavefront_align_sequences(
+  const int wf_status = wavefront_align_sequences(
       wf_aligner,
       wavefront_align_initialize,
       wavefront_align_terminate,
@@ -394,7 +405,18 @@ int wavefront_align(
   const uint64_t wf_memory_used = wavefront_aligner_get_size(wf_aligner);
   const bool reap_memory = wf_memory_used > wf_aligner->system.max_memory_resident;
   if (reap_memory) wavefront_aligner_reap(wf_aligner);
+  // DEBUG
+  if (wf_aligner->system.verbose >= 2) {
+    timer_stop(&timer);
+    if (wf_aligner->system.verbose == 2) {
+      wavefront_report_lite(stderr,wf_aligner,
+          pattern,pattern_length,text,text_length,
+          wf_status,wf_memory_used,&timer);
+    } else {
+      wavefront_report_verbose_end(stderr,wf_aligner,wf_status,wf_memory_used,&timer);
+    }
+  }
   // Return
-  return status;
+  return wf_status;
 }
 

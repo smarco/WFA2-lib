@@ -148,7 +148,7 @@ wavefront_aligner_t* wavefront_aligner_new(
   // Reduction strategy
   wavefront_set_reduction(wf_aligner,attributes);
   // Custom matching functions
-  if (wf_aligner->match_funct != NULL) {
+  if (attributes->match_funct != NULL) {
     wf_aligner->match_funct = attributes->match_funct;
     wf_aligner->match_funct_arguments = attributes->match_funct_arguments;
   }

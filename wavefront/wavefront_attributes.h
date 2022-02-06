@@ -98,8 +98,12 @@ typedef struct {
   uint64_t max_memory_compact;   // Maximum BT-buffer memory allowed before trying compacting
   uint64_t max_memory_resident;  // Maximum memory allowed to be buffered before reap
   uint64_t max_memory_abort;     // Maximum memory allowed to be used before aborting alignment
-  // Misc
-  bool verbose;                  // Verbose (regulates messages during alignment)
+  // Verbose
+  //  0 - Quiet
+  //  1 - Report WFA progress and heavy tasks
+  //  2 - Report each sequence aligned (brief)
+  //  3 - Report each sequence aligned (very verbose)
+  int verbose;                   // Verbose (regulates messages during alignment)
 } alignment_system_t;
 
 /*

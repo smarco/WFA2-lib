@@ -30,6 +30,7 @@
  */
 
 #include "benchmark/benchmark_gap_lineal.h"
+#include "benchmark/benchmark_check.h"
 #include "gap_lineal/nw.h"
 
 /*
@@ -53,6 +54,20 @@ void benchmark_gap_lineal_nw(
       align_input->pattern,align_input->pattern_length,
       align_input->text,align_input->text_length,&cigar);
   timer_stop(&align_input->timer);
+  // DEBUG
+  if (align_input->debug_flags) {
+    benchmark_check_alignment(align_input,&cigar);
+  }
+  // Output
+  if (align_input->output_file) {
+    const int score = cigar_score_gap_lineal(&cigar,penalties);
+    FILE* const output_file = align_input->output_file;
+    if (align_input->output_full) {
+      benchmark_print_output_full(output_file,align_input,score,&cigar);
+    } else {
+      benchmark_print_output_lite(output_file,align_input,score,&cigar);
+    }
+  }
   // Free
   score_matrix_free(&score_matrix);
   cigar_free(&cigar);

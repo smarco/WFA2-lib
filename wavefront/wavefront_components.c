@@ -425,6 +425,9 @@ void wavefront_components_compact_bt_buffer(
   // Parameters
   wf_backtrace_buffer_t* const bt_buffer = wf_components->bt_buffer;
   const uint64_t bt_buffer_used = wf_backtrace_buffer_get_used(bt_buffer);
+  // PROFILE
+  profiler_timer_t timer;
+  if (verbose) { timer_reset(&timer); timer_start(&timer); }
   // Allocate bitmap
   bitmap_t* const bitmap = bitmap_new(bt_buffer_used,wf_components->mm_allocator);
   // Mark Active Working Set (AWS)
@@ -435,5 +438,12 @@ void wavefront_components_compact_bt_buffer(
   wavefront_components_translate_wavefronts(wf_components,bitmap,score);
   // Free
   bitmap_delete(bitmap);
+  // PROFILE
+  if (verbose) {
+    timer_stop(&timer);
+    fprintf(stderr,"[");
+    timer_print_total(stderr,&timer);
+    fprintf(stderr,"]\n");
+  }
 }
 

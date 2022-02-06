@@ -30,6 +30,7 @@
  */
 
 #include "benchmark/benchmark_gap_affine2p.h"
+#include "benchmark/benchmark_check.h"
 #include "gap_affine2p/affine2p_matrix.h"
 #include "gap_affine2p/affine2p_dp.h"
 #include "wavefront/wavefront_align.h"
@@ -56,10 +57,18 @@ void benchmark_gap_affine2p_dp(
       align_input->text,align_input->text_length,&cigar);
   timer_stop(&align_input->timer);
   // DEBUG
+  if (align_input->debug_flags) {
+    benchmark_check_alignment(align_input,&cigar);
+  }
+  // Output
   if (align_input->output_file) {
     const int score = cigar_score_gap_affine2p(&cigar,penalties);
-    benchmark_print_alignment_output(
-        align_input->output_file,align_input,score,&cigar);
+    FILE* const output_file = align_input->output_file;
+    if (align_input->output_full) {
+      benchmark_print_output_full(output_file,align_input,score,&cigar);
+    } else {
+      benchmark_print_output_lite(output_file,align_input,score,&cigar);
+    }
   }
   // Free
   affine2p_matrix_free(&matrix,align_input->mm_allocator);
@@ -77,14 +86,19 @@ void benchmark_gap_affine2p_wavefront(
       align_input->text,align_input->text_length);
   timer_stop(&align_input->timer);
   // DEBUG
-  //  if (align_input->debug_flags) { // TODO Implement check for 2p
-  //    benchmark_check_alignment(align_input,&cigar);
-  //  }
+  if (align_input->debug_flags) {
+    benchmark_check_alignment(align_input,&wf_aligner->cigar);
+  }
+  // Output
   if (align_input->output_file) {
     const int score_only = (wf_aligner->alignment_scope == compute_score);
-    const int score = (score_only) ?
-        wf_aligner->cigar.score : cigar_score_gap_affine2p(&wf_aligner->cigar,penalties);
-    benchmark_print_alignment_output(
-        align_input->output_file,align_input,score,&wf_aligner->cigar);
+    const int score = (score_only) ? wf_aligner->cigar.score :
+        cigar_score_gap_affine2p(&wf_aligner->cigar,penalties);
+    FILE* const output_file = align_input->output_file;
+    if (align_input->output_full) {
+      benchmark_print_output_full(output_file,align_input,score,&wf_aligner->cigar);
+    } else {
+      benchmark_print_output_lite(output_file,align_input,score,&wf_aligner->cigar);
+    }
   }
 }

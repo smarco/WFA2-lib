@@ -80,6 +80,10 @@ uint64_t timer_get_mean(const profiler_timer_t* const timer);
 uint64_t timer_get_variance(const profiler_timer_t* const timer);
 uint64_t timer_get_stddev(const profiler_timer_t* const timer);
 
+void timer_print_total(
+    FILE* const stream,
+    const profiler_timer_t* const timer);
+
 void timer_print(
     FILE* const stream,
     const profiler_timer_t* const timer,

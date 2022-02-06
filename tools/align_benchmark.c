@@ -81,6 +81,7 @@ typedef struct {
   // Input
   char *input_filename;
   char *output_filename;
+  bool output_full;
   // Penalties
   lineal_penalties_t lineal_penalties;
   affine_penalties_t affine_penalties;
@@ -112,14 +113,15 @@ typedef struct {
   // System
   uint64_t max_memory;
   int progress;
-  bool verbose;
+  int verbose;
 } benchmark_args;
 benchmark_args parameters = {
   // Algorithm
   .algorithm = alignment_test,
   // Input
-  .input_filename=NULL,
-  .output_filename=NULL,
+  .input_filename = NULL,
+  .output_filename = NULL,
+  .output_full = false,
   // Penalties
   .lineal_penalties = {
       .match = 0,
@@ -166,7 +168,7 @@ benchmark_args parameters = {
   // System
   .max_memory = UINT64_MAX,
   .progress = 10000,
-  .verbose = false
+  .verbose = 0
 };
 
 /*
@@ -380,6 +382,7 @@ void align_benchmark_configure_global(
   } else {
     align_input->output_file = fopen(parameters.output_filename, "w");
   }
+  align_input->output_full = parameters.output_full;
   // MM
   align_input->mm_allocator = mm_allocator_new(BUFFER_SIZE_8M);
   // WFA
@@ -585,7 +588,7 @@ void usage() {
   fprintf(stderr,
       "USE: ./align_benchmark -a <algorithm> -i <input>                     \n"
       "      Options::                                                      \n"
-      "        [Input]                                                      \n"
+      "        [Algorithm]                                                  \n"
       "          --algorithm|a <algorithm>                                  \n"
       "            [edit]                                                   \n"
       "              edit-dp                                                \n"
@@ -605,8 +608,10 @@ void usage() {
       "              gap-affine2p-dp                                        \n"
       "              gap-affine2p-wfa                                       \n"
       "              gap-affine2p-wfa-adaptive                              \n"
+      "        [Input & Output]                                             \n"
       "          --input|i <File>                                           \n"
       "          --output|o <File>                                          \n"
+      "          --output-full <File>                                       \n"
       "        [Penalties]                                                  \n"
       "          --lineal-penalties|p M,X,I,D                               \n"
       "          --affine-penalties|g M,X,O,E                               \n"
@@ -634,6 +639,8 @@ void parse_arguments(int argc,char** argv) {
     /* Input */
     { "algorithm", required_argument, 0, 'a' },
     { "input", required_argument, 0, 'i' },
+    { "output", required_argument, 0, 'o' },
+    { "output-full", required_argument, 0, 800 },
     /* Penalties */
     { "lineal-penalties", required_argument, 0, 'p' },
     { "affine-penalties", required_argument, 0, 'g' },
@@ -654,7 +661,7 @@ void parse_arguments(int argc,char** argv) {
     /* System */
     { "max-memory", required_argument, 0, 3000 },
     { "progress", required_argument, 0, 'P' },
-    { "verbose", no_argument, 0, 'v' },
+    { "verbose", optional_argument, 0, 'v' },
     { "help", no_argument, 0, 'h' },
     { 0, 0, 0, 0 } };
   int c,option_index;
@@ -663,7 +670,7 @@ void parse_arguments(int argc,char** argv) {
     exit(0);
   }
   while (1) {
-    c=getopt_long(argc,argv,"a:i:o:p:g:P:c:vh",long_options,&option_index);
+    c=getopt_long(argc,argv,"a:i:o:p:g:P:c:v::h",long_options,&option_index);
     if (c==-1) break;
     switch (c) {
     /*
@@ -727,6 +734,10 @@ void parse_arguments(int argc,char** argv) {
       break;
     case 'o':
       parameters.output_filename = optarg;
+      break;
+    case 800: // --output-full
+      parameters.output_filename = optarg;
+      parameters.output_full = true;
       break;
     /*
      * Penalties
@@ -866,7 +877,15 @@ void parse_arguments(int argc,char** argv) {
       parameters.progress = atoi(optarg);
       break;
     case 'v':
-      parameters.verbose = true;
+      if (optarg==NULL) {
+        parameters.verbose = 1;
+      } else {
+        parameters.verbose = atoi(optarg);
+        if (parameters.verbose < 0 || parameters.verbose > 3) {
+          fprintf(stderr,"Option '--verbose' must be in {0,1,2,3}\n");
+          exit(1);
+        }
+      }
       break;
     case 'h':
       usage();
