@@ -50,32 +50,17 @@ class WFAligner {
 public:
   // Configuration
   enum MemoryModel {
-    WavefrontMemoryFull,
-    WavefrontMemoryHigh,
-    WavefrontMemoryMed,
-    WavefrontMemoryLow
+    MemoryHigh,
+    MemoryMed,
+    MemoryLow,
+    MemoryUltralow,
   };
-  void setReductionNone();
-  void setReductionAdaptive(
-      const int minWavefrontLength,
-      const int maxDistanceThreshold);
-  void setMatchFunct(
-      int (*matchFunct)(int,int,void*),
-      void* matchFunctArguments);
-  void setMaxAlignmentScore(
-      const int maxAlignmentScore);
-  void setMaxMemory(
-      const uint64_t maxMemoryCompact,
-      const uint64_t maxMemoryResident,
-      const uint64_t maxMemoryAbort);
-  // Accessors
-  int getAlignmentScore();
-  void getAlignmentCigar(
-      char** const cigarOperations,
-      int* cigarLength);
-  std::string getAlignmentCigar();
+  enum AlignmentScope {
+    Score,
+    Alignment,
+  };
   // Align End-to-end
-  int alignEnd2End(
+  int alignEnd2EndLambda(
       const int patternLength,
       const int textLength);
   int alignEnd2End(
@@ -87,7 +72,7 @@ public:
       std::string& pattern,
       std::string& text);
   // Align Ends-free
-  int alignEndsFree(
+  int alignEndsFreeLambda(
       const int patternLength,
       const int patternBeginFree,
       const int patternEndFree,
@@ -110,17 +95,43 @@ public:
       std::string& text,
       const int textBeginFree,
       const int textEndFree);
-  // Display & errors
+  // Reduction
+  void setReductionNone();
+  void setReductionAdaptive(
+      const int minWavefrontLength,
+      const int maxDistanceThreshold);
+  // Custom extend-match function (lambda)
+  void setMatchFunct(
+      int (*matchFunct)(int,int,void*),
+      void* matchFunctArguments);
+  // Limits
+  void setMaxAlignmentScore(
+      const int maxAlignmentScore);
+  void setMaxMemory(
+      const uint64_t maxMemoryCompact,
+      const uint64_t maxMemoryResident,
+      const uint64_t maxMemoryAbort);
+  // Accessors
+  int getAlignmentScore();
+  void getAlignmentCigar(
+      char** const cigarOperations,
+      int* cigarLength);
+  std::string getAlignmentCigar();
+  // Misc
   char* strError(
       const int wfErrorCode);
+  void setVerbose(
+      const int verbose);
 protected:
   wavefront_aligner_attr_t attributes;
   wavefront_aligner_t* wfAligner;
   // Setup
   WFAligner(
-      const bool onlyScore = false,
-      const MemoryModel memoryModel = WavefrontMemoryFull);
+      const AlignmentScope alignmentScope,
+      const MemoryModel memoryModel = MemoryHigh);
   ~WFAligner();
+private:
+  WFAligner(const WFAligner&);
 };
 /*
  * Gap-Affine Aligner
@@ -131,8 +142,8 @@ public:
       const int mismatch,
       const int gapOpening,
       const int gapExtension,
-      const bool onlyScore = false,
-      const MemoryModel memoryModel = WFAligner::WavefrontMemoryFull);
+      const AlignmentScope alignmentScope,
+      const MemoryModel memoryModel = MemoryHigh);
 };
 /*
  * Gap-Affine Dual-Cost (2 pieces) Aligner
@@ -145,8 +156,8 @@ public:
       const int gapExtension1,
       const int gapOpening2,
       const int gapExtension2,
-      const bool onlyScore = false,
-      const MemoryModel memoryModel = WFAligner::WavefrontMemoryFull);
+      const AlignmentScope alignmentScope,
+      const MemoryModel memoryModel = MemoryHigh);
 };
 
 } /* namespace wfa */

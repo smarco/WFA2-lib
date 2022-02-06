@@ -483,17 +483,17 @@ int wavefront_compute_offload_backtrace_blocks(
   wf_backtrace_buffer_t* const bt_buffer = wf_aligner->wf_components.bt_buffer;
   // Select memory-mode
   switch (wavefront_memory) {
-    case wavefront_memory_high:
+    case wavefront_memory_med:
       wavefront_compute_offload_backtrace_blocks_all(
           out_offsets,out_bt_pcigar,out_bt_prev,lo,hi,bt_buffer);
       return 0; // Maximum occupancy (all empty)
       break;
-    case wavefront_memory_med:
+    case wavefront_memory_low:
       wavefront_compute_offload_backtrace_blocks_selective(
           out_offsets,out_bt_pcigar,out_bt_prev,
           lo,hi,PCIGAR_HALF_FULL_MASK,bt_buffer);
       return PCIGAR_MAX_LENGTH/2; // Maximum occupancy (at least 2 ops)
-    case wavefront_memory_low:
+    case wavefront_memory_ultralow:
       wavefront_compute_offload_backtrace_blocks_selective(
           out_offsets,out_bt_pcigar,out_bt_prev,
           lo,hi,PCIGAR_FULL_MASK,bt_buffer);

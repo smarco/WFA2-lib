@@ -154,7 +154,7 @@ benchmark_args parameters = {
   .reduction_type = wavefront_reduction_none,
   .min_wavefront_length = 10,
   .max_distance_threshold = 50,
-  .memory_mode = wavefront_memory_full,
+  .memory_mode = wavefront_memory_high,
   .match_funct = NULL,
   .match_funct_arguments = NULL,
   // Misc
@@ -268,7 +268,7 @@ void align_pairwise_test() {
   attributes.reduction.min_wavefront_length = 10;
   attributes.reduction.max_distance_threshold = 50;
   attributes.alignment_scope = compute_alignment; // compute_score
-  attributes.memory_mode = wavefront_memory_full;
+  attributes.memory_mode = wavefront_memory_high;
   attributes.alignment_form.span = (endsfree) ? alignment_endsfree : alignment_end2end;
   attributes.alignment_form.pattern_begin_free = pattern_begin_free;
   attributes.alignment_form.pattern_end_free = pattern_end_free;
@@ -620,7 +620,7 @@ void usage() {
       "          --score-only                                               \n"
       "          --minimum-wavefront-length <INT>                           \n"
       "          --maximum-difference-distance <INT>                        \n"
-      "          --memory-mode 'full'|'high'|'med'|'low'                    \n"
+      "          --memory-mode 'high'|'med'|'low'|'ultralow'                \n"
       "          --ends-free P0,Pf,T0,Tf                                    \n"
       "          --custom-match-funct                                       \n"
       "        [Misc]                                                       \n"
@@ -791,17 +791,17 @@ void parse_arguments(int argc,char** argv) {
     case 1003: // --maximum-difference-distance
       parameters.max_distance_threshold = atoi(optarg);
       break;
-    case 1004: // --memory-mode 'full'|'high'|'med'|'low'
-      if (strcmp(optarg,"full")==0) {
-        parameters.memory_mode = wavefront_memory_full;
-      } else if (strcmp(optarg,"high")==0) {
+    case 1004: // --memory-mode 'high'|'med'|'low'|'ultralow'
+      if (strcmp(optarg,"high")==0) {
         parameters.memory_mode = wavefront_memory_high;
       } else if (strcmp(optarg,"med")==0) {
         parameters.memory_mode = wavefront_memory_med;
       } else if (strcmp(optarg,"low")==0) {
         parameters.memory_mode = wavefront_memory_low;
+      } else if (strcmp(optarg,"ultralow")==0) {
+        parameters.memory_mode = wavefront_memory_ultralow;
       } else {
-        fprintf(stderr,"Option '--memory-mode' must be in {'full','high','med','low'}\n");
+        fprintf(stderr,"Option '--memory-mode' must be in {'high'|'med'|'low'|'ultralow'}\n");
         exit(1);
       }
       break;

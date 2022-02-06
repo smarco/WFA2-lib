@@ -44,74 +44,26 @@ namespace wfa {
  * General Wavefront Aligner
  */
 WFAligner::WFAligner(
-    const bool onlyScore,
+    const AlignmentScope alignmentScope,
     const MemoryModel memoryModel) {
   this->attributes = wavefront_aligner_attr_default;
   switch (memoryModel) {
-    case WavefrontMemoryHigh: this->attributes.memory_mode = wavefront_memory_high; break;
-    case WavefrontMemoryMed: this->attributes.memory_mode = wavefront_memory_med; break;
-    case WavefrontMemoryLow: this->attributes.memory_mode = wavefront_memory_low; break;
-    default: this->attributes.memory_mode = wavefront_memory_full; break;
+    case MemoryHigh: this->attributes.memory_mode = wavefront_memory_high; break;
+    case MemoryMed: this->attributes.memory_mode = wavefront_memory_med; break;
+    case MemoryLow: this->attributes.memory_mode = wavefront_memory_low; break;
+    case MemoryUltralow: this->attributes.memory_mode = wavefront_memory_ultralow; break;
+    default: this->attributes.memory_mode = wavefront_memory_high; break;
   }
-  this->attributes.alignment_scope = onlyScore ? compute_score : compute_alignment;
+  this->attributes.alignment_scope = (alignmentScope==Score) ? compute_score : compute_alignment;
   this->wfAligner = nullptr;
 }
 WFAligner::~WFAligner() {
   wavefront_aligner_delete(wfAligner);
 }
 /*
- * Configuration
- */
-void WFAligner::setReductionNone() {
-  wavefront_aligner_set_reduction_none(wfAligner);
-}
-void WFAligner::setReductionAdaptive(
-    const int min_wavefront_length,
-    const int max_distance_threshold) {
-  wavefront_aligner_set_reduction_adaptive(
-      wfAligner,min_wavefront_length,max_distance_threshold);
-}
-void WFAligner::setMatchFunct(
-    int (*matchFunct)(int,int,void*),
-    void* matchFunctArguments) {
-  wavefront_aligner_set_match_funct(wfAligner,matchFunct,matchFunctArguments);
-}
-void WFAligner::setMaxAlignmentScore(
-    const int maxAlignmentScore) {
-  wavefront_aligner_set_max_alignment_score(
-      wfAligner,maxAlignmentScore);
-}
-void WFAligner::setMaxMemory(
-    const uint64_t maxMemoryCompact,
-    const uint64_t maxMemoryResident,
-    const uint64_t maxMemoryAbort) {
-  wavefront_aligner_set_max_memory(wfAligner,
-      maxMemoryCompact,maxMemoryResident,maxMemoryAbort);
-}
-/*
- * Accessors
- */
-int WFAligner::getAlignmentScore() {
-  return wfAligner->cigar.score;
-}
-void WFAligner::getAlignmentCigar(
-    char** const cigarOperations,
-    int* cigarLength) {
- *cigarOperations = wfAligner->cigar.operations + wfAligner->cigar.begin_offset;
- *cigarLength = wfAligner->cigar.end_offset - wfAligner->cigar.begin_offset;
-}
-std::string WFAligner::getAlignmentCigar() {
-  // Fetch CIGAR
-  char* buffer;
-  int bufferLength;
-  getAlignmentCigar(&buffer,&bufferLength);
-  // Create string and return
-  return std::string(buffer,bufferLength);
-}
-/*
  * Align End-to-end
  */
-int WFAligner::alignEnd2End(
+int WFAligner::alignEnd2EndLambda(
     const int patternLength,
     const int textLength) {
   // Configure
@@ -145,7 +97,7 @@ int WFAligner::alignEnd2End(
  * Align Ends-free
  */
 // Align Ends-free
-int WFAligner::alignEndsFree(
+int WFAligner::alignEndsFreeLambda(
     const int patternLength,
     const int patternBeginFree,
     const int patternEndFree,
@@ -192,11 +144,70 @@ int WFAligner::alignEndsFree(
       text.c_str(),text.length());
 }
 /*
- * Display & errors
+ * Reduction
+ */
+void WFAligner::setReductionNone() {
+  wavefront_aligner_set_reduction_none(wfAligner);
+}
+void WFAligner::setReductionAdaptive(
+    const int min_wavefront_length,
+    const int max_distance_threshold) {
+  wavefront_aligner_set_reduction_adaptive(
+      wfAligner,min_wavefront_length,max_distance_threshold);
+}
+/*
+ * Custom extend-match function (lambda)
+ */
+void WFAligner::setMatchFunct(
+    int (*matchFunct)(int,int,void*),
+    void* matchFunctArguments) {
+  wavefront_aligner_set_match_funct(wfAligner,matchFunct,matchFunctArguments);
+}
+/*
+ * Limits
+ */
+void WFAligner::setMaxAlignmentScore(
+    const int maxAlignmentScore) {
+  wavefront_aligner_set_max_alignment_score(
+      wfAligner,maxAlignmentScore);
+}
+void WFAligner::setMaxMemory(
+    const uint64_t maxMemoryCompact,
+    const uint64_t maxMemoryResident,
+    const uint64_t maxMemoryAbort) {
+  wavefront_aligner_set_max_memory(wfAligner,
+      maxMemoryCompact,maxMemoryResident,maxMemoryAbort);
+}
+/*
+ * Accessors
+ */
+int WFAligner::getAlignmentScore() {
+  return wfAligner->cigar.score;
+}
+void WFAligner::getAlignmentCigar(
+    char** const cigarOperations,
+    int* cigarLength) {
+ *cigarOperations = wfAligner->cigar.operations + wfAligner->cigar.begin_offset;
+ *cigarLength = wfAligner->cigar.end_offset - wfAligner->cigar.begin_offset;
+}
+std::string WFAligner::getAlignmentCigar() {
+  // Fetch CIGAR
+  char* buffer;
+  int bufferLength;
+  getAlignmentCigar(&buffer,&bufferLength);
+  // Create string and return
+  return std::string(buffer,bufferLength);
+}
+/*
+ * Misc
  */
 char* WFAligner::strError(
     const int wfErrorCode) {
   return wavefront_align_strerror(wfErrorCode);
+}
+void WFAligner::setVerbose(
+    const int verbose) {
+  wfAligner->system.verbose = verbose;
 }
 /*
  * Gap-Affine Aligner
@@ -205,9 +216,9 @@ WFAlignerGapAffine::WFAlignerGapAffine(
     const int mismatch,
     const int gapOpening,
     const int gapExtension,
-    const bool onlyScore,
+    const AlignmentScope alignmentScope,
     const MemoryModel memoryModel) :
-        WFAligner(onlyScore,memoryModel) {
+        WFAligner(alignmentScope,memoryModel) {
   attributes.distance_metric = gap_affine;
   attributes.affine_penalties.match = 0;
   attributes.affine_penalties.mismatch = mismatch;
@@ -224,9 +235,9 @@ WFAlignerGapAffine2Pieces::WFAlignerGapAffine2Pieces(
     const int gapExtension1,
     const int gapOpening2,
     const int gapExtension2,
-    const bool onlyScore,
+    const AlignmentScope alignmentScope,
     const MemoryModel memoryModel) :
-        WFAligner(onlyScore,memoryModel) {
+        WFAligner(alignmentScope,memoryModel) {
   attributes.distance_metric = gap_affine_2p;
   attributes.affine2p_penalties.match = 0;
   attributes.affine2p_penalties.mismatch = mismatch;

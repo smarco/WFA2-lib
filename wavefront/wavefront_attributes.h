@@ -110,10 +110,10 @@ typedef struct {
  * Low-memory modes
  */
 typedef enum {
-  wavefront_memory_full = 0, // High-memore mode (fastest, stores all WFs explicitly)
-  wavefront_memory_high = 1, // Succing-memory mode (fast, offloads multiple BT-blocks -- even empty)
-  wavefront_memory_med  = 2, // Succing-memory mode (medium, offloads half-full BT-blocks)
-  wavefront_memory_low  = 3, // Succing-memory mode (slow, offloads only full BT-blocks)
+  wavefront_memory_high = 0,     // High-memore mode (fastest, stores all WFs explicitly)
+  wavefront_memory_med = 1,      // Succing-memory mode (fast, offloads multiple BT-blocks)
+  wavefront_memory_low = 2,      // Succing-memory mode (medium, offloads half-full BT-blocks)
+  wavefront_memory_ultralow = 3, // Succing-memory mode (slow, offloads only full BT-blocks)
 } wavefront_memory_t;
 
 /*
