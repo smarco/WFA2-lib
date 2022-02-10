@@ -283,7 +283,7 @@ void wavefront_report_lite(
   if (wf_aligner->match_funct != NULL) {
     fprintf(stream,"\t-\t-");
   } else {
-    fprintf(stream,"\t%s\t%s",pattern,text);
+    fprintf(stream,"\t%.*s\t%.*s",pattern_length,pattern,text_length,text);
   }
   fprintf(stream,"\n");
 }
@@ -300,8 +300,8 @@ void wavefront_report_verbose_begin(
     fprintf(stream,"[WFA::Debug]\tPattern\t%d\tcustom-funct()\n",pattern_length);
     fprintf(stream,"[WFA::Debug]\tText\t%d\tcustom-funct()\n",text_length);
   } else {
-    fprintf(stream,"[WFA::Debug]\tPattern\t%d\t%s\n",pattern_length,pattern);
-    fprintf(stream,"[WFA::Debug]\tText\t%d\t%s\n",text_length,text);
+    fprintf(stream,"[WFA::Debug]\tPattern\t%d\t%.*s\n",pattern_length,pattern_length,pattern);
+    fprintf(stream,"[WFA::Debug]\tText\t%d\t%.*s\n",text_length,text_length,text);
   }
   // Alignment scope/form
   fprintf(stream,"[WFA::Debug]\tScope\t%s\n",

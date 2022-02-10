@@ -148,10 +148,8 @@ wavefront_aligner_t* wavefront_aligner_new(
   // Reduction strategy
   wavefront_set_reduction(wf_aligner,attributes);
   // Custom matching functions
-  if (attributes->match_funct != NULL) {
-    wf_aligner->match_funct = attributes->match_funct;
-    wf_aligner->match_funct_arguments = attributes->match_funct_arguments;
-  }
+  wf_aligner->match_funct = attributes->match_funct;
+  wf_aligner->match_funct_arguments = attributes->match_funct_arguments;
   // Wavefront components
   wavefront_components_allocate(
       &wf_aligner->wf_components,pattern_length,text_length,

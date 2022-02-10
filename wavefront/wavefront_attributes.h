@@ -91,6 +91,8 @@ typedef int (*alignment_match_funct_t)(int,int,void*);
  * Alignment system configuration
  */
 typedef struct {
+  // Debug
+  bool check_alignment_correct;  // Verify that the alignment CIGAR output is correct
   // Probing intervals
   int probe_interval_global;     // Score-ticks interval to check any limits
   int probe_interval_compact;    // Score-ticks interval to check BT-buffer compacting

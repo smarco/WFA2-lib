@@ -91,6 +91,7 @@ wavefront_aligner_attr_t wavefront_aligner_attr_default = {
     },
     // System
     .system = {
+        .check_alignment_correct = false,
         .probe_interval_global = 2000,
         .probe_interval_compact = 6000,
         .max_memory_compact = -1,  // Automatically set based on memory-mode

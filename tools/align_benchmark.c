@@ -178,84 +178,31 @@ void align_pairwise_test() {
   // Patters & Texts
 //  char * pattern = "GATTACA";
 //  char * text = "GATCACTA";
-    char * pattern = "GCAGAGAATTACGACCGGCTCGCTGAATTGCGAAG";
-    char * text = "GCGAGAATTACGACCGGCTCGCTGAATTGCGCGAAG";
+//  char* pattern = "AAGGGTAATCTAAGTGTCTGGTCCTTTGTCATTCTGACTTTCTTCATAATGTGATCTCCTCACCTCCAGATTTCCCTTCTGCTCAATAGAACTAGGAGGAAGGAGAGGGAGCTTAACATTTCCCTTCTCTCAGACCCTTAGCTCCAA";
+//  char* text = "CAAGGGTAATCTAAGTGTT";
+
+  char* pattern =  "AAGGGTAATCTAAGTGTCTGGTCCTTTGTCATTCTGACTTTCTTCATAATGTGATCTCCTCACCTCCAGATTTCCCTTCTGCTCAATAGAACTAGGAGGAAGGAGAGGGAGCTTAACATTTCCCTTCTCTCAGACCCTTAGCTCCAA";
+  char* text =    "CAAGGGTAATCTAAGTGTT";
 
   // MMAllocator
   mm_allocator_t* const mm_allocator = mm_allocator_new(BUFFER_SIZE_8M);
   // Penalties
   affine_penalties_t affine_penalties = {
       .match = 0,
-      .mismatch = 2,//4, //9,
-      .gap_opening = 3, //6 //13,
+      .mismatch = 9,//4, //9,
+      .gap_opening = 13, //6 //13,
       .gap_extension = 1,
-  };
-  affine2p_penalties_t affine2p_penalties = {
-      .match = 0,
-      .mismatch = 4,
-      .gap_opening1 = 6,
-      .gap_extension1 = 2,
-      .gap_opening2 = 7000,
-      .gap_extension2 = 3000,
   };
   // Ends
   const int pattern_begin_free = 0;
   const int pattern_end_free = 0;
   const int text_begin_free = 0;
-  const int text_end_free = 0;
-//  const int pattern_begin_free = 20;
-//  const int pattern_end_free = 20;
-//  const int text_begin_free = 20;
-//  const int text_end_free = 20;
+  const int text_end_free = 19;
   const bool endsfree =
       pattern_begin_free>0 ||
       pattern_end_free>0   ||
       text_begin_free>0    ||
       text_end_free>0;
-
-//  /*
-//   * SWG
-//   */
-//  // Allocate
-//  affine_matrix_t matrix;
-//  affine_matrix_allocate(&matrix,strlen(pattern)+1,strlen(text)+1,mm_allocator);
-//  cigar_t cigar;
-//  cigar_allocate(&cigar,strlen(pattern)+strlen(text),mm_allocator);
-//  // Align
-//  swg_compute_endsfree(
-//      &matrix,&affine_penalties,
-//      pattern,strlen(pattern),text,strlen(text),
-//      pattern_begin_free,pattern_end_free,
-//      text_begin_free,text_end_free,&cigar);
-//  cigar_print_pretty(stderr,
-//      pattern,strlen(pattern),text,strlen(text),
-//      &cigar,mm_allocator);
-//  fprintf(stderr,"SCORE: %d \n",cigar_score_gap_affine(&cigar,&affine_penalties));
-//  // Free
-//  affine_matrix_free(&matrix,mm_allocator);
-//  cigar_free(&cigar);
-
-//  /*
-//   * SWG 2P
-//   */
-//  // Allocate
-//  affine2p_matrix_t matrix;
-//  affine2p_matrix_allocate(&matrix,strlen(pattern)+1,strlen(text)+1,mm_allocator);
-//  cigar_t cigar;
-//  cigar_allocate(&cigar,strlen(pattern)+strlen(text),mm_allocator);
-//  // Align
-//  affine2p_dp_compute(
-//      &matrix,&affine2p_penalties,
-//      pattern,strlen(pattern),
-//      text,strlen(text),&cigar);
-//  cigar_print_pretty(stderr,
-//      pattern,strlen(pattern),text,strlen(text),
-//      &cigar,mm_allocator);
-//  fprintf(stderr,"SCORE: %d \n",cigar_score_gap_affine2p(&cigar,&affine2p_penalties));
-//  // Free
-//  affine2p_matrix_free(&matrix,mm_allocator);
-//  cigar_free(&cigar);
-
   /*
    * Gap-Affine
    */
@@ -264,17 +211,17 @@ void align_pairwise_test() {
   attributes.distance_metric = gap_affine;
   attributes.affine_penalties = affine_penalties;
   // attributes.affine2p_penalties = affine2p_penalties;
-  attributes.reduction.reduction_strategy = wavefront_reduction_none; // wavefront_reduction_adaptive; //
-  attributes.reduction.min_wavefront_length = 10;
-  attributes.reduction.max_distance_threshold = 50;
+  attributes.reduction.reduction_strategy = wavefront_reduction_adaptive;
+  attributes.reduction.min_wavefront_length = 256;
+  attributes.reduction.max_distance_threshold = 4096;
   attributes.alignment_scope = compute_alignment; // compute_score
-  attributes.memory_mode = wavefront_memory_high;
+  attributes.memory_mode = wavefront_memory_med;
   attributes.alignment_form.span = (endsfree) ? alignment_endsfree : alignment_end2end;
   attributes.alignment_form.pattern_begin_free = pattern_begin_free;
   attributes.alignment_form.pattern_end_free = pattern_end_free;
   attributes.alignment_form.text_begin_free = text_begin_free;
   attributes.alignment_form.text_end_free = text_end_free;
-  attributes.plot_params.plot_enabled = true;
+  attributes.plot_params.plot_enabled = false;
   attributes.mm_allocator = mm_allocator;
   wavefront_aligner_t* const wf_aligner = wavefront_aligner_new(&attributes);
   // Align
@@ -284,7 +231,7 @@ void align_pairwise_test() {
   cigar_print_pretty(stderr,
       pattern,strlen(pattern),text,strlen(text),
       &wf_aligner->cigar,mm_allocator);
-  fprintf(stderr,"SCORE: %d \n",cigar_score_gap_affine2p(&wf_aligner->cigar,&affine2p_penalties));
+  fprintf(stderr,"SCORE: %d \n",cigar_score_gap_affine(&wf_aligner->cigar,&affine_penalties));
   // Plot
   if (attributes.plot_params.plot_enabled) {
     FILE* const wf_plot = fopen("test.wfa","w");
