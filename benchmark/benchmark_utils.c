@@ -32,7 +32,7 @@
 #include "benchmark/benchmark_utils.h"
 #include "alignment/score_matrix.h"
 #include "edit/edit_dp.h"
-#include "gap_lineal/nw.h"
+#include "gap_linear/nw.h"
 #include "gap_affine/affine_matrix.h"
 #include "gap_affine/swg.h"
 

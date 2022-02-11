@@ -136,9 +136,9 @@ int cigar_score_edit(
   }
   return score;
 }
-int cigar_score_gap_lineal(
+int cigar_score_gap_linear(
     cigar_t* const cigar,
-    lineal_penalties_t* const penalties) {
+    linear_penalties_t* const penalties) {
   int score = 0, i;
   for (i=cigar->begin_offset;i<cigar->end_offset;++i) {
     switch (cigar->operations[i]) {

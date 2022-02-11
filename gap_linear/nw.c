@@ -27,17 +27,17 @@
  * PROJECT: Wavefront Alignments Algorithms
  * AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
  * DESCRIPTION: Dynamic-programming alignment algorithm for computing
- *   gap-lineal pairwise alignment (Needleman-Wunsch - NW)
+ *   gap-linear pairwise alignment (Needleman-Wunsch - NW)
  */
 
-#include "gap_lineal/nw.h"
+#include "gap_linear/nw.h"
 
 /*
  * NW Traceback
  */
 void nw_traceback(
     score_matrix_t* const score_matrix,
-    lineal_penalties_t* const penalties,
+    linear_penalties_t* const penalties,
     cigar_t* const cigar) {
   // Parameters
   int** const dp = score_matrix->columns;
@@ -67,7 +67,7 @@ void nw_traceback(
 }
 void nw_compute(
     score_matrix_t* const score_matrix,
-    lineal_penalties_t* const penalties,
+    linear_penalties_t* const penalties,
     const char* const pattern,
     const int pattern_length,
     const char* const text,

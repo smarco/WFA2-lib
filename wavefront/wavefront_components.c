@@ -57,7 +57,7 @@ void wavefront_components_dimensions_edit(
     *num_wavefronts = MAX(max_pattern_length,max_text_length);
   }
 }
-void wavefront_components_dimensions_lineal(
+void wavefront_components_dimensions_linear(
     wavefront_components_t* const wf_components,
     wavefronts_penalties_t* const penalties,
     const int max_pattern_length,
@@ -129,14 +129,15 @@ void wavefront_components_dimensions(
     int* const num_wavefronts) {
   // Switch attending to distance-metric
   switch (penalties->distance_metric) {
+    case indel:
     case edit:
       wavefront_components_dimensions_edit(
           wf_components,
           max_pattern_length,max_text_length,
           max_score_scope,num_wavefronts);
       break;
-    case gap_lineal:
-      wavefront_components_dimensions_lineal(
+    case gap_linear:
+      wavefront_components_dimensions_linear(
           wf_components,penalties,
           max_pattern_length,max_text_length,
           max_score_scope,num_wavefronts);
@@ -172,7 +173,7 @@ void wavefront_components_allocate_wf(
   mm_allocator_t* const mm_allocator = wf_components->mm_allocator;
   // Allocate wavefronts
   wf_components->mwavefronts = mm_allocator_calloc(mm_allocator,num_wavefronts,wavefront_t*,init_wf);
-  if (distance_metric==edit || distance_metric==gap_lineal) {
+  if (distance_metric <= gap_linear) {
     wf_components->i1wavefronts = NULL;
     wf_components->d1wavefronts = NULL;
     wf_components->i2wavefronts = NULL;
@@ -180,7 +181,7 @@ void wavefront_components_allocate_wf(
   } else {
     wf_components->i1wavefronts = mm_allocator_calloc(mm_allocator,num_wavefronts,wavefront_t*,init_wf);
     wf_components->d1wavefronts = mm_allocator_calloc(mm_allocator,num_wavefronts,wavefront_t*,init_wf);
-    if (distance_metric==gap_affine) {
+    if (distance_metric == gap_affine) {
       wf_components->i2wavefronts = NULL;
       wf_components->d2wavefronts = NULL;
     } else {

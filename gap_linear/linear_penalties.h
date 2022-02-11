@@ -26,30 +26,17 @@
  *
  * PROJECT: Wavefront Alignments Algorithms
  * AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
- * DESCRIPTION: WaveFront-Alignment module for the "extension" of exact matches
+ * DESCRIPTION: Gap-linear penalties
  */
 
-#ifndef WAVEFRONT_EXTEND_H_
-#define WAVEFRONT_EXTEND_H_
+#ifndef LINEAR_PENALTIES_H_
+#define LINEAR_PENALTIES_H_
 
-#include "wavefront_aligner.h"
+typedef struct {
+  int match;              // (Penalty representation; usually M <= 0)
+  int mismatch;           // (Penalty representation; usually X > 0)
+  int insertion;          // (Penalty representation; usually I > 0)
+  int deletion;           // (Penalty representation; usually D > 0)
+} linear_penalties_t;
 
-/*
- * Constants
- */
-#define WAVEFRONT_PADDING  10
-
-/*
- * Wavefront exact "extension"
- */
-bool wavefront_extend_end2end(
-    wavefront_aligner_t* const wf_aligner,
-    int score);
-bool wavefront_extend_endsfree(
-    wavefront_aligner_t* const wf_aligner,
-    int score);
-bool wavefront_extend_custom(
-    wavefront_aligner_t* const wf_aligner,
-    int score);
-
-#endif /* WAVEFRONT_EXTEND_H_ */
+#endif /* LINEAR_PENALTIES_H_ */

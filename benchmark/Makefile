@@ -11,7 +11,7 @@ MODULES=benchmark_check \
         benchmark_edit \
         benchmark_gap_affine \
         benchmark_gap_affine2p \
-        benchmark_gap_lineal \
+        benchmark_gap_linear \
         benchmark_utils
         
 SRCS=$(addsuffix .c, $(MODULES))

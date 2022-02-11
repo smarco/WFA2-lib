@@ -26,26 +26,20 @@
  *
  * PROJECT: Wavefront Alignments Algorithms
  * AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
- * DESCRIPTION: Dynamic-programming alignment algorithm for computing
- *   gap-lineal pairwise alignment (Needleman-Wunsch - NW)
+ * DESCRIPTION: Gap-linear alignment algorithms wrapper
  */
 
-#ifndef NW_H_
-#define NW_H_
+#ifndef BENCHMARK_GAP_LINEAR_H_
+#define BENCHMARK_GAP_LINEAR_H_
 
-#include "utils/commons.h"
-#include "alignment/score_matrix.h"
+#include "gap_linear/nw.h"
+#include "benchmark/benchmark_utils.h"
 
 /*
- * Edit distance computation using raw dynamic-programming matrix
+ * Benchmark NW
  */
-void nw_compute(
-    score_matrix_t* const score_matrix,
-    lineal_penalties_t* const penalties,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
-    cigar_t* const cigar);
+void benchmark_gap_linear_nw(
+    align_input_t* const align_input,
+    linear_penalties_t* const penalties);
 
-#endif /* NW_H_ */
+#endif /* BENCHMARK_GAP_LINEAR_H_ */

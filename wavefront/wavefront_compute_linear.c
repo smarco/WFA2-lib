@@ -26,7 +26,7 @@
  *
  * PROJECT: Wavefront Alignments Algorithms
  * AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
- * DESCRIPTION: WaveFront alignment module for computing wavefronts (gap-affine)
+ * DESCRIPTION: WaveFront alignment module for computing wavefronts (gap-linear)
  */
 
 #include "utils/string_padded.h"
@@ -35,7 +35,7 @@
 /*
  * Compute Kernels
  */
-void wavefront_compute_affine_idm(
+void wavefront_compute_linear_idm(
     wavefront_aligner_t* const wf_aligner,
     const wavefront_set_t* const wavefront_set,
     const int lo,
@@ -46,27 +46,15 @@ void wavefront_compute_affine_idm(
   // In Offsets
   const wf_offset_t* const m_misms = wavefront_set->in_mwavefront_misms->offsets;
   const wf_offset_t* const m_open1 = wavefront_set->in_mwavefront_open1->offsets;
-  const wf_offset_t* const i1_ext = wavefront_set->in_i1wavefront_ext->offsets;
-  const wf_offset_t* const d1_ext = wavefront_set->in_d1wavefront_ext->offsets;
   // Out Offsets
   wf_offset_t* const out_m = wavefront_set->out_mwavefront->offsets;
-  wf_offset_t* const out_i1 = wavefront_set->out_i1wavefront->offsets;
-  wf_offset_t* const out_d1 = wavefront_set->out_d1wavefront->offsets;
   // Compute-Next kernel loop
   int k;
   PRAGMA_LOOP_VECTORIZE
   for (k=lo;k<=hi;++k) {
-    // Update I1
-    const wf_offset_t ins1_o = m_open1[k-1];
-    const wf_offset_t ins1_e = i1_ext[k-1];
-    const wf_offset_t ins1 = MAX(ins1_o,ins1_e) + 1;
-    out_i1[k] = ins1;
-    // Update D1
-    const wf_offset_t del1_o = m_open1[k+1];
-    const wf_offset_t del1_e = d1_ext[k+1];
-    const wf_offset_t del1 = MAX(del1_o,del1_e);
-    out_d1[k] = del1;
-    // Update M
+    // Compute maximum Offset
+    const wf_offset_t ins1 = m_open1[k-1] + 1;
+    const wf_offset_t del1 = m_open1[k+1];
     const wf_offset_t misms = m_misms[k] + 1;
     wf_offset_t max = MAX(del1,MAX(misms,ins1));
     // Adjust offset out of boundaries !(h>tlen,v>plen) (here to allow vectorization)
@@ -80,7 +68,7 @@ void wavefront_compute_affine_idm(
 /*
  * Compute Kernel (Piggyback)
  */
-void wavefront_compute_affine_idm_piggyback(
+void wavefront_compute_linear_idm_piggyback(
     wavefront_aligner_t* const wf_aligner,
     const wavefront_set_t* const wavefront_set,
     const int lo,
@@ -88,91 +76,40 @@ void wavefront_compute_affine_idm_piggyback(
   // Parameters
   const int pattern_length = wf_aligner->pattern_length;
   const int text_length = wf_aligner->text_length;
-  // In Offsets
+  // In M
   const wf_offset_t* const m_misms = wavefront_set->in_mwavefront_misms->offsets;
-  const wf_offset_t* const m_open1 = wavefront_set->in_mwavefront_open1->offsets;
-  const wf_offset_t* const i1_ext  = wavefront_set->in_i1wavefront_ext->offsets;
-  const wf_offset_t* const d1_ext  = wavefront_set->in_d1wavefront_ext->offsets;
-  // Out Offsets
-  wf_offset_t* const out_m  = wavefront_set->out_mwavefront->offsets;
-  wf_offset_t* const out_i1 = wavefront_set->out_i1wavefront->offsets;
-  wf_offset_t* const out_d1 = wavefront_set->out_d1wavefront->offsets;
-  // In BT-pcigar
   const pcigar_t* const m_misms_bt_pcigar = wavefront_set->in_mwavefront_misms->bt_pcigar;
-  const pcigar_t* const m_open1_bt_pcigar = wavefront_set->in_mwavefront_open1->bt_pcigar;
-  const pcigar_t* const i1_ext_bt_pcigar  = wavefront_set->in_i1wavefront_ext->bt_pcigar;
-  const pcigar_t* const d1_ext_bt_pcigar  = wavefront_set->in_d1wavefront_ext->bt_pcigar;
-  // In BT-prev
   const bt_block_idx_t* const m_misms_bt_prev = wavefront_set->in_mwavefront_misms->bt_prev;
+  // In I/D
+  const wf_offset_t* const m_open1 = wavefront_set->in_mwavefront_open1->offsets;
+  const pcigar_t* const m_open1_bt_pcigar = wavefront_set->in_mwavefront_open1->bt_pcigar;
   const bt_block_idx_t* const m_open1_bt_prev = wavefront_set->in_mwavefront_open1->bt_prev;
-  const bt_block_idx_t* const i1_ext_bt_prev  = wavefront_set->in_i1wavefront_ext->bt_prev;
-  const bt_block_idx_t* const d1_ext_bt_prev  = wavefront_set->in_d1wavefront_ext->bt_prev;
-  // Out BT-pcigar
-  pcigar_t* const out_m_bt_pcigar   = wavefront_set->out_mwavefront->bt_pcigar;
-  pcigar_t* const out_i1_bt_pcigar  = wavefront_set->out_i1wavefront->bt_pcigar;
-  pcigar_t* const out_d1_bt_pcigar  = wavefront_set->out_d1wavefront->bt_pcigar;
-  // Out BT-prev
-  bt_block_idx_t* const out_m_bt_prev  = wavefront_set->out_mwavefront->bt_prev;
-  bt_block_idx_t* const out_i1_bt_prev = wavefront_set->out_i1wavefront->bt_prev;
-  bt_block_idx_t* const out_d1_bt_prev = wavefront_set->out_d1wavefront->bt_prev;
+  // Out
+  wf_offset_t* const out_m = wavefront_set->out_mwavefront->offsets;
+  pcigar_t* const out_m_bt_pcigar = wavefront_set->out_mwavefront->bt_pcigar;
+  bt_block_idx_t* const out_m_bt_prev = wavefront_set->out_mwavefront->bt_prev;
   // Compute-Next kernel loop
   int k;
   PRAGMA_LOOP_VECTORIZE // Ifs predicated by the compiler
   for (k=lo;k<=hi;++k) {
-    // Update I1
-    const wf_offset_t ins1_o = m_open1[k-1];
-    const wf_offset_t ins1_e = i1_ext[k-1];
-    wf_offset_t ins1;
-    pcigar_t ins1_pcigar;
-    bt_block_idx_t ins1_block_idx;
-    if (ins1_e >= ins1_o) {
-      ins1 = ins1_e;
-      ins1_pcigar = i1_ext_bt_pcigar[k-1];
-      ins1_block_idx = i1_ext_bt_prev[k-1];
-    } else {
-      ins1 = ins1_o;
-      ins1_pcigar = m_open1_bt_pcigar[k-1];
-      ins1_block_idx = m_open1_bt_prev[k-1];
-    }
-    out_i1_bt_pcigar[k] = PCIGAR_PUSH_BACK_INS(ins1_pcigar);
-    out_i1_bt_prev[k] = ins1_block_idx;
-    out_i1[k] = ++ins1;
-    // Update D1
-    const wf_offset_t del1_o = m_open1[k+1];
-    const wf_offset_t del1_e = d1_ext[k+1];
-    wf_offset_t del1;
-    pcigar_t del1_pcigar;
-    bt_block_idx_t del1_block_idx;
-    if (del1_e >= del1_o) {
-      del1 = del1_e;
-      del1_pcigar = d1_ext_bt_pcigar[k+1];
-      del1_block_idx = d1_ext_bt_prev[k+1];
-    } else {
-      del1 = del1_o;
-      del1_pcigar = m_open1_bt_pcigar[k+1];
-      del1_block_idx = m_open1_bt_prev[k+1];
-    }
-    out_d1_bt_pcigar[k] = PCIGAR_PUSH_BACK_DEL(del1_pcigar);
-    out_d1_bt_prev[k] = del1_block_idx;
-    out_d1[k] = del1;
-    // Update M
-    const wf_offset_t misms = m_misms[k] + 1;
-    wf_offset_t max = MAX(del1,MAX(misms,ins1));
+    // Compute maximum Offset
+    const wf_offset_t ins1 = m_open1[k-1];
+    const wf_offset_t del1 = m_open1[k+1];
+    const wf_offset_t misms = m_misms[k];
+    wf_offset_t max = MAX(del1,MAX(misms,ins1)+1);
+    // Update pcigar & bt-block
     if (max == ins1) {
-      out_m_bt_pcigar[k] = out_i1_bt_pcigar[k];
-      out_m_bt_prev[k] = out_i1_bt_prev[k];
+      out_m_bt_pcigar[k] = PCIGAR_PUSH_BACK_INS(m_open1_bt_pcigar[k-1]);
+      out_m_bt_prev[k] = m_open1_bt_prev[k-1];
     }
     if (max == del1) {
-      out_m_bt_pcigar[k] = out_d1_bt_pcigar[k];
-      out_m_bt_prev[k] = out_d1_bt_prev[k];
+      out_m_bt_pcigar[k] = PCIGAR_PUSH_BACK_DEL(m_open1_bt_pcigar[k+1]);
+      out_m_bt_prev[k] = m_open1_bt_prev[k+1];
     }
     if (max == misms) {
-      out_m_bt_pcigar[k] = m_misms_bt_pcigar[k];
+      out_m_bt_pcigar[k] = PCIGAR_PUSH_BACK_MISMS(m_misms_bt_pcigar[k]);
       out_m_bt_prev[k] = m_misms_bt_prev[k];
     }
-    // Coming from I/D -> X is fake to represent gap-close
-    // Coming from M -> X is real to represent mismatch
-    out_m_bt_pcigar[k] = PCIGAR_PUSH_BACK_MISMS(out_m_bt_pcigar[k]);
     // Adjust offset out of boundaries !(h>tlen,v>plen) (here to allow vectorization)
     const wf_unsigned_offset_t h = WAVEFRONT_H(k,max); // Make unsigned to avoid checking negative
     const wf_unsigned_offset_t v = WAVEFRONT_V(k,max); // Make unsigned to avoid checking negative
@@ -181,12 +118,12 @@ void wavefront_compute_affine_idm_piggyback(
     out_m[k] = max;
   }
   // Offload backtrace
-  wavefront_compute_offload_backtrace_affine(wf_aligner,wavefront_set,lo,hi);
+  wavefront_compute_offload_backtrace_linear(wf_aligner,wavefront_set,lo,hi);
 }
 /*
  * Compute next wavefront
  */
-void wavefront_compute_affine(
+void wavefront_compute_linear(
     wavefront_aligner_t* const wf_aligner,
     const int score) {
   // Select wavefronts
@@ -194,9 +131,7 @@ void wavefront_compute_affine(
   wavefront_compute_fetch_input(wf_aligner,&wavefront_set,score);
   // Check null wavefronts
   if (wavefront_set.in_mwavefront_misms->null &&
-      wavefront_set.in_mwavefront_open1->null &&
-      wavefront_set.in_i1wavefront_ext->null &&
-      wavefront_set.in_d1wavefront_ext->null) {
+      wavefront_set.in_mwavefront_open1->null) {
     wavefront_compute_allocate_output_null(wf_aligner,score); // Null s-wavefront
     return;
   }
@@ -209,9 +144,9 @@ void wavefront_compute_affine(
   wavefront_compute_init_ends(wf_aligner,&wavefront_set,lo,hi);
   // Compute next wavefront
   if (wf_aligner->wf_components.bt_piggyback) {
-    wavefront_compute_affine_idm_piggyback(wf_aligner,&wavefront_set,lo,hi);
+    wavefront_compute_linear_idm_piggyback(wf_aligner,&wavefront_set,lo,hi);
   } else {
-    wavefront_compute_affine_idm(wf_aligner,&wavefront_set,lo,hi);
+    wavefront_compute_linear_idm(wf_aligner,&wavefront_set,lo,hi);
   }
   // Trim wavefront ends
   wavefront_compute_trim_ends_set(wf_aligner,&wavefront_set);

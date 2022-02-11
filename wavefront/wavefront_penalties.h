@@ -32,7 +32,7 @@
 #ifndef WAVEFRONT_WAVEFRONT_PENALTIES_H_
 #define WAVEFRONT_WAVEFRONT_PENALTIES_H_
 
-#include "gap_lineal/lineal_penalties.h"
+#include "gap_linear/linear_penalties.h"
 #include "gap_affine/affine_penalties.h"
 #include "gap_affine2p/affine2p_penalties.h"
 
@@ -40,10 +40,11 @@
  * Distance metrics
  */
 typedef enum {
-  edit          = 0,
-  gap_lineal    = 1,
-  gap_affine    = 2,
-  gap_affine_2p = 3
+  indel         = 0,
+  edit          = 1,
+  gap_linear    = 2,
+  gap_affine    = 3,
+  gap_affine_2p = 4
 } distance_metric_t;
 
 /*
@@ -70,11 +71,13 @@ typedef struct {
 /*
  * Penalties adjustment
  */
+void wavefronts_penalties_set_indel(
+    wavefronts_penalties_t* const wavefronts_penalties);
 void wavefronts_penalties_set_edit(
     wavefronts_penalties_t* const wavefronts_penalties);
-void wavefronts_penalties_set_lineal(
+void wavefronts_penalties_set_linear(
     wavefronts_penalties_t* const wavefronts_penalties,
-    lineal_penalties_t* const lineal_penalties,
+    linear_penalties_t* const linear_penalties,
     const wf_penalties_strategy_type penalties_strategy);
 void wavefronts_penalties_set_affine(
     wavefronts_penalties_t* const wavefronts_penalties,

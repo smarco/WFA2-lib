@@ -47,7 +47,7 @@
 #define ALIGN_DEBUG_DISPLAY_INFO    0x00000008
 
 #define ALIGN_DEBUG_CHECK_DISTANCE_METRIC_EDIT       0x00000010
-#define ALIGN_DEBUG_CHECK_DISTANCE_METRIC_GAP_LINEAL 0x00000040
+#define ALIGN_DEBUG_CHECK_DISTANCE_METRIC_GAP_LINEAR 0x00000040
 #define ALIGN_DEBUG_CHECK_DISTANCE_METRIC_GAP_AFFINE 0x00000080
 
 /*
@@ -87,7 +87,7 @@ typedef struct {
   profiler_counter_t align_ins;
   // DEBUG
   int debug_flags;
-  lineal_penalties_t* check_lineal_penalties;
+  linear_penalties_t* check_linear_penalties;
   affine_penalties_t* check_affine_penalties;
   int check_bandwidth;
   bool verbose;

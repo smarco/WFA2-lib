@@ -32,7 +32,7 @@
 #include "benchmark/benchmark_check.h"
 #include "alignment/score_matrix.h"
 #include "edit/edit_dp.h"
-#include "gap_lineal/nw.h"
+#include "gap_linear/nw.h"
 #include "gap_affine/affine_matrix.h"
 #include "gap_affine/swg.h"
 
@@ -70,7 +70,7 @@ void benchmark_check_alignment_edit(
   score_matrix_free(&score_matrix);
   cigar_free(&cigar);
 }
-void benchmark_check_alignment_gap_lineal(
+void benchmark_check_alignment_gap_linear(
     align_input_t* const align_input,
     cigar_t* const cigar_computed) {
   // Compute correct
@@ -83,13 +83,13 @@ void benchmark_check_alignment_gap_lineal(
       align_input->pattern_length+align_input->text_length,
       align_input->mm_allocator);
   nw_compute(&score_matrix,
-      align_input->check_lineal_penalties,
+      align_input->check_linear_penalties,
       align_input->pattern,align_input->pattern_length,
       align_input->text,align_input->text_length,&cigar);
-  const int score_correct = cigar_score_gap_lineal(
-      &cigar,align_input->check_lineal_penalties);
-  const int score_computed = cigar_score_gap_lineal(
-      cigar_computed,align_input->check_lineal_penalties);
+  const int score_correct = cigar_score_gap_linear(
+      &cigar,align_input->check_linear_penalties);
+  const int score_computed = cigar_score_gap_linear(
+      cigar_computed,align_input->check_linear_penalties);
   // Check alignment
   benchmark_check_alignment_using_solution(
       align_input,cigar_computed,score_computed,
@@ -141,8 +141,8 @@ void benchmark_check_alignment(
       (align_input->debug_flags & ALIGN_DEBUG_CHECK_ALIGNMENT)) {
     if (align_input->debug_flags & ALIGN_DEBUG_CHECK_DISTANCE_METRIC_GAP_AFFINE) {
       benchmark_check_alignment_gap_affine(align_input,cigar_computed);
-    } else if(align_input->debug_flags & ALIGN_DEBUG_CHECK_DISTANCE_METRIC_GAP_LINEAL) {
-      benchmark_check_alignment_gap_lineal(align_input,cigar_computed);
+    } else if(align_input->debug_flags & ALIGN_DEBUG_CHECK_DISTANCE_METRIC_GAP_LINEAR) {
+      benchmark_check_alignment_gap_linear(align_input,cigar_computed);
     } else { // ALIGN_DEBUG_CHECK_DISTANCE_METRIC_EDIT
       benchmark_check_alignment_edit(align_input,cigar_computed);
     }

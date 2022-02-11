@@ -36,7 +36,7 @@
 #include "alignment/cigar.h"
 #include "gap_affine/affine_penalties.h"
 #include "gap_affine2p/affine2p_penalties.h"
-#include "gap_lineal/lineal_penalties.h"
+#include "gap_linear/linear_penalties.h"
 #include "system/mm_allocator.h"
 
 #include "wavefront_penalties.h"
@@ -127,7 +127,7 @@ typedef struct {
   alignment_scope_t alignment_scope;       // Alignment scope (score only or full-CIGAR)
   alignment_form_t alignment_form;         // Alignment mode (end-to-end/ends-free)
   // Penalties
-  lineal_penalties_t lineal_penalties;     // Gap-lineal penalties (placeholder)
+  linear_penalties_t linear_penalties;     // Gap-linear penalties (placeholder)
   affine_penalties_t affine_penalties;     // Gap-affine penalties (placeholder)
   affine2p_penalties_t affine2p_penalties; // Gap-affine-2p penalties (placeholder)
   // Reduction strategy

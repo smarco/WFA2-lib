@@ -26,30 +26,19 @@
  *
  * PROJECT: Wavefront Alignments Algorithms
  * AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
- * DESCRIPTION: WaveFront-Alignment module for the "extension" of exact matches
+ * DESCRIPTION: WaveFront alignment module for computing wavefronts (gap-linear)
  */
 
-#ifndef WAVEFRONT_EXTEND_H_
-#define WAVEFRONT_EXTEND_H_
+#ifndef WAVEFRONT_COMPUTE_LINEAR_H_
+#define WAVEFRONT_COMPUTE_LINEAR_H_
 
 #include "wavefront_aligner.h"
 
 /*
- * Constants
+ * Compute wavefront (gap-linear)
  */
-#define WAVEFRONT_PADDING  10
+void wavefront_compute_linear(
+    wavefront_aligner_t* const wf_aligner,
+    const int score);
 
-/*
- * Wavefront exact "extension"
- */
-bool wavefront_extend_end2end(
-    wavefront_aligner_t* const wf_aligner,
-    int score);
-bool wavefront_extend_endsfree(
-    wavefront_aligner_t* const wf_aligner,
-    int score);
-bool wavefront_extend_custom(
-    wavefront_aligner_t* const wf_aligner,
-    int score);
-
-#endif /* WAVEFRONT_EXTEND_H_ */
+#endif /* WAVEFRONT_COMPUTE_LINEAR_H_ */

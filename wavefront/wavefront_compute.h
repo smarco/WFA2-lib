@@ -78,12 +78,27 @@ void wavefront_compute_init_ends(
  */
 void wavefront_compute_trim_ends(
     wavefront_aligner_t* const wf_aligner,
+    wavefront_t* const wavefront);
+void wavefront_compute_trim_ends_set(
+    wavefront_aligner_t* const wf_aligner,
     wavefront_set_t* const wavefront_set);
 
 /*
  * Backtrace offloading
  */
-void wavefront_compute_offload_backtrace(
+int wavefront_compute_offload_backtrace_blocks(
+    wavefront_aligner_t* const wf_aligner,
+    wf_offset_t* const out_offsets,
+    pcigar_t* const out_bt_pcigar,
+    bt_block_idx_t* const out_bt_prev,
+    const int lo,
+    const int hi);
+void wavefront_compute_offload_backtrace_linear(
+    wavefront_aligner_t* const wf_aligner,
+    const wavefront_set_t* const wavefront_set,
+    const int lo,
+    const int hi);
+void wavefront_compute_offload_backtrace_affine(
     wavefront_aligner_t* const wf_aligner,
     const wavefront_set_t* const wavefront_set,
     const int lo,

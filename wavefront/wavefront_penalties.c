@@ -47,6 +47,17 @@ void wavefronts_penalties_shift(
 /*
  * Penalties adjustment
  */
+void wavefronts_penalties_set_indel(
+    wavefronts_penalties_t* const wavefronts_penalties) {
+  // Set distance model
+  wavefronts_penalties->distance_metric = indel;
+  // Set penalties
+  wavefronts_penalties->mismatch = -1;
+  wavefronts_penalties->gap_opening1 = 1;
+  wavefronts_penalties->gap_extension1 = -1;
+  wavefronts_penalties->gap_opening2 = -1;
+  wavefronts_penalties->gap_extension2 = -1;
+}
 void wavefronts_penalties_set_edit(
     wavefronts_penalties_t* const wavefronts_penalties) {
   // Set distance model
@@ -58,36 +69,36 @@ void wavefronts_penalties_set_edit(
   wavefronts_penalties->gap_opening2 = -1;
   wavefronts_penalties->gap_extension2 = -1;
 }
-void wavefronts_penalties_set_lineal(
+void wavefronts_penalties_set_linear(
     wavefronts_penalties_t* const wavefronts_penalties,
-    lineal_penalties_t* const lineal_penalties,
+    linear_penalties_t* const linear_penalties,
     const wf_penalties_strategy_type penalties_strategy) {
   // Set distance model
-  wavefronts_penalties->distance_metric = gap_lineal;
+  wavefronts_penalties->distance_metric = gap_linear;
   // Check base penalties
-  if (lineal_penalties->match > 0) {
-    fprintf(stderr,"[WFA::Penalties] Match score must be negative or zero (M=%d)\n",lineal_penalties->match);
+  if (linear_penalties->match > 0) {
+    fprintf(stderr,"[WFA::Penalties] Match score must be negative or zero (M=%d)\n",linear_penalties->match);
     exit(1);
-  } else if (lineal_penalties->mismatch <= 0 ||
-            lineal_penalties->deletion <= 0 ||
-            lineal_penalties->insertion <= 0) {
+  } else if (linear_penalties->mismatch <= 0 ||
+             linear_penalties->deletion <= 0 ||
+             linear_penalties->insertion <= 0) {
     fprintf(stderr,"[WFA::Penalties] Penalties must be strictly positive (X=%d,D=%d,I=%d). "
                    "Must be (X>0,D>0,I>0)\n",
-        lineal_penalties->mismatch,
-        lineal_penalties->deletion,
-        lineal_penalties->insertion);
+        linear_penalties->mismatch,
+        linear_penalties->deletion,
+        linear_penalties->insertion);
     exit(1);
-  } else if (lineal_penalties->deletion != lineal_penalties->insertion) {
+  } else if (linear_penalties->deletion != linear_penalties->insertion) {
     fprintf(stderr,"[WFA::Penalties] At the moment, Insertion/Deletion penalties must be equal (D==I)\n");
     exit(1);
   }
   // Copy base penalties
-  wavefronts_penalties->mismatch = lineal_penalties->mismatch;
-  wavefronts_penalties->gap_opening1 = lineal_penalties->deletion;
+  wavefronts_penalties->mismatch = linear_penalties->mismatch;
+  wavefronts_penalties->gap_opening1 = linear_penalties->deletion;
   // Adjust scores
-  if (lineal_penalties->match > 0 &&
+  if (linear_penalties->match > 0 &&
       penalties_strategy == wavefronts_penalties_shifted_penalties) {
-    wavefronts_penalties_shift(wavefronts_penalties,lineal_penalties->match);
+    wavefronts_penalties_shift(wavefronts_penalties,linear_penalties->match);
   }
   // Set unused
   wavefronts_penalties->gap_extension1 = -1;
@@ -171,11 +182,14 @@ void wavefronts_penalties_print(
     wavefronts_penalties_t* const wavefronts_penalties) {
   // Select penalties mode
   switch (wavefronts_penalties->distance_metric) {
+    case indel:
+      fprintf(stream,"(Indel)");
+      break;
     case edit:
       fprintf(stream,"(Edit)");
       break;
-    case gap_lineal:
-      fprintf(stream,"(GapLineal,%d,%d)",
+    case gap_linear:
+      fprintf(stream,"(GapLinear,%d,%d)",
           wavefronts_penalties->mismatch,
           wavefronts_penalties->gap_opening1);
       break;

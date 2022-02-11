@@ -35,10 +35,29 @@
 #include "wavefront_reduction.h"
 
 /*
- * Wavefront ends-free check boundaries (detect end of alignment)
+ * Wavefront check termination (detect end of alignment)
  */
-bool wavefront_extend_endsfree_check_boundaries(
+bool wavefront_extend_end2end_check_termination(
     wavefront_aligner_t* const wf_aligner,
+    wavefront_t* const mwavefront) {
+  // Parameters
+  const int pattern_length = wf_aligner->pattern_length;
+  const int text_length = wf_aligner->text_length;
+  // Check wavefront limits
+  wf_offset_t* const offsets = mwavefront->offsets;
+  const int alignment_k = WAVEFRONT_DIAGONAL(text_length,pattern_length);
+  if (mwavefront->lo > alignment_k || alignment_k > mwavefront->hi) return false; // Not done
+  // Check offset
+  const wf_offset_t offset = offsets[alignment_k];
+  const wf_offset_t alignment_offset = WAVEFRONT_OFFSET(text_length,pattern_length);
+  if (offset < alignment_offset) return false; // Not done
+  // We are done
+  mwavefront->k_alignment_end = alignment_k;
+  return true;
+}
+bool wavefront_extend_endsfree_check_termination(
+    wavefront_aligner_t* const wf_aligner,
+    wavefront_t* const mwavefront,
     const wf_offset_t offset,
     const int k) {
   // Parameters
@@ -51,13 +70,19 @@ bool wavefront_extend_endsfree_check_boundaries(
     // Is Pattern end-free?
     const int pattern_left = pattern_length - v_pos;
     const int pattern_end_free = wf_aligner->alignment_form.pattern_end_free;
-    if (pattern_left <= pattern_end_free) return true; // Quit (we are done)
+    if (pattern_left <= pattern_end_free) {
+      mwavefront->k_alignment_end = k;
+      return true; // Quit (we are done)
+    }
   }
   if (v_pos >= pattern_length) { // Pattern is aligned
     // Is text end-free?
     const int text_left = text_length - h_pos;
     const int text_end_free = wf_aligner->alignment_form.text_end_free;
-    if (text_left <= text_end_free) return true; // Quit (we are done)
+    if (text_left <= text_end_free) {
+      mwavefront->k_alignment_end = k;
+      return true; // Quit (we are done)
+    }
   }
   // Not done
   return false;
@@ -104,12 +129,15 @@ bool wavefront_extend_matches_packed(
     // Update offset
     offsets[k] = offset;
     // Check ends-free reaching boundaries
-    if (endsfree && wavefront_extend_endsfree_check_boundaries(wf_aligner,offset,k)) {
-      mwavefront->k_alignment_end = k;
+    if (endsfree && wavefront_extend_endsfree_check_termination(wf_aligner,mwavefront,offset,k)) {
       return true; // Quit (we are done)
     }
   }
-  // No end reached
+  // Check end-to-end finished
+  if (!endsfree) {
+    return wavefront_extend_end2end_check_termination(wf_aligner,mwavefront);
+  }
+  // Alignment not finished
   return false;
 }
 bool wavefront_extend_matches_custom(
@@ -140,42 +168,49 @@ bool wavefront_extend_matches_custom(
     // Update offset
     offsets[k] = offset;
     // Check ends-free reaching boundaries
-    if (endsfree && wavefront_extend_endsfree_check_boundaries(wf_aligner,offset,k)) {
-      mwavefront->k_alignment_end = k;
+    if (endsfree && wavefront_extend_endsfree_check_termination(wf_aligner,mwavefront,offset,k)) {
       return true; // Quit (we are done)
     }
   }
-  // No end reached
+  // Check end-to-end finished
+  if (!endsfree) {
+    return wavefront_extend_end2end_check_termination(wf_aligner,mwavefront);
+  }
+  // Alignment not finished
   return false;
 }
 /*
  * Wavefront exact "extension"
  */
-void wavefront_extend_end2end(
+bool wavefront_extend_end2end(
     wavefront_aligner_t* const wf_aligner,
     int score) {
   // Modular wavefront
   if (wf_aligner->wf_components.memory_modular) score = score % wf_aligner->wf_components.max_score_scope;
   // Extend wavefront
-  wavefront_extend_matches_packed(wf_aligner,score,false);
+  const bool end_reached = wavefront_extend_matches_packed(wf_aligner,score,false);
+  if (end_reached) return true;
   // Reduce wavefront adaptively
   if (wf_aligner->reduction.reduction_strategy == wavefront_reduction_adaptive) {
     wavefront_reduce(wf_aligner,score);
   }
+  return false;
 }
-void wavefront_extend_endsfree(
+bool wavefront_extend_endsfree(
     wavefront_aligner_t* const wf_aligner,
     int score) {
   // Modular wavefront
   if (wf_aligner->wf_components.memory_modular) score = score % wf_aligner->wf_components.max_score_scope;
   // Extend wavefront
   const bool end_reached = wavefront_extend_matches_packed(wf_aligner,score,true);
+  if (end_reached) return true;
   // Reduce wavefront adaptively
-  if (!end_reached && wf_aligner->reduction.reduction_strategy == wavefront_reduction_adaptive) {
+  if (wf_aligner->reduction.reduction_strategy == wavefront_reduction_adaptive) {
     wavefront_reduce(wf_aligner,score);
   }
+  return false;
 }
-void wavefront_extend_custom(
+bool wavefront_extend_custom(
     wavefront_aligner_t* const wf_aligner,
     int score) {
   // Modular wavefront
@@ -183,10 +218,12 @@ void wavefront_extend_custom(
   // Extend wavefront
   const bool endsfree = (wf_aligner->alignment_form.span == alignment_endsfree);
   const bool end_reached = wavefront_extend_matches_custom(wf_aligner,score,endsfree);
+  if (end_reached) return true;
   // Reduce wavefront adaptively
-  if (!end_reached && wf_aligner->reduction.reduction_strategy == wavefront_reduction_adaptive) {
+  if (wf_aligner->reduction.reduction_strategy == wavefront_reduction_adaptive) {
     wavefront_reduce(wf_aligner,score);
   }
+  return false;
 }
 
 

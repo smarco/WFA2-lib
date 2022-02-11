@@ -26,20 +26,19 @@
  *
  * PROJECT: Wavefront Alignments Algorithms
  * AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
- * DESCRIPTION: Gap-lineal alignment algorithms wrapper
+ * DESCRIPTION: WaveFront alignment module for computing wavefronts (edit/indel)
  */
 
-#ifndef BENCHMARK_GAP_LINEAL_H_
-#define BENCHMARK_GAP_LINEAL_H_
+#ifndef WAVEFRONT_COMPUTE_EDIT_H_
+#define WAVEFRONT_COMPUTE_EDIT_H_
 
-#include "gap_lineal/nw.h"
-#include "benchmark/benchmark_utils.h"
+#include "wavefront_aligner.h"
 
 /*
- * Benchmark NW
+ * Compute wavefront (edit)
  */
-void benchmark_gap_lineal_nw(
-    align_input_t* const align_input,
-    lineal_penalties_t* const penalties);
+void wavefront_compute_edit(
+    wavefront_aligner_t* const wf_aligner,
+    const int score);
 
-#endif /* BENCHMARK_GAP_LINEAL_H_ */
+#endif /* WAVEFRONT_COMPUTE_EDIT_H_ */

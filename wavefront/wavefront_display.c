@@ -47,6 +47,9 @@ int wavefront_display_compute_row_width(
   // Compute number of components
   int num_components = 1;
   switch (distance_metric) {
+    case indel:
+    case edit:
+    case gap_linear: num_components = 1; break;
     case gap_affine: num_components = 3; break;
     case gap_affine_2p: num_components = 5; break;
     default: break;
@@ -72,7 +75,7 @@ void wavefront_display_compute_limits(
       max_k = MAX(max_k,mwavefront->hi);
       min_k = MIN(min_k,mwavefront->lo);
     }
-    if (distance_metric==edit || distance_metric==gap_lineal) continue;
+    if (distance_metric <= gap_linear) continue;
     wavefront_t* const i1wavefront = wf_components->i1wavefronts[s];
     if (i1wavefront != NULL) {
       max_k = MAX(max_k,i1wavefront->hi);
@@ -83,7 +86,7 @@ void wavefront_display_compute_limits(
       max_k = MAX(max_k,d1wavefront->hi);
       min_k = MIN(min_k,d1wavefront->lo);
     }
-    if (distance_metric==gap_affine) continue;
+    if (distance_metric == gap_affine) continue;
     wavefront_t* const i2wavefront = wf_components->i2wavefronts[s];
     if (i2wavefront != NULL) {
       max_k = MAX(max_k,i2wavefront->hi);
@@ -182,12 +185,12 @@ void wavefront_display_print_header(
     fprintf(stream,"|");
     fprintf(stream,"[ M]");
     PRINT_CHAR_REP(stream,' ',bt_length);
-    if (distance_metric==edit || distance_metric==gap_lineal) continue;
+    if (distance_metric <= gap_linear) continue;
     fprintf(stream,"[I1]");
     PRINT_CHAR_REP(stream,' ',bt_length);
     fprintf(stream,"[D1]");
     PRINT_CHAR_REP(stream,' ',bt_length);
-    if (distance_metric==gap_affine) continue;
+    if (distance_metric == gap_affine) continue;
     fprintf(stream,"[I2]");
     PRINT_CHAR_REP(stream,' ',bt_length);
     fprintf(stream,"[D2]");
@@ -227,12 +230,12 @@ void wavefront_aligner_print_block(
       // Fetch wavefront
       wavefront_t* const mwavefront = wf_components->mwavefronts[s];
       wavefront_display_print_element(stream,wf_aligner,mwavefront,k,bt_length);
-      if (distance_metric==edit || distance_metric==gap_lineal) continue;
+      if (distance_metric <= gap_linear) continue;
       wavefront_t* const i1wavefront = wf_components->i1wavefronts[s];
       wavefront_t* const d1wavefront = wf_components->d1wavefronts[s];
       wavefront_display_print_element(stream,wf_aligner,i1wavefront,k,bt_length);
       wavefront_display_print_element(stream,wf_aligner,d1wavefront,k,bt_length);
-      if (distance_metric==gap_affine) continue;
+      if (distance_metric == gap_affine) continue;
       wavefront_t* const i2wavefront = wf_components->i2wavefronts[s];
       wavefront_t* const d2wavefront = wf_components->d2wavefronts[s];
       wavefront_display_print_element(stream,wf_aligner,i2wavefront,k,bt_length);

@@ -53,7 +53,7 @@ void wavefront_plot_allocate(
   // Wavefront Components
   wf_plot->m_heatmap = heatmap_new(heatmap_min,
       min_v,max_v,min_h,max_h,plot_params->resolution_points);
-  if (distance_metric == gap_lineal || distance_metric == gap_affine) {
+  if (distance_metric == gap_affine) {
     wf_plot->i1_heatmap = heatmap_new(heatmap_min,
         min_v,max_v,min_h,max_h,plot_params->resolution_points);
     wf_plot->d1_heatmap = heatmap_new(heatmap_min,
@@ -133,7 +133,7 @@ void wavefront_plot(
       pattern,pattern_length,text,text_length,
       score,wf_aligner->wf_plot.m_heatmap,
       wf_aligner->wf_plot.behavior_heatmap);
-  if (distance_metric == gap_lineal || distance_metric == gap_affine) {
+  if (distance_metric == gap_affine) {
     wavefront_plot_component(
         wf_components->i1wavefronts[s],
         pattern,pattern_length,text,text_length,
@@ -223,7 +223,7 @@ void wavefront_plot_print(
   fprintf(stream,")\n");
   // Wavefront components
   fprintf(stream,"# Heatmap M\n"); heatmap_print(stream,wf_plot->m_heatmap);
-  if (distance_metric == gap_lineal || distance_metric == gap_affine) {
+  if (distance_metric == gap_affine) {
     fprintf(stream,"# Heatmap I1\n"); heatmap_print(stream,wf_plot->i1_heatmap);
     fprintf(stream,"# Heatmap D1\n"); heatmap_print(stream,wf_plot->d1_heatmap);
   }

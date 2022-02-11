@@ -47,13 +47,16 @@ void wavefront_set_penalties(
     wavefront_aligner_t* const wf_aligner,
     wavefront_aligner_attr_t* const attributes) {
   switch (attributes->distance_metric) {
+    case indel:
+      wavefronts_penalties_set_indel(&wf_aligner->penalties);
+      break;
     case edit:
       wavefronts_penalties_set_edit(&wf_aligner->penalties);
       break;
-    case gap_lineal:
-      wavefronts_penalties_set_lineal(
+    case gap_linear:
+      wavefronts_penalties_set_linear(
           &wf_aligner->penalties,
-          &attributes->lineal_penalties,
+          &attributes->linear_penalties,
           wavefronts_penalties_shifted_penalties);
       break;
     case gap_affine:

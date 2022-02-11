@@ -36,8 +36,8 @@
  */
 wavefront_aligner_attr_t wavefront_aligner_attr_default = {
     // Distance model & Penalties
-    .distance_metric = gap_affine, // TODO: DU wants lineal
-    .alignment_scope = compute_alignment, // TODO: I don't know what DU wants, honestly
+    .distance_metric = gap_affine,
+    .alignment_scope = compute_alignment,
     .alignment_form = {
         .span = alignment_end2end,
         .pattern_begin_free = 0,
@@ -50,7 +50,7 @@ wavefront_aligner_attr_t wavefront_aligner_attr_default = {
     .match_funct = NULL,           // Use default match-compare function
     .match_funct_arguments = NULL, // No arguments
     // Penalties
-    .lineal_penalties = {
+    .linear_penalties = {
         .match = 0,
         .mismatch = 4,
         .insertion = 2,

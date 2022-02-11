@@ -305,7 +305,7 @@ void wavefront_reduce(
   //        wf_length_base,wf_length_reduced,100.0f*(float)wf_length_reduced/(float)wf_length_base);
   //  }
   // Equate other wavefronts
-  if (distance_metric <= gap_lineal) return;
+  if (distance_metric <= gap_linear) return;
   // Reduce the other wavefronts (same dimensions as M-reduced)
   wavefront_t* const i1wavefront = wf_components->i1wavefronts[score];
   wavefront_t* const d1wavefront = wf_components->d1wavefronts[score];

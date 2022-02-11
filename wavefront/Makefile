@@ -15,6 +15,8 @@ MODULES=wavefront_align \
         wavefront_components \
         wavefront_compute_affine \
         wavefront_compute_affine2p \
+        wavefront_compute_edit \
+        wavefront_compute_linear \
         wavefront_compute \
         wavefront_display \
         wavefront_extend \

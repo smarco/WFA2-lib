@@ -26,17 +26,26 @@
  *
  * PROJECT: Wavefront Alignments Algorithms
  * AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
- * DESCRIPTION: Gap-lineal penalties
+ * DESCRIPTION: Dynamic-programming alignment algorithm for computing
+ *   gap-linear pairwise alignment (Needleman-Wunsch - NW)
  */
 
-#ifndef LINEAL_PENALTIES_H_
-#define LINEAL_PENALTIES_H_
+#ifndef NW_H_
+#define NW_H_
 
-typedef struct {
-  int match;              // (Penalty representation; usually M <= 0)
-  int mismatch;           // (Penalty representation; usually X > 0)
-  int insertion;          // (Penalty representation; usually I > 0)
-  int deletion;           // (Penalty representation; usually D > 0)
-} lineal_penalties_t;
+#include "utils/commons.h"
+#include "alignment/score_matrix.h"
 
-#endif /* LINEAL_PENALTIES_H_ */
+/*
+ * Edit distance computation using raw dynamic-programming matrix
+ */
+void nw_compute(
+    score_matrix_t* const score_matrix,
+    linear_penalties_t* const penalties,
+    const char* const pattern,
+    const int pattern_length,
+    const char* const text,
+    const int text_length,
+    cigar_t* const cigar);
+
+#endif /* NW_H_ */

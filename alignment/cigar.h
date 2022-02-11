@@ -34,7 +34,7 @@
 
 #include "utils/commons.h"
 #include "system/mm_allocator.h"
-#include "gap_lineal/lineal_penalties.h"
+#include "gap_linear/linear_penalties.h"
 #include "gap_affine/affine_penalties.h"
 #include "gap_affine2p/affine2p_penalties.h"
 
@@ -85,9 +85,9 @@ void cigar_add_mismatches(
  */
 int cigar_score_edit(
     cigar_t* const cigar);
-int cigar_score_gap_lineal(
+int cigar_score_gap_linear(
     cigar_t* const cigar,
-    lineal_penalties_t* const penalties);
+    linear_penalties_t* const penalties);
 int cigar_score_gap_affine(
     cigar_t* const cigar,
     affine_penalties_t* const penalties);

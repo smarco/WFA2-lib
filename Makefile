@@ -31,7 +31,7 @@ SUBDIRS=alignment \
         edit \
         gap_affine \
         gap_affine2p \
-        gap_lineal \
+        gap_linear \
         system \
         utils \
         wavefront

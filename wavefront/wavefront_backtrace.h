@@ -37,6 +37,11 @@
 /*
  * Backtrace
  */
+void wavefront_backtrace_linear(
+    wavefront_aligner_t* const wf_aligner,
+    const int alignment_score,
+    const int alignment_k,
+    const wf_offset_t alignment_offset);
 void wavefront_backtrace_affine(
     wavefront_aligner_t* const wf_aligner,
     const int alignment_score,

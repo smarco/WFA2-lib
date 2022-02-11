@@ -26,19 +26,19 @@
  *
  * PROJECT: Wavefront Alignments Algorithms
  * AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
- * DESCRIPTION: Gap-lineal alignment algorithms wrapper
+ * DESCRIPTION: Gap-linear alignment algorithms wrapper
  */
 
-#include "benchmark/benchmark_gap_lineal.h"
+#include "benchmark/benchmark_gap_linear.h"
 #include "benchmark/benchmark_check.h"
-#include "gap_lineal/nw.h"
+#include "gap_linear/nw.h"
 
 /*
  * Benchmark NW
  */
-void benchmark_gap_lineal_nw(
+void benchmark_gap_linear_nw(
     align_input_t* const align_input,
-    lineal_penalties_t* const penalties) {
+    linear_penalties_t* const penalties) {
   // Allocate
   score_matrix_t score_matrix;
   score_matrix_allocate(
@@ -60,7 +60,7 @@ void benchmark_gap_lineal_nw(
   }
   // Output
   if (align_input->output_file) {
-    const int score = cigar_score_gap_lineal(&cigar,penalties);
+    const int score = cigar_score_gap_linear(&cigar,penalties);
     FILE* const output_file = align_input->output_file;
     if (align_input->output_full) {
       benchmark_print_output_full(output_file,align_input,score,&cigar);

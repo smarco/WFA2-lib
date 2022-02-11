@@ -272,7 +272,7 @@ void wavefront_compute_affine2p_idm_piggyback(
     out_m[k] = max;
   }
   // Offload backtrace
-  wavefront_compute_offload_backtrace(wf_aligner,wavefront_set,lo,hi);
+  wavefront_compute_offload_backtrace_affine(wf_aligner,wavefront_set,lo,hi);
 }
 /*
  * Compute next wavefront
@@ -320,7 +320,7 @@ void wavefront_compute_affine2p(
     }
   }
   // Trim wavefront ends
-  wavefront_compute_trim_ends(wf_aligner,&wavefront_set);
+  wavefront_compute_trim_ends_set(wf_aligner,&wavefront_set);
 }
 
 
