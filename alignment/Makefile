@@ -7,7 +7,9 @@ FOLDER_BUILD=../build
 ###############################################################################
 # Modules
 ###############################################################################
-MODULES=cigar \
+MODULES=affine_penalties \
+        affine2p_penalties \
+        cigar \
         score_matrix
         
 SRCS=$(addsuffix .c, $(MODULES))
