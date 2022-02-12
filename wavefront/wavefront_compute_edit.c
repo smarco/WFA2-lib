@@ -122,7 +122,7 @@ void wavefront_compute_indel_idm_piggyback(
   bt_block_idx_t* const curr_bt_idx = wf_curr->bt_prev;
   // Loop peeling (k=lo)
   curr_offsets[lo] = prev_offsets[lo+1];
-  curr_pcigar[lo] = prev_pcigar[lo+1];
+  curr_pcigar[lo] = PCIGAR_PUSH_BACK_DEL(prev_pcigar[lo+1]);
   curr_bt_idx[lo] = prev_bt_idx[lo+1];
   // Compute-Next kernel loop
   int k;
@@ -149,7 +149,7 @@ void wavefront_compute_indel_idm_piggyback(
   }
   // Loop peeling (k=hi)
   curr_offsets[hi] = prev_offsets[hi-1] + 1;
-  curr_pcigar[hi] = prev_pcigar[hi-1];
+  curr_pcigar[hi] = PCIGAR_PUSH_BACK_INS(prev_pcigar[hi-1]);
   curr_bt_idx[hi] = prev_bt_idx[hi-1];
   // Offload backtrace (if necessary)
   if (score % PCIGAR_MAX_LENGTH == 0) {
@@ -177,7 +177,7 @@ void wavefront_compute_edit_idm_piggyback(
   bt_block_idx_t* const curr_bt_idx = wf_curr->bt_prev;
   // Loop peeling (k=lo)
   curr_offsets[lo] = prev_offsets[lo+1];
-  curr_pcigar[lo] = prev_pcigar[lo+1];
+  curr_pcigar[lo] = PCIGAR_PUSH_BACK_DEL(prev_pcigar[lo+1]);
   curr_bt_idx[lo] = prev_bt_idx[lo+1];
   // Compute-Next kernel loop
   int k;
@@ -210,7 +210,7 @@ void wavefront_compute_edit_idm_piggyback(
   }
   // Loop peeling (k=hi)
   curr_offsets[hi] = prev_offsets[hi-1] + 1;
-  curr_pcigar[hi] = prev_pcigar[hi-1];
+  curr_pcigar[hi] = PCIGAR_PUSH_BACK_INS(prev_pcigar[hi-1]);
   curr_bt_idx[hi] = prev_bt_idx[hi-1];
   // Offload backtrace (if necessary)
   if (score % PCIGAR_MAX_LENGTH == 0) {
@@ -247,15 +247,15 @@ void wavefront_compute_edit(
   wf_components->mwavefronts[score_curr]->lo = lo;
   wf_components->mwavefronts[score_curr]->hi = hi;
   // Compute next wavefront
-  if (wf_aligner->penalties.distance_metric == indel) {
-    if (wf_aligner->wf_components.bt_piggyback) {
+  if (wf_aligner->wf_components.bt_piggyback) {
+    if (wf_aligner->penalties.distance_metric == indel) {
       wavefront_compute_indel_idm_piggyback(wf_aligner,wf_prev,wf_curr,lo,hi,score);
     } else {
-      wavefront_compute_indel_idm(wf_aligner,wf_prev,wf_curr,lo,hi);
+      wavefront_compute_edit_idm_piggyback(wf_aligner,wf_prev,wf_curr,lo,hi,score);
     }
   } else {
-    if (wf_aligner->wf_components.bt_piggyback) {
-      wavefront_compute_edit_idm_piggyback(wf_aligner,wf_prev,wf_curr,lo,hi,score);
+    if (wf_aligner->penalties.distance_metric == indel) {
+      wavefront_compute_indel_idm(wf_aligner,wf_prev,wf_curr,lo,hi);
     } else {
       wavefront_compute_edit_idm(wf_aligner,wf_prev,wf_curr,lo,hi);
     }
