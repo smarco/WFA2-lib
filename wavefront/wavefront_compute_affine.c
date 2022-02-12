@@ -31,6 +31,7 @@
 
 #include "utils/string_padded.h"
 #include "wavefront_compute.h"
+#include "wavefront_backtrace_offload.h"
 
 /*
  * Compute Kernels
@@ -181,7 +182,7 @@ void wavefront_compute_affine_idm_piggyback(
     out_m[k] = max;
   }
   // Offload backtrace
-  wavefront_compute_offload_backtrace_affine(wf_aligner,wavefront_set,lo,hi);
+  wavefront_backtrace_offload_affine(wf_aligner,wavefront_set,lo,hi);
 }
 /*
  * Compute next wavefront

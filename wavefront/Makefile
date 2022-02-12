@@ -11,6 +11,7 @@ MODULES=wavefront_align \
         wavefront_aligner \
         wavefront_attributes \
         wavefront_backtrace_buffer \
+        wavefront_backtrace_offload \
         wavefront_backtrace \
         wavefront_components \
         wavefront_compute_affine \

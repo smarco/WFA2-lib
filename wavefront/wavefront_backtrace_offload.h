@@ -26,61 +26,44 @@
  *
  * PROJECT: Wavefront Alignments Algorithms
  * AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
- * DESCRIPTION: WaveFront alignment module for computing wavefronts
+ * DESCRIPTION: WaveFront alignment module for offloading partial backtraces
  */
 
-#ifndef WAVEFRONT_COMPUTE_H_
-#define WAVEFRONT_COMPUTE_H_
+#ifndef WAVEFRONT_BACKTRACE_OFFLOAD_H_
+#define WAVEFRONT_BACKTRACE_OFFLOAD_H_
 
 #include "wavefront_aligner.h"
 
 /*
- * Compute limits
+ * Backtrace offloading (gap-linear)
  */
-void wavefront_compute_limits(
+int wavefront_backtrace_offload_blocks_linear(
+    wavefront_aligner_t* const wf_aligner,
+    wf_offset_t* const out_offsets,
+    pcigar_t* const out_bt_pcigar,
+    bt_block_idx_t* const out_bt_prev,
+    const int lo,
+    const int hi);
+void wavefront_backtrace_offload_linear(
     wavefront_aligner_t* const wf_aligner,
     const wavefront_set_t* const wavefront_set,
-    int* const lo,
-    int* const hi);
-
-/*
- * Input wavefronts (fetch)
- */
-void wavefront_compute_fetch_input(
-    wavefront_aligner_t* const wf_aligner,
-    wavefront_set_t* const wavefront_set,
-    const int score);
-
-/*
- * Output wavefronts (allocate)
- */
-void wavefront_compute_allocate_output_null(
-    wavefront_aligner_t* const wf_aligner,
-    int score);
-void wavefront_compute_allocate_output(
-    wavefront_aligner_t* const wf_aligner,
-    wavefront_set_t* const wavefront_set,
-    int score,
     const int lo,
     const int hi);
 
 /*
- * Initialize wavefronts ends
+ * Backtrace offloading (gap-affine)
  */
-void wavefront_compute_init_ends(
+int wavefront_backtrace_offload_blocks_affine(
     wavefront_aligner_t* const wf_aligner,
-    wavefront_set_t* const wavefront_set,
+    wf_offset_t* const out_offsets,
+    pcigar_t* const out_bt_pcigar,
+    bt_block_idx_t* const out_bt_prev,
+    const int lo,
+    const int hi);
+void wavefront_backtrace_offload_affine(
+    wavefront_aligner_t* const wf_aligner,
+    const wavefront_set_t* const wavefront_set,
     const int lo,
     const int hi);
 
-/*
- * Trim wavefronts ends
- */
-void wavefront_compute_trim_ends(
-    wavefront_aligner_t* const wf_aligner,
-    wavefront_t* const wavefront);
-void wavefront_compute_trim_ends_set(
-    wavefront_aligner_t* const wf_aligner,
-    wavefront_set_t* const wavefront_set);
-
-#endif /* WAVEFRONT_COMPUTE_H_ */
+#endif /* WAVEFRONT_BACKTRACE_OFFLOAD_H_ */

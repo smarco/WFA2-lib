@@ -31,6 +31,7 @@
 
 #include "utils/string_padded.h"
 #include "wavefront_compute.h"
+#include "wavefront_backtrace_offload.h"
 
 /*
  * Compute Kernels
@@ -152,7 +153,7 @@ void wavefront_compute_indel_idm_piggyback(
   curr_bt_idx[hi] = prev_bt_idx[hi-1];
   // Offload backtrace (if necessary)
   if (score % PCIGAR_MAX_LENGTH == 0) {
-    wavefront_compute_offload_backtrace_blocks_linear(
+    wavefront_backtrace_offload_blocks_linear(
         wf_aligner,curr_offsets,curr_pcigar,curr_bt_idx,lo,hi);
   }
 }
@@ -213,7 +214,7 @@ void wavefront_compute_edit_idm_piggyback(
   curr_bt_idx[hi] = prev_bt_idx[hi-1];
   // Offload backtrace (if necessary)
   if (score % PCIGAR_MAX_LENGTH == 0) {
-    wavefront_compute_offload_backtrace_blocks_linear(
+    wavefront_backtrace_offload_blocks_linear(
         wf_aligner,curr_offsets,curr_pcigar,curr_bt_idx,lo,hi);
   }
 }
