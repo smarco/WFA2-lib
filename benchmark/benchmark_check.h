@@ -42,11 +42,5 @@
 void benchmark_check_alignment(
     align_input_t* const align_input,
     cigar_t* const cigar_computed);
-void benchmark_check_alignment_using_solution(
-    align_input_t* const align_input,
-    cigar_t* const cigar_computed,
-    const int score_computed,
-    cigar_t* const cigar_correct,
-    const int score_correct);
 
 #endif /* BENCHMARK_CHECK_H_ */

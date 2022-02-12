@@ -37,6 +37,7 @@
 #include "gap_linear/nw.h"
 #include "gap_affine/swg.h"
 
+#include "benchmark/benchmark_indel.h"
 #include "benchmark/benchmark_edit.h"
 #include "benchmark/benchmark_gap_linear.h"
 #include "benchmark/benchmark_gap_affine.h"
@@ -52,16 +53,23 @@
  * Algorithms
  */
 typedef enum {
+  /* Test */
   alignment_test,
+  /* Indel */
+  alignment_indel_wavefront,
+  /* Edit */
   alignment_edit_dp,
   alignment_edit_dp_banded,
   alignment_edit_wavefront,
+  /* Gap-linear */
   alignment_gap_linear_nw,
   alignment_gap_linear_wavefront,
+  /* Gap-affine */
   alignment_gap_affine_swg,
   alignment_gap_affine_swg_endsfree,
   alignment_gap_affine_swg_banded,
   alignment_gap_affine_wavefront,
+  /* Gap-affine dual-cost */
   alignment_gap_affine2p_dp,
   alignment_gap_affine2p_wavefront
 } alignment_algorithm_type;
@@ -181,12 +189,18 @@ void align_pairwise_test() {
 //  char* pattern = "AAGGGTAATCTAAGTGTCTGGTCCTTTGTCATTCTGACTTTCTTCATAATGTGATCTCCTCACCTCCAGATTTCCCTTCTGCTCAATAGAACTAGGAGGAAGGAGAGGGAGCTTAACATTTCCCTTCTCTCAGACCCTTAGCTCCAA";
 //  char* text = "CAAGGGTAATCTAAGTGTT";
 
-  char* pattern =  "AAGGGTAATCTAAGTGTCTGGTCCTTTGTCATTCTGACTTTCTTCATAATGTGATCTCCTCACCTCCAGATTTCCCTTCTGCTCAATAGAACTAGGAGGAAGGAGAGGGAGCTTAACATTTCCCTTCTCTCAGACCCTTAGCTCCAA";
-  char* text =    "CAAGGGTAATCTAAGTGTT";
+  char* pattern =  "GCAGAGAATTACGACCGGCTCGCTGAATTGCGAGAAACAACCCTGTCACGTTCAGTCTGAGATGGTGTATTCCCATAGTGATCCAAACTTGGTCAGCGGGGCTTGAGGGGCTGGCTTGCTCTCCCCAGAGAGTAGGCCCATGTGCAGAGTTAGCCTGGGTAGGAGAGACTACCTAGAGTGCTGAAATTGGGTACTTCCTTATCGTGATAACGTAGTCGTAACTCTGAATAATAGGTATGATAGTCCGGTGGATCCGTGTGTAGTGAGGTCTTCGGTACCTTTATCCCAACTTGGGATCTTTTGCGCAGGCGCCGAGAGGAAGTGCGTAATTTGGAATATCCCTGTACTGAATGTCTGCAGAACTGCTGGGATATGTATTGTTGGTAGGCGAGTGCGTAACTACTAATATGTTGCGGGAATTAGGGTAGACATGGTGGGTGCGCAATGTAGTAGCGCATAACAATGTGAGCGAAAACAGAACTATATCCTCCCCCAACTCACAACAATCTAGAATACTCGGTAACGACTTTTCTATACGGATACTTGCGTACTACAGGGGGGGTCGGGTCAAACCAATCTTGATGGTCAGATAGGGACAAGCATGGTTGCGGTTCGGAATGAGGTCATGCAATATGTTCCAATAAATGCTCAAATTCTTTCTAAAAGTTACAACCCGATTTCTTCGGTGGTACTCCAACTATACACGGCCCCTCCAAAATGTTTGACTATTCGTGGAACGGTACACGCGGAACAAAAGACCTTTGCGTGTGATGGTAACGTCTCCTGGCGATCTGACCTTCGTAAGACTCATTTACTTAAGATAAGACAAACGACTGGACTAATTCATCATTCTTCGTGGATAGTGCCAGTATATTGAGTCGGGCCTACGTCCTAACGGCAGGTTGGCGCATTTGAAGCGAAAGTATCGGTTACGATCCGGGGCCAGGGAATACCACAGAGCTTTGTTTCCGTTAAATTGTTGTCTAGAGGTACGTAGGTT";
+  char* text =    "GCGAGAATTACGACCGGCTCGCTGAATTGCGCGAAGCAAGCCCTGTCTCTTCGTCTGCGTACGGTATGTATTCCCATAGTGATCAACCACTTGGCCAGCGGGGCTTGAGGGGCTGGCTTGCTATCCCCAGAGAGTAGGCCCCTATGTGCAGATTAGCCTGGTAGGAGAGACACCTAGAGTGCAGAATCGTGGGTACTTCCTTATCGTTTAACATATCGTAACTCTGACATAATAGGTAGTGATATGTCCGGTGGAATCCCTGGTTCAGCGTGAGGTCTTTCGGTACCTTATCCCATTGGGGATTCGTATGCCGCAGGGCGCCAGAGGAGTGCGTAATTGGGAAAATCCTTGCCATGAATGTCTGGCAGAACTGATGGATGCGTATTGTTGTGTATGCGGGTGCGAACTACTAATATGTTGCATGCAATTAGGGGGACGCATGGTGGGTGCGCAATGTAGTAGCGCTAACAATGTGAGCGGAAAACAGAACTTGTACTCCCCCAACTCAAGACACTAGAATACTCGGGTAACGGATTTTCTATACGATTTACTTCCGTACTCCAGGGGGGTCGGGTAAACGCAATCTTTGATGGTCAGTATAGGGACAGGCATCGTTGCGGTTCGGATGAGATCACATCAATATTTCCAATAATGCTCAATCTTTCTAAAAAGTTACGAACCCGATTTCTTTCGGTGGTCGTCCAAATATTACAGCCCCTCCAAAGTGTTGACTTTCGTGAAACCGGTACCGCGAACAAAAGACTTTGCGGTGTATGTTAACTCTCCTGTCGATCTGACCTTCGTAAGACTCGTTTACTTAAGTAAGAAAAACACTGACAATTCATCATTCTTCGTGGAATGGCAGTATATTGGTCGTGGCTCACGGTCCTCCGCGCAGGGGCGCTATTTGAAGCCAAAGTATCGGTTACGATCCGGCCCAGGGAATACCACAGAGCATTTGTTTTCCGTAAATTGTTGTCTAGAGGTCGTCGGTT";
 
   // MMAllocator
   mm_allocator_t* const mm_allocator = mm_allocator_new(BUFFER_SIZE_8M);
   // Penalties
+  linear_penalties_t linear_penalties = {
+      .match = 0,
+      .mismatch = 4,
+      .insertion = 2,
+      .deletion = 2,
+  };
   affine_penalties_t affine_penalties = {
       .match = 0,
       .mismatch = 9,//4, //9,
@@ -197,25 +211,24 @@ void align_pairwise_test() {
   const int pattern_begin_free = 0;
   const int pattern_end_free = 0;
   const int text_begin_free = 0;
-  const int text_end_free = 19;
+  const int text_end_free = 0;
   const bool endsfree =
-      pattern_begin_free>0 ||
-      pattern_end_free>0   ||
-      text_begin_free>0    ||
-      text_end_free>0;
+      pattern_begin_free>0 || pattern_end_free>0 ||
+      text_begin_free>0 || text_end_free>0;
   /*
    * Gap-Affine
    */
   // Allocate
   wavefront_aligner_attr_t attributes = wavefront_aligner_attr_default;
-  attributes.distance_metric = gap_affine;
+  attributes.distance_metric = gap_linear;
+  attributes.linear_penalties = linear_penalties;
   attributes.affine_penalties = affine_penalties;
   // attributes.affine2p_penalties = affine2p_penalties;
-  attributes.reduction.reduction_strategy = wavefront_reduction_adaptive;
+  attributes.reduction.reduction_strategy = wavefront_reduction_none;
   attributes.reduction.min_wavefront_length = 256;
   attributes.reduction.max_distance_threshold = 4096;
   attributes.alignment_scope = compute_alignment; // compute_score
-  attributes.memory_mode = wavefront_memory_med;
+  attributes.memory_mode = wavefront_memory_ultralow;
   attributes.alignment_form.span = (endsfree) ? alignment_endsfree : alignment_end2end;
   attributes.alignment_form.pattern_begin_free = pattern_begin_free;
   attributes.alignment_form.pattern_end_free = pattern_end_free;
@@ -284,6 +297,9 @@ wavefront_aligner_t* align_benchmark_configure_wf(
   }
   // Select flavor
   switch (parameters.algorithm) {
+    case alignment_indel_wavefront:
+      attributes.distance_metric = indel;
+      break;
     case alignment_edit_wavefront:
       attributes.distance_metric = edit;
       break;
@@ -348,6 +364,7 @@ void align_benchmark_configure_global(
   if (parameters.check_alignments) align_input->debug_flags |= ALIGN_DEBUG_CHECK_ALIGNMENT;
   align_input->check_linear_penalties = &parameters.linear_penalties;
   align_input->check_affine_penalties = &parameters.affine_penalties;
+  align_input->check_affine2p_penalties = &parameters.affine2p_penalties;
   align_input->check_bandwidth = parameters.check_bandwidth;
   align_input->verbose = parameters.verbose;
 }
@@ -473,15 +490,28 @@ void align_benchmark() {
     align_benchmark_configure_local(&align_input);
     // Align queries using DP
     switch (parameters.algorithm) {
+      /* Indel */
+      case alignment_indel_wavefront:
+        benchmark_indel_wavefront(&align_input);
+        break;
+      /* Edit */
       case alignment_edit_dp:
         benchmark_edit_dp(&align_input);
         break;
       case alignment_edit_dp_banded:
         benchmark_edit_dp_banded(&align_input,parameters.bandwidth);
         break;
+      case alignment_edit_wavefront:
+        benchmark_edit_wavefront(&align_input);
+        break;
+      /* Gap-linear */
       case alignment_gap_linear_nw:
         benchmark_gap_linear_nw(&align_input,&parameters.linear_penalties);
         break;
+      case alignment_gap_linear_wavefront:
+        benchmark_gap_linear_wavefront(&align_input,&parameters.linear_penalties);
+        break;
+      /* Gap-affine */
       case alignment_gap_affine_swg:
         benchmark_gap_affine_swg(&align_input,&parameters.affine_penalties);
         break;
@@ -496,6 +526,7 @@ void align_benchmark() {
       case alignment_gap_affine_wavefront:
         benchmark_gap_affine_wavefront(&align_input,&parameters.affine_penalties);
         break;
+      /* Gap-affine 2p */
       case alignment_gap_affine2p_dp:
         benchmark_gap_affine2p_dp(&align_input,&parameters.affine2p_penalties);
         break;
@@ -533,53 +564,52 @@ void align_benchmark() {
  */
 void usage() {
   fprintf(stderr,
-      "USE: ./align_benchmark -a <algorithm> -i <input>                     \n"
-      "      Options::                                                      \n"
-      "        [Algorithm]                                                  \n"
-      "          --algorithm|a <algorithm>                                  \n"
-      "            [edit]                                                   \n"
-      "              edit-dp                                                \n"
-      "              edit-dp-banded                                         \n"
-      "              edit-wfa                                               \n"
-      "              edit-wfa-adaptive                                      \n"
-      "            [gap-linear]                                             \n"
-      "              gap-linear-nw                                          \n"
-      "              gap-linear-wfa                                         \n"
-      "              gap-linear-wfa-adaptive                                \n"
-      "            [gap-affine]                                             \n"
-      "              gap-affine-swg                                         \n"
-      "              gap-affine-swg-banded                                  \n"
-      "              gap-affine-wfa                                         \n"
-      "              gap-affine-wfa-adaptive                                \n"
-      "            [gap-affine-2pieces]                                     \n"
-      "              gap-affine2p-dp                                        \n"
-      "              gap-affine2p-wfa                                       \n"
-      "              gap-affine2p-wfa-adaptive                              \n"
-      "        [Input & Output]                                             \n"
-      "          --input|i <File>                                           \n"
-      "          --output|o <File>                                          \n"
-      "          --output-full <File>                                       \n"
-      "        [Penalties]                                                  \n"
-      "          --linear-penalties|p M,X,I,D                               \n"
-      "          --affine-penalties|g M,X,O,E                               \n"
-      "          --affine2p-penalties M,X,O1,E1,O2,E2                       \n"
-      "        [Wavefront parameters]                                       \n"
-      "          --score-only                                               \n"
-      "          --minimum-wavefront-length <INT>                           \n"
-      "          --maximum-difference-distance <INT>                        \n"
-      "          --memory-mode 'high'|'med'|'low'|'ultralow'                \n"
-      "          --ends-free P0,Pf,T0,Tf                                    \n"
-      "          --custom-match-funct                                       \n"
-      "        [Misc]                                                       \n"
-      "          --bandwidth <INT>                                          \n"
-      "          --check|c 'correct'|'score'|'alignment'                    \n"
-      "          --check-distance 'edit'|'gap-linear'|'gap-affine'          \n"
-      "          --check-bandwidth <INT>                                    \n"
-      "          --plot                                                     \n"
-      "        [System]                                                     \n"
-      "          --max-memory <bytes>                                       \n"
-      "          --progress|P <integer>                                     \n"
-      "          --help|h                                                   \n");
+      "USE: ./align_benchmark -a <algorithm> -i <input>                       \n"
+      "      Options::                                                        \n"
+      "        [Algorithm]                                                    \n"
+      "          --algorithm|a <algorithm>                                    \n"
+      "            [indel (Longest Common Subsequence)]                       \n"
+      "              indel-wfa                                                \n"
+      "            [edit (Levenshtein)]                                       \n"
+      "              edit-dp                                                  \n"
+      "              edit-dp-banded                                           \n"
+      "              edit-wfa                                                 \n"
+      "            [gap-linear (Needleman-Wunsch)]                            \n"
+      "              gap-linear-nw                                            \n"
+      "              gap-linear-wfa                                           \n"
+      "              gap-linear-wfa-adaptive                                  \n"
+      "            [gap-affine (Smith-Waterman-Gotoh)]                        \n"
+      "              gap-affine-swg                                           \n"
+      "              gap-affine-swg-banded                                    \n"
+      "              gap-affine-wfa                                           \n"
+      "            [gap-affine-2pieces (Concave 2-pieces)]                    \n"
+      "              gap-affine2p-dp                                          \n"
+      "              gap-affine2p-wfa                                         \n"
+      "        [Input & Output]                                               \n"
+      "          --input|i <File>                                             \n"
+      "          --output|o <File>                                            \n"
+      "          --output-full <File>                                         \n"
+      "        [Penalties]                                                    \n"
+      "          --linear-penalties|p M,X,I,D                                 \n"
+      "          --affine-penalties|g M,X,O,E                                 \n"
+      "          --affine2p-penalties M,X,O1,E1,O2,E2                         \n"
+      "        [Wavefront parameters]                                         \n"
+      "          --score-only                                                 \n"
+      "          --minimum-wavefront-length <INT>                             \n"
+      "          --maximum-difference-distance <INT>                          \n"
+      "          --memory-mode 'high'|'med'|'low'|'ultralow'                  \n"
+      "          --ends-free P0,Pf,T0,Tf                                      \n"
+      "          --custom-match-funct                                         \n"
+      "        [Misc]                                                         \n"
+      "          --bandwidth <INT>                                            \n"
+      "          --check|c 'correct'|'score'|'alignment'                      \n"
+      "          --check-distance 'indel'|'edit'|'linear'|'affine'|'affine2p' \n"
+      "          --check-bandwidth <INT>                                      \n"
+      "          --plot                                                       \n"
+      "        [System]                                                       \n"
+      "          --max-memory <bytes>                                         \n"
+      "          --progress|P <integer>                                       \n"
+      "          --help|h                                                     \n");
 }
 void parse_arguments(int argc,char** argv) {
   struct option long_options[] = {
@@ -627,26 +657,21 @@ void parse_arguments(int argc,char** argv) {
       /* Test bench */
       if (strcmp(optarg,"test")==0) {
         parameters.algorithm = alignment_test;
+      /* Indel */
+      } else if (strcmp(optarg,"indel-wfa")==0) {
+        parameters.algorithm = alignment_indel_wavefront;
       /* Edit */
       } else if (strcmp(optarg,"edit-dp")==0) {
         parameters.algorithm = alignment_edit_dp;
       } else if (strcmp(optarg,"edit-dp-banded")==0) {
         parameters.algorithm = alignment_edit_dp_banded;
       } else if (strcmp(optarg,"edit-wfa")==0) {
-        parameters.reduction_type = wavefront_reduction_none;
-        parameters.algorithm = alignment_edit_wavefront;
-      } else if (strcmp(optarg,"edit-wfa-adaptive")==0) {
-        parameters.reduction_type = wavefront_reduction_adaptive;
         parameters.algorithm = alignment_edit_wavefront;
       /* Gap-Linear */
       } else if (strcmp(optarg,"gap-linear-nw")==0 ||
                  strcmp(optarg,"gap-linear-dp")==0) {
         parameters.algorithm = alignment_gap_linear_nw;
       } else if (strcmp(optarg,"gap-linear-wfa")==0) {
-        parameters.reduction_type = wavefront_reduction_none;
-        parameters.algorithm = alignment_gap_linear_wavefront;
-      } else if (strcmp(optarg,"gap-linear-wfa-adaptive")==0) {
-        parameters.reduction_type = wavefront_reduction_adaptive;
         parameters.algorithm = alignment_gap_linear_wavefront;
       /* Gap-Affine */
       } else if (strcmp(optarg,"gap-affine-swg")==0 ||
@@ -656,19 +681,11 @@ void parse_arguments(int argc,char** argv) {
                  strcmp(optarg,"gap-affine-dp-banded")==0) {
         parameters.algorithm = alignment_gap_affine_swg_banded;
       } else if (strcmp(optarg,"gap-affine-wfa")==0) {
-        parameters.reduction_type = wavefront_reduction_none;
-        parameters.algorithm = alignment_gap_affine_wavefront;
-      } else if (strcmp(optarg,"gap-affine-wfa-adaptive")==0) {
-        parameters.reduction_type = wavefront_reduction_adaptive;
         parameters.algorithm = alignment_gap_affine_wavefront;
       /* Gap-Affine 2-Pieces */
       } else if (strcmp(optarg,"gap-affine2p-dp")==0) {
         parameters.algorithm = alignment_gap_affine2p_dp;
       } else if (strcmp(optarg,"gap-affine2p-wfa")==0) {
-        parameters.reduction_type = wavefront_reduction_none;
-        parameters.algorithm = alignment_gap_affine2p_wavefront;
-      } else if (strcmp(optarg,"gap-affine2p-wfa-adaptive")==0) {
-        parameters.reduction_type = wavefront_reduction_adaptive;
         parameters.algorithm = alignment_gap_affine2p_wavefront;
       } else {
         fprintf(stderr,"Algorithm '%s' not recognized\n",optarg);
@@ -734,11 +751,13 @@ void parse_arguments(int argc,char** argv) {
       break;
     case 1002: // --minimum-wavefront-length
       parameters.min_wavefront_length = atoi(optarg);
+      parameters.reduction_type = wavefront_reduction_adaptive;
       break;
     case 1003: // --maximum-difference-distance
       parameters.max_distance_threshold = atoi(optarg);
+      parameters.reduction_type = wavefront_reduction_adaptive;
       break;
-    case 1004: // --memory-mode 'high'|'med'|'low'|'ultralow'
+    case 1004: // --memory-mode in {'high','med','low','ultralow'}
       if (strcmp(optarg,"high")==0) {
         parameters.memory_mode = wavefront_memory_high;
       } else if (strcmp(optarg,"med")==0) {
@@ -748,7 +767,7 @@ void parse_arguments(int argc,char** argv) {
       } else if (strcmp(optarg,"ultralow")==0) {
         parameters.memory_mode = wavefront_memory_ultralow;
       } else {
-        fprintf(stderr,"Option '--memory-mode' must be in {'high'|'med'|'low'|'ultralow'}\n");
+        fprintf(stderr,"Option '--memory-mode' must be in {'high','med','low','ultralow'}\n");
         exit(1);
       }
       break;
@@ -796,15 +815,19 @@ void parse_arguments(int argc,char** argv) {
         exit(1);
       }
       break;
-    case 2001: // --check-distance
-      if (strcasecmp(optarg,"edit")==0) { // default = edit
+    case 2001: // --check-distance in {'indel','edit','linear','affine','affine2p'}
+      if (strcasecmp(optarg,"indel")==0) {
+        parameters.check_metric = ALIGN_DEBUG_CHECK_DISTANCE_METRIC_INDEL;
+      } else if (strcasecmp(optarg,"edit")==0) {
         parameters.check_metric = ALIGN_DEBUG_CHECK_DISTANCE_METRIC_EDIT;
-      } else if (strcasecmp(optarg,"gap-linear")==0) {
+      } else if (strcasecmp(optarg,"linear")==0) {
         parameters.check_metric = ALIGN_DEBUG_CHECK_DISTANCE_METRIC_GAP_LINEAR;
-      } else if (strcasecmp(optarg,"gap-affine")==0) {
+      } else if (strcasecmp(optarg,"affine")==0) {
         parameters.check_metric = ALIGN_DEBUG_CHECK_DISTANCE_METRIC_GAP_AFFINE;
+      } else if (strcasecmp(optarg,"affine2p")==0) {
+        parameters.check_metric = ALIGN_DEBUG_CHECK_DISTANCE_METRIC_GAP_AFFINE2P;
       } else {
-        fprintf(stderr,"Option '--check-distance' must be in {'edit','gap-linear','gap-affine'}\n");
+        fprintf(stderr,"Option '--check-distance' must be in {'indel','edit','linear','affine','affine2p'}\n");
         exit(1);
       }
       break;
@@ -853,6 +876,8 @@ void parse_arguments(int argc,char** argv) {
       case alignment_gap_affine_swg:
         parameters.algorithm = alignment_gap_affine_swg_endsfree;
         break;
+      case alignment_indel_wavefront:
+      case alignment_edit_wavefront:
       case alignment_gap_linear_wavefront:
       case alignment_gap_affine_wavefront:
       case alignment_gap_affine2p_wavefront:

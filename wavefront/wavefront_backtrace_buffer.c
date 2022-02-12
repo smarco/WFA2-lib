@@ -223,9 +223,23 @@ bt_block_idx_t wf_backtrace_buffer_init_block(
   return BT_BUFFER_IDX(segment_idx,segment_offset);
 }
 /*
- * Recover CIGAR
+ * Unpack CIGAR
  */
-void wf_backtrace_buffer_recover_cigar(
+bt_block_t* wf_backtrace_buffer_traceback_pcigar(
+    wf_backtrace_buffer_t* const bt_buffer,
+    bt_block_t* bt_block) {
+  // Clear temporal buffer
+  vector_t* const alignment_packed = bt_buffer->alignment_packed;
+  vector_clear(alignment_packed);
+  // Traverse-back the BT-blocks and store all the pcigars
+  while (bt_block->prev_idx != BT_BLOCK_IDX_NULL) {
+    vector_insert(alignment_packed,bt_block->pcigar,pcigar_t);
+    bt_block = wf_backtrace_buffer_get_block(bt_buffer,bt_block->prev_idx);
+  }
+  // Return initial block (start coordinate)
+  return bt_block;
+}
+void wf_backtrace_buffer_unpack_cigar_linear(
     wf_backtrace_buffer_t* const bt_buffer,
     const char* const pattern,
     const int pattern_length,
@@ -233,45 +247,76 @@ void wf_backtrace_buffer_recover_cigar(
     const int text_length,
     alignment_match_funct_t const match_funct,
     void* const match_funct_arguments,
-    const int alignment_k,
-    const int alignment_offset,
-    const pcigar_t pcigar_last,
-    const bt_block_idx_t prev_idx_last,
+    const int begin_v,
+    const int begin_h,
+    const int end_v,
+    const int end_h,
     cigar_t* const cigar) {
-  // Clear temporal buffer
-  vector_t* const alignment_packed = bt_buffer->alignment_packed;
-  vector_clear(alignment_packed);
-  // Traverse-back the BT-blocks and store all the pcigars
-  bt_block_t bt_block_last = {
-      .pcigar = pcigar_last,
-      .prev_idx = prev_idx_last
-  };
-  bt_block_t* bt_block = &bt_block_last;
-  while (bt_block->prev_idx != BT_BLOCK_IDX_NULL) {
-    vector_insert(alignment_packed,bt_block->pcigar,pcigar_t);
-    bt_block = wf_backtrace_buffer_get_block(bt_buffer,bt_block->prev_idx);
-  }
   // Clear cigar
   char* cigar_buffer = cigar->operations;
   cigar->begin_offset = 0;
-  // Fetch initial coordinate
-  const int init_position_offset = bt_block->pcigar;
-  wf_backtrace_init_pos_t* const backtrace_init_pos =
-      vector_get_elm(bt_buffer->alignment_init_pos,init_position_offset,wf_backtrace_init_pos_t);
   // Add init insertions/deletions
   int i;
-  int v = backtrace_init_pos->v;
-  int h = backtrace_init_pos->h;
+  int v = begin_v;
+  int h = begin_h;
   for (i=0;i<h;++i) {*cigar_buffer = 'I'; ++cigar_buffer;};
   for (i=0;i<v;++i) {*cigar_buffer = 'D'; ++cigar_buffer;};
-  // Traverse-forward the pcigars and recover the cigar
-  const int num_palignment_blocks = vector_get_used(alignment_packed);
-  pcigar_t* const palignment_blocks = vector_get_mem(alignment_packed,pcigar_t);
+  // Traverse-forward the pcigars and unpack the cigar
+  const int num_palignment_blocks = vector_get_used(bt_buffer->alignment_packed);
+  pcigar_t* const palignment_blocks = vector_get_mem(bt_buffer->alignment_packed,pcigar_t);
+  for (i=num_palignment_blocks-1;i>=0;--i) {
+    // Unpack block
+    int cigar_block_length = 0;
+    pcigar_unpack_linear(
+        palignment_blocks[i],
+        pattern,pattern_length,text,text_length,
+        match_funct,match_funct_arguments,&v,&h,
+        cigar_buffer,&cigar_block_length);
+    // Update CIGAR
+    cigar_buffer += cigar_block_length;
+  }
+  // Account for last stroke of matches
+  const int num_matches = MIN(end_v-v,end_h-h);
+  for (i=0;i<num_matches;++i) {*cigar_buffer = 'M'; ++cigar_buffer;};
+  v += num_matches;
+  h += num_matches;
+  // Account for last stroke of insertion/deletion
+  while (h < text_length) {*cigar_buffer = 'I'; ++cigar_buffer; ++h;};
+  while (v < pattern_length) {*cigar_buffer = 'D'; ++cigar_buffer; ++v;};
+  // Close CIGAR
+  *cigar_buffer = '\0';
+  cigar->end_offset = cigar_buffer - cigar->operations;
+}
+void wf_backtrace_buffer_unpack_cigar_affine(
+    wf_backtrace_buffer_t* const bt_buffer,
+    const char* const pattern,
+    const int pattern_length,
+    const char* const text,
+    const int text_length,
+    alignment_match_funct_t const match_funct,
+    void* const match_funct_arguments,
+    const int begin_v,
+    const int begin_h,
+    const int end_v,
+    const int end_h,
+    cigar_t* const cigar) {
+  // Clear cigar
+  char* cigar_buffer = cigar->operations;
+  cigar->begin_offset = 0;
+  // Add init insertions/deletions
+  int i;
+  int v = begin_v;
+  int h = begin_h;
+  for (i=0;i<h;++i) {*cigar_buffer = 'I'; ++cigar_buffer;};
+  for (i=0;i<v;++i) {*cigar_buffer = 'D'; ++cigar_buffer;};
+  // Traverse-forward the pcigars and unpack the cigar
+  const int num_palignment_blocks = vector_get_used(bt_buffer->alignment_packed);
+  pcigar_t* const palignment_blocks = vector_get_mem(bt_buffer->alignment_packed,pcigar_t);
   affine_matrix_type current_matrix_type = affine_matrix_M;
   for (i=num_palignment_blocks-1;i>=0;--i) {
-    // Recover block
+    // Unpack block
     int cigar_block_length = 0;
-    pcigar_recover(
+    pcigar_unpack_affine(
         palignment_blocks[i],
         pattern,pattern_length,text,text_length,
         match_funct,match_funct_arguments,&v,&h,
@@ -280,9 +325,7 @@ void wf_backtrace_buffer_recover_cigar(
     cigar_buffer += cigar_block_length;
   }
   // Account for last stroke of matches
-  const int alignment_v = WAVEFRONT_V(alignment_k,alignment_offset);
-  const int alignment_h = WAVEFRONT_H(alignment_k,alignment_offset);
-  const int num_matches = MIN(alignment_v-v,alignment_h-h);
+  const int num_matches = MIN(end_v-v,end_h-h);
   for (i=0;i<num_matches;++i) {*cigar_buffer = 'M'; ++cigar_buffer;};
   v += num_matches;
   h += num_matches;

@@ -134,30 +134,43 @@ void wavefront_compute_fetch_input(
   const distance_metric_t distance_metric = wf_aligner->penalties.distance_metric;
   // Compute scores
   const wavefronts_penalties_t* const penalties = &(wf_aligner->penalties);
-  int mismatch = score - penalties->mismatch;
-  int gap_open1 = score - penalties->gap_opening1 - penalties->gap_extension1;
-  int gap_extend1 = score - penalties->gap_extension1;
-  int gap_open2 = score - penalties->gap_opening2 - penalties->gap_extension2;
-  int gap_extend2 = score - penalties->gap_extension2;
-  // Modular wavefront
-  if (wf_components->memory_modular) {
-    const int max_score_scope = wf_components->max_score_scope;
-    if (mismatch > 0) mismatch =  mismatch % max_score_scope;
-    if (gap_open1 > 0) gap_open1 = gap_open1 % max_score_scope;
-    if (gap_extend1 > 0) gap_extend1 = gap_extend1 % max_score_scope;
-    if (gap_open2 > 0) gap_open2 = gap_open2 % max_score_scope;
-    if (gap_extend2 > 0) gap_extend2 = gap_extend2 % max_score_scope;
+  if (distance_metric == gap_linear) {
+    int mismatch = score - penalties->mismatch;
+    int gap_open1 = score - penalties->gap_opening1;
+    // Modular wavefront
+    if (wf_components->memory_modular) {
+      const int max_score_scope = wf_components->max_score_scope;
+      if (mismatch > 0) mismatch =  mismatch % max_score_scope;
+      if (gap_open1 > 0) gap_open1 = gap_open1 % max_score_scope;
+    }
+    // Fetch wavefronts
+    wavefront_set->in_mwavefront_misms = wavefront_compute_get_mwavefront(wf_components,mismatch);
+    wavefront_set->in_mwavefront_open1 = wavefront_compute_get_mwavefront(wf_components,gap_open1);
+  } else { // distance_metric == gap_affine || distance_metric == gap_affine_2p
+    int mismatch = score - penalties->mismatch;
+    int gap_open1 = score - penalties->gap_opening1 - penalties->gap_extension1;
+    int gap_extend1 = score - penalties->gap_extension1;
+    int gap_open2 = score - penalties->gap_opening2 - penalties->gap_extension2;
+    int gap_extend2 = score - penalties->gap_extension2;
+    // Modular wavefront
+    if (wf_components->memory_modular) {
+      const int max_score_scope = wf_components->max_score_scope;
+      if (mismatch > 0) mismatch =  mismatch % max_score_scope;
+      if (gap_open1 > 0) gap_open1 = gap_open1 % max_score_scope;
+      if (gap_extend1 > 0) gap_extend1 = gap_extend1 % max_score_scope;
+      if (gap_open2 > 0) gap_open2 = gap_open2 % max_score_scope;
+      if (gap_extend2 > 0) gap_extend2 = gap_extend2 % max_score_scope;
+    }
+    // Fetch wavefronts
+    wavefront_set->in_mwavefront_misms = wavefront_compute_get_mwavefront(wf_components,mismatch);
+    wavefront_set->in_mwavefront_open1 = wavefront_compute_get_mwavefront(wf_components,gap_open1);
+    wavefront_set->in_i1wavefront_ext = wavefront_compute_get_i1wavefront(wf_components,gap_extend1);
+    wavefront_set->in_d1wavefront_ext = wavefront_compute_get_d1wavefront(wf_components,gap_extend1);
+    if (distance_metric == gap_affine) return;
+    wavefront_set->in_mwavefront_open2 = wavefront_compute_get_mwavefront(wf_components,gap_open2);
+    wavefront_set->in_i2wavefront_ext = wavefront_compute_get_i2wavefront(wf_components,gap_extend2);
+    wavefront_set->in_d2wavefront_ext = wavefront_compute_get_d2wavefront(wf_components,gap_extend2);
   }
-  // Fetch wavefronts
-  wavefront_set->in_mwavefront_misms = wavefront_compute_get_mwavefront(wf_components,mismatch);
-  wavefront_set->in_mwavefront_open1 = wavefront_compute_get_mwavefront(wf_components,gap_open1);
-  if (distance_metric == gap_linear) return;
-  wavefront_set->in_i1wavefront_ext = wavefront_compute_get_i1wavefront(wf_components,gap_extend1);
-  wavefront_set->in_d1wavefront_ext = wavefront_compute_get_d1wavefront(wf_components,gap_extend1);
-  if (distance_metric == gap_affine) return;
-  wavefront_set->in_mwavefront_open2 = wavefront_compute_get_mwavefront(wf_components,gap_open2);
-  wavefront_set->in_i2wavefront_ext = wavefront_compute_get_i2wavefront(wf_components,gap_extend2);
-  wavefront_set->in_d2wavefront_ext = wavefront_compute_get_d2wavefront(wf_components,gap_extend2);
 }
 /*
  * Output wavefronts (allocate)
@@ -492,7 +505,7 @@ int wavefront_compute_offload_backtrace_blocks(
       wavefront_compute_offload_backtrace_blocks_selective(
           out_offsets,out_bt_pcigar,out_bt_prev,
           lo,hi,PCIGAR_HALF_FULL_MASK,bt_buffer);
-      return PCIGAR_MAX_LENGTH/2; // Maximum occupancy (at least 2 ops)
+      return PCIGAR_MAX_LENGTH/2; // Half occupancy
     case wavefront_memory_ultralow:
       wavefront_compute_offload_backtrace_blocks_selective(
           out_offsets,out_bt_pcigar,out_bt_prev,
@@ -582,15 +595,14 @@ void wavefront_compute_offload_backtrace_linear(
   const wavefront_t* const m_misms = wavefront_set->in_mwavefront_misms;
   const wavefront_t* const m_open1 = wavefront_set->in_mwavefront_open1;
   // Compute BT occupancy maximum
-  int occ_max_d1 = 0;
-  if (!m_open1->null) occ_max_d1 = m_open1->bt_occupancy_max + 1;
-  int occ_max_m = m_misms->bt_occupancy_max;
-  if (occ_max_m < occ_max_d1) occ_max_m = occ_max_d1;
-  ++occ_max_m;
+  int occ_max_indel = 0;
+  if (!m_open1->null) occ_max_indel = m_open1->bt_occupancy_max + 1;
+  const int occ_max_m = m_misms->bt_occupancy_max + 1;
+  int occ_max = MAX(occ_max_indel,occ_max_m);
   // Set new occupancy
-  wf_m->bt_occupancy_max = occ_max_m;
+  wf_m->bt_occupancy_max = occ_max;
   // Offload if necessary (Gap-Linear)
-  if (!wf_m->null && occ_max_m >= PCIGAR_MAX_LENGTH) {
+  if (!wf_m->null && occ_max >= PCIGAR_MAX_LENGTH) {
     wf_offset_t* const out_m  = wavefront_set->out_mwavefront->offsets;
     pcigar_t* const out_m_bt_pcigar = wavefront_set->out_mwavefront->bt_pcigar;
     bt_block_idx_t* const out_m_bt_prev = wavefront_set->out_mwavefront->bt_prev;

@@ -535,3 +535,45 @@ void wavefront_backtrace_affine(
   ++(cigar->begin_offset);
   cigar->score = alignment_score;
 }
+/*
+ * Backtrace from BT-Buffer (pcigar)
+ */
+void wavefront_backtrace_pcigar(
+    wavefront_aligner_t* const wf_aligner,
+    const int alignment_k,
+    const int alignment_offset,
+    const pcigar_t pcigar_last,
+    const bt_block_idx_t prev_idx_last) {
+  // Parameters
+  wf_backtrace_buffer_t* const bt_buffer =  wf_aligner->wf_components.bt_buffer;
+  // Traceback pcigar-blocks
+  bt_block_t bt_block_last = {
+      .pcigar = pcigar_last,
+      .prev_idx = prev_idx_last
+  };
+  bt_block_t* const init_block = wf_backtrace_buffer_traceback_pcigar(bt_buffer,&bt_block_last);
+  // Fetch initial coordinate
+  const int init_position_offset = init_block->pcigar;
+  wf_backtrace_init_pos_t* const backtrace_init_pos =
+      vector_get_elm(bt_buffer->alignment_init_pos,init_position_offset,wf_backtrace_init_pos_t);
+  // Unpack pcigar blocks (packed alignment)
+  const int begin_v = backtrace_init_pos->v;
+  const int begin_h = backtrace_init_pos->h;
+  const int end_v = WAVEFRONT_V(alignment_k,alignment_offset);
+  const int end_h = WAVEFRONT_H(alignment_k,alignment_offset);
+  if (wf_aligner->penalties.distance_metric <= gap_linear) {
+    wf_backtrace_buffer_unpack_cigar_linear(bt_buffer,
+        wf_aligner->pattern,wf_aligner->pattern_length,
+        wf_aligner->text,wf_aligner->text_length,
+        wf_aligner->match_funct,
+        wf_aligner->match_funct_arguments,
+        begin_v,begin_h,end_v,end_h,&wf_aligner->cigar);
+  } else {
+    wf_backtrace_buffer_unpack_cigar_affine(bt_buffer,
+        wf_aligner->pattern,wf_aligner->pattern_length,
+        wf_aligner->text,wf_aligner->text_length,
+        wf_aligner->match_funct,
+        wf_aligner->match_funct_arguments,
+        begin_v,begin_h,end_v,end_h,&wf_aligner->cigar);
+  }
+}

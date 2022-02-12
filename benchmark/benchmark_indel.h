@@ -26,23 +26,18 @@
  *
  * PROJECT: Wavefront Alignments Algorithms
  * AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
- * DESCRIPTION: Gap-linear alignment algorithms wrapper
+ * DESCRIPTION: Indel-distance alignment algorithms wrapper
  */
 
-#ifndef BENCHMARK_GAP_LINEAR_H_
-#define BENCHMARK_GAP_LINEAR_H_
+#ifndef BENCHMARK_INDEL_H_
+#define BENCHMARK_INDEL_H_
 
-#include "gap_linear/nw.h"
 #include "benchmark/benchmark_utils.h"
 
 /*
- * Benchmark NW
+ * Benchmark Indel (Longest Common Subsequence)
  */
-void benchmark_gap_linear_nw(
-    align_input_t* const align_input,
-    linear_penalties_t* const penalties);
-void benchmark_gap_linear_wavefront(
-    align_input_t* const align_input,
-    linear_penalties_t* const penalties);
+void benchmark_indel_wavefront(
+    align_input_t* const align_input);
 
-#endif /* BENCHMARK_GAP_LINEAR_H_ */
+#endif /* BENCHMARK_INDEL_H_ */

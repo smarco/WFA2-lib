@@ -158,17 +158,39 @@ void wavefront_display_print_score(
   int s;
   for (s=score_begin;s<=score_end;++s) {
     fprintf(stream,"|");
-    PRINT_CHAR_REP(stream,' ',row_width-10);
-    fprintf(stream,"%4d-score",s);
+    if (row_width >= 10) {
+      PRINT_CHAR_REP(stream,' ',row_width-10);
+      fprintf(stream,"%4d-score",s);
+    } else {
+      fprintf(stream,"s=%2d",s);
+    }
   }
   fprintf(stream,"|\n");
 }
+void wavefront_display_print_header_component(
+    FILE* const stream,
+    wavefront_t* const wavefront,
+    char* const wavefront_id,
+    const int bt_length) {
+  fprintf(stream,"[ %s]",wavefront_id);
+  if (bt_length > 0) {
+    if (wavefront!=NULL && bt_length >= 10) {
+      PRINT_CHAR_REP(stream,' ',bt_length-10);
+      fprintf(stream,"[|BT|=%2d]",wavefront->bt_occupancy_max);
+    } else {
+      PRINT_CHAR_REP(stream,' ',bt_length-1);
+    }
+  }
+}
 void wavefront_display_print_header(
     FILE* const stream,
-    const distance_metric_t distance_metric,
+    wavefront_aligner_t* const wf_aligner,
     const int score_begin,
     const int score_end,
     const int bt_length) {
+  // Parameters
+  wavefront_components_t* const wf_components = &wf_aligner->wf_components;
+  const distance_metric_t distance_metric = wf_aligner->penalties.distance_metric;
   const int row_width = wavefront_display_compute_row_width(distance_metric,bt_length);
   // Score header
   fprintf(stream,"\n>[SCORE %d-%d]\n",score_begin,score_end);
@@ -180,21 +202,17 @@ void wavefront_display_print_header(
   wavefront_display_print_frame(stream,score_begin,score_end,row_width,bt_length);
   // Wavefront labels
   PRINT_CHAR_REP(stream,' ',WF_DISPLAY_YLABEL_LENGTH); // Align [k=   ]
-  int s;
-  for (s=score_begin;s<=score_end;++s) {
+  int score;
+  for (score=score_begin;score<=score_end;++score) {
+    const int s = (wf_components->memory_modular) ? score%wf_components->max_score_scope : score;
     fprintf(stream,"|");
-    fprintf(stream,"[ M]");
-    PRINT_CHAR_REP(stream,' ',bt_length);
+    wavefront_display_print_header_component(stream,wf_components->mwavefronts[s]," M",bt_length);
     if (distance_metric <= gap_linear) continue;
-    fprintf(stream,"[I1]");
-    PRINT_CHAR_REP(stream,' ',bt_length);
-    fprintf(stream,"[D1]");
-    PRINT_CHAR_REP(stream,' ',bt_length);
+    wavefront_display_print_header_component(stream,wf_components->i1wavefronts[s],"I1",bt_length);
+    wavefront_display_print_header_component(stream,wf_components->d1wavefronts[s],"D1",bt_length);
     if (distance_metric == gap_affine) continue;
-    fprintf(stream,"[I2]");
-    PRINT_CHAR_REP(stream,' ',bt_length);
-    fprintf(stream,"[D2]");
-    PRINT_CHAR_REP(stream,' ',bt_length);
+    wavefront_display_print_header_component(stream,wf_components->i2wavefronts[s],"I2",bt_length);
+    wavefront_display_print_header_component(stream,wf_components->d2wavefronts[s],"D2",bt_length);
   }
   fprintf(stream,"|\n");
   // Frame
@@ -217,7 +235,7 @@ void wavefront_aligner_print_block(
   int max_k, min_k;
   wavefront_display_compute_limits(wf_aligner,score_begin,score_end,&max_k,&min_k);
   // Header
-  wavefront_display_print_header(stream,distance_metric,score_begin,score_end,bt_length);
+  wavefront_display_print_header(stream,wf_aligner,score_begin,score_end,bt_length);
   // Traverse all diagonals
   int k;
   for (k=max_k;k>=min_k;k--) {
@@ -256,7 +274,7 @@ void wavefront_aligner_print(
     const int backtrace_length) {
   // Print wavefronts by chunks
   int s;
-  for (s=score_begin;s<=score_end;s+=num_wfs_per_row-1) {
+  for (s=MAX(score_begin,0);s<=score_end;s+=num_wfs_per_row-1) {
     const int block_score_end = MIN(s+num_wfs_per_row-1,score_end);
     wavefront_aligner_print_block(stream,wf_aligner,s,block_score_end,backtrace_length);
     if (block_score_end == score_end) break;

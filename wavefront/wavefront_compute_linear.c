@@ -53,10 +53,10 @@ void wavefront_compute_linear_idm(
   PRAGMA_LOOP_VECTORIZE
   for (k=lo;k<=hi;++k) {
     // Compute maximum Offset
-    const wf_offset_t ins1 = m_open1[k-1] + 1;
+    const wf_offset_t ins1 = m_open1[k-1];
     const wf_offset_t del1 = m_open1[k+1];
-    const wf_offset_t misms = m_misms[k] + 1;
-    wf_offset_t max = MAX(del1,MAX(misms,ins1));
+    const wf_offset_t misms = m_misms[k];
+    wf_offset_t max = MAX(del1,MAX(misms,ins1)+1);
     // Adjust offset out of boundaries !(h>tlen,v>plen) (here to allow vectorization)
     const wf_unsigned_offset_t h = WAVEFRONT_H(k,max); // Make unsigned to avoid checking negative
     const wf_unsigned_offset_t v = WAVEFRONT_V(k,max); // Make unsigned to avoid checking negative
@@ -93,10 +93,10 @@ void wavefront_compute_linear_idm_piggyback(
   PRAGMA_LOOP_VECTORIZE // Ifs predicated by the compiler
   for (k=lo;k<=hi;++k) {
     // Compute maximum Offset
-    const wf_offset_t ins1 = m_open1[k-1];
+    const wf_offset_t ins1 = m_open1[k-1] + 1;
     const wf_offset_t del1 = m_open1[k+1];
-    const wf_offset_t misms = m_misms[k];
-    wf_offset_t max = MAX(del1,MAX(misms,ins1)+1);
+    const wf_offset_t misms = m_misms[k] + 1;
+    wf_offset_t max = MAX(del1,MAX(misms,ins1));
     // Update pcigar & bt-block
     if (max == ins1) {
       out_m_bt_pcigar[k] = PCIGAR_PUSH_BACK_INS(m_open1_bt_pcigar[k-1]);

@@ -46,9 +46,11 @@
 #define ALIGN_DEBUG_CHECK_ALIGNMENT 0x00000004
 #define ALIGN_DEBUG_DISPLAY_INFO    0x00000008
 
-#define ALIGN_DEBUG_CHECK_DISTANCE_METRIC_EDIT       0x00000010
-#define ALIGN_DEBUG_CHECK_DISTANCE_METRIC_GAP_LINEAR 0x00000040
-#define ALIGN_DEBUG_CHECK_DISTANCE_METRIC_GAP_AFFINE 0x00000080
+#define ALIGN_DEBUG_CHECK_DISTANCE_METRIC_INDEL        0x00000010
+#define ALIGN_DEBUG_CHECK_DISTANCE_METRIC_EDIT         0x00000040
+#define ALIGN_DEBUG_CHECK_DISTANCE_METRIC_GAP_LINEAR   0x00000080
+#define ALIGN_DEBUG_CHECK_DISTANCE_METRIC_GAP_AFFINE   0x00000100
+#define ALIGN_DEBUG_CHECK_DISTANCE_METRIC_GAP_AFFINE2P 0x00000400
 
 /*
  * Alignment Input
@@ -89,6 +91,7 @@ typedef struct {
   int debug_flags;
   linear_penalties_t* check_linear_penalties;
   affine_penalties_t* check_affine_penalties;
+  affine2p_penalties_t* check_affine2p_penalties;
   int check_bandwidth;
   bool verbose;
 } align_input_t;

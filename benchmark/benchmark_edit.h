@@ -35,13 +35,6 @@
 #include "benchmark/benchmark_utils.h"
 
 /*
- * Check
- */
-void benchmark_debug_edit(
-    align_input_t* const align_input,
-    cigar_t* const cigar);
-
-/*
  * Benchmark Edit
  */
 void benchmark_edit_dp(
@@ -49,5 +42,7 @@ void benchmark_edit_dp(
 void benchmark_edit_dp_banded(
     align_input_t* const align_input,
     const int bandwidth);
+void benchmark_edit_wavefront(
+    align_input_t* const align_input);
 
 #endif /* BENCHMARK_EDIT_H_ */

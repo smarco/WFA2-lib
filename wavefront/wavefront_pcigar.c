@@ -72,7 +72,7 @@ int pcigar_unpack(
     pcigar_length -= free_slots;
     pcigar <<= free_slots*2;
   }
-  // Recover BT-blocks
+  // Unpack BT-blocks
   int i;
   for (i=0;i<pcigar_length;++i) {
     // Extract next CIGAR operation
@@ -87,7 +87,7 @@ int pcigar_unpack(
 /*
  * PCIGAR extend exact-matches
  */
-int pcigar_recover_extend(
+int pcigar_unpack_extend(
     const char* const pattern,
     const int pattern_length,
     const char* const text,
@@ -125,7 +125,7 @@ int pcigar_recover_extend(
   // Return total matches
   return num_matches;
 }
-int pcigar_recover_extend_custom(
+int pcigar_unpack_extend_custom(
     const int pattern_length,
     const int text_length,
     alignment_match_funct_t const match_funct,
@@ -146,9 +146,61 @@ int pcigar_recover_extend_custom(
   return num_matches;
 }
 /*
- * PCIGAR recover
+ * PCIGAR unpack
  */
-void pcigar_recover(
+void pcigar_unpack_linear(
+    pcigar_t pcigar,
+    const char* const pattern,
+    const int pattern_length,
+    const char* const text,
+    const int text_length,
+    alignment_match_funct_t const match_funct,
+    void* const match_funct_arguments,
+    int* const v_pos,
+    int* const h_pos,
+    char* cigar_buffer,
+    int* const cigar_length) {
+  // Parameters
+  char* const cigar_buffer_base = cigar_buffer;
+  // Compute pcigar length and shift to the end of the word
+  int pcigar_length = PCIGAR_MAX_LENGTH;
+  if (!PCIGAR_IS_UTILISED(pcigar,PCIGAR_FULL_MASK)) {
+    const int free_slots = PCIGAR_FREE_SLOTS(pcigar);
+    pcigar_length -= free_slots;
+    pcigar <<= free_slots*2;
+  }
+  // Unpack BT-blocks
+  int v = *v_pos, h = *h_pos, i;
+  for (i=0;i<pcigar_length;++i) {
+    // Extend exact-matches
+    int num_matches;
+    if (match_funct != NULL) { // Custom extend-match function
+      num_matches = pcigar_unpack_extend_custom(
+          pattern_length,text_length,
+          match_funct,match_funct_arguments,v,h,cigar_buffer);
+    } else {
+      num_matches = pcigar_unpack_extend(
+          pattern,pattern_length,text,text_length,v,h,cigar_buffer);
+    }
+    // Update location
+    v += num_matches;
+    h += num_matches;
+    cigar_buffer += num_matches;
+    // Extract next CIGAR operation
+    const int cigar_op = (int)PCIGAR_EXTRACT(pcigar); // Extract
+    PCIGAR_POP_FRONT(pcigar); // Shift
+    // Add operation using LUT
+    pcigar_op_t* const op = pcigar_lut + cigar_op;
+    *(cigar_buffer++) = op->operation;
+    v += op->inc_v;
+    h += op->inc_h;
+  }
+  // Update length/positions
+  *cigar_length = cigar_buffer - cigar_buffer_base;
+  *v_pos = v;
+  *h_pos = h;
+}
+void pcigar_unpack_affine(
     pcigar_t pcigar,
     const char* const pattern,
     const int pattern_length,
@@ -170,7 +222,7 @@ void pcigar_recover(
     pcigar_length -= free_slots;
     pcigar <<= free_slots*2;
   }
-  // Recover BT-blocks
+  // Unpack BT-blocks
   affine_matrix_type matrix_type = *current_matrix_type;
   int v = *v_pos, h = *h_pos, i;
   for (i=0;i<pcigar_length;++i) {
@@ -178,11 +230,11 @@ void pcigar_recover(
     if (matrix_type == affine_matrix_M) { // Extend only on the M-wavefront
       int num_matches;
       if (match_funct != NULL) { // Custom extend-match function
-        num_matches = pcigar_recover_extend_custom(
+        num_matches = pcigar_unpack_extend_custom(
             pattern_length,text_length,
             match_funct,match_funct_arguments,v,h,cigar_buffer);
       } else {
-        num_matches = pcigar_recover_extend(
+        num_matches = pcigar_unpack_extend(
             pattern,pattern_length,text,text_length,v,h,cigar_buffer);
       }
       // Update location

@@ -26,23 +26,39 @@
  *
  * PROJECT: Wavefront Alignments Algorithms
  * AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
- * DESCRIPTION: Gap-linear alignment algorithms wrapper
+ * DESCRIPTION: Indel-distance alignment algorithms wrapper
  */
 
-#ifndef BENCHMARK_GAP_LINEAR_H_
-#define BENCHMARK_GAP_LINEAR_H_
-
-#include "gap_linear/nw.h"
 #include "benchmark/benchmark_utils.h"
+#include "benchmark/benchmark_check.h"
+#include "wavefront/wavefront_align.h"
 
 /*
- * Benchmark NW
+ * Benchmark Indel
  */
-void benchmark_gap_linear_nw(
-    align_input_t* const align_input,
-    linear_penalties_t* const penalties);
-void benchmark_gap_linear_wavefront(
-    align_input_t* const align_input,
-    linear_penalties_t* const penalties);
-
-#endif /* BENCHMARK_GAP_LINEAR_H_ */
+void benchmark_indel_wavefront(
+    align_input_t* const align_input) {
+  // Parameters
+  wavefront_aligner_t* const wf_aligner = align_input->wf_aligner;
+  // Align
+  timer_start(&align_input->timer);
+  wavefront_align(wf_aligner,
+      align_input->pattern,align_input->pattern_length,
+      align_input->text,align_input->text_length);
+  timer_stop(&align_input->timer);
+  // DEBUG
+  if (align_input->debug_flags) {
+    benchmark_check_alignment(align_input,&wf_aligner->cigar);
+  }
+  // Output
+  if (align_input->output_file) {
+    const int score_only = (wf_aligner->alignment_scope == compute_score);
+    const int score = (score_only) ? wf_aligner->cigar.score : cigar_score_edit(&wf_aligner->cigar);
+    FILE* const output_file = align_input->output_file;
+    if (align_input->output_full) {
+      benchmark_print_output_full(output_file,align_input,score,&wf_aligner->cigar);
+    } else {
+      benchmark_print_output_lite(output_file,align_input,score,&wf_aligner->cigar);
+    }
+  }
+}

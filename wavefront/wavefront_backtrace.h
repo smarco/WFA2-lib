@@ -48,4 +48,14 @@ void wavefront_backtrace_affine(
     const int alignment_k,
     const wf_offset_t alignment_offset);
 
+/*
+ * Backtrace from BT-Buffer (pcigar)
+ */
+void wavefront_backtrace_pcigar(
+    wavefront_aligner_t* const wf_aligner,
+    const int alignment_k,
+    const int alignment_offset,
+    const pcigar_t pcigar_last,
+    const bt_block_idx_t prev_idx_last);
+
 #endif /* WAVEFRONT_BACKTRACE_H_ */

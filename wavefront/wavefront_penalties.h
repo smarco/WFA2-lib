@@ -40,11 +40,11 @@
  * Distance metrics
  */
 typedef enum {
-  indel         = 0,
-  edit          = 1,
-  gap_linear    = 2,
-  gap_affine    = 3,
-  gap_affine_2p = 4
+  indel         = 0, // Longest Common Subsequence - LCS
+  edit          = 1, // Levenshtein
+  gap_linear    = 2, // Needleman-Wunsch
+  gap_affine    = 3, // Smith-Waterman-Gotoh
+  gap_affine_2p = 4  // Concave 2-pieces
 } distance_metric_t;
 
 /*

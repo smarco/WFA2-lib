@@ -291,7 +291,7 @@ void wavefront_align_terminate(
   if (wf_components->memory_modular) score = score % wf_components->max_score_scope;
   wavefront_t* const mwavefront = wf_components->mwavefronts[score];
   // DEBUG
-  // wavefront_aligner_print(stderr,wf_aligner,score_final-5,score_final,6,16);
+  //wavefront_aligner_print(stderr,wf_aligner,score_final-10,score_final,6,16);
   // Retrieve alignment
   if (wf_aligner->alignment_scope == compute_score) {
     cigar_clear(&wf_aligner->cigar);
@@ -299,16 +299,11 @@ void wavefront_align_terminate(
     const int alignment_k = mwavefront->k_alignment_end;
     const wf_offset_t alignment_offset = mwavefront->offsets[alignment_k];
     if (wf_components->bt_piggyback) {
-      // Fetch backtrace from buffer and recover alignment
-      wf_backtrace_buffer_recover_cigar(
-          wf_components->bt_buffer,
-          wf_aligner->pattern,wf_aligner->pattern_length,
-          wf_aligner->text,wf_aligner->text_length,
-          wf_aligner->match_funct,wf_aligner->match_funct,
-          alignment_k,alignment_offset,
+      // Backtrace alignment from buffer (unpacking pcigar)
+      wavefront_backtrace_pcigar(
+          wf_aligner,alignment_k,alignment_offset,
           mwavefront->bt_pcigar[alignment_k],
-          mwavefront->bt_prev[alignment_k],
-          &wf_aligner->cigar);
+          mwavefront->bt_prev[alignment_k]);
     } else {
       // Backtrace alignment
       if (wf_aligner->penalties.distance_metric <= gap_linear) {
@@ -360,7 +355,7 @@ int wavefront_align_sequences(
     // PROFILE
     if (plot) wavefront_plot(wf_aligner,pattern,text,score);
     // DEBUG
-    //wavefront_aligner_print(stderr,wf_aligner,score,score,6,16);
+    // wavefront_aligner_print(stderr,wf_aligner,score-5,score,7,16);
   }
   // Return OK
   return WF_ALIGN_SUCCESSFUL;

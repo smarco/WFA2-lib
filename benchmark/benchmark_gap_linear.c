@@ -31,6 +31,7 @@
 
 #include "benchmark/benchmark_gap_linear.h"
 #include "benchmark/benchmark_check.h"
+#include "wavefront/wavefront_align.h"
 #include "gap_linear/nw.h"
 
 /*
@@ -71,4 +72,32 @@ void benchmark_gap_linear_nw(
   // Free
   score_matrix_free(&score_matrix);
   cigar_free(&cigar);
+}
+void benchmark_gap_linear_wavefront(
+    align_input_t* const align_input,
+    linear_penalties_t* const penalties) {
+  // Parameters
+  wavefront_aligner_t* const wf_aligner = align_input->wf_aligner;
+  // Align
+  timer_start(&align_input->timer);
+  wavefront_align(wf_aligner,
+      align_input->pattern,align_input->pattern_length,
+      align_input->text,align_input->text_length);
+  timer_stop(&align_input->timer);
+  // DEBUG
+  if (align_input->debug_flags) {
+    benchmark_check_alignment(align_input,&wf_aligner->cigar);
+  }
+  // Output
+  if (align_input->output_file) {
+    const int score_only = (wf_aligner->alignment_scope == compute_score);
+    const int score = (score_only) ? wf_aligner->cigar.score :
+        cigar_score_gap_linear(&wf_aligner->cigar,penalties);
+    FILE* const output_file = align_input->output_file;
+    if (align_input->output_full) {
+      benchmark_print_output_full(output_file,align_input,score,&wf_aligner->cigar);
+    } else {
+      benchmark_print_output_lite(output_file,align_input,score,&wf_aligner->cigar);
+    }
+  }
 }

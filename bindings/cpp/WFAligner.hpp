@@ -134,7 +134,36 @@ private:
   WFAligner(const WFAligner&);
 };
 /*
- * Gap-Affine Aligner
+ * Indel Aligner (a.k.a Longest Common Subsequence - LCS)
+ */
+class WFAlignerIndel : public WFAligner {
+public:
+  WFAlignerIndel(
+      const AlignmentScope alignmentScope,
+      const MemoryModel memoryModel = MemoryHigh);
+};
+/*
+ * Edit Aligner (a.k.a Levenshtein)
+ */
+class WFAlignerEdit : public WFAligner {
+public:
+  WFAlignerEdit(
+      const AlignmentScope alignmentScope,
+      const MemoryModel memoryModel = MemoryHigh);
+};
+/*
+ * Gap-Linear Aligner (a.k.a Needleman-Wunsch)
+ */
+class WFAlignerGapLinear : public WFAligner {
+public:
+  WFAlignerGapLinear(
+      const int mismatch,
+      const int indel,
+      const AlignmentScope alignmentScope,
+      const MemoryModel memoryModel = MemoryHigh);
+};
+/*
+ * Gap-Affine Aligner (a.k.a Smith-Waterman-Gotoh)
  */
 class WFAlignerGapAffine : public WFAligner {
 public:
@@ -146,7 +175,7 @@ public:
       const MemoryModel memoryModel = MemoryHigh);
 };
 /*
- * Gap-Affine Dual-Cost (2 pieces) Aligner
+ * Gap-Affine Dual-Cost Aligner (a.k.a. concave 2-pieces)
  */
 class WFAlignerGapAffine2Pieces : public WFAligner {
 public:

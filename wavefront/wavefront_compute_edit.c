@@ -183,10 +183,10 @@ void wavefront_compute_edit_idm_piggyback(
   PRAGMA_LOOP_VECTORIZE // Ifs predicated by the compiler
   for (k=lo+1;k<=hi-1;++k) {
     // Compute maximum offset
-    const wf_offset_t ins = prev_offsets[k-1]; // Lower
-    const wf_offset_t del = prev_offsets[k+1]; // Upper
-    const wf_offset_t misms = prev_offsets[k]; // Mid
-    wf_offset_t max = MAX(del,MAX(ins,misms)+1);
+    const wf_offset_t ins = prev_offsets[k-1] + 1; // Lower
+    const wf_offset_t del = prev_offsets[k+1];     // Upper
+    const wf_offset_t misms = prev_offsets[k] + 1; // Mid
+    wf_offset_t max = MAX(del,MAX(ins,misms));
     // Update pcigar & bt-block
     if (max == ins) {
       curr_pcigar[k] = PCIGAR_PUSH_BACK_INS(prev_pcigar[k-1]);
