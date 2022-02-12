@@ -298,7 +298,7 @@ void benchmark_check_alignment(
       benchmark_check_alignment_edit(align_input,cigar_computed);
     }
     // Check indel
-    if (align_input->debug_flags & ALIGN_DEBUG_CHECK_DISTANCE_METRIC_EDIT) {
+    if (align_input->debug_flags & ALIGN_DEBUG_CHECK_DISTANCE_METRIC_INDEL) {
       benchmark_check_alignment_indel(align_input,cigar_computed);
     }
   }
