@@ -26,26 +26,30 @@
  *
  * PROJECT: Wavefront Alignments Algorithms
  * AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
- * DESCRIPTION: WaveFront-Alignment module for display and report
+ * DESCRIPTION: WaveFront-Alignment module for debugging and collect stats
  */
 
-#ifndef WAVEFRONT_DISPLAY_H_
-#define WAVEFRONT_DISPLAY_H_
+#ifndef WAVEFRONT_DEBUG_H_
+#define WAVEFRONT_DEBUG_H_
 
-#include "utils/commons.h"
-
-// Wavefront ahead definition
-typedef struct _wavefront_aligner_t wavefront_aligner_t;
+#include "wavefront_aligner.h"
 
 /*
- * Display
+ * Debug
  */
-void wavefront_aligner_print(
-    FILE* const stream,
+void wavefront_debug_prologue(
     wavefront_aligner_t* const wf_aligner,
-    const int score_begin,
-    const int score_end,
-    const int num_wfs_per_row,
-    const int backtrace_length);
+    const char* const pattern,
+    const int pattern_length,
+    const char* const text,
+    const int text_length);
+void wavefront_debug_epilogue(
+    wavefront_aligner_t* const wf_aligner,
+    const char* const pattern,
+    const int pattern_length,
+    const char* const text,
+    const int text_length,
+    const int wf_status,
+    const uint64_t wf_memory_used);
 
-#endif /* WAVEFRONT_DISPLAY_H_ */
+#endif /* WAVEFRONT_DEBUG_H_ */

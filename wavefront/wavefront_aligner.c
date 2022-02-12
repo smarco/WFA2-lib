@@ -195,6 +195,7 @@ void wavefront_aligner_resize(
         &wf_aligner->plot_params);
   }
   // System
+  timer_reset(&wf_aligner->timer);
   wavefront_set_alignment_system(wf_aligner,&wf_aligner->system);
 }
 void wavefront_aligner_reap(

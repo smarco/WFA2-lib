@@ -48,10 +48,10 @@ void nw_traceback(
   int h = score_matrix->num_columns-1;
   int v = score_matrix->num_rows-1;
   while (h>0 && v>0) {
-    if (dp[h][v] == dp[h][v-1]+penalties->deletion) {
+    if (dp[h][v] == dp[h][v-1]+penalties->indel) {
       operations[op_sentinel--] = 'D';
       --v;
-    } else if (dp[h][v] == dp[h-1][v]+penalties->insertion) {
+    } else if (dp[h][v] == dp[h-1][v]+penalties->indel) {
       operations[op_sentinel--] = 'I';
       --h;
     } else {
@@ -79,17 +79,17 @@ void nw_compute(
   // Init DP (No ends-free)
   dp[0][0] = 0;
   for (v=1;v<=pattern_length;++v) {
-    dp[0][v] = dp[0][v-1] + penalties->deletion;
+    dp[0][v] = dp[0][v-1] + penalties->indel;
   }
   for (h=1;h<=text_length;++h) {
-    dp[h][0] = dp[h-1][0] + penalties->insertion;
+    dp[h][0] = dp[h-1][0] + penalties->indel;
   }
   // Compute DP
   for (h=1;h<=text_length;++h) {
     for (v=1;v<=pattern_length;++v) {
       int min = dp[h-1][v-1] + ((pattern[v-1]==text[h-1]) ? 0 : penalties->mismatch); // Misms
-      min = MIN(min,dp[h-1][v]+penalties->insertion); // Ins
-      min = MIN(min,dp[h][v-1]+penalties->deletion); // Del
+      min = MIN(min,dp[h-1][v]+penalties->indel); // Ins
+      min = MIN(min,dp[h][v-1]+penalties->indel); // Del
       dp[h][v] = min;
     }
   }

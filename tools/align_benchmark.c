@@ -135,8 +135,7 @@ benchmark_args parameters = {
   .linear_penalties = {
       .match = 0,
       .mismatch = 4,
-      .insertion = 2,
-      .deletion  = 2,
+      .indel = 2,
   },
   .affine_penalties = {
       .match = 0,
@@ -196,8 +195,7 @@ void align_pairwise_test() {
   linear_penalties_t linear_penalties = {
       .match = 0,
       .mismatch = 4,
-      .insertion = 2,
-      .deletion = 2,
+      .indel = 2,
   };
   affine_penalties_t affine_penalties = {
       .match = 0,
@@ -588,7 +586,7 @@ void usage() {
       "          --output|o <File>                                            \n"
       "          --output-full <File>                                         \n"
       "        [Penalties]                                                    \n"
-      "          --linear-penalties|p M,X,I,D                                 \n"
+      "          --linear-penalties|p M,X,O                                   \n"
       "          --affine-penalties|g M,X,O,E                                 \n"
       "          --affine2p-penalties M,X,O1,E1,O2,E2                         \n"
       "        [Wavefront parameters]                                         \n"
@@ -704,15 +702,13 @@ void parse_arguments(int argc,char** argv) {
     /*
      * Penalties
      */
-    case 'p': { // --linear-penalties M,X,I,D
+    case 'p': { // --linear-penalties M,X,O
       char* sentinel = strtok(optarg,",");
       parameters.linear_penalties.match = atoi(sentinel);
       sentinel = strtok(NULL,",");
       parameters.linear_penalties.mismatch = atoi(sentinel);
       sentinel = strtok(NULL,",");
-      parameters.linear_penalties.insertion = atoi(sentinel);
-      sentinel = strtok(NULL,",");
-      parameters.linear_penalties.deletion = atoi(sentinel);
+      parameters.linear_penalties.indel = atoi(sentinel);
       break;
     }
     case 'g': { // --affine-penalties M,X,O,E

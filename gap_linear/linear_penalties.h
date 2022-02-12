@@ -33,10 +33,9 @@
 #define LINEAR_PENALTIES_H_
 
 typedef struct {
-  int match;              // (Penalty representation; usually M <= 0)
-  int mismatch;           // (Penalty representation; usually X > 0)
-  int insertion;          // (Penalty representation; usually I > 0)
-  int deletion;           // (Penalty representation; usually D > 0)
+  int match;          // (Penalty representation; usually M <= 0)
+  int mismatch;       // (Penalty representation; usually X > 0)
+  int indel;          // (Penalty representation; usually I > 0)
 } linear_penalties_t;
 
 #endif /* LINEAR_PENALTIES_H_ */

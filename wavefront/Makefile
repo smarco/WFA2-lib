@@ -19,6 +19,7 @@ MODULES=wavefront_align \
         wavefront_compute_edit \
         wavefront_compute_linear \
         wavefront_compute \
+        wavefront_debug \
         wavefront_display \
         wavefront_extend \
         wavefront_pcigar \

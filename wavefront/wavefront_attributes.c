@@ -53,14 +53,13 @@ wavefront_aligner_attr_t wavefront_aligner_attr_default = {
     .linear_penalties = {
         .match = 0,
         .mismatch = 4,
-        .insertion = 2,
-        .deletion  = 2,
+        .indel = 2,
     },
     .affine_penalties = {
         .match = 0,
         .mismatch = 4,
         .gap_opening = 6,
-        .gap_extension = 2, // 1
+        .gap_extension = 2,
     },
     .affine2p_penalties = {
         .match = 0,

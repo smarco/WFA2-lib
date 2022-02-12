@@ -31,6 +31,7 @@
 
 #include "wavefront_components.h"
 #include "utils/bitmap.h"
+#include "system/profiler_timer.h"
 
 /*
  * Configuration

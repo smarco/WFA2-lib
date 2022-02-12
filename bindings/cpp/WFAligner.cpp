@@ -241,8 +241,7 @@ WFAlignerGapLinear::WFAlignerGapLinear(
   attributes.distance_metric = gap_linear;
   attributes.linear_penalties.match = 0;
   attributes.linear_penalties.mismatch = mismatch;
-  attributes.linear_penalties.insertion = indel;
-  attributes.linear_penalties.deletion = indel;
+  attributes.linear_penalties.indel = indel;
   wfAligner = wavefront_aligner_new(&attributes);
 }
 /*

@@ -80,21 +80,16 @@ void wavefronts_penalties_set_linear(
     fprintf(stderr,"[WFA::Penalties] Match score must be negative or zero (M=%d)\n",linear_penalties->match);
     exit(1);
   } else if (linear_penalties->mismatch <= 0 ||
-             linear_penalties->deletion <= 0 ||
-             linear_penalties->insertion <= 0) {
-    fprintf(stderr,"[WFA::Penalties] Penalties must be strictly positive (X=%d,D=%d,I=%d). "
+             linear_penalties->indel <= 0) {
+    fprintf(stderr,"[WFA::Penalties] Penalties must be strictly positive (X=%d,O=%d). "
                    "Must be (X>0,D>0,I>0)\n",
         linear_penalties->mismatch,
-        linear_penalties->deletion,
-        linear_penalties->insertion);
-    exit(1);
-  } else if (linear_penalties->deletion != linear_penalties->insertion) {
-    fprintf(stderr,"[WFA::Penalties] At the moment, Insertion/Deletion penalties must be equal (D==I)\n");
+        linear_penalties->indel);
     exit(1);
   }
   // Copy base penalties
   wavefronts_penalties->mismatch = linear_penalties->mismatch;
-  wavefronts_penalties->gap_opening1 = linear_penalties->deletion;
+  wavefronts_penalties->gap_opening1 = linear_penalties->indel;
   // Adjust scores
   if (linear_penalties->match > 0 &&
       penalties_strategy == wavefronts_penalties_shifted_penalties) {

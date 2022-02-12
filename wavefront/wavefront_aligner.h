@@ -74,6 +74,7 @@ typedef struct _wavefront_aligner_t {
   wavefront_plot_params_t plot_params;     // Wavefront plot parameters
   wavefront_plot_t wf_plot;                // Wavefront plot
   // System
+  profiler_timer_t timer;                  // Time alignment
   alignment_system_t system;               // System related parameters
 } wavefront_aligner_t;
 

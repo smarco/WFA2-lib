@@ -144,8 +144,8 @@ int cigar_score_gap_linear(
     switch (cigar->operations[i]) {
       case 'M': score -= penalties->match; break;
       case 'X': score -= penalties->mismatch; break;
-      case 'I': score -= penalties->insertion; break;
-      case 'D': score -= penalties->deletion; break;
+      case 'I': score -= penalties->indel; break;
+      case 'D': score -= penalties->indel; break;
       default: return INT_MIN;
     }
   }
