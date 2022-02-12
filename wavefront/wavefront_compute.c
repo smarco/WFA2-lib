@@ -416,7 +416,7 @@ void wavefront_compute_trim_ends_set(
   if (wavefront_set->out_d2wavefront) wavefront_compute_trim_ends(wf_aligner,wavefront_set->out_d2wavefront);
 }
 /*
- * Backtrace offloading
+ * Backtrace-blocks offloading
  */
 void wavefront_compute_offload_backtrace_blocks_selective(
     wf_offset_t* const out_offsets,
@@ -484,7 +484,73 @@ void wavefront_compute_offload_backtrace_blocks_all(
     k += offloaded_blocks;
   }
 }
-int wavefront_compute_offload_backtrace_blocks(
+/*
+ * Backtrace offloading (linear)
+ */
+int wavefront_compute_offload_backtrace_blocks_linear(
+    wavefront_aligner_t* const wf_aligner,
+    wf_offset_t* const out_offsets,
+    pcigar_t* const out_bt_pcigar,
+    bt_block_idx_t* const out_bt_prev,
+    const int lo,
+    const int hi) {
+  // Parameters
+  const wavefront_memory_t wavefront_memory = wf_aligner->memory_mode;
+  wf_backtrace_buffer_t* const bt_buffer = wf_aligner->wf_components.bt_buffer;
+  // Select memory-mode
+  switch (wavefront_memory) {
+    case wavefront_memory_med:
+      wavefront_compute_offload_backtrace_blocks_all(
+          out_offsets,out_bt_pcigar,out_bt_prev,lo,hi,bt_buffer);
+      return 0; // Maximum occupancy (all empty)
+      break;
+    case wavefront_memory_low:
+      wavefront_compute_offload_backtrace_blocks_selective(
+          out_offsets,out_bt_pcigar,out_bt_prev,
+          lo,hi,PCIGAR_HALF_FULL_MASK,bt_buffer);
+      return PCIGAR_MAX_LENGTH/2; // Half occupancy
+      break;
+    case wavefront_memory_ultralow:
+      wavefront_compute_offload_backtrace_blocks_selective(
+          out_offsets,out_bt_pcigar,out_bt_prev,
+          lo,hi,PCIGAR_FULL_MASK,bt_buffer);
+      return PCIGAR_MAX_LENGTH-1; // At least 1-slots free
+      break;
+    default:
+      fprintf(stderr,"[WFA::compute] Wrong memory-mode\n");
+      exit(1);
+  }
+}
+void wavefront_compute_offload_backtrace_linear(
+    wavefront_aligner_t* const wf_aligner,
+    const wavefront_set_t* const wavefront_set,
+    const int lo,
+    const int hi) {
+  // Paramters
+  wavefront_t* const wf_m = wavefront_set->out_mwavefront;
+  const wavefront_t* const m_misms = wavefront_set->in_mwavefront_misms;
+  const wavefront_t* const m_open1 = wavefront_set->in_mwavefront_open1;
+  // Compute BT occupancy maximum
+  int occ_max_m = 0, occ_max_indel = 0;
+  if (!m_open1->null) occ_max_indel = m_open1->bt_occupancy_max;
+  if (!m_misms->null) occ_max_m = m_misms->bt_occupancy_max;
+  const int occ_max = MAX(occ_max_indel,occ_max_m) + 1;
+  // Set new occupancy
+  wf_m->bt_occupancy_max = occ_max;
+  // Offload if necessary (Gap-Linear)
+  if (!wf_m->null && occ_max >= PCIGAR_MAX_LENGTH) {
+    wf_offset_t* const out_m  = wavefront_set->out_mwavefront->offsets;
+    pcigar_t* const out_m_bt_pcigar = wavefront_set->out_mwavefront->bt_pcigar;
+    bt_block_idx_t* const out_m_bt_prev = wavefront_set->out_mwavefront->bt_prev;
+    wavefront_set->out_mwavefront->bt_occupancy_max =
+        wavefront_compute_offload_backtrace_blocks_linear(
+            wf_aligner,out_m,out_m_bt_pcigar,out_m_bt_prev,lo,hi);
+  }
+}
+/*
+ * Backtrace offloading (gap-affine)
+ */
+int wavefront_compute_offload_backtrace_blocks_affine(
     wavefront_aligner_t* const wf_aligner,
     wf_offset_t* const out_offsets,
     pcigar_t* const out_bt_pcigar,
@@ -509,15 +575,15 @@ int wavefront_compute_offload_backtrace_blocks(
     case wavefront_memory_ultralow:
       wavefront_compute_offload_backtrace_blocks_selective(
           out_offsets,out_bt_pcigar,out_bt_prev,
-          lo,hi,PCIGAR_FULL_MASK,bt_buffer);
-      return PCIGAR_MAX_LENGTH-2; // Maximum occupancy (at least 2 ops)
+          lo,hi,PCIGAR_ALMOST_FULL_MASK,bt_buffer);
+      return PCIGAR_MAX_LENGTH-2; // At least 2-slots free
     default:
       fprintf(stderr,"[WFA::compute] Wrong memory-mode\n");
       exit(1);
       return 0;
   }
 }
-void wavefront_compute_offload_backtrace_occupation(
+void wavefront_compute_offload_backtrace_occupation_affine(
     wavefront_aligner_t* const wf_aligner,
     const wavefront_set_t* const wavefront_set) {
   // Parameters
@@ -539,7 +605,7 @@ void wavefront_compute_offload_backtrace_occupation(
     }
     if (!i1_ext->null) occ_max_i1 = MAX(occ_max_i1,i1_ext->bt_occupancy_max+1);
     if (!d1_ext->null) occ_max_d1 = MAX(occ_max_d1,d1_ext->bt_occupancy_max+1);
-    occ_max_m = m_misms->bt_occupancy_max;
+    if (!m_misms->null) occ_max_m = m_misms->bt_occupancy_max;
     if (occ_max_m < occ_max_i1) occ_max_m = occ_max_i1;
     if (occ_max_m < occ_max_d1) occ_max_m = occ_max_d1;
     ++occ_max_m;
@@ -571,7 +637,7 @@ void wavefront_compute_offload_backtrace_occupation(
     if (!i2_ext->null) occ_max_i2 = MAX(occ_max_i2,i2_ext->bt_occupancy_max+1);
     if (!d2_ext->null) occ_max_d2 = MAX(occ_max_d2,d2_ext->bt_occupancy_max+1);
     // Compute BT occupancy maximum (M)
-    occ_max_m = m_misms->bt_occupancy_max;
+    if (!m_misms->null) occ_max_m = m_misms->bt_occupancy_max;
     if (occ_max_m < occ_max_i1) occ_max_m = occ_max_i1;
     if (occ_max_m < occ_max_i2) occ_max_m = occ_max_i2;
     if (occ_max_m < occ_max_d1) occ_max_m = occ_max_d1;
@@ -585,32 +651,6 @@ void wavefront_compute_offload_backtrace_occupation(
     wavefront_set->out_mwavefront->bt_occupancy_max = occ_max_m;
   }
 }
-void wavefront_compute_offload_backtrace_linear(
-    wavefront_aligner_t* const wf_aligner,
-    const wavefront_set_t* const wavefront_set,
-    const int lo,
-    const int hi) {
-  // Paramters
-  wavefront_t* const wf_m = wavefront_set->out_mwavefront;
-  const wavefront_t* const m_misms = wavefront_set->in_mwavefront_misms;
-  const wavefront_t* const m_open1 = wavefront_set->in_mwavefront_open1;
-  // Compute BT occupancy maximum
-  int occ_max_indel = 0;
-  if (!m_open1->null) occ_max_indel = m_open1->bt_occupancy_max + 1;
-  const int occ_max_m = m_misms->bt_occupancy_max + 1;
-  int occ_max = MAX(occ_max_indel,occ_max_m);
-  // Set new occupancy
-  wf_m->bt_occupancy_max = occ_max;
-  // Offload if necessary (Gap-Linear)
-  if (!wf_m->null && occ_max >= PCIGAR_MAX_LENGTH) {
-    wf_offset_t* const out_m  = wavefront_set->out_mwavefront->offsets;
-    pcigar_t* const out_m_bt_pcigar = wavefront_set->out_mwavefront->bt_pcigar;
-    bt_block_idx_t* const out_m_bt_prev = wavefront_set->out_mwavefront->bt_prev;
-    wavefront_set->out_mwavefront->bt_occupancy_max =
-        wavefront_compute_offload_backtrace_blocks(
-            wf_aligner,out_m,out_m_bt_pcigar,out_m_bt_prev,lo,hi);
-  }
-}
 void wavefront_compute_offload_backtrace_affine(
     wavefront_aligner_t* const wf_aligner,
     const wavefront_set_t* const wavefront_set,
@@ -619,30 +659,15 @@ void wavefront_compute_offload_backtrace_affine(
   // Parameters
   const distance_metric_t distance_metric = wf_aligner->penalties.distance_metric;
   // Compute maximum occupancy
-  wavefront_compute_offload_backtrace_occupation(wf_aligner,wavefront_set);
-  /*
-   * Offload if necessary (Edit or Gap-Linear)
-   */
-  const wavefront_t* const wf_m = wavefront_set->out_mwavefront;
-  if (!wf_m->null && wf_m->bt_occupancy_max >= PCIGAR_MAX_LENGTH-1) {
-    wf_offset_t* const out_m  = wavefront_set->out_mwavefront->offsets;
-    pcigar_t* const out_m_bt_pcigar = wavefront_set->out_mwavefront->bt_pcigar;
-    bt_block_idx_t* const out_m_bt_prev = wavefront_set->out_mwavefront->bt_prev;
-    wavefront_set->out_mwavefront->bt_occupancy_max =
-        wavefront_compute_offload_backtrace_blocks(
-            wf_aligner,out_m,out_m_bt_pcigar,out_m_bt_prev,lo,hi);
-  }
-  if (distance_metric == gap_linear) return;
-  /*
-   * Offload if necessary (Gap-Affine)
-   */
+  wavefront_compute_offload_backtrace_occupation_affine(wf_aligner,wavefront_set);
+  // Offload if necessary (Gap-Affine)
   const wavefront_t* const wf_i1 = wavefront_set->out_i1wavefront;
   if (!wf_i1->null && wf_i1->bt_occupancy_max >= PCIGAR_MAX_LENGTH-1) {
     wf_offset_t* const out_i1 = wavefront_set->out_i1wavefront->offsets;
     pcigar_t* const out_i1_bt_pcigar = wavefront_set->out_i1wavefront->bt_pcigar;
     bt_block_idx_t* const out_i1_bt_prev = wavefront_set->out_i1wavefront->bt_prev;
     wavefront_set->out_i1wavefront->bt_occupancy_max =
-        wavefront_compute_offload_backtrace_blocks(
+        wavefront_compute_offload_backtrace_blocks_affine(
             wf_aligner,out_i1,out_i1_bt_pcigar,out_i1_bt_prev,lo,hi);
   }
   const wavefront_t* const wf_d1 = wavefront_set->out_d1wavefront;
@@ -651,20 +676,18 @@ void wavefront_compute_offload_backtrace_affine(
     pcigar_t* const out_d1_bt_pcigar  = wavefront_set->out_d1wavefront->bt_pcigar;
     bt_block_idx_t* const out_d1_bt_prev = wavefront_set->out_d1wavefront->bt_prev;
     wavefront_set->out_d1wavefront->bt_occupancy_max =
-        wavefront_compute_offload_backtrace_blocks(
+        wavefront_compute_offload_backtrace_blocks_affine(
             wf_aligner,out_d1,out_d1_bt_pcigar,out_d1_bt_prev,lo,hi);
   }
   if (distance_metric == gap_affine) return;
-  /*
-   * Offload if necessary (Gap-Affine-2p)
-   */
+  // Offload if necessary (Gap-Affine-2p)
   const wavefront_t* const wf_i2 = wavefront_set->out_i2wavefront;
   if (!wf_i2->null && wf_i2->bt_occupancy_max >= PCIGAR_MAX_LENGTH-1) {
     wf_offset_t* const out_i2 = wavefront_set->out_i2wavefront->offsets;
     pcigar_t* const out_i2_bt_pcigar = wavefront_set->out_i2wavefront->bt_pcigar;
     bt_block_idx_t* const out_i2_bt_prev = wavefront_set->out_i2wavefront->bt_prev;
     wavefront_set->out_i2wavefront->bt_occupancy_max =
-        wavefront_compute_offload_backtrace_blocks(
+        wavefront_compute_offload_backtrace_blocks_affine(
             wf_aligner,out_i2,out_i2_bt_pcigar,out_i2_bt_prev,lo,hi);
   }
   const wavefront_t* const wf_d2 = wavefront_set->out_d2wavefront;
@@ -673,7 +696,7 @@ void wavefront_compute_offload_backtrace_affine(
     pcigar_t* const out_d2_bt_pcigar = wavefront_set->out_d2wavefront->bt_pcigar;
     bt_block_idx_t* const out_d2_bt_prev = wavefront_set->out_d2wavefront->bt_prev;
     wavefront_set->out_d2wavefront->bt_occupancy_max =
-        wavefront_compute_offload_backtrace_blocks(
+        wavefront_compute_offload_backtrace_blocks_affine(
             wf_aligner,out_d2,out_d2_bt_pcigar,out_d2_bt_prev,lo,hi);
   }
 }
