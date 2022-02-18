@@ -42,7 +42,7 @@ int main(int argc,char* argv[]) {
   string text    = "TCTATACTGCGCGTTTGGAGAAATAAAATAGT";
 
   // Create a WFAligner
-  WFAlignerGapAffine aligner(4,6,2);
+  WFAlignerGapAffine aligner(4,6,2,WFAligner::Alignment,WFAligner::MemoryHigh);
   // Align
   aligner.alignEnd2End(pattern,text);
   cout << "WFA-Alignment returns score " << aligner.getAlignmentScore() << endl;

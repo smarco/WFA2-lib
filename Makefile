@@ -26,8 +26,10 @@ SUBDIRS=alignment \
         system \
         utils \
         wavefront
-TOOLS=tools/align_benchmark \
-      tools/generate_dataset         
+TOOLS=tools/generate_dataset \
+      tools/align_benchmark \
+      tools/examples
+               
 
 release: CC_FLAGS+=-O3 -march=native -flto
 release: build
@@ -59,6 +61,7 @@ lib_wfa: $(SUBDIRS)
 clean:
 	rm -rf $(FOLDER_BIN) $(FOLDER_BUILD) $(FOLDER_LIB)
 	$(MAKE) --directory=tools/align_benchmark clean
+	$(MAKE) --directory=tools/examples clean
 	
 ###############################################################################
 # Subdir rule

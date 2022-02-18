@@ -232,6 +232,9 @@ void wavefront_compute_edit(
   if (wf_components->memory_modular) { // Modular wavefront
     score_prev = score_prev % wf_components->max_score_scope;
     score_curr = score_curr % wf_components->max_score_scope;
+    if (wf_components->mwavefronts[score_curr]) { // Free
+      wavefront_slab_free(wf_aligner->wavefront_slab,wf_components->mwavefronts[score_curr]);
+    }
   }
   // Fetch previous wavefront, compute limits & initialize
   wavefront_t* const wf_prev = wf_components->mwavefronts[score_prev];

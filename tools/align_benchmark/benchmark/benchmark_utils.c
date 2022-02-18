@@ -118,9 +118,9 @@ void benchmark_print_output_full(
   fprintf(stream,"%d\t",align_input->pattern_length); // Pattern length
   fprintf(stream,"%d\t",align_input->text_length); // Text length
   fprintf(stream,"%d\t",score); // Alignment score
-  cigar_print(stream,cigar,true); fprintf(stream,"\t"); // CIGAR
   fprintf(stream,"%s\t",align_input->pattern); // Pattern sequence
-  fprintf(stream,"%s\n",align_input->text); // Text sequence
+  fprintf(stream,"%s\t",align_input->text); // Text sequence
+  cigar_print(stream,cigar,true); fprintf(stream,"\n"); // CIGAR
 }
 /*
  * Stats
