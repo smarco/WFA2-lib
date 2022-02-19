@@ -51,6 +51,7 @@
 #include "benchmark/external/benchmark_ksw2.h"
 #include "benchmark/external/benchmark_parasail.h"
 #include "benchmark/external/benchmark_seqan.h"
+#include "benchmark/external/benchmark_wfalm.h"
 
 /*
  * Algorithms
@@ -88,7 +89,9 @@ typedef enum {
   alignment_seqan_edit,
   alignment_seqan_edit_bpm,
   alignment_seqan_lineal,
-  alignment_seqan_affine
+  alignment_seqan_affine,
+  alignment_wfalm,
+  alignment_wfalm_lowmem
 } alignment_algorithm_type;
 bool align_benchmark_is_wavefront(
     const alignment_algorithm_type algorithm) {
@@ -211,8 +214,8 @@ void align_pairwise_test() {
   // Patters & Texts
 //  char * pattern = "GATTACA";
 //  char * text = "GATCACTA";
-  char* pattern = "AAGGGTAATCTAAGTGTCTGGTCCTTTGTCATTCTGACTTTCTTCATAATGTGATCTCCTCACCTCCAGATTTCCCTTCTGCTCAATAGAACTAGGAGGAAGGAGAGGGAGCTTAACATTTCCCTTCTCTCAGACCCTTAGCTCCAA";
-  char* text = "CAAGGGTAATCTAAGTGTT";
+  char* pattern = "AAGGGTAATCTAAGTGTCTGGTCCTTTGTCATTCTGACTTTCTTCATAATGTGATCTCCTCACCTC";
+  char* text =    "AAGGGCAATTTAAGTGTCTGGTCCTTTGTCATTCGACTTTCTTCATAATGTGATCTTCCTCACCTC";
 
   // MMAllocator
   mm_allocator_t* const mm_allocator = mm_allocator_new(BUFFER_SIZE_8M);
@@ -262,6 +265,7 @@ void align_pairwise_test() {
   wavefront_align(wf_aligner,
       pattern,strlen(pattern),text,strlen(text));
   // CIGAR
+  fprintf(stderr,">> WFA2");
   cigar_print_pretty(stderr,
       pattern,strlen(pattern),text,strlen(text),
       &wf_aligner->cigar,mm_allocator);
@@ -272,6 +276,30 @@ void align_pairwise_test() {
     wavefront_plot_print(wf_plot,wf_aligner);
     fclose(wf_plot);
   }
+
+//  // Parameters
+//  fprintf(stderr,">> WFALM:");
+//  const int max_cigar_length = strlen(pattern)+strlen(text);
+//  cigar_t cigar = {
+//      .operations = malloc(max_cigar_length),
+//      .begin_offset = 0,
+//      .end_offset = 0,
+//  };
+//  // Align
+//  benchmark_wfalm_bridge_global_affine(
+//      pattern,strlen(pattern),text,strlen(text),
+//      affine_penalties.mismatch,affine_penalties.gap_opening,
+//      affine_penalties.gap_extension,
+//      cigar.operations,&cigar.end_offset);
+//  // Debug alignment
+//  // CIGAR
+//  cigar_print_pretty(stderr,
+//      pattern,strlen(pattern),text,strlen(text),
+//      &cigar,mm_allocator);
+//  fprintf(stderr,"SCORE: %d \n",cigar_score_gap_affine(&cigar,&affine_penalties));
+//  // Free
+//  free(cigar.operations);
+
   // Free
   wavefront_aligner_delete(wf_aligner);
   mm_allocator_delete(mm_allocator);
@@ -605,6 +633,12 @@ void align_benchmark() {
       case alignment_seqan_affine:
         benchmark_seqan_global_affine(&align_input,&parameters.affine_penalties);
         break;
+      case alignment_wfalm:
+        benchmark_wfalm_global_affine(&align_input,&parameters.affine_penalties);
+        break;
+      case alignment_wfalm_lowmem:
+        benchmark_wfalm_global_affine_lowmem(&align_input,&parameters.affine_penalties);
+        break;
       default:
         fprintf(stderr,"Algorithm not implemented\n");
         exit(1);
@@ -658,8 +692,8 @@ void usage() {
       "              gap-affine2p-dp                                          \n"
       "              gap-affine2p-wfa                                         \n"
       "            [External/BitPal]                                          \n"
-      "              bitpal-edit          (Edit)                              \n"
-      "              bitpal-scored        (Gap-linear)                        \n"
+      "              bitpal-edit          (Edit)[score-only]                  \n"
+      "              bitpal-scored        (Gap-linear)[score-only]            \n"
       "            [External/GABA]                                            \n"
       "              aband-gaba           (Gap-affine)                        \n"
       "            [External/KSW2]                                            \n"
@@ -669,12 +703,15 @@ void usage() {
       "              parasail-nw-stripped (Gap-affine)                        \n"
       "              parasail-nw-scan     (Gap-affine)                        \n"
       "              parasail-nw-diag     (Gap-affine)                        \n"
-      "              parasail-nw-banded   (Gap-affine)                        \n"
+      "              parasail-nw-banded   (Gap-affine)[score-only]            \n"
       "            [External/SeqAn]                                           \n"
       "              seqan-edit           (Edit)                              \n"
-      "              seqan-edit-bpm       (Edit)                              \n"
+      "              seqan-edit-bpm       (Edit)[score-only]                  \n"
       "              seqan-lineal         (Gap-linear)                        \n"
       "              seqan-affine         (Gap-affine)                        \n"
+      "            [External/WFAlm]                                           \n"
+      "              wfalm                (Gap-affine)                        \n"
+      "              wfalm-lowmem         (Gap-affine)[low-mem]               \n"
       "        [Input & Output]                                               \n"
       "          --input|i <File>                                             \n"
       "          --output|o <File>                                            \n"
@@ -811,6 +848,10 @@ void parse_arguments(int argc,char** argv) {
         parameters.algorithm = alignment_seqan_lineal;
       } else if (strcmp(optarg,"seqan-affine")==0) {
         parameters.algorithm = alignment_seqan_affine;
+      } else if (strcmp(optarg,"wfalm")==0) {
+        parameters.algorithm = alignment_wfalm;
+      } else if (strcmp(optarg,"wfalm-lowmem")==0) {
+        parameters.algorithm = alignment_wfalm_lowmem;
       } else {
         fprintf(stderr,"Algorithm '%s' not recognized\n",optarg);
         exit(1);
