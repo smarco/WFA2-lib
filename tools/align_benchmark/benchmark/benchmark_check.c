@@ -301,10 +301,8 @@ void benchmark_check_alignment(
     if (align_input->debug_flags & ALIGN_DEBUG_CHECK_DISTANCE_METRIC_INDEL) {
       benchmark_check_alignment_indel(align_input,cigar_computed);
     }
-  }
-  // Check CORRECT or just DISPLAY
-  if ((align_input->debug_flags & ALIGN_DEBUG_CHECK_CORRECT) ||
-      (align_input->debug_flags & ALIGN_DEBUG_DISPLAY_INFO)) {
+  } else if ((align_input->debug_flags & ALIGN_DEBUG_CHECK_CORRECT) ||
+             (align_input->debug_flags & ALIGN_DEBUG_DISPLAY_INFO)) { // Check CORRECT or just DISPLAY
     // Delegate check alignment
     benchmark_check_alignment_using_solution(
         align_input,cigar_computed,-1,NULL,-1);

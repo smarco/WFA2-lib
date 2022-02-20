@@ -93,15 +93,26 @@ void benchmark_ksw2_extz2_sse(
   if (approximate_max__drop) flag |= KSW_EZ_APPROX_MAX | KSW_EZ_APPROX_DROP;
   // Align
   timer_start(&align_input->timer);
-  ksw_extz2_sse(km, qlen, (uint8_t*)qseq, tlen, (uint8_t*)tseq, 5,
-      mat, gapo, gape, band_width, zdrop, 0, flag, &ez);
+  ksw_extz2_sse(
+      km,qlen,(uint8_t*)qseq,tlen,(uint8_t*)tseq,5,
+      mat,gapo,gape,band_width,zdrop,0,flag,&ez);
   timer_stop(&align_input->timer);
   // Adapt CIGAR
   cigar_t cigar;
   benchmark_ksw2_adapt_cigar(align_input,&ez,&cigar);
-  // Debug alignment
+  // DEBUG
   if (align_input->debug_flags) {
     benchmark_check_alignment(align_input,&cigar);
+  }
+  // Output
+  if (align_input->output_file) {
+    const int score = cigar_score_gap_affine(&cigar,penalties);
+    FILE* const output_file = align_input->output_file;
+    if (align_input->output_full) {
+      benchmark_print_output_full(output_file,align_input,score,&cigar);
+    } else {
+      benchmark_print_output_lite(output_file,align_input,score,&cigar);
+    }
   }
   // Free
   free(cigar.operations);
@@ -111,7 +122,7 @@ void benchmark_ksw2_extz2_sse(
 }
 void benchmark_ksw2_extd2_sse(
     align_input_t* const align_input,
-    affine_penalties_t* const penalties,
+    affine2p_penalties_t* const penalties,
     const bool approximate_max__drop,
     const int band_width,
     const int zdrop) {
@@ -120,8 +131,10 @@ void benchmark_ksw2_extd2_sse(
   const char *qseq = align_input->pattern;
   const int sc_mch = -penalties->match;
   const int sc_mis = -penalties->mismatch;
-  const int gapo = penalties->gap_opening;
-  const int gape = penalties->gap_extension;
+  const int gapo1 = penalties->gap_opening1;
+  const int gape1 = penalties->gap_extension1;
+  const int gapo2 = penalties->gap_opening2;
+  const int gape2 = penalties->gap_extension2;
   // Prepare data
   void *km = 0;
   int flag = 0;
@@ -141,15 +154,26 @@ void benchmark_ksw2_extd2_sse(
   if (approximate_max__drop) flag |= KSW_EZ_APPROX_MAX | KSW_EZ_APPROX_DROP;
   // Align
   timer_start(&align_input->timer);
-  ksw_extd2_sse(km, qlen, (uint8_t*)qseq, tlen, (uint8_t*)tseq, 5,
-      mat, gapo, gape, gapo, gape, band_width, zdrop, 0, flag, &ez);
+  ksw_extd2_sse(
+      km,qlen,(uint8_t*)qseq,tlen,(uint8_t*)tseq,5,
+      mat,gapo1,gape1,gapo2,gape2,band_width,zdrop,0,flag,&ez);
   timer_stop(&align_input->timer);
   // Adapt CIGAR
   cigar_t cigar;
   benchmark_ksw2_adapt_cigar(align_input,&ez,&cigar);
-  // Debug alignment
+  // DEBUG
   if (align_input->debug_flags) {
     benchmark_check_alignment(align_input,&cigar);
+  }
+  // Output
+  if (align_input->output_file) {
+    const int score = cigar_score_gap_affine2p(&cigar,penalties);
+    FILE* const output_file = align_input->output_file;
+    if (align_input->output_full) {
+      benchmark_print_output_full(output_file,align_input,score,&cigar);
+    } else {
+      benchmark_print_output_lite(output_file,align_input,score,&cigar);
+    }
   }
   // Free
   free(cigar.operations);

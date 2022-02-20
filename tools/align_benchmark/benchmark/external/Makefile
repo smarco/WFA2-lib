@@ -9,6 +9,10 @@ FOLDER_BUILD=$(FOLDER_ROOT)/build
 # Modules
 ###############################################################################
 MODULES=benchmark_bitpal \
+        benchmark_blockaligner \
+        benchmark_daligner \
+        benchmark_diffutils \
+        benchmark_edlib \
         benchmark_gaba \
         benchmark_ksw2 \
         benchmark_parasail \
@@ -26,6 +30,9 @@ LI_FLAGS=-I$(FOLDER_ROOT) -I$(FOLDER_WFA)
 # Rules
 ###############################################################################
 all: $(OBJS) $(FOLDER_BUILD)/benchmark_seqan_bindings.o
+
+$(FOLDER_BUILD)/benchmark_diffutils.o : benchmark_diffutils.c
+	$(CC) -Wno-maybe-uninitialized $(CC_FLAGS) $(LI_FLAGS) -c $< -o $@
 
 $(FOLDER_BUILD)/benchmark_gaba.o : benchmark_gaba.c
 	$(CC) -march=native $(CC_FLAGS) $(LI_FLAGS) -c $< -o $@

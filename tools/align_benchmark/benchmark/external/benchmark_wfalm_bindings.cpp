@@ -77,9 +77,6 @@ void benchmark_wfalm_adapt_cigar(
         break;
     }
   }
-  if (text_pos!=text_length || pattern_pos!=pattern_length) {
-
-  }
   // Return
   *num_cigar_operations = cigar_idx;
 }

@@ -29,29 +29,37 @@
  * DESCRIPTION: Wavefront Alignment Algorithms benchmarking tool
  */
 
+#define EXTERNAL_BENCHMARKS
+
 #include "utils/commons.h"
 #include "system/profiler_timer.h"
 
 #include "alignment/score_matrix.h"
-#include "wavefront/wavefront_align.h"
-
 #include "edit/edit_dp.h"
 #include "gap_linear/nw.h"
 #include "gap_affine/swg.h"
 #include "gap_affine2p/affine2p_matrix.h"
 #include "gap_affine2p/affine2p_dp.h"
+#include "wavefront/wavefront_align.h"
 
 #include "benchmark/benchmark_indel.h"
 #include "benchmark/benchmark_edit.h"
 #include "benchmark/benchmark_gap_linear.h"
 #include "benchmark/benchmark_gap_affine.h"
 #include "benchmark/benchmark_gap_affine2p.h"
+
+#ifdef EXTERNAL_BENCHMARKS
 #include "benchmark/external/benchmark_bitpal.h"
+#include "benchmark/external/benchmark_blockaligner.h"
+#include "benchmark/external/benchmark_daligner.h"
+#include "benchmark/external/benchmark_diffutils.h"
+#include "benchmark/external/benchmark_edlib.h"
 #include "benchmark/external/benchmark_gaba.h"
 #include "benchmark/external/benchmark_ksw2.h"
 #include "benchmark/external/benchmark_parasail.h"
 #include "benchmark/external/benchmark_seqan.h"
 #include "benchmark/external/benchmark_wfalm.h"
+#endif
 
 /*
  * Algorithms
@@ -62,6 +70,7 @@ typedef enum {
   // Indel
   alignment_indel_wavefront,
   // Edit
+  alignment_edit_bpm,
   alignment_edit_dp,
   alignment_edit_dp_banded,
   alignment_edit_wavefront,
@@ -76,10 +85,15 @@ typedef enum {
   // Gap-affine dual-cost
   alignment_gap_affine2p_dp,
   alignment_gap_affine2p_wavefront,
+#ifdef EXTERNAL_BENCHMARKS
   // External algorithms
   alignment_bitpal_edit,
   alignment_bitpal_scored,
-  alignment_aband_gaba,
+  alignment_blockaligner,
+  alignment_daligner,
+  alignment_diffutils,
+  alignment_edlib,
+  alignment_gaba_aband,
   alignment_ksw2_extz2_sse,
   alignment_ksw2_extd2_sse,
   alignment_parasail_nw_stripped,
@@ -92,6 +106,7 @@ typedef enum {
   alignment_seqan_affine,
   alignment_wfalm,
   alignment_wfalm_lowmem
+#endif
 } alignment_algorithm_type;
 bool align_benchmark_is_wavefront(
     const alignment_algorithm_type algorithm) {
@@ -129,12 +144,9 @@ typedef struct {
   wavefront_memory_t memory_mode;
   alignment_match_funct_t match_funct;
   void* match_funct_arguments;
-  // External algorithms parameters
-  bool ksw2_approx_max__drop;
-  int ksw2_bandwidth;
-  int ksw2_zdrop;
   // Misc
   int bandwidth;
+  bool check_display;
   bool check_correct;
   bool check_score;
   bool check_alignments;
@@ -147,6 +159,12 @@ typedef struct {
   uint64_t max_memory;
   int progress;
   int verbose;
+#ifdef EXTERNAL_BENCHMARKS
+  // External algorithms parameters
+  bool ksw2_approx_max__drop;
+  int ksw2_bandwidth;
+  int ksw2_zdrop;
+#endif
 } benchmark_args;
 benchmark_args parameters = {
   // Algorithm
@@ -189,13 +207,10 @@ benchmark_args parameters = {
   .memory_mode = wavefront_memory_high,
   .match_funct = NULL,
   .match_funct_arguments = NULL,
-  // External algorithms parameters
-  .ksw2_approx_max__drop = false,
-  .ksw2_bandwidth = -1,
-  .ksw2_zdrop = -1,
   // Misc
   .bandwidth = 10,
   .check_bandwidth = -1,
+  .check_display = false,
   .check_correct = false,
   .check_score = false,
   .check_alignments = false,
@@ -204,7 +219,13 @@ benchmark_args parameters = {
   // System
   .max_memory = UINT64_MAX,
   .progress = 10000,
-  .verbose = 0
+  .verbose = 0,
+#ifdef EXTERNAL_BENCHMARKS
+  // External algorithms parameters
+  .ksw2_approx_max__drop = false,
+  .ksw2_bandwidth = -1,
+  .ksw2_zdrop = -1,
+#endif
 };
 
 /*
@@ -276,29 +297,6 @@ void align_pairwise_test() {
     wavefront_plot_print(wf_plot,wf_aligner);
     fclose(wf_plot);
   }
-
-//  // Parameters
-//  fprintf(stderr,">> WFALM:");
-//  const int max_cigar_length = strlen(pattern)+strlen(text);
-//  cigar_t cigar = {
-//      .operations = malloc(max_cigar_length),
-//      .begin_offset = 0,
-//      .end_offset = 0,
-//  };
-//  // Align
-//  benchmark_wfalm_bridge_global_affine(
-//      pattern,strlen(pattern),text,strlen(text),
-//      affine_penalties.mismatch,affine_penalties.gap_opening,
-//      affine_penalties.gap_extension,
-//      cigar.operations,&cigar.end_offset);
-//  // Debug alignment
-//  // CIGAR
-//  cigar_print_pretty(stderr,
-//      pattern,strlen(pattern),text,strlen(text),
-//      &cigar,mm_allocator);
-//  fprintf(stderr,"SCORE: %d \n",cigar_score_gap_affine(&cigar,&affine_penalties));
-//  // Free
-//  free(cigar.operations);
 
   // Free
   wavefront_aligner_delete(wf_aligner);
@@ -408,6 +406,7 @@ void align_benchmark_configure_global(
   // DEBUG
   align_input->debug_flags = 0;
   align_input->debug_flags |= parameters.check_metric;
+  if (parameters.check_display) align_input->debug_flags |= ALIGN_DEBUG_DISPLAY_INFO;
   if (parameters.check_correct) align_input->debug_flags |= ALIGN_DEBUG_CHECK_CORRECT;
   if (parameters.check_score) align_input->debug_flags |= ALIGN_DEBUG_CHECK_SCORE;
   if (parameters.check_alignments) align_input->debug_flags |= ALIGN_DEBUG_CHECK_ALIGNMENT;
@@ -491,7 +490,7 @@ void align_benchmark_print_results(
   fprintf(stderr,"  => Time.Alignment    ");
   timer_print(stderr,&align_input->timer,&parameters.timer_global);
   // Print Stats
-  if (parameters.check_correct || parameters.check_score || parameters.check_alignments) {
+  if (parameters.check_display || parameters.check_correct || parameters.check_score || parameters.check_alignments) {
     const bool print_wf_stats = (parameters.algorithm == alignment_gap_affine_wavefront);
     benchmark_print_stats(stderr,align_input,print_wf_stats);
   }
@@ -547,6 +546,9 @@ void align_benchmark() {
         benchmark_indel_wavefront(&align_input);
         break;
       // Edit
+      case alignment_edit_bpm:
+        benchmark_edit_bpm(&align_input);
+        break;
       case alignment_edit_dp:
         benchmark_edit_dp(&align_input);
         break;
@@ -585,6 +587,7 @@ void align_benchmark() {
       case alignment_gap_affine2p_wavefront:
         benchmark_gap_affine2p_wavefront(&align_input,&parameters.affine2p_penalties);
         break;
+#ifdef EXTERNAL_BENCHMARKS
       /*
        * External Algorithms
        */
@@ -594,8 +597,20 @@ void align_benchmark() {
       case alignment_bitpal_scored:
         benchmark_bitpal_m1_x4_g2(&align_input);
         break;
-      case alignment_aband_gaba:
-        benchmark_aband_gaba(&align_input,&parameters.affine_penalties);
+      case alignment_blockaligner:
+        benchmark_blockaligner_global_affine(&align_input,&parameters.affine_penalties);
+        break;
+      case alignment_daligner:
+        benchmark_daligner(&align_input);
+        break;
+      case alignment_diffutils:
+        benchmark_diffutils(&align_input,true);
+        break;
+      case alignment_edlib:
+        benchmark_edlib(&align_input);
+        break;
+      case alignment_gaba_aband:
+        benchmark_gaba_aband(&align_input,&parameters.affine_penalties);
         break;
       case alignment_ksw2_extz2_sse:
         benchmark_ksw2_extz2_sse(
@@ -605,7 +620,7 @@ void align_benchmark() {
         break;
       case alignment_ksw2_extd2_sse:
         benchmark_ksw2_extd2_sse(
-            &align_input,&parameters.affine_penalties,
+            &align_input,&parameters.affine2p_penalties,
             parameters.ksw2_approx_max__drop,
             parameters.ksw2_bandwidth,parameters.ksw2_zdrop);
         break;
@@ -639,6 +654,7 @@ void align_benchmark() {
       case alignment_wfalm_lowmem:
         benchmark_wfalm_global_affine_lowmem(&align_input,&parameters.affine_penalties);
         break;
+#endif
       default:
         fprintf(stderr,"Algorithm not implemented\n");
         exit(1);
@@ -677,6 +693,7 @@ void usage() {
       "            [Indel (Longest Common Subsequence)]                       \n"
       "              indel-wfa                                                \n"
       "            [Edit (Levenshtein)]                                       \n"
+      "              edit-bpm                                                 \n"
       "              edit-dp                                                  \n"
       "              edit-dp-banded                                           \n"
       "              edit-wfa                                                 \n"
@@ -691,11 +708,20 @@ void usage() {
       "            [Gap-affine-2pieces (Concave 2-pieces)]                    \n"
       "              gap-affine2p-dp                                          \n"
       "              gap-affine2p-wfa                                         \n"
+#ifdef EXTERNAL_BENCHMARKS
       "            [External/BitPal]                                          \n"
       "              bitpal-edit          (Edit)[score-only]                  \n"
       "              bitpal-scored        (Gap-linear)[score-only]            \n"
+      "            [External/BlockAligner]                                    \n"
+      "              block-aligner        (Gap-affine)                        \n"
+      "            [External/Daligner]                                        \n"
+      "              daligner             (Edit)                              \n"
+      "            [External/Diffutils]                                       \n"
+      "              diffutils            (Edit)                              \n"
+      "            [External/Edlib]                                           \n"
+      "              edlib                (Edit)                              \n"
       "            [External/GABA]                                            \n"
-      "              aband-gaba           (Gap-affine)                        \n"
+      "              gaba-aband           (Gap-affine)                        \n"
       "            [External/KSW2]                                            \n"
       "              ksw2-extz2-sse       (Gap-affine)                        \n"
       "              ksw2-extd2-sse       (Gap-affine-2pieces)                \n"
@@ -712,6 +738,7 @@ void usage() {
       "            [External/WFAlm]                                           \n"
       "              wfalm                (Gap-affine)                        \n"
       "              wfalm-lowmem         (Gap-affine)[low-mem]               \n"
+#endif
       "        [Input & Output]                                               \n"
       "          --input|i <File>                                             \n"
       "          --output|o <File>                                            \n"
@@ -722,11 +749,12 @@ void usage() {
       "          --affine2p-penalties M,X,O1,E1,O2,E2                         \n"
       "        [Wavefront parameters]                                         \n"
       "          --score-only                                                 \n"
+      "          --ends-free P0,Pf,T0,Tf                                      \n"
+      "          --memory-mode 'high'|'med'|'low'|'ultralow'                  \n"
+      "          --wf-reduction 'none'|'adaptive'                             \n"
       "          --minimum-wavefront-length <INT>                             \n"
       "          --maximum-difference-distance <INT>                          \n"
-      "          --memory-mode 'high'|'med'|'low'|'ultralow'                  \n"
-      "          --ends-free P0,Pf,T0,Tf                                      \n"
-      "          --custom-match-funct                                         \n"
+    //"          --custom-match-funct                                         \n"
       "        [Misc]                                                         \n"
       "          --bandwidth <INT>                                            \n"
       "          --check|c 'correct'|'score'|'alignment'                      \n"
@@ -751,11 +779,12 @@ void parse_arguments(int argc,char** argv) {
     { "affine2p-penalties", required_argument, 0, 900 },
     /* Wavefront parameters */
     { "score-only", no_argument, 0, 1001 },
-    { "minimum-wavefront-length", required_argument, 0, 1002 },
-    { "maximum-difference-distance", required_argument, 0, 1003 },
-    { "memory-mode", required_argument, 0, 1004 },
-    { "ends-free", required_argument, 0, 1005 },
-    { "custom-match-funct", no_argument, 0, 1006 },
+    { "ends-free", required_argument, 0, 1002 },
+    { "memory-mode", required_argument, 0, 1003 },
+    { "wf-reduction", required_argument, 0, 1004 },
+    { "minimum-wavefront-length", required_argument, 0, 1005 },
+    { "maximum-difference-distance", required_argument, 0, 1006 },
+    { "custom-match-funct", no_argument, 0, 1007 },
     /* Misc */
     { "bandwidth", required_argument, 0, 2000 },
     { "check", optional_argument, 0, 'c' },
@@ -788,6 +817,8 @@ void parse_arguments(int argc,char** argv) {
       } else if (strcmp(optarg,"indel-wfa")==0) {
         parameters.algorithm = alignment_indel_wavefront;
       // Edit
+      } else if (strcmp(optarg,"edit-bpm")==0) {
+        parameters.algorithm = alignment_edit_bpm;
       } else if (strcmp(optarg,"edit-dp")==0) {
         parameters.algorithm = alignment_edit_dp;
       } else if (strcmp(optarg,"edit-dp-banded")==0) {
@@ -814,6 +845,7 @@ void parse_arguments(int argc,char** argv) {
         parameters.algorithm = alignment_gap_affine2p_dp;
       } else if (strcmp(optarg,"gap-affine2p-wfa")==0) {
         parameters.algorithm = alignment_gap_affine2p_wavefront;
+#ifdef EXTERNAL_BENCHMARKS
       /*
        * External Algorithm
        */
@@ -822,9 +854,21 @@ void parse_arguments(int argc,char** argv) {
         parameters.algorithm = alignment_bitpal_edit;
       } else if (strcmp(optarg,"bitpal-scored")==0) {
         parameters.algorithm = alignment_bitpal_scored;
-      // External (Adaptive Band)
-      } else if (strcmp(optarg,"aband-gaba")==0) {
-        parameters.algorithm = alignment_aband_gaba;
+      // External (BlockAligner)
+      } else if (strcmp(optarg,"block-aligner")==0) {
+        parameters.algorithm = alignment_blockaligner;
+      // External (Daligner)
+      } else if (strcmp(optarg,"daligner")==0) {
+        parameters.algorithm = alignment_daligner;
+      // External (Diffutils)
+      } else if (strcmp(optarg,"diffutils")==0) {
+        parameters.algorithm = alignment_diffutils;
+      // External (Edlib)
+      } else if (strcmp(optarg,"edlib")==0) {
+        parameters.algorithm = alignment_edlib;
+      // External (Gaba)
+      } else if (strcmp(optarg,"gaba-aband")==0) {
+        parameters.algorithm = alignment_gaba_aband;
       // External (KSW2)
       } else if (strcmp(optarg,"ksw2-extz2-sse")==0) {
         parameters.algorithm = alignment_ksw2_extz2_sse;
@@ -852,6 +896,7 @@ void parse_arguments(int argc,char** argv) {
         parameters.algorithm = alignment_wfalm;
       } else if (strcmp(optarg,"wfalm-lowmem")==0) {
         parameters.algorithm = alignment_wfalm_lowmem;
+#endif
       } else {
         fprintf(stderr,"Algorithm '%s' not recognized\n",optarg);
         exit(1);
@@ -859,7 +904,7 @@ void parse_arguments(int argc,char** argv) {
       break;
     }
     /*
-     * Input
+     * Input/Output
      */
     case 'i':
       parameters.input_filename = optarg;
@@ -915,15 +960,19 @@ void parse_arguments(int argc,char** argv) {
     case 1001: // --score-only
       parameters.score_only = true;
       break;
-    case 1002: // --minimum-wavefront-length
-      parameters.min_wavefront_length = atoi(optarg);
-      parameters.reduction_type = wavefront_reduction_adaptive;
+    case 1002: { // --ends-free P0,Pf,T0,Tf
+      parameters.endsfree = true;
+      char* sentinel = strtok(optarg,",");
+      parameters.pattern_begin_free = atof(sentinel);
+      sentinel = strtok(NULL,",");
+      parameters.pattern_end_free = atof(sentinel);
+      sentinel = strtok(NULL,",");
+      parameters.text_begin_free = atof(sentinel);
+      sentinel = strtok(NULL,",");
+      parameters.text_end_free = atof(sentinel);
       break;
-    case 1003: // --maximum-difference-distance
-      parameters.max_distance_threshold = atoi(optarg);
-      parameters.reduction_type = wavefront_reduction_adaptive;
-      break;
-    case 1004: // --memory-mode in {'high','med','low','ultralow'}
+    }
+    case 1003: // --memory-mode in {'high','med','low','ultralow'}
       if (strcmp(optarg,"high")==0) {
         parameters.memory_mode = wavefront_memory_high;
       } else if (strcmp(optarg,"med")==0) {
@@ -937,19 +986,25 @@ void parse_arguments(int argc,char** argv) {
         exit(1);
       }
       break;
-    case 1005: { // --ends-free P0,Pf,T0,Tf
-      parameters.endsfree = true;
-      char* sentinel = strtok(optarg,",");
-      parameters.pattern_begin_free = atof(sentinel);
-      sentinel = strtok(NULL,",");
-      parameters.pattern_end_free = atof(sentinel);
-      sentinel = strtok(NULL,",");
-      parameters.text_begin_free = atof(sentinel);
-      sentinel = strtok(NULL,",");
-      parameters.text_end_free = atof(sentinel);
+    case 1004: // --wf-reduction in {'none','adaptive'}
+      if (strcmp(optarg,"none")==0) {
+        parameters.reduction_type = wavefront_reduction_none;
+      } else if (strcmp(optarg,"adaptive")==0) {
+        parameters.reduction_type = wavefront_reduction_adaptive;
+      } else {
+        fprintf(stderr,"Option '--wf-reduction' must be in {'none','adaptive'}\n");
+        exit(1);
+      }
       break;
-    }
-    case 1006: // --custom-match-funct
+    case 1005: // --minimum-wavefront-length
+      parameters.min_wavefront_length = atoi(optarg);
+      parameters.reduction_type = wavefront_reduction_adaptive;
+      break;
+    case 1006: // --maximum-difference-distance
+      parameters.max_distance_threshold = atoi(optarg);
+      parameters.reduction_type = wavefront_reduction_adaptive;
+      break;
+    case 1007: // --custom-match-funct
       parameters.match_funct = match_function;
       parameters.match_funct_arguments = &match_function_params;
       break;
@@ -964,6 +1019,8 @@ void parse_arguments(int argc,char** argv) {
         parameters.check_correct = true;
         parameters.check_score = true;
         parameters.check_alignments = false;
+      } else if (strcasecmp(optarg,"display")==0) {
+        parameters.check_display = true;
       } else if (strcasecmp(optarg,"correct")==0) {
         parameters.check_correct = true;
         parameters.check_score = false;

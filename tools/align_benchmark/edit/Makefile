@@ -8,7 +8,8 @@ FOLDER_BUILD=$(FOLDER_ROOT)/build
 ###############################################################################
 # Modules
 ###############################################################################
-MODULES=edit_dp
+MODULES=edit_bpm \
+        edit_dp
         
 SRCS=$(addsuffix .c, $(MODULES))
 OBJS=$(addprefix $(FOLDER_BUILD)/, $(SRCS:.c=.o))

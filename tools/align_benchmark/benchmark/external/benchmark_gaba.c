@@ -50,7 +50,7 @@ int printer(
   // Ok
   return 0;
 }
-void benchmark_aband_gaba(
+void benchmark_gaba_aband(
     align_input_t* const align_input,
     affine_penalties_t* const penalties) {
   // Parameters
@@ -127,9 +127,19 @@ void benchmark_aband_gaba(
   cigar_add_mismatches(
       align_input->pattern,align_input->pattern_length,
       align_input->text,align_input->text_length,&cigar);
-  // Debug alignment
+  // DEBUG
   if (align_input->debug_flags) {
     benchmark_check_alignment(align_input,&cigar);
+  }
+  // Output
+  if (align_input->output_file) {
+    const int score = cigar_score_gap_affine(&cigar,penalties);
+    FILE* const output_file = align_input->output_file;
+    if (align_input->output_full) {
+      benchmark_print_output_full(output_file,align_input,score,&cigar);
+    } else {
+      benchmark_print_output_lite(output_file,align_input,score,&cigar);
+    }
   }
   // Free
   free(a);

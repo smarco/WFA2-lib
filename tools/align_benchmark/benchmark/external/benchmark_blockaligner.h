@@ -26,25 +26,20 @@
  *
  * PROJECT: Wavefront Alignment Algorithms
  * AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
- * DESCRIPTION: Edit-distance alignment algorithms wrapper
+ * DESCRIPTION: Block-aligner library wrapper
  */
 
-#ifndef BENCHMARK_EDIT_H_
-#define BENCHMARK_EDIT_H_
+#ifndef BENCHMARK_BLOCKALIGNER_H_
+#define BENCHMARK_BLOCKALIGNER_H_
 
 #include "benchmark/benchmark_utils.h"
+#include "benchmark/benchmark_check.h"
 
 /*
- * Benchmark Edit
+ * Benchmark Block-aligner
  */
-void benchmark_edit_bpm(
-    align_input_t* const align_input);
-void benchmark_edit_dp(
-    align_input_t* const align_input);
-void benchmark_edit_dp_banded(
+void benchmark_blockaligner_global_affine(
     align_input_t* const align_input,
-    const int bandwidth);
-void benchmark_edit_wavefront(
-    align_input_t* const align_input);
+    affine_penalties_t* const penalties);
 
-#endif /* BENCHMARK_EDIT_H_ */
+#endif /* BENCHMARK_BLOCKALIGNER_H_ */

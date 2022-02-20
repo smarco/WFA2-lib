@@ -90,9 +90,19 @@ void benchmark_seqan_global_edit(
       align_input->text,align_input->text_length,
       cigar.operations,&cigar.end_offset);
   timer_stop(&align_input->timer);
-  // Debug alignment
+  // DEBUG
   if (align_input->debug_flags) {
     benchmark_check_alignment(align_input,&cigar);
+  }
+  // Output
+  if (align_input->output_file) {
+    const int score = cigar_score_edit(&cigar);
+    FILE* const output_file = align_input->output_file;
+    if (align_input->output_full) {
+      benchmark_print_output_full(output_file,align_input,score,&cigar);
+    } else {
+      benchmark_print_output_lite(output_file,align_input,score,&cigar);
+    }
   }
   // Free
   free(cigar.operations);
@@ -128,9 +138,19 @@ void benchmark_seqan_global_lineal(
       penalties->indel,penalties->indel,
       cigar.operations,&cigar.end_offset);
   timer_stop(&align_input->timer);
-  // Debug alignment
+  // DEBUG
   if (align_input->debug_flags) {
     benchmark_check_alignment(align_input,&cigar);
+  }
+  // Output
+  if (align_input->output_file) {
+    const int score = cigar_score_gap_linear(&cigar,penalties);
+    FILE* const output_file = align_input->output_file;
+    if (align_input->output_full) {
+      benchmark_print_output_full(output_file,align_input,score,&cigar);
+    } else {
+      benchmark_print_output_lite(output_file,align_input,score,&cigar);
+    }
   }
   // Free
   free(cigar.operations);
@@ -154,9 +174,19 @@ void benchmark_seqan_global_affine(
       penalties->gap_opening,penalties->gap_extension,
       cigar.operations,&cigar.end_offset);
   timer_stop(&align_input->timer);
-  // Debug alignment
+  // DEBUG
   if (align_input->debug_flags) {
     benchmark_check_alignment(align_input,&cigar);
+  }
+  // Output
+  if (align_input->output_file) {
+    const int score = cigar_score_gap_affine(&cigar,penalties);
+    FILE* const output_file = align_input->output_file;
+    if (align_input->output_full) {
+      benchmark_print_output_full(output_file,align_input,score,&cigar);
+    } else {
+      benchmark_print_output_lite(output_file,align_input,score,&cigar);
+    }
   }
   // Free
   free(cigar.operations);

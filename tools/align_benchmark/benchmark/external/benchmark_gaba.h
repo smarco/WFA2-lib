@@ -37,7 +37,7 @@
 /*
  * Adaptive Banded Gaba
  */
-void benchmark_aband_gaba(
+void benchmark_gaba_aband(
     align_input_t* const align_input,
     affine_penalties_t* const penalties);
 

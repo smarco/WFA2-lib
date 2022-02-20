@@ -63,16 +63,6 @@ void benchmark_parasail_parse_cigar(
     }
     cigar->operations[cigar->end_offset] = '\0';
   }
-//  // DEBUG
-//  const int score_parasail = parasail_result_get_score(parasail_result);
-//  const int score_cigar = cigar_score_gap_affine(cigar,penalties);
-//  if (score_parasail != score_cigar) {
-//    char* const cigar_str = parasail_cigar_decode(parasail_cigar);
-//    fprintf(stderr,"COMPUTED=%d\t",score_cigar);
-//    cigar_print(stderr,cigar);
-//    fprintf(stderr,"\nPARASAIL=%d\t%s\n",score_parasail,cigar_str);
-//    free(cigar_str);
-//  }
 }
 void benchmark_parasail_nw_stripped(
     align_input_t* const align_input,
@@ -97,9 +87,19 @@ void benchmark_parasail_nw_stripped(
   cigar_t cigar;
   benchmark_parasail_parse_cigar(
       align_input,penalties,result,parasail_cigar,&cigar);
-  // Debug alignment
+  // DEBUG
   if (align_input->debug_flags) {
     benchmark_check_alignment(align_input,&cigar);
+  }
+  // Output
+  if (align_input->output_file) {
+    const int score = cigar_score_gap_affine(&cigar,penalties);
+    FILE* const output_file = align_input->output_file;
+    if (align_input->output_full) {
+      benchmark_print_output_full(output_file,align_input,score,&cigar);
+    } else {
+      benchmark_print_output_lite(output_file,align_input,score,&cigar);
+    }
   }
   // Free
   free(cigar.operations);
@@ -130,9 +130,19 @@ void benchmark_parasail_nw_scan(
   benchmark_parasail_parse_cigar(
       align_input,penalties,result,
       parasail_cigar,&cigar);
-  // Debug alignment
+  // DEBUG
   if (align_input->debug_flags) {
     benchmark_check_alignment(align_input,&cigar);
+  }
+  // Output
+  if (align_input->output_file) {
+    const int score = cigar_score_gap_affine(&cigar,penalties);
+    FILE* const output_file = align_input->output_file;
+    if (align_input->output_full) {
+      benchmark_print_output_full(output_file,align_input,score,&cigar);
+    } else {
+      benchmark_print_output_lite(output_file,align_input,score,&cigar);
+    }
   }
   // Free
   free(cigar.operations);
@@ -163,9 +173,19 @@ void benchmark_parasail_nw_diag(
   benchmark_parasail_parse_cigar(
       align_input,penalties,result,
       parasail_cigar,&cigar);
-  // Debug alignment
+  // DEBUG
   if (align_input->debug_flags) {
     benchmark_check_alignment(align_input,&cigar);
+  }
+  // Output
+  if (align_input->output_file) {
+    const int score = cigar_score_gap_affine(&cigar,penalties);
+    FILE* const output_file = align_input->output_file;
+    if (align_input->output_full) {
+      benchmark_print_output_full(output_file,align_input,score,&cigar);
+    } else {
+      benchmark_print_output_lite(output_file,align_input,score,&cigar);
+    }
   }
   // Free
   free(cigar.operations);

@@ -45,7 +45,7 @@ void benchmark_ksw2_extz2_sse(
     const int zdrop);
 void benchmark_ksw2_extd2_sse(
     align_input_t* const align_input,
-    affine_penalties_t* const penalties,
+    affine2p_penalties_t* const penalties,
     const bool approximate_max__drop,
     const int band_width,
     const int zdrop);

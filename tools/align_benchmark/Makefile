@@ -10,37 +10,40 @@ FOLDER_BUILD=./build
 ifeq ($(UNAME), Linux)
   LD_FLAGS+=-lrt 
 endif
-LD_FLAGS+=-lwfa -lm
 
 LI_FLAGS=-L$(FOLDER_LIB) -I$(FOLDER_ROOT) -I$(FOLDER_WFA) -I.
 
-LIBS_PARASAIL=external/parasail/build/libparasail.a
-LIBS_GABA=external/libgaba/libgaba.a
+LIB_BLOCKALIGNER=external/block-aligner/target/release/
+LIB_EDLIB=external/edlib/build/lib/
+LIB_GABA=external/libgaba/libgaba.a
+LIB_PARASAIL=external/parasail/build/libparasail.a
+
+LIB_WFA=$(FOLDER_LIB)/libwfa.a
 ###############################################################################
 # Rules
 ###############################################################################
-LIB_WFA=$(FOLDER_LIB)/libwfa.a
 SUBDIRS=benchmark \
         edit \
         gap_affine \
         gap_affine2p \
         gap_linear \
         indel
-
 BIN=$(FOLDER_BIN)/align_benchmark
         
 all: setup 
 all: $(SUBDIRS)
-all: LD_FLAGS+=$(LIB_WFA)
-all: LD_FLAGS+=$(LIBS_PARASAIL)
-all: LD_FLAGS+=$(LIBS_GABA)
-all: LD_FLAGS+=-lstdc++ # For SeqAn
 all: OBJS+=$(FOLDER_BUILD)/*.o
 all: OBJS+=external/build/*.o
+all: LD_FLAGS+=-L$(LIB_BLOCKALIGNER) -Wl,-rpath=$(PWD)/tools/align_benchmark/$(LIB_BLOCKALIGNER) -lblock_aligner # BlockAligner
+all: LD_FLAGS+=-L$(LIB_EDLIB) -Wl,-rpath=$(PWD)/tools/align_benchmark/$(LIB_EDLIB) -ledlib # Edlib
+all: LD_FLAGS+=$(LIB_GABA) # Gaba
+all: LD_FLAGS+=$(LIB_PARASAIL) # Parasail
+all: LD_FLAGS+=-lstdc++ # SeqAn
+
 all: align_benchmark
 
 align_benchmark: */*.c */*.h align_benchmark.c $(LIB_WFA)
-	$(CC) $(CC_FLAGS) $(LI_FLAGS) $(OBJS) align_benchmark.c -o $(BIN) $(LD_FLAGS)
+	$(CC) $(CC_FLAGS) $(LI_FLAGS) $(OBJS) align_benchmark.c -o $(BIN) $(LD_FLAGS) -lwfa -lm
 	
 setup:
 	@mkdir -p $(FOLDER_BUILD)
