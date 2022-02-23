@@ -15,6 +15,7 @@ MODULES=benchmark_bitpal \
         benchmark_edlib \
         benchmark_gaba \
         benchmark_ksw2 \
+        benchmark_lv89 \
         benchmark_parasail \
         benchmark_seqan_bindings \
         benchmark_seqan \

@@ -40,6 +40,7 @@
  */
 void benchmark_blockaligner_global_affine(
     align_input_t* const align_input,
-    affine_penalties_t* const penalties);
+    affine_penalties_t* const penalties,
+    const int block_size);
 
 #endif /* BENCHMARK_BLOCKALIGNER_H_ */

@@ -56,6 +56,7 @@
 #include "benchmark/external/benchmark_edlib.h"
 #include "benchmark/external/benchmark_gaba.h"
 #include "benchmark/external/benchmark_ksw2.h"
+#include "benchmark/external/benchmark_lv89.h"
 #include "benchmark/external/benchmark_parasail.h"
 #include "benchmark/external/benchmark_seqan.h"
 #include "benchmark/external/benchmark_wfalm.h"
@@ -96,6 +97,7 @@ typedef enum {
   alignment_gaba_aband,
   alignment_ksw2_extz2_sse,
   alignment_ksw2_extd2_sse,
+  alignment_lv89,
   alignment_parasail_nw_stripped,
   alignment_parasail_nw_scan,
   alignment_parasail_nw_diag,
@@ -137,15 +139,23 @@ typedef struct {
   double pattern_end_free;
   double text_end_free;
   // Wavefront parameters
-  bool score_only;
-  wavefront_reduction_type reduction_type;
-  int min_wavefront_length;
-  int max_distance_threshold;
-  wavefront_memory_t memory_mode;
-  alignment_match_funct_t match_funct;
-  void* match_funct_arguments;
-  // Misc
+  bool wfa_score_only;
+  wavefront_reduction_type wfa_reduction_type;
+  int wfa_min_wf_length;
+  int wfa_max_dist_th;
+  wavefront_memory_t wfa_memory_mode;
+  alignment_match_funct_t wfa_match_funct;
+  void* wfa_match_funct_arguments;
+  uint64_t wfa_max_memory;
+  // Other algorithms parameters
   int bandwidth;
+#ifdef EXTERNAL_BENCHMARKS
+  int ba_block_size;
+  bool ksw2_approx_max__drop;
+  int ksw2_bandwidth;
+  int ksw2_zdrop;
+#endif
+  // Misc
   bool check_display;
   bool check_correct;
   bool check_score;
@@ -156,15 +166,8 @@ typedef struct {
   // Profile
   profiler_timer_t timer_global;
   // System
-  uint64_t max_memory;
   int progress;
   int verbose;
-#ifdef EXTERNAL_BENCHMARKS
-  // External algorithms parameters
-  bool ksw2_approx_max__drop;
-  int ksw2_bandwidth;
-  int ksw2_zdrop;
-#endif
 } benchmark_args;
 benchmark_args parameters = {
   // Algorithm
@@ -200,15 +203,23 @@ benchmark_args parameters = {
   .pattern_end_free = 0.0,
   .text_end_free = 0.0,
   // Wavefront parameters
-  .score_only = false,
-  .reduction_type = wavefront_reduction_none,
-  .min_wavefront_length = 10,
-  .max_distance_threshold = 50,
-  .memory_mode = wavefront_memory_high,
-  .match_funct = NULL,
-  .match_funct_arguments = NULL,
+  .wfa_score_only = false,
+  .wfa_reduction_type = wavefront_reduction_none,
+  .wfa_min_wf_length = 10,
+  .wfa_max_dist_th = 50,
+  .wfa_memory_mode = wavefront_memory_high,
+  .wfa_match_funct = NULL,
+  .wfa_match_funct_arguments = NULL,
+  .wfa_max_memory = UINT64_MAX,
+  // Other algorithms parameters
+  .bandwidth = -1,
+#ifdef EXTERNAL_BENCHMARKS
+  .ba_block_size = 256,
+  .ksw2_approx_max__drop = false,
+  .ksw2_bandwidth = -1,
+  .ksw2_zdrop = -1,
+#endif
   // Misc
-  .bandwidth = 10,
   .check_bandwidth = -1,
   .check_display = false,
   .check_correct = false,
@@ -217,15 +228,8 @@ benchmark_args parameters = {
   .check_metric = ALIGN_DEBUG_CHECK_DISTANCE_METRIC_GAP_AFFINE,
   .plot = 0,
   // System
-  .max_memory = UINT64_MAX,
   .progress = 10000,
   .verbose = 0,
-#ifdef EXTERNAL_BENCHMARKS
-  // External algorithms parameters
-  .ksw2_approx_max__drop = false,
-  .ksw2_bandwidth = -1,
-  .ksw2_zdrop = -1,
-#endif
 };
 
 /*
@@ -297,7 +301,6 @@ void align_pairwise_test() {
     wavefront_plot_print(wf_plot,wf_aligner);
     fclose(wf_plot);
   }
-
   // Free
   wavefront_aligner_delete(wf_aligner);
   mm_allocator_delete(mm_allocator);
@@ -327,16 +330,16 @@ wavefront_aligner_t* align_benchmark_configure_wf(
     mm_allocator_t* const mm_allocator) {
   // Set attributes
   wavefront_aligner_attr_t attributes = wavefront_aligner_attr_default;
-  attributes.memory_mode = parameters.memory_mode;
+  attributes.memory_mode = parameters.wfa_memory_mode;
   attributes.mm_allocator = mm_allocator;
-  if (parameters.score_only) {
+  if (parameters.wfa_score_only) {
     attributes.alignment_scope = compute_score;
   }
   // WF-Reduction
-  if (parameters.reduction_type == wavefront_reduction_adaptive) {
+  if (parameters.wfa_reduction_type == wavefront_reduction_adaptive) {
     attributes.reduction.reduction_strategy = wavefront_reduction_adaptive;
-    attributes.reduction.min_wavefront_length = parameters.min_wavefront_length;
-    attributes.reduction.max_distance_threshold = parameters.max_distance_threshold;
+    attributes.reduction.min_wavefront_length = parameters.wfa_min_wf_length;
+    attributes.reduction.max_distance_threshold = parameters.wfa_max_dist_th;
   } else {
     attributes.reduction.reduction_strategy = wavefront_reduction_none;
     attributes.reduction.min_wavefront_length = -1;
@@ -369,14 +372,14 @@ wavefront_aligner_t* align_benchmark_configure_wf(
   // Select alignment form
   attributes.alignment_form.span = (parameters.endsfree) ? alignment_endsfree : alignment_end2end;
   // Misc
-  if (parameters.match_funct_arguments != NULL) {
-    attributes.match_funct = parameters.match_funct;
-    attributes.match_funct_arguments = parameters.match_funct_arguments;
+  if (parameters.wfa_match_funct_arguments != NULL) {
+    attributes.match_funct = parameters.wfa_match_funct;
+    attributes.match_funct_arguments = parameters.wfa_match_funct_arguments;
   }
   attributes.plot_params.plot_enabled = (parameters.plot > 0);
   attributes.plot_params.resolution_points = parameters.plot;
   attributes.system.verbose = parameters.verbose;
-  attributes.system.max_memory_abort = parameters.max_memory;
+  attributes.system.max_memory_abort = parameters.wfa_max_memory;
   // Allocate
   return wavefront_aligner_new(&attributes);
 }
@@ -433,7 +436,7 @@ void align_benchmark_configure_local(
     }
   }
   // Custom extend-match function
-  if (parameters.match_funct != NULL) {
+  if (parameters.wfa_match_funct != NULL) {
     match_function_params.pattern = align_input->pattern;
     match_function_params.pattern_length = align_input->pattern_length;
     match_function_params.text = align_input->text;
@@ -598,7 +601,9 @@ void align_benchmark() {
         benchmark_bitpal_m1_x4_g2(&align_input);
         break;
       case alignment_blockaligner:
-        benchmark_blockaligner_global_affine(&align_input,&parameters.affine_penalties);
+        benchmark_blockaligner_global_affine(
+            &align_input,&parameters.affine_penalties,
+            parameters.ba_block_size);
         break;
       case alignment_daligner:
         benchmark_daligner(&align_input);
@@ -623,6 +628,9 @@ void align_benchmark() {
             &align_input,&parameters.affine2p_penalties,
             parameters.ksw2_approx_max__drop,
             parameters.ksw2_bandwidth,parameters.ksw2_zdrop);
+        break;
+      case alignment_lv89:
+        benchmark_lv89(&align_input);
         break;
       case alignment_parasail_nw_stripped:
         benchmark_parasail_nw_stripped(&align_input,&parameters.affine_penalties);
@@ -686,85 +694,95 @@ void align_benchmark() {
  */
 void usage() {
   fprintf(stderr,
-      "USE: ./align_benchmark -a <algorithm> -i <input>                       \n"
-      "      Options::                                                        \n"
-      "        [Algorithm]                                                    \n"
-      "          --algorithm|a <algorithm>                                    \n"
-      "            [Indel (Longest Common Subsequence)]                       \n"
-      "              indel-wfa                                                \n"
-      "            [Edit (Levenshtein)]                                       \n"
-      "              edit-bpm                                                 \n"
-      "              edit-dp                                                  \n"
-      "              edit-dp-banded                                           \n"
-      "              edit-wfa                                                 \n"
-      "            [Gap-linear (Needleman-Wunsch)]                            \n"
-      "              gap-linear-nw                                            \n"
-      "              gap-linear-wfa                                           \n"
-      "              gap-linear-wfa-adaptive                                  \n"
-      "            [Gap-affine (Smith-Waterman-Gotoh)]                        \n"
-      "              gap-affine-swg                                           \n"
-      "              gap-affine-swg-banded                                    \n"
-      "              gap-affine-wfa                                           \n"
-      "            [Gap-affine-2pieces (Concave 2-pieces)]                    \n"
-      "              gap-affine2p-dp                                          \n"
-      "              gap-affine2p-wfa                                         \n"
+      "USE: ./align_benchmark -a <algorithm> -i <input>                        \n"
+      "      Options::                                                         \n"
+      "        [Algorithm]                                                     \n"
+      "          --algorithm|a <algorithm>                                     \n"
+      "            [Indel (Longest Common Subsequence)]                        \n"
+      "              indel-wfa                                                 \n"
+      "            [Edit (Levenshtein)]                                        \n"
+      "              edit-bpm                                                  \n"
+      "              edit-dp                                                   \n"
+      "              edit-dp-banded                                            \n"
+      "              edit-wfa                                                  \n"
+      "            [Gap-linear (Needleman-Wunsch)]                             \n"
+      "              gap-linear-nw                                             \n"
+      "              gap-linear-wfa                                            \n"
+      "              gap-linear-wfa-adaptive                                   \n"
+      "            [Gap-affine (Smith-Waterman-Gotoh)]                         \n"
+      "              gap-affine-swg                                            \n"
+      "              gap-affine-swg-banded                                     \n"
+      "              gap-affine-wfa                                            \n"
+      "            [Gap-affine-2pieces (Concave 2-pieces)]                     \n"
+      "              gap-affine2p-dp                                           \n"
+      "              gap-affine2p-wfa                                          \n"
 #ifdef EXTERNAL_BENCHMARKS
-      "            [External/BitPal]                                          \n"
-      "              bitpal-edit          (Edit)[score-only]                  \n"
-      "              bitpal-scored        (Gap-linear)[score-only]            \n"
-      "            [External/BlockAligner]                                    \n"
-      "              block-aligner        (Gap-affine)                        \n"
-      "            [External/Daligner]                                        \n"
-      "              daligner             (Edit)                              \n"
-      "            [External/Diffutils]                                       \n"
-      "              diffutils            (Edit)                              \n"
-      "            [External/Edlib]                                           \n"
-      "              edlib                (Edit)                              \n"
-      "            [External/GABA]                                            \n"
-      "              gaba-aband           (Gap-affine)                        \n"
-      "            [External/KSW2]                                            \n"
-      "              ksw2-extz2-sse       (Gap-affine)                        \n"
-      "              ksw2-extd2-sse       (Gap-affine-2pieces)                \n"
-      "            [External/Parasail]                                        \n"
-      "              parasail-nw-stripped (Gap-affine)                        \n"
-      "              parasail-nw-scan     (Gap-affine)                        \n"
-      "              parasail-nw-diag     (Gap-affine)                        \n"
-      "              parasail-nw-banded   (Gap-affine)[score-only]            \n"
-      "            [External/SeqAn]                                           \n"
-      "              seqan-edit           (Edit)                              \n"
-      "              seqan-edit-bpm       (Edit)[score-only]                  \n"
-      "              seqan-lineal         (Gap-linear)                        \n"
-      "              seqan-affine         (Gap-affine)                        \n"
-      "            [External/WFAlm]                                           \n"
-      "              wfalm                (Gap-affine)                        \n"
-      "              wfalm-lowmem         (Gap-affine)[low-mem]               \n"
+      "            [External/BitPal]                                           \n"
+      "              bitpal-edit          (Edit)[score-only]                   \n"
+      "              bitpal-scored        (Gap-linear)[score-only]             \n"
+      "            [External/BlockAligner]                                     \n"
+      "              block-aligner        (Gap-affine)                         \n"
+      "            [External/Daligner]                                         \n"
+      "              daligner             (Edit)                               \n"
+      "            [External/Diffutils]                                        \n"
+      "              diffutils            (Edit)                               \n"
+      "            [External/Edlib]                                            \n"
+      "              edlib                (Edit)                               \n"
+      "            [External/GABA]                                             \n"
+      "              gaba-aband           (Gap-affine)                         \n"
+      "            [External/KSW2]                                             \n"
+      "              ksw2-extz2-sse       (Gap-affine)                         \n"
+      "              ksw2-extd2-sse       (Gap-affine-2pieces)                 \n"
+      "            [External/LV89]                                             \n"
+      "              lv89                 (Edit)[score-only]                   \n"
+      "            [External/Parasail]                                         \n"
+      "              parasail-nw-stripped (Gap-affine)                         \n"
+      "              parasail-nw-scan     (Gap-affine)                         \n"
+      "              parasail-nw-diag     (Gap-affine)                         \n"
+      "              parasail-nw-banded   (Gap-affine)[score-only]             \n"
+      "            [External/SeqAn]                                            \n"
+      "              seqan-edit           (Edit)                               \n"
+      "              seqan-edit-bpm       (Edit)[score-only]                   \n"
+      "              seqan-lineal         (Gap-linear)                         \n"
+      "              seqan-affine         (Gap-affine)                         \n"
+      "            [External/WFAlm]                                            \n"
+      "              wfalm                (Gap-affine)                         \n"
+      "              wfalm-lowmem         (Gap-affine)[low-mem]                \n"
 #endif
-      "        [Input & Output]                                               \n"
-      "          --input|i <File>                                             \n"
-      "          --output|o <File>                                            \n"
-      "          --output-full <File>                                         \n"
-      "        [Penalties]                                                    \n"
-      "          --linear-penalties|p M,X,O                                   \n"
-      "          --affine-penalties|g M,X,O,E                                 \n"
-      "          --affine2p-penalties M,X,O1,E1,O2,E2                         \n"
-      "        [Wavefront parameters]                                         \n"
-      "          --score-only                                                 \n"
-      "          --ends-free P0,Pf,T0,Tf                                      \n"
-      "          --memory-mode 'high'|'med'|'low'|'ultralow'                  \n"
-      "          --wf-reduction 'none'|'adaptive'                             \n"
-      "          --minimum-wavefront-length <INT>                             \n"
-      "          --maximum-difference-distance <INT>                          \n"
-    //"          --custom-match-funct                                         \n"
-      "        [Misc]                                                         \n"
-      "          --bandwidth <INT>                                            \n"
-      "          --check|c 'correct'|'score'|'alignment'                      \n"
-      "          --check-distance 'indel'|'edit'|'linear'|'affine'|'affine2p' \n"
-      "          --check-bandwidth <INT>                                      \n"
-      "          --plot                                                       \n"
-      "        [System]                                                       \n"
-      "          --max-memory <bytes>                                         \n"
-      "          --progress|P <integer>                                       \n"
-      "          --help|h                                                     \n");
+      "        [Input & Output]                                                \n"
+      "          --input|i <File>                                              \n"
+      "          --output|o <File>                                             \n"
+      "          --output-full <File>                                          \n"
+      "        [Penalties & Span]                                              \n"
+      "          --linear-penalties|p M,X,O                                    \n"
+      "          --affine-penalties|g M,X,O,E                                  \n"
+      "          --affine2p-penalties M,X,O1,E1,O2,E2                          \n"
+      "          --ends-free P0,Pf,T0,Tf                                       \n"
+      "        [Wavefront parameters]                                          \n"
+      "          --wfa-score-only                                              \n"
+      "          --wfa-memory-mode 'high'|'med'|'low'|'ultralow'               \n"
+      "          --wfa-reduction 'none'|'adaptive'                             \n"
+      "          --wfa-reduction-parameters  <P1>,<P2>                         \n"
+      "            [Adaptive]                                                  \n"
+      "              P1 = minimum-wavefront-length                             \n"
+      "              P2 = maxumum-difference-distance                          \n"
+      "        [Other Parameters]                                              \n"
+      "          --bandwidth <INT>                                             \n"
+#ifdef EXTERNAL_BENCHMARKS
+      "          --ba-block-size <INT>                                         \n"
+      "          --ksw2-approx-max-drop                                        \n"
+      "          --ksw2-bandwidth <INT>                                        \n"
+      "          --ksw2-zdrop <INT>                                            \n"
+#endif
+      "        [Misc]                                                          \n"
+      "          --check|c 'correct'|'score'|'alignment'                       \n"
+      "          --check-distance 'indel'|'edit'|'linear'|'affine'|'affine2p'  \n"
+      "          --check-bandwidth <INT>                                       \n"
+      "          --plot                                                        \n"
+      "        [System]                                                        \n"
+      "          --max-memory <bytes>                                          \n"
+      "          --progress|P <integer>                                        \n"
+      "          --help|h                                                      \n");
 }
 void parse_arguments(int argc,char** argv) {
   struct option long_options[] = {
@@ -777,22 +795,28 @@ void parse_arguments(int argc,char** argv) {
     { "linear-penalties", required_argument, 0, 'p' },
     { "affine-penalties", required_argument, 0, 'g' },
     { "affine2p-penalties", required_argument, 0, 900 },
+    { "ends-free", required_argument, 0, 901 },
     /* Wavefront parameters */
-    { "score-only", no_argument, 0, 1001 },
-    { "ends-free", required_argument, 0, 1002 },
-    { "memory-mode", required_argument, 0, 1003 },
-    { "wf-reduction", required_argument, 0, 1004 },
-    { "minimum-wavefront-length", required_argument, 0, 1005 },
-    { "maximum-difference-distance", required_argument, 0, 1006 },
-    { "custom-match-funct", no_argument, 0, 1007 },
-    /* Misc */
+    { "wfa-score-only", no_argument, 0, 1000 },
+    { "wfa-memory-mode", required_argument, 0, 1001 },
+    { "wfa-reduction", required_argument, 0, 1002 },
+    { "wfa-reduction-parameters", required_argument, 0, 1003 },
+    { "wfa-custom-match-funct", no_argument, 0, 1004 },
+    { "wfa-max-memory", required_argument, 0, 1005 },
+    /* Other alignment parameters */
     { "bandwidth", required_argument, 0, 2000 },
+#ifdef EXTERNAL_BENCHMARKS
+    { "ba-block-size", required_argument, 0, 2001 },
+    { "ksw2-approx-max-drop", no_argument, 0, 2002 },
+    { "ksw2-bandwidth", required_argument, 0, 2003 },
+    { "ksw2-zdrop", required_argument, 0, 2004 },
+#endif
+    /* Misc */
     { "check", optional_argument, 0, 'c' },
-    { "check-distance", required_argument, 0, 2001 },
-    { "check-bandwidth", required_argument, 0, 2002 },
-    { "plot", optional_argument, 0, 2003 },
+    { "check-distance", required_argument, 0, 3001 },
+    { "check-bandwidth", required_argument, 0, 3002 },
+    { "plot", optional_argument, 0, 3003 },
     /* System */
-    { "max-memory", required_argument, 0, 3000 },
     { "progress", required_argument, 0, 'P' },
     { "verbose", optional_argument, 0, 'v' },
     { "help", no_argument, 0, 'h' },
@@ -874,6 +898,9 @@ void parse_arguments(int argc,char** argv) {
         parameters.algorithm = alignment_ksw2_extz2_sse;
       } else if (strcmp(optarg,"ksw2-extd2-sse")==0) {
         parameters.algorithm = alignment_ksw2_extd2_sse;
+      // External (LV89)
+      } else if (strcmp(optarg,"lv89")==0) {
+        parameters.algorithm = alignment_lv89;
       // External (Parasail)
       } else if (strcmp(optarg,"parasail-nw-stripped")==0) {
         parameters.algorithm = alignment_parasail_nw_stripped;
@@ -954,13 +981,7 @@ void parse_arguments(int argc,char** argv) {
       parameters.affine2p_penalties.gap_extension2 = atoi(sentinel);
       break;
     }
-    /*
-     * Wavefront parameters
-     */
-    case 1001: // --score-only
-      parameters.score_only = true;
-      break;
-    case 1002: { // --ends-free P0,Pf,T0,Tf
+    case 901: { // --ends-free P0,Pf,T0,Tf
       parameters.endsfree = true;
       char* sentinel = strtok(optarg,",");
       parameters.pattern_begin_free = atof(sentinel);
@@ -972,48 +993,75 @@ void parse_arguments(int argc,char** argv) {
       parameters.text_end_free = atof(sentinel);
       break;
     }
-    case 1003: // --memory-mode in {'high','med','low','ultralow'}
+    /*
+     * Wavefront parameters
+     */
+    case 1000: // --wfa-score-only
+      parameters.wfa_score_only = true;
+      break;
+    case 1001: // --wfa-memory-mode in {'high','med','low','ultralow'}
       if (strcmp(optarg,"high")==0) {
-        parameters.memory_mode = wavefront_memory_high;
+        parameters.wfa_memory_mode = wavefront_memory_high;
       } else if (strcmp(optarg,"med")==0) {
-        parameters.memory_mode = wavefront_memory_med;
+        parameters.wfa_memory_mode = wavefront_memory_med;
       } else if (strcmp(optarg,"low")==0) {
-        parameters.memory_mode = wavefront_memory_low;
+        parameters.wfa_memory_mode = wavefront_memory_low;
       } else if (strcmp(optarg,"ultralow")==0) {
-        parameters.memory_mode = wavefront_memory_ultralow;
+        parameters.wfa_memory_mode = wavefront_memory_ultralow;
       } else {
-        fprintf(stderr,"Option '--memory-mode' must be in {'high','med','low','ultralow'}\n");
+        fprintf(stderr,"Option '--wfa-memory-mode' must be in {'high','med','low','ultralow'}\n");
         exit(1);
       }
       break;
-    case 1004: // --wf-reduction in {'none','adaptive'}
+    case 1002: // --wfa-reduction in {'none','adaptive'}
       if (strcmp(optarg,"none")==0) {
-        parameters.reduction_type = wavefront_reduction_none;
+        parameters.wfa_reduction_type = wavefront_reduction_none;
       } else if (strcmp(optarg,"adaptive")==0) {
-        parameters.reduction_type = wavefront_reduction_adaptive;
+        parameters.wfa_reduction_type = wavefront_reduction_adaptive;
       } else {
         fprintf(stderr,"Option '--wf-reduction' must be in {'none','adaptive'}\n");
         exit(1);
       }
       break;
-    case 1005: // --minimum-wavefront-length
-      parameters.min_wavefront_length = atoi(optarg);
-      parameters.reduction_type = wavefront_reduction_adaptive;
+    case 1003: { // --wfa-reduction-parameters  <P1>,<P2>
+      char* sentinel = strtok(optarg,",");
+      const int p1 = atoi(sentinel);
+      parameters.wfa_min_wf_length = p1;
+      sentinel = strtok(NULL,",");
+      const int p2 = atoi(sentinel);
+      parameters.wfa_max_dist_th = p2;
       break;
-    case 1006: // --maximum-difference-distance
-      parameters.max_distance_threshold = atoi(optarg);
-      parameters.reduction_type = wavefront_reduction_adaptive;
+    }
+    case 1004: // --wfa-custom-match-funct
+      parameters.wfa_match_funct = match_function;
+      parameters.wfa_match_funct_arguments = &match_function_params;
       break;
-    case 1007: // --custom-match-funct
-      parameters.match_funct = match_function;
-      parameters.match_funct_arguments = &match_function_params;
+    case 1005:
+      parameters.wfa_max_memory = atol(optarg);
       break;
     /*
-     * Misc
+     * Other alignment parameters
      */
     case 2000: // --bandwidth
       parameters.bandwidth = atoi(optarg);
       break;
+#ifdef EXTERNAL_BENCHMARKS
+    case 2001: // --ba-block-size
+      parameters.ba_block_size = atoi(optarg);
+      break;
+    case 2002: // --ksw2-approx-max-drop
+      parameters.ksw2_approx_max__drop = true;
+      break;
+    case 2003: // --ksw2-bandwidth
+      parameters.ksw2_bandwidth = atoi(optarg);
+      break;
+    case 2004: // --ksw2-zdrop
+      parameters.ksw2_zdrop = atoi(optarg);
+      break;
+#endif
+    /*
+     * Misc
+     */
     case 'c':
       if (optarg ==  NULL) { // default = score
         parameters.check_correct = true;
@@ -1038,7 +1086,7 @@ void parse_arguments(int argc,char** argv) {
         exit(1);
       }
       break;
-    case 2001: // --check-distance in {'indel','edit','linear','affine','affine2p'}
+    case 3001: // --check-distance in {'indel','edit','linear','affine','affine2p'}
       if (strcasecmp(optarg,"indel")==0) {
         parameters.check_metric = ALIGN_DEBUG_CHECK_DISTANCE_METRIC_INDEL;
       } else if (strcasecmp(optarg,"edit")==0) {
@@ -1054,18 +1102,15 @@ void parse_arguments(int argc,char** argv) {
         exit(1);
       }
       break;
-    case 2002: // --check-bandwidth
+    case 3002: // --check-bandwidth
       parameters.check_bandwidth = atoi(optarg);
       break;
-    case 2003: // --plot
+    case 3003: // --plot
       parameters.plot = (optarg==NULL) ? 1000 : atoi(optarg);
       break;
     /*
      * System
      */
-    case 3000:
-      parameters.max_memory = atol(optarg);
-      break;
     case 'P':
       parameters.progress = atoi(optarg);
       break;
@@ -1089,11 +1134,12 @@ void parse_arguments(int argc,char** argv) {
       exit(1);
     }
   }
-  // Checks
+  // General checks
   if (parameters.algorithm!=alignment_test && parameters.input_filename==NULL) {
     fprintf(stderr,"Option --input is required \n");
     exit(1);
   }
+  // Check 'ends-free' parameter
   if (parameters.endsfree) {
     switch (parameters.algorithm) {
       case alignment_gap_affine_swg:
@@ -1106,10 +1152,27 @@ void parse_arguments(int argc,char** argv) {
       case alignment_gap_affine2p_wavefront:
         break;
       default:
-        fprintf(stderr,"Ends-free variant not implemented selected algorithm\n");
+        fprintf(stderr,"Ends-free variant not implemented for the selected algorithm\n");
         exit(1);
         break;
     }
+  }
+  // Check 'bandwidth' parameter
+  switch (parameters.algorithm) {
+    case alignment_edit_dp_banded:
+    case alignment_gap_affine_swg_banded:
+    case alignment_parasail_nw_banded:
+      if (parameters.bandwidth == -1) {
+        fprintf(stderr,"Parameter 'bandwidth' has to be provided for banded algorithms\n");
+        exit(1);
+      }
+      break;
+    default:
+      if (parameters.bandwidth == -1) {
+        fprintf(stderr,"Parameter 'bandwidth' has no effect with the selected algorithm\n");
+        exit(1);
+      }
+      break;
   }
 }
 int main(int argc,char* argv[]) {

@@ -81,10 +81,12 @@ void benchmark_blockaligner_adapt_cigar(
  */
 void benchmark_blockaligner_global_affine(
     align_input_t* const align_input,
-    affine_penalties_t* const penalties) {
+    affine_penalties_t* const penalties,
+    const int block_size) {
   // Configure global alignment with traceback
-  SizeRange range = {.min = 32, .max = 32};
+  SizeRange range = {.min = block_size, .max = block_size};
   Gaps gaps = {.open = -penalties->gap_opening, .extend = -penalties->gap_extension};
+  // AAMatrix m_matrix = block_new_simple_aamatrix(0,-penalties->mismatch);
   PaddedBytes* a = block_new_padded_aa(align_input->pattern_length, range.max);
   PaddedBytes* b = block_new_padded_aa(align_input->text_length, range.max);
   block_set_bytes_padded_aa(a,(const uint8_t*)align_input->pattern,align_input->pattern_length,range.max);

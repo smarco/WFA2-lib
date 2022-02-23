@@ -12,13 +12,11 @@ ifeq ($(UNAME), Linux)
 endif
 
 LI_FLAGS=-L$(FOLDER_LIB) -I$(FOLDER_ROOT) -I$(FOLDER_WFA) -I.
-
+LIB_WFA=$(FOLDER_LIB)/libwfa.a
 LIB_BLOCKALIGNER=external/block-aligner/target/release/
 LIB_EDLIB=external/edlib/build/lib/
 LIB_GABA=external/libgaba/libgaba.a
 LIB_PARASAIL=external/parasail/build/libparasail.a
-
-LIB_WFA=$(FOLDER_LIB)/libwfa.a
 ###############################################################################
 # Rules
 ###############################################################################
