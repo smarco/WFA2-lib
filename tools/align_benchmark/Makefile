@@ -5,20 +5,17 @@ FOLDER_WFA=../../..
 FOLDER_ROOT=../..
 FOLDER_LIB=$(FOLDER_ROOT)/lib
 FOLDER_BIN=$(FOLDER_ROOT)/bin
-
 FOLDER_BUILD=./build
 
 ifeq ($(UNAME), Linux)
   LD_FLAGS+=-lrt 
 endif
-LD_FLAGS+=-lwfa -lm
 
 LI_FLAGS=-L$(FOLDER_LIB) -I$(FOLDER_ROOT) -I$(FOLDER_WFA) -I.
-
+LIB_WFA=$(FOLDER_LIB)/libwfa.a
 ###############################################################################
 # Rules
 ###############################################################################
-LIB_WFA=$(FOLDER_LIB)/libwfa.a
 SUBDIRS=benchmark \
         edit \
         gap_affine \
@@ -29,10 +26,11 @@ BIN=$(FOLDER_BIN)/align_benchmark
         
 all: setup 
 all: $(SUBDIRS)
+all: OBJS+=$(FOLDER_BUILD)/*.o
 all: align_benchmark
 
 align_benchmark: */*.c */*.h align_benchmark.c $(LIB_WFA)
-	$(CC) $(CC_FLAGS) $(LI_FLAGS) align_benchmark.c $(FOLDER_BUILD)/*.o -o $(BIN) $(LD_FLAGS)
+	$(CC) $(CC_FLAGS) $(LI_FLAGS) $(OBJS) align_benchmark.c -o $(BIN) $(LD_FLAGS) -lwfa -lm
 	
 setup:
 	@mkdir -p $(FOLDER_BUILD)
@@ -48,3 +46,4 @@ $(SUBDIRS):
 	$(MAKE) --directory=$@ all
 	
 .PHONY: $(SUBDIRS)
+

@@ -85,7 +85,6 @@
 #define SLASH '/'
 #define STAR '*'
 #define DOT '.'
-#define EQUAL '='
 #define COMA ','
 #define SEMICOLON ';'
 #define COLON ':'

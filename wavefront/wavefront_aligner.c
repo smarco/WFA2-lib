@@ -216,7 +216,9 @@ void wavefront_aligner_delete(
   // Slab
   wavefront_slab_delete(wf_aligner->wavefront_slab);
   // Display
-  if (wf_aligner->plot_params.plot_enabled) wavefront_plot_free(&wf_aligner->wf_plot);
+  if (wf_aligner->plot_params.plot_enabled) {
+    wavefront_plot_free(&wf_aligner->wf_plot);
+  }
   // MM
   const bool mm_allocator_own = wf_aligner->mm_allocator_own;
   mm_allocator_free(mm_allocator,wf_aligner); // Handler

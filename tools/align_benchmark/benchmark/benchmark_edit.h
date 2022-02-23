@@ -37,6 +37,8 @@
 /*
  * Benchmark Edit
  */
+void benchmark_edit_bpm(
+    align_input_t* const align_input);
 void benchmark_edit_dp(
     align_input_t* const align_input);
 void benchmark_edit_dp_banded(
