@@ -106,21 +106,69 @@ void benchmark_print_output_lite(
     align_input_t* const align_input,
     const int score,
     cigar_t* const cigar) {
-  fprintf(stream,"%d ",score);
-  cigar_print(stream,cigar,true);
-  fprintf(stream,"\n");
+  // Retrieve CIGAR
+  char* const cigar_str = malloc(cigar->end_offset-cigar->begin_offset);
+  cigar_sprint(cigar_str,cigar,true);
+  // Print
+  fprintf(stream,"%d\t%s\n",score,cigar_str);
+  // Free
+  free(cigar_str);
 }
 void benchmark_print_output_full(
     FILE* const stream,
     align_input_t* const align_input,
     const int score,
     cigar_t* const cigar) {
-  fprintf(stream,"%d\t",align_input->pattern_length); // Pattern length
-  fprintf(stream,"%d\t",align_input->text_length); // Text length
-  fprintf(stream,"%d\t",score); // Alignment score
-  fprintf(stream,"%s\t",align_input->pattern); // Pattern sequence
-  fprintf(stream,"%s\t",align_input->text); // Text sequence
-  cigar_print(stream,cigar,true); fprintf(stream,"\n"); // CIGAR
+  // Retrieve CIGAR
+  char* const cigar_str = malloc(cigar->end_offset-cigar->begin_offset);
+  cigar_sprint(cigar_str,cigar,true);
+  // Print
+  fprintf(stream,"%d\t%d\t%d\t%s\t%s\t%s\n",
+      align_input->pattern_length, // Pattern length
+      align_input->text_length,    // Text length
+      score,                       // Alignment score
+      align_input->pattern,        // Pattern sequence
+      align_input->text,           // Text sequence
+      cigar_str);                  // CIGAR
+  // Free
+  free(cigar_str);
+}
+void benchmark_print_output(
+    align_input_t* const align_input,
+    const distance_metric_t distance_metric,
+    const bool score_only,
+    cigar_t* const cigar) {
+  if (align_input->output_file) {
+    // Compute score
+    int score = -1;
+    if (score_only) {
+      score = cigar->score;
+    } else {
+      switch (distance_metric) {
+        case indel:
+        case edit:
+          score = cigar_score_edit(cigar);
+          break;
+        case gap_linear:
+          score = cigar_score_gap_linear(cigar,&align_input->linear_penalties);
+          break;
+        case gap_affine:
+          score = cigar_score_gap_affine(cigar,&align_input->affine_penalties);
+          break;
+        case gap_affine_2p:
+          score = cigar_score_gap_affine2p(cigar,&align_input->affine2p_penalties);
+          break;
+        default:
+          break;
+      }
+    }
+    // Print summary
+    if (align_input->output_full) {
+      benchmark_print_output_full(align_input->output_file,align_input,score,cigar);
+    } else {
+      benchmark_print_output_lite(align_input->output_file,align_input,score,cigar);
+    }
+  }
 }
 /*
  * Stats

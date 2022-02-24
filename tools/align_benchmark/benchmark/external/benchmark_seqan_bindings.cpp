@@ -101,7 +101,7 @@ extern "C" void benchmark_seqan_bridge_global_edit(
       pattern,pattern_length,text,text_length,
       align,edit_operations,num_edit_operations);
 }
-extern "C" void benchmark_seqan_bridge_global_edit_bpm(
+extern "C" int benchmark_seqan_bridge_global_edit_bpm(
     char* const pattern,
     const int pattern_length,
     char* const text,
@@ -111,7 +111,7 @@ extern "C" void benchmark_seqan_bridge_global_edit_bpm(
   TSequence seq1 = pattern;
   TSequence seq2 = text;
   // Align
-  globalAlignmentScore(seq1,seq2,MyersBitVector());
+  return globalAlignmentScore(seq1,seq2,MyersBitVector());
 }
 extern "C" void benchmark_seqan_bridge_global_lineal(
     char* const pattern,

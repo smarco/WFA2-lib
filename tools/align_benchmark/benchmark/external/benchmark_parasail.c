@@ -93,13 +93,7 @@ void benchmark_parasail_nw_stripped(
   }
   // Output
   if (align_input->output_file) {
-    const int score = cigar_score_gap_affine(&cigar,penalties);
-    FILE* const output_file = align_input->output_file;
-    if (align_input->output_full) {
-      benchmark_print_output_full(output_file,align_input,score,&cigar);
-    } else {
-      benchmark_print_output_lite(output_file,align_input,score,&cigar);
-    }
+    benchmark_print_output(align_input,gap_affine,false,&cigar);
   }
   // Free
   free(cigar.operations);
@@ -136,13 +130,7 @@ void benchmark_parasail_nw_scan(
   }
   // Output
   if (align_input->output_file) {
-    const int score = cigar_score_gap_affine(&cigar,penalties);
-    FILE* const output_file = align_input->output_file;
-    if (align_input->output_full) {
-      benchmark_print_output_full(output_file,align_input,score,&cigar);
-    } else {
-      benchmark_print_output_lite(output_file,align_input,score,&cigar);
-    }
+    benchmark_print_output(align_input,gap_affine,false,&cigar);
   }
   // Free
   free(cigar.operations);
@@ -179,13 +167,7 @@ void benchmark_parasail_nw_diag(
   }
   // Output
   if (align_input->output_file) {
-    const int score = cigar_score_gap_affine(&cigar,penalties);
-    FILE* const output_file = align_input->output_file;
-    if (align_input->output_full) {
-      benchmark_print_output_full(output_file,align_input,score,&cigar);
-    } else {
-      benchmark_print_output_lite(output_file,align_input,score,&cigar);
-    }
+    benchmark_print_output(align_input,gap_affine,false,&cigar);
   }
   // Free
   free(cigar.operations);
@@ -208,8 +190,11 @@ void benchmark_parasail_nw_banded(
       penalties->gap_opening + penalties->gap_extension,
       penalties->gap_extension,bandwidth,matrix);
   timer_stop(&align_input->timer);
-  // NOTE:
-  //   No CIGAR is produced, just score
+  // Output. NOTE: No CIGAR is produced, just score
+  cigar_t cigar = {.begin_offset=0,.end_offset=0,.score=result->score};
+  if (align_input->output_file) {
+    benchmark_print_output(align_input,gap_affine,true,&cigar);
+  }
   // Free
   parasail_result_free(result);
   parasail_matrix_free(matrix);

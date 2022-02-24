@@ -38,13 +38,16 @@ void benchmark_lv89(
   uint8_t* mem = (uint8_t*)malloc((align_input->pattern_length+align_input->text_length)*16);
   // Align
   timer_start(&align_input->timer);
-  lv_ed(
+  const int score = lv_ed(
       align_input->pattern_length,align_input->pattern,
       align_input->text_length,align_input->text,
       false,mem);
   timer_stop(&align_input->timer);
   // Free
   free(mem);
-  // NOTE:
-  //   No CIGAR is produced, just score
+  // Output. NOTE: No CIGAR is produced, just score
+  cigar_t cigar = {.begin_offset=0,.end_offset=0,.score=score};
+  if (align_input->output_file) {
+    benchmark_print_output(align_input,edit,true,&cigar);
+  }
 }

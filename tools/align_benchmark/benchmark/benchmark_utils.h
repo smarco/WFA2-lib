@@ -62,6 +62,10 @@ typedef struct {
   int pattern_length;
   char* text;
   int text_length;
+  // Penalties
+  linear_penalties_t linear_penalties;
+  affine_penalties_t affine_penalties;
+  affine2p_penalties_t affine2p_penalties;
   // Alignment form
   bool ends_free;
   int pattern_begin_free;
@@ -112,15 +116,10 @@ void benchmark_print_alignment(
     cigar_t* const cigar_computed,
     const int score_correct,
     cigar_t* const cigar_correct);
-void benchmark_print_output_lite(
-    FILE* const stream,
+void benchmark_print_output(
     align_input_t* const align_input,
-    const int score,
-    cigar_t* const cigar);
-void benchmark_print_output_full(
-    FILE* const stream,
-    align_input_t* const align_input,
-    const int score,
+    const distance_metric_t distance_metric,
+    const bool score_only,
     cigar_t* const cigar);
 
 /*

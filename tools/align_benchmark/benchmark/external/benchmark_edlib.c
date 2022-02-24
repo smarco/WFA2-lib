@@ -80,13 +80,7 @@ void benchmark_edlib(align_input_t* const align_input) {
   }
   // Output
   if (align_input->output_file) {
-    const int score = cigar_score_edit(&cigar);
-    FILE* const output_file = align_input->output_file;
-    if (align_input->output_full) {
-      benchmark_print_output_full(output_file,align_input,score,&cigar);
-    } else {
-      benchmark_print_output_lite(output_file,align_input,score,&cigar);
-    }
+    benchmark_print_output(align_input,edit,false,&cigar);
   }
   // Free
   free(edlib_cigar);

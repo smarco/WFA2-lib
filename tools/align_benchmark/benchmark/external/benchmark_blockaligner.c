@@ -86,7 +86,7 @@ void benchmark_blockaligner_global_affine(
   // Configure global alignment with traceback
   SizeRange range = {.min = block_size, .max = block_size};
   Gaps gaps = {.open = -penalties->gap_opening, .extend = -penalties->gap_extension};
-  // AAMatrix m_matrix = block_new_simple_aamatrix(0,-penalties->mismatch);
+  AAMatrix* m_matrix = block_new_simple_aamatrix(0,-penalties->mismatch);
   PaddedBytes* a = block_new_padded_aa(align_input->pattern_length, range.max);
   PaddedBytes* b = block_new_padded_aa(align_input->text_length, range.max);
   block_set_bytes_padded_aa(a,(const uint8_t*)align_input->pattern,align_input->pattern_length,range.max);
@@ -94,7 +94,7 @@ void benchmark_blockaligner_global_affine(
   // Align
   timer_start(&align_input->timer);
   BlockHandle block = block_new_aa_trace(align_input->pattern_length,align_input->text_length,range.max);
-  block_align_aa_trace(block,a,b,&BLOSUM62,gaps,range,0);
+  block_align_aa_trace(block,a,b,m_matrix,gaps,range,0);
   AlignResult res = block_res_aa_trace(block);
   timer_stop(&align_input->timer);
   // Allocate CIGAR
@@ -119,13 +119,7 @@ void benchmark_blockaligner_global_affine(
   }
   // Output
   if (align_input->output_file) {
-    const int score = cigar_score_gap_affine(&cigar,penalties);
-    FILE* const output_file = align_input->output_file;
-    if (align_input->output_full) {
-      benchmark_print_output_full(output_file,align_input,score,&cigar);
-    } else {
-      benchmark_print_output_lite(output_file,align_input,score,&cigar);
-    }
+    benchmark_print_output(align_input,gap_affine,false,&cigar);
   }
   // Free
   block_free_cigar(ba_cigar);

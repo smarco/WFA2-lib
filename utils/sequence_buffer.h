@@ -26,33 +26,55 @@
  *
  * PROJECT: Wavefront Alignment Algorithms
  * AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
- * DESCRIPTION: Indel-distance alignment algorithms wrapper
  */
 
-#include "benchmark/benchmark_utils.h"
-#include "benchmark/benchmark_check.h"
-#include "wavefront/wavefront_align.h"
+#ifndef SEQUENCE_BUFFER_H_
+#define SEQUENCE_BUFFER_H_
+
+#include "utils/commons.h"
+#include "system/mm_allocator.h"
+
+typedef struct {
+  uint64_t pattern_offset;
+  uint64_t pattern_length;
+  uint64_t text_offset;
+  uint64_t text_length;
+} sequence_offset_t;
+typedef struct {
+  // ID
+  uint64_t sequence_id;
+  // Sequences
+  sequence_offset_t* offsets;
+  uint64_t offsets_used;
+  uint64_t offsets_allocated;
+  // Buffer
+  char* buffer;
+  uint64_t buffer_used;
+  uint64_t buffer_allocated;
+  // Stats
+  int max_pattern_length;
+  int max_text_length;
+} sequence_buffer_t;
 
 /*
- * Benchmark Indel
+ * Setup
  */
-void benchmark_indel_wavefront(
-    align_input_t* const align_input) {
-  // Parameters
-  wavefront_aligner_t* const wf_aligner = align_input->wf_aligner;
-  // Align
-  timer_start(&align_input->timer);
-  wavefront_align(wf_aligner,
-      align_input->pattern,align_input->pattern_length,
-      align_input->text,align_input->text_length);
-  timer_stop(&align_input->timer);
-  // DEBUG
-  if (align_input->debug_flags) {
-    benchmark_check_alignment(align_input,&wf_aligner->cigar);
-  }
-  // Output
-  if (align_input->output_file) {
-    const int score_only = (wf_aligner->alignment_scope == compute_score);
-    benchmark_print_output(align_input,indel,score_only,&wf_aligner->cigar);
-  }
-}
+sequence_buffer_t* sequence_buffer_new(
+    const uint64_t num_sequences_hint,
+    const uint64_t sequence_length_hint);
+void sequence_buffer_clear(
+    sequence_buffer_t* const sequence_buffer);
+void sequence_buffer_delete(
+    sequence_buffer_t* const sequence_buffer);
+
+/*
+ * Accessors
+ */
+void sequence_buffer_add_pair(
+    sequence_buffer_t* const sequence_buffer,
+    char* const pattern,
+    const uint64_t pattern_length,
+    char* const text,
+    const uint64_t text_length);
+
+#endif /* SEQUENCE_BUFFER_H_ */

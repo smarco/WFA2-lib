@@ -61,13 +61,7 @@ void benchmark_gap_linear_nw(
   }
   // Output
   if (align_input->output_file) {
-    const int score = cigar_score_gap_linear(&cigar,penalties);
-    FILE* const output_file = align_input->output_file;
-    if (align_input->output_full) {
-      benchmark_print_output_full(output_file,align_input,score,&cigar);
-    } else {
-      benchmark_print_output_lite(output_file,align_input,score,&cigar);
-    }
+    benchmark_print_output(align_input,gap_linear,false,&cigar);
   }
   // Free
   score_matrix_free(&score_matrix);
@@ -91,13 +85,6 @@ void benchmark_gap_linear_wavefront(
   // Output
   if (align_input->output_file) {
     const int score_only = (wf_aligner->alignment_scope == compute_score);
-    const int score = (score_only) ? wf_aligner->cigar.score :
-        cigar_score_gap_linear(&wf_aligner->cigar,penalties);
-    FILE* const output_file = align_input->output_file;
-    if (align_input->output_full) {
-      benchmark_print_output_full(output_file,align_input,score,&wf_aligner->cigar);
-    } else {
-      benchmark_print_output_lite(output_file,align_input,score,&wf_aligner->cigar);
-    }
+    benchmark_print_output(align_input,gap_linear,score_only,&wf_aligner->cigar);
   }
 }

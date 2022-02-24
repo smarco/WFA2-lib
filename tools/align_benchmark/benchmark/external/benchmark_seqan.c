@@ -42,7 +42,7 @@ void benchmark_seqan_bridge_global_edit(
     const int text_length,
     char* const edit_operations,
     int* const num_edit_operations);
-void benchmark_seqan_bridge_global_edit_bpm(
+int benchmark_seqan_bridge_global_edit_bpm(
     char* const pattern,
     const int pattern_length,
     char* const text,
@@ -96,13 +96,7 @@ void benchmark_seqan_global_edit(
   }
   // Output
   if (align_input->output_file) {
-    const int score = cigar_score_edit(&cigar);
-    FILE* const output_file = align_input->output_file;
-    if (align_input->output_full) {
-      benchmark_print_output_full(output_file,align_input,score,&cigar);
-    } else {
-      benchmark_print_output_lite(output_file,align_input,score,&cigar);
-    }
+    benchmark_print_output(align_input,edit,false,&cigar);
   }
   // Free
   free(cigar.operations);
@@ -111,13 +105,16 @@ void benchmark_seqan_global_edit_bpm(
     align_input_t* const align_input) {
   // Align
   timer_start(&align_input->timer);
-  benchmark_seqan_bridge_global_edit_bpm(
+  const int score = benchmark_seqan_bridge_global_edit_bpm(
       align_input->pattern,align_input->pattern_length,
       align_input->text,align_input->text_length,
       NULL,NULL);
   timer_stop(&align_input->timer);
-  // NOTE:
-  //   No CIGAR is produced, just score
+  // Output. NOTE: No CIGAR is produced, just score
+  cigar_t cigar = {.begin_offset=0,.end_offset=0,.score=score};
+  if (align_input->output_file) {
+    benchmark_print_output(align_input,edit,true,&cigar);
+  }
 }
 void benchmark_seqan_global_lineal(
     align_input_t* const align_input,
@@ -144,13 +141,7 @@ void benchmark_seqan_global_lineal(
   }
   // Output
   if (align_input->output_file) {
-    const int score = cigar_score_gap_linear(&cigar,penalties);
-    FILE* const output_file = align_input->output_file;
-    if (align_input->output_full) {
-      benchmark_print_output_full(output_file,align_input,score,&cigar);
-    } else {
-      benchmark_print_output_lite(output_file,align_input,score,&cigar);
-    }
+    benchmark_print_output(align_input,gap_linear,false,&cigar);
   }
   // Free
   free(cigar.operations);
@@ -180,13 +171,7 @@ void benchmark_seqan_global_affine(
   }
   // Output
   if (align_input->output_file) {
-    const int score = cigar_score_gap_affine(&cigar,penalties);
-    FILE* const output_file = align_input->output_file;
-    if (align_input->output_full) {
-      benchmark_print_output_full(output_file,align_input,score,&cigar);
-    } else {
-      benchmark_print_output_lite(output_file,align_input,score,&cigar);
-    }
+    benchmark_print_output(align_input,gap_affine,false,&cigar);
   }
   // Free
   free(cigar.operations);

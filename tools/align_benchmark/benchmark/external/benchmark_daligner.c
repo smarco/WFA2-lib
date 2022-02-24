@@ -75,19 +75,19 @@ void benchmark_daligner(
   forward_wave(w, spec, &aln, &bpath, &low, high, 0, -INT32_MAX, INT32_MAX);
   timer_stop(&align_input->timer);
   // DEBUG
-//  fprintf(stderr, "\n(%u, %u) :: (%u, %u) -> (%u, %u)\n",
-//      aln.alen, aln.blen,
-//      aln.path->abpos, aln.path->bbpos,
-//      aln.path->aepos, aln.path->bepos);
-//  Alignment_Cartoon(stdout,&aln,1,1);
-//  Print_Alignment(stdout,&aln,w,1,1,1,1,1);
-//  Print_Reference(stdout,&aln,w,1,1,1,1,1);
-//  int INDENT    = 4;
-//  int WIDTH     = 100;
-//  int BORDER    = 10;
-//  Alignment_Cartoon(stdout,&aln,INDENT,5);
-//  //Print_Reference(stdout,&aln,w,INDENT,WIDTH,BORDER,0,5);
-//  Print_Alignment(stdout,&aln,w,INDENT,WIDTH,BORDER,0,5);
+  //  fprintf(stderr, "\n(%u, %u) :: (%u, %u) -> (%u, %u)\n",
+  //      aln.alen, aln.blen,
+  //      aln.path->abpos, aln.path->bbpos,
+  //      aln.path->aepos, aln.path->bepos);
+  //  Alignment_Cartoon(stdout,&aln,1,1);
+  //  Print_Alignment(stdout,&aln,w,1,1,1,1,1);
+  //  Print_Reference(stdout,&aln,w,1,1,1,1,1);
+  //  int INDENT    = 4;
+  //  int WIDTH     = 100;
+  //  int BORDER    = 10;
+  //  Alignment_Cartoon(stdout,&aln,INDENT,5);
+  //  //Print_Reference(stdout,&aln,w,INDENT,WIDTH,BORDER,0,5);
+  //  Print_Alignment(stdout,&aln,w,INDENT,WIDTH,BORDER,0,5);
   // Free
   free(apath.trace);
   free(bpath.trace);

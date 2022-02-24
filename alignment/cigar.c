@@ -351,6 +351,39 @@ void cigar_print(
     fprintf(stream,"%d%c",last_op_length,last_op);
   }
 }
+int cigar_sprint(
+    char* buffer,
+    cigar_t* const cigar,
+    const bool print_matches) {
+  // Parameters
+  int pos = 0;
+  // Check null CIGAR
+  if (cigar->begin_offset >= cigar->end_offset) {
+    buffer[pos] = '\0';
+    return pos;
+  }
+  // Print operations
+  char last_op = cigar->operations[cigar->begin_offset];
+  int last_op_length = 1;
+  int i;
+  for (i=cigar->begin_offset+1;i<cigar->end_offset;++i) {
+    if (cigar->operations[i]==last_op) {
+      ++last_op_length;
+    } else {
+      if (print_matches || last_op != 'M') {
+        pos += sprintf(buffer+pos,"%d%c",last_op_length,last_op);
+      }
+      last_op = cigar->operations[i];
+      last_op_length = 1;
+    }
+  }
+  if (print_matches || last_op != 'M') {
+    pos += sprintf(buffer+pos,"%d%c",last_op_length,last_op);
+  }
+  // Return
+  buffer[pos] = '\0';
+  return pos;
+}
 void cigar_print_pretty(
     FILE* const stream,
     const char* const pattern,

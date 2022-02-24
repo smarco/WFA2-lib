@@ -39,22 +39,28 @@ void benchmark_bitpal_m0_x1_g1(
     align_input_t* const align_input) {
   // Align
   timer_start(&align_input->timer);
-  bitwise_alignment_m0_x1_g1(
+  const int score = bitwise_alignment_m0_x1_g1(
       align_input->pattern,align_input->text,
       MAX(align_input->pattern_length,align_input->text_length)/63 + 1);
   timer_stop(&align_input->timer);
-  // NOTE:
-  //   No CIGAR is produced, just score
+  // Output. NOTE: No CIGAR is produced, just score
+  cigar_t cigar = {.begin_offset=0,.end_offset=0,.score=score};
+  if (align_input->output_file) {
+    benchmark_print_output(align_input,edit,true,&cigar);
+  }
 }
 int bitwise_alignment_m1_x4_g2(char * s1,char* s2,int words);
 void benchmark_bitpal_m1_x4_g2(
     align_input_t* const align_input) {
   // Align
   timer_start(&align_input->timer);
-  bitwise_alignment_m1_x4_g2(
+  const int score = bitwise_alignment_m1_x4_g2(
       align_input->pattern,align_input->text,
       MAX(align_input->pattern_length,align_input->text_length)/63 + 1);
   timer_stop(&align_input->timer);
-  // NOTE:
-  //   No CIGAR is produced, just score
+  // Output. NOTE: No CIGAR is produced, just score
+  cigar_t cigar = {.begin_offset=0,.end_offset=0,.score=score};
+  if (align_input->output_file) {
+    benchmark_print_output(align_input,gap_linear,true,&cigar);
+  }
 }

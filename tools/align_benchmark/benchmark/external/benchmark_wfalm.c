@@ -82,13 +82,7 @@ void benchmark_wfalm_global_affine(
   }
   // Output
   if (align_input->output_file) {
-    const int score = cigar_score_gap_affine(&cigar,penalties);
-    FILE* const output_file = align_input->output_file;
-    if (align_input->output_full) {
-      benchmark_print_output_full(output_file,align_input,score,&cigar);
-    } else {
-      benchmark_print_output_lite(output_file,align_input,score,&cigar);
-    }
+    benchmark_print_output(align_input,gap_affine,false,&cigar);
   }
   // Free
   free(cigar.operations);
@@ -118,13 +112,7 @@ void benchmark_wfalm_global_affine_lowmem(
   }
   // Output
   if (align_input->output_file) {
-    const int score = cigar_score_gap_affine(&cigar,penalties);
-    FILE* const output_file = align_input->output_file;
-    if (align_input->output_full) {
-      benchmark_print_output_full(output_file,align_input,score,&cigar);
-    } else {
-      benchmark_print_output_lite(output_file,align_input,score,&cigar);
-    }
+    benchmark_print_output(align_input,gap_affine,false,&cigar);
   }
   // Free
   free(cigar.operations);
