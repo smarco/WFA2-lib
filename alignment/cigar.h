@@ -120,6 +120,10 @@ void cigar_print(
     FILE* const stream,
     cigar_t* const cigar,
     const bool print_matches);
+int cigar_sprint(
+    char* buffer,
+    cigar_t* const cigar,
+    const bool print_matches);
 void cigar_print_pretty(
     FILE* const stream,
     const char* const pattern,

@@ -62,13 +62,7 @@ void benchmark_gap_affine_swg(
   }
   // Output
   if (align_input->output_file) {
-    const int score = cigar_score_gap_affine(&cigar,penalties);
-    FILE* const output_file = align_input->output_file;
-    if (align_input->output_full) {
-      benchmark_print_output_full(output_file,align_input,score,&cigar);
-    } else {
-      benchmark_print_output_lite(output_file,align_input,score,&cigar);
-    }
+    benchmark_print_output(align_input,gap_affine,false,&cigar);
   }
   // Free
   affine_matrix_free(&affine_matrix,align_input->mm_allocator);
@@ -100,13 +94,7 @@ void benchmark_gap_affine_swg_endsfree(
   }
   // Output
   if (align_input->output_file) {
-    const int score = cigar_score_gap_affine(&cigar,penalties);
-    FILE* const output_file = align_input->output_file;
-    if (align_input->output_full) {
-      benchmark_print_output_full(output_file,align_input,score,&cigar);
-    } else {
-      benchmark_print_output_lite(output_file,align_input,score,&cigar);
-    }
+    benchmark_print_output(align_input,gap_affine,false,&cigar);
   }
   // Free
   affine_matrix_free(&affine_matrix,align_input->mm_allocator);
@@ -137,13 +125,7 @@ void benchmark_gap_affine_swg_banded(
   }
   // Output
   if (align_input->output_file) {
-    const int score = cigar_score_gap_affine(&cigar,penalties);
-    FILE* const output_file = align_input->output_file;
-    if (align_input->output_full) {
-      benchmark_print_output_full(output_file,align_input,score,&cigar);
-    } else {
-      benchmark_print_output_lite(output_file,align_input,score,&cigar);
-    }
+    benchmark_print_output(align_input,gap_affine,false,&cigar);
   }
   // Free
   affine_matrix_free(&affine_matrix,align_input->mm_allocator);
@@ -167,13 +149,6 @@ void benchmark_gap_affine_wavefront(
   // Output
   if (align_input->output_file) {
     const int score_only = (wf_aligner->alignment_scope == compute_score);
-    const int score = (score_only) ? wf_aligner->cigar.score :
-        cigar_score_gap_affine(&wf_aligner->cigar,penalties);
-    FILE* const output_file = align_input->output_file;
-    if (align_input->output_full) {
-      benchmark_print_output_full(output_file,align_input,score,&wf_aligner->cigar);
-    } else {
-      benchmark_print_output_lite(output_file,align_input,score,&wf_aligner->cigar);
-    }
+    benchmark_print_output(align_input,gap_affine,score_only,&wf_aligner->cigar);
   }
 }
