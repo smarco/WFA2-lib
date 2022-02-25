@@ -16,6 +16,13 @@ CC_FLAGS=-Wall -g
 AR=ar
 AR_FLAGS=-rsc
 
+ifndef BUILD_EXAMPLES 
+BUILD_EXAMPLES=1
+endif
+
+ifndef BUILD_TOOLS 
+BUILD_TOOLS=1
+endif
 ###############################################################################
 # Configuration rules
 ###############################################################################
@@ -26,10 +33,13 @@ SUBDIRS=alignment \
         system \
         utils \
         wavefront
-TOOLS=tools/generate_dataset \
-      tools/align_benchmark \
-      tools/examples
-               
+ifeq ($(BUILD_TOOLS),1)        
+    APPS+=tools/generate_dataset \
+          tools/align_benchmark
+endif
+ifeq ($(BUILD_EXAMPLES),1)        
+    APPS+=examples
+endif
 
 release: CC_FLAGS+=-O3 -march=native -flto
 release: build
@@ -49,7 +59,7 @@ asan: build
 build: setup
 build: $(SUBDIRS) 
 build: lib_wfa 
-build: $(TOOLS)
+build: $(APPS)
 
 setup:
 	@mkdir -p $(FOLDER_BIN) $(FOLDER_BUILD) $(FOLDER_BUILD_CPP) $(FOLDER_LIB)
@@ -61,7 +71,7 @@ lib_wfa: $(SUBDIRS)
 clean:
 	rm -rf $(FOLDER_BIN) $(FOLDER_BUILD) $(FOLDER_LIB)
 	$(MAKE) --directory=tools/align_benchmark clean
-	$(MAKE) --directory=tools/examples clean
+	$(MAKE) --directory=examples clean
 	
 ###############################################################################
 # Build external libs (for align-benchmark)
@@ -81,8 +91,8 @@ export
 $(SUBDIRS):
 	$(MAKE) --directory=$@ all
 	
-$(TOOLS):
+$(APPS):
 	$(MAKE) --directory=$@ all
 
-.PHONY: $(SUBDIRS) $(TOOLS)
+.PHONY: $(SUBDIRS) $(APPS)
 
