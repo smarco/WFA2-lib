@@ -104,6 +104,10 @@ int wavefront_align_reached_limits(
       if (system->max_memory_compact < proposed_mem && proposed_mem < system->max_memory_abort) {
         proposed_mem = system->max_memory_compact;
       }
+      // Reset (if maximum compacts has been performed)
+      if (wf_components->bt_buffer->num_compactions >= system->max_partial_compacts) {
+        wf_backtrace_buffer_reset_compaction(wf_components->bt_buffer);
+      }
     }
   }
   // Check overall memory used

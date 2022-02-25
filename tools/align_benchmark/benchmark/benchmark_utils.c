@@ -111,6 +111,8 @@ void benchmark_print_output_lite(
   cigar_sprint(cigar_str,cigar,true);
   // Print
   fprintf(stream,"%d\t%s\n",score,cigar_str);
+  // Free
+  free(cigar_str);
 }
 void benchmark_print_output_full(
     FILE* const stream,
@@ -128,6 +130,8 @@ void benchmark_print_output_full(
       align_input->pattern,        // Pattern sequence
       align_input->text,           // Text sequence
       cigar_str);                  // CIGAR
+  // Free
+  free(cigar_str);
 }
 void benchmark_print_output(
     align_input_t* const align_input,

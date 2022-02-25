@@ -97,7 +97,8 @@ typedef struct {
   int probe_interval_global;     // Score-ticks interval to check any limits
   int probe_interval_compact;    // Score-ticks interval to check BT-buffer compacting
   // Memory
-  uint64_t max_memory_compact;   // Maximum BT-buffer memory allowed before trying compacting
+  uint64_t max_partial_compacts; // Maximum partial-compacts before attempting full-compact
+  uint64_t max_memory_compact;   // Maximum BT-buffer memory allowed before trigger compact
   uint64_t max_memory_resident;  // Maximum memory allowed to be buffered before reap
   uint64_t max_memory_abort;     // Maximum memory allowed to be used before aborting alignment
   // Verbose

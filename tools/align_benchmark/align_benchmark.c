@@ -720,7 +720,7 @@ void usage() {
       "          --wfa-reduction-parameters  <P1>,<P2>                         \n"
       "            [Adaptive]                                                  \n"
       "              P1 = minimum-wavefront-length                             \n"
-      "              P2 = maxumum-difference-distance                          \n"
+      "              P2 = maximum-difference-distance                          \n"
       "          --wfa-max-memory <Bytes>                                      \n"
       "        [Other Parameters]                                              \n"
       "          --bandwidth <INT>                                             \n"

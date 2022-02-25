@@ -10,8 +10,8 @@ rm *.log *.alg
 
 # Config
 ALGORITHM="gap-affine-wfa"  
-REDUCTION="--minimum-wavefront-length 10 --maximum-difference-distance 50"
-LOWMEMORY="--memory-mode=med"
+REDUCTION="--wfa-reduction=adaptive --wfa-reduction-parameters 10,50"
+LOWMEMORY="--wfa-memory-mode=med"
 
 # Utest for length=100
 \time -v ./bin/align_benchmark -a $ALGORITHM -i ../data/sim.l100.n100K.e2.seq -o sim.l100.e2.W.alg               &> sim.l100.e2.W.log

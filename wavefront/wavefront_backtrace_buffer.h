@@ -66,15 +66,17 @@ typedef struct {
  */
 typedef struct {
   // Locator
-  int segment_idx;                  // Current segment idx
-  int segment_offset;               // Current free position within segment
-  bt_block_t* block_next;           // Next BT-block free
+  int segment_idx;                     // Current segment idx
+  int segment_offset;                  // Current free position within segment
+  bt_block_t* block_next;              // Next BT-block free
   // Buffers
-  vector_t* segments;               // Memory segments (bt_block_t*)
-  vector_t* alignment_init_pos;     // Buffer to store alignment's initial coordinates (h,v) (wf_backtrace_init_pos_t)
+  vector_t* segments;                  // Memory segments (bt_block_t*)
+  vector_t* alignment_init_pos;        // Buffer to store alignment's initial coordinates (h,v) (wf_backtrace_init_pos_t)
+  bt_block_idx_t num_compacted_blocks; // Total compacted blocks in BT-buffer compacted (dense from 0..num_compacted_blocks-1)
+  int num_compactions;                 // Total compactions performed
   // Internal buffers
-  vector_t* alignment_packed;       // Temporal buffer to store final alignment (pcigar_t)
-  vector_t* prefetch_blocks_idxs;   // Temporal buffer to store blocks_idxs (bt_block_idx_t)
+  vector_t* alignment_packed;          // Temporal buffer to store final alignment (pcigar_t)
+  vector_t* prefetch_blocks_idxs;      // Temporal buffer to store blocks_idxs (bt_block_idx_t)
   // MM
   mm_allocator_t* mm_allocator;
 } wf_backtrace_buffer_t;
@@ -157,7 +159,7 @@ void wf_backtrace_buffer_mark_backtrace_batch(
     const int num_block_idxs,
     bitmap_t* const bitmap);
 
-void wf_backtrace_buffer_compact_marked(
+bt_block_idx_t wf_backtrace_buffer_compact_marked(
     wf_backtrace_buffer_t* const bt_buffer,
     bitmap_t* const bitmap,
     const bool verbose);
@@ -166,6 +168,14 @@ void wf_backtrace_buffer_compact_marked(
  * Utils
  */
 uint64_t wf_backtrace_buffer_get_used(
+    wf_backtrace_buffer_t* const bt_buffer);
+
+bt_block_idx_t wf_backtrace_buffer_get_num_compacted_blocks(
+    wf_backtrace_buffer_t* const bt_buffer);
+void wf_backtrace_buffer_set_num_compacted_blocks(
+    wf_backtrace_buffer_t* const bt_buffer,
+    const bt_block_idx_t num_compacted_blocks);
+void wf_backtrace_buffer_reset_compaction(
     wf_backtrace_buffer_t* const bt_buffer);
 
 uint64_t wf_backtrace_buffer_get_size_allocated(

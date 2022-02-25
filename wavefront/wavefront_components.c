@@ -345,8 +345,8 @@ void wavefront_components_mark_wavefronts(
     const int score) {
   // Parameters
   wf_backtrace_buffer_t* const bt_buffer = wf_components->bt_buffer;
-  // Mark Active Working Set (AWS)
   const int max_score_scope = wf_components->max_score_scope;
+  // Mark Active Working Set (AWS)
   int i;
   for (i=0;i<max_score_scope;++i) {
     // Compute score
@@ -376,6 +376,7 @@ void wavefront_components_mark_wavefronts(
  * Translate block-idxs
  */
 void wavefront_components_translate_idx(
+    wavefront_components_t* const wf_components,
     bitmap_t* const bitmap,
     wavefront_t* const wavefront) {
   // Parameters
@@ -383,12 +384,14 @@ void wavefront_components_translate_idx(
   bt_block_idx_t* const bt_prev = wavefront->bt_prev;
   const int lo = wavefront->lo;
   const int hi = wavefront->hi;
+  const bt_block_idx_t num_compacted_blocks = wf_components->bt_buffer->num_compacted_blocks;
   // Translate all wavefront block-idxs
   int k;
   for (k=lo;k<=hi;++k) {
-    if (offsets[k]>=0) {
+    if (offsets[k]>=0) {  // NOTE bt_prev[k] >= num_compacted_blocks
       bt_prev[k] = (bt_prev[k]==BT_BLOCK_IDX_NULL) ?
-          BT_BLOCK_IDX_NULL : bitmap_erank(bitmap,bt_prev[k]);
+          BT_BLOCK_IDX_NULL :
+          num_compacted_blocks + bitmap_erank(bitmap,bt_prev[k]);
     }
   }
 }
@@ -404,19 +407,19 @@ void wavefront_components_translate_wavefronts(
     const int score_mod = (score-i) % wf_components->max_score_scope;
     // Mark M-wavefront
     wavefront_t* const mwavefront = wf_components->mwavefronts[score_mod];
-    if (mwavefront!=NULL) wavefront_components_translate_idx(bitmap,mwavefront);
+    if (mwavefront!=NULL) wavefront_components_translate_idx(wf_components,bitmap,mwavefront);
     // Mark (I1/D1)-wavefronts
     if (wf_components->i1wavefronts != NULL) {
       wavefront_t* const i1wavefront = wf_components->i1wavefronts[score_mod];
-      if (i1wavefront!=NULL) wavefront_components_translate_idx(bitmap,i1wavefront);
+      if (i1wavefront!=NULL) wavefront_components_translate_idx(wf_components,bitmap,i1wavefront);
       wavefront_t* const d1wavefront = wf_components->d1wavefronts[score_mod];
-      if (d1wavefront!=NULL) wavefront_components_translate_idx(bitmap,d1wavefront);
+      if (d1wavefront!=NULL) wavefront_components_translate_idx(wf_components,bitmap,d1wavefront);
       // Mark (I2/D2)-wavefronts
       if (wf_components->i2wavefronts != NULL) {
         wavefront_t* const i2wavefront = wf_components->i2wavefronts[score_mod];
-        if (i2wavefront!=NULL) wavefront_components_translate_idx(bitmap,i2wavefront);
+        if (i2wavefront!=NULL) wavefront_components_translate_idx(wf_components,bitmap,i2wavefront);
         wavefront_t* const d2wavefront = wf_components->d2wavefronts[score_mod];
-        if (d2wavefront!=NULL) wavefront_components_translate_idx(bitmap,d2wavefront);
+        if (d2wavefront!=NULL) wavefront_components_translate_idx(wf_components,bitmap,d2wavefront);
       }
     }
   }
@@ -428,20 +431,23 @@ void wavefront_components_compact_bt_buffer(
     wavefront_components_t* const wf_components,
     const int score,
     const bool verbose) {
-  // Parameters
-  wf_backtrace_buffer_t* const bt_buffer = wf_components->bt_buffer;
-  const uint64_t bt_buffer_used = wf_backtrace_buffer_get_used(bt_buffer);
   // PROFILE
   profiler_timer_t timer;
   if (verbose) { timer_reset(&timer); timer_start(&timer); }
+  // Parameters
+  wf_backtrace_buffer_t* const bt_buffer = wf_components->bt_buffer;
+  const uint64_t bt_buffer_used = wf_backtrace_buffer_get_used(bt_buffer);
   // Allocate bitmap
   bitmap_t* const bitmap = bitmap_new(bt_buffer_used,wf_components->mm_allocator);
   // Mark Active Working Set (AWS)
   wavefront_components_mark_wavefronts(wf_components,bitmap,score);
   // Compact marked blocks (also translates idxs to compacted positions)
-  wf_backtrace_buffer_compact_marked(bt_buffer,bitmap,verbose);
+  const bt_block_idx_t total_compacted_blocks =
+      wf_backtrace_buffer_compact_marked(bt_buffer,bitmap,verbose);
   // Translate Active Working Set (AWS)
   wavefront_components_translate_wavefronts(wf_components,bitmap,score);
+  // Set new compacted blocks
+  wf_backtrace_buffer_set_num_compacted_blocks(bt_buffer,total_compacted_blocks);
   // Free
   bitmap_delete(bitmap);
   // PROFILE

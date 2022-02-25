@@ -36,6 +36,9 @@
  */
 #define BT_BUFFER_SEGMENT_LENGTH BUFFER_SIZE_8M
 
+#define BT_BUFFER_SEGMENT_IDX(block_idx)    ((block_idx)/BT_BUFFER_SEGMENT_LENGTH)
+#define BT_BUFFER_SEGMENT_OFFSET(block_idx) ((block_idx)%BT_BUFFER_SEGMENT_LENGTH)
+
 #define BT_BUFFER_IDX(segment_idx,segment_offset) \
   ((segment_idx)*BT_BUFFER_SEGMENT_LENGTH) + (segment_offset)
 
@@ -82,6 +85,8 @@ wf_backtrace_buffer_t* wf_backtrace_buffer_new(
   bt_buffer->segments = vector_new(10,bt_block_t*);
   wf_backtrace_buffer_segment_add(bt_buffer); // Add initial segment
   bt_buffer->block_next = vector_get_mem(bt_buffer->segments,bt_block_t*)[0];
+  bt_buffer->num_compacted_blocks = 0;
+  bt_buffer->num_compactions = 0;
   bt_buffer->alignment_init_pos = vector_new(100,wf_backtrace_init_pos_t);
   bt_buffer->alignment_packed = vector_new(100,pcigar_t);
   bt_buffer->prefetch_blocks_idxs = vector_new(500,bt_block_idx_t);
@@ -93,6 +98,8 @@ void wf_backtrace_buffer_clear(
   bt_buffer->segment_idx = 0;
   bt_buffer->segment_offset = 0;
   bt_buffer->block_next = vector_get_mem(bt_buffer->segments,bt_block_t*)[0];
+  bt_buffer->num_compacted_blocks = 0;
+  bt_buffer->num_compactions = 0;
   vector_clear(bt_buffer->alignment_init_pos);
 }
 void wf_backtrace_buffer_reap(
@@ -109,6 +116,8 @@ void wf_backtrace_buffer_reap(
   bt_buffer->segment_idx = 0;
   bt_buffer->segment_offset = 0;
   bt_buffer->block_next = vector_get_mem(bt_buffer->segments,bt_block_t*)[0];
+  bt_buffer->num_compacted_blocks = 0;
+  bt_buffer->num_compactions = 0;
 }
 void wf_backtrace_buffer_delete(
     wf_backtrace_buffer_t* const bt_buffer) {
@@ -134,6 +143,20 @@ uint64_t wf_backtrace_buffer_get_used(
   const bt_block_idx_t max_block_idx = BT_BUFFER_IDX(bt_buffer->segment_idx,bt_buffer->segment_offset);
   return max_block_idx;
 }
+bt_block_idx_t wf_backtrace_buffer_get_num_compacted_blocks(
+    wf_backtrace_buffer_t* const bt_buffer) {
+  return bt_buffer->num_compacted_blocks;
+}
+void wf_backtrace_buffer_set_num_compacted_blocks(
+    wf_backtrace_buffer_t* const bt_buffer,
+    const bt_block_idx_t num_compacted_blocks) {
+  bt_buffer->num_compacted_blocks = num_compacted_blocks;
+}
+void wf_backtrace_buffer_reset_compaction(
+    wf_backtrace_buffer_t* const bt_buffer) {
+  bt_buffer->num_compactions = 0;
+  bt_buffer->num_compacted_blocks = 0;
+}
 uint64_t wf_backtrace_buffer_get_size_allocated(
     wf_backtrace_buffer_t* const bt_buffer) {
   const uint64_t segments_used = vector_get_used(bt_buffer->segments);
@@ -148,8 +171,8 @@ void wf_backtrace_buffer_prefetch_block(
     wf_backtrace_buffer_t* const bt_buffer,
     const bt_block_idx_t block_idx) {
   // Compute location
-  const int segment_idx = block_idx / BT_BUFFER_SEGMENT_LENGTH;
-  const int segment_offset = block_idx % BT_BUFFER_SEGMENT_LENGTH;
+  const int segment_idx = BT_BUFFER_SEGMENT_IDX(block_idx);
+  const int segment_offset = BT_BUFFER_SEGMENT_OFFSET(block_idx);
   // Fetch bt-block
   bt_block_t** const segments = vector_get_mem(bt_buffer->segments,bt_block_t*);
   PREFETCH(segments[segment_idx]+segment_offset);
@@ -158,8 +181,8 @@ bt_block_t* wf_backtrace_buffer_get_block(
     wf_backtrace_buffer_t* const bt_buffer,
     const bt_block_idx_t block_idx) {
   // Compute location
-  const int segment_idx = block_idx / BT_BUFFER_SEGMENT_LENGTH;
-  const int segment_offset = block_idx % BT_BUFFER_SEGMENT_LENGTH;
+  const int segment_idx = BT_BUFFER_SEGMENT_IDX(block_idx);
+  const int segment_offset = BT_BUFFER_SEGMENT_OFFSET(block_idx);
   // Fetch bt-block
   bt_block_t** const segments = vector_get_mem(bt_buffer->segments,bt_block_t*);
   return &(segments[segment_idx][segment_offset]);
@@ -234,7 +257,8 @@ bt_block_t* wf_backtrace_buffer_traceback_pcigar(
   // Traverse-back the BT-blocks and store all the pcigars
   while (bt_block->prev_idx != BT_BLOCK_IDX_NULL) {
     vector_insert(alignment_packed,bt_block->pcigar,pcigar_t);
-    bt_block = wf_backtrace_buffer_get_block(bt_buffer,bt_block->prev_idx);
+    const bt_block_idx_t prev_idx = bt_block->prev_idx;
+    bt_block = wf_backtrace_buffer_get_block(bt_buffer,prev_idx);
   }
   // Return initial block (start coordinate)
   return bt_block;
@@ -343,12 +367,15 @@ void wf_backtrace_buffer_mark_backtrace(
     wf_backtrace_buffer_t* const bt_buffer,
     const bt_block_idx_t bt_block_idx,
     bitmap_t* const bitmap) {
+  // Parameters
+  const bt_block_idx_t num_compacted_blocks = bt_buffer->num_compacted_blocks;
   // Traverse-back the BT-blocks while not marked
   bt_block_t bt_block_last = { .prev_idx = bt_block_idx };
   bt_block_t* bt_block = &bt_block_last;
   // Check marked and fetch previous (until already marked or NULL is found)
-  while (bt_block->prev_idx!=BT_BLOCK_IDX_NULL &&
-        !bitmap_check__set(bitmap,bt_block->prev_idx)) {
+  while (bt_block->prev_idx != BT_BLOCK_IDX_NULL &&
+         bt_block->prev_idx >= num_compacted_blocks &&
+         !bitmap_check__set(bitmap,bt_block->prev_idx)) {
     // Fetch previous BT-block
     const bt_block_idx_t prev_idx = bt_block->prev_idx;
     bt_block = wf_backtrace_buffer_get_block(bt_buffer,prev_idx);
@@ -360,6 +387,8 @@ void wf_backtrace_buffer_mark_backtrace_batch(
     bt_block_idx_t* const bt_block_idxs,
     const int num_block_idxs,
     bitmap_t* const bitmap) {
+  // Parameters
+  const bt_block_idx_t num_compacted_blocks = bt_buffer->num_compacted_blocks;
   // Reserve prefetch-buffer
   const int max_batch_size = 100;
   vector_reserve(bt_buffer->prefetch_blocks_idxs,max_batch_size,false);
@@ -368,9 +397,10 @@ void wf_backtrace_buffer_mark_backtrace_batch(
   int active_blocks = 0, next_idx = 0;
   while (active_blocks < max_batch_size && next_idx < num_block_idxs) {
     // Check NULL
-    if (offsets[next_idx] >= 0) {
+    const bt_block_idx_t block_idx = bt_block_idxs[next_idx];
+    if (offsets[next_idx] >= 0 && 
+        block_idx >= num_compacted_blocks) { // NOTE block_idx != BT_BLOCK_IDX_NULL
       // Prefetch (bt-block and bt_block)
-      const bt_block_idx_t block_idx = bt_block_idxs[next_idx];
       BITMAP_PREFETCH_BLOCK(bitmap,block_idx);
       wf_backtrace_buffer_prefetch_block(bt_buffer,block_idx);
       // Store
@@ -389,14 +419,15 @@ void wf_backtrace_buffer_mark_backtrace_batch(
     if (!BM_BLOCK_IS_SET(*block_bm_ptr,block_idx)) {
       BM_BLOCK_SET(*block_bm_ptr,block_idx);
       // Fetch next block
-      const bt_block_t* const bt_block =
-          wf_backtrace_buffer_get_block(bt_buffer,block_idx);
+      bt_block_t* const bt_block = wf_backtrace_buffer_get_block(bt_buffer,block_idx);
+      const bt_block_idx_t prev_block_idx = bt_block->prev_idx;
       // Check NULL
-      if (bt_block->prev_idx != BT_BLOCK_IDX_NULL) {
+      if (prev_block_idx != BT_BLOCK_IDX_NULL &&
+          prev_block_idx >= num_compacted_blocks) {
         // Update next bt-block index and prefetch
-        pf_block_idx[i] = bt_block->prev_idx;
-        BITMAP_PREFETCH_BLOCK(bitmap,bt_block->prev_idx);
-        wf_backtrace_buffer_prefetch_block(bt_buffer,bt_block->prev_idx);
+        pf_block_idx[i] = prev_block_idx;
+        BITMAP_PREFETCH_BLOCK(bitmap,prev_block_idx);
+        wf_backtrace_buffer_prefetch_block(bt_buffer,prev_block_idx);
         // Next in batch
         i = (i+1) % active_blocks;
         continue;
@@ -406,7 +437,7 @@ void wf_backtrace_buffer_mark_backtrace_batch(
     while (true /* !refilled */) {
       if (next_idx < num_block_idxs) {
         // Check NULL
-        if (offsets[next_idx] < 0) {
+        if (offsets[next_idx] < 0 || bt_block_idxs[next_idx] < num_compacted_blocks) {
           ++next_idx; // Next
           continue;
         }
@@ -431,18 +462,23 @@ void wf_backtrace_buffer_mark_backtrace_batch(
     }
   }
 }
-void wf_backtrace_buffer_compact_marked(
+bt_block_idx_t wf_backtrace_buffer_compact_marked(
     wf_backtrace_buffer_t* const bt_buffer,
     bitmap_t* const bitmap,
     const bool verbose) {
   // Parameters
   const int num_segments = vector_get_used(bt_buffer->segments);
   bt_block_t** const segments = vector_get_mem(bt_buffer->segments,bt_block_t*);
+  const bt_block_idx_t num_compacted_blocks = bt_buffer->num_compacted_blocks;
   // Sentinels
-  bt_block_idx_t read_segidx = 0, read_offset = 0, read_global_pos = 0;
-  bt_block_idx_t write_segidx = 0, write_offset = 0, write_global_pos = 0;
-  bt_block_t* read_block = segments[0];
-  bt_block_t* write_block = segments[0];
+  bt_block_idx_t read_global_pos = num_compacted_blocks;
+  bt_block_idx_t write_global_pos = num_compacted_blocks;
+  bt_block_idx_t read_segidx = BT_BUFFER_SEGMENT_IDX(read_global_pos);
+  bt_block_idx_t read_offset = BT_BUFFER_SEGMENT_OFFSET(read_global_pos);
+  bt_block_idx_t write_segidx = BT_BUFFER_SEGMENT_IDX(write_global_pos);
+  bt_block_idx_t write_offset = BT_BUFFER_SEGMENT_OFFSET(write_global_pos);
+  bt_block_t* read_block = segments[read_segidx] + read_offset;
+  bt_block_t* write_block = segments[write_segidx] + write_offset;
   // Traverse all BT-blocks from the beginning (stored marked)
   const bt_block_idx_t max_block_idx = BT_BUFFER_IDX(bt_buffer->segment_idx,bt_buffer->segment_offset);
   while (read_global_pos < max_block_idx) {
@@ -452,10 +488,11 @@ void wf_backtrace_buffer_compact_marked(
       // Store pcigar in compacted BT-buffer
       write_block->pcigar = read_block->pcigar;
       // Translate and store index in compacted BT-buffer
-      if (read_block->prev_idx == BT_BLOCK_IDX_NULL) {
-        write_block->prev_idx = BT_BLOCK_IDX_NULL;
+      if (read_block->prev_idx == BT_BLOCK_IDX_NULL ||
+          read_block->prev_idx < num_compacted_blocks) {
+        write_block->prev_idx = read_block->prev_idx;
       } else {
-        write_block->prev_idx = bitmap_erank(bitmap,read_block->prev_idx);
+        write_block->prev_idx = num_compacted_blocks + bitmap_erank(bitmap,read_block->prev_idx);
       }
       // Next write
       ++write_offset; ++write_block; ++write_global_pos;
@@ -478,6 +515,7 @@ void wf_backtrace_buffer_compact_marked(
   bt_buffer->segment_offset = write_offset;
   bt_buffer->segment_idx = write_segidx;
   bt_buffer->block_next = write_block;
+  bt_buffer->num_compactions++;
   // DEBUG
   if (verbose) {
     fprintf(stderr,"[WFA::BacktraceBuffer] Compacted from %lu MB to %lu MB (%2.2f%%)",
@@ -485,6 +523,8 @@ void wf_backtrace_buffer_compact_marked(
         CONVERT_B_TO_MB(write_global_pos*sizeof(bt_block_t)),
         100.0f*(float)write_global_pos/(float)read_global_pos);
   }
+  // Return last index
+  return write_global_pos - 1;
 }
 
 
