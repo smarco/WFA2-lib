@@ -1,54 +1,54 @@
-# WFA
+# WFA TOOLS
 
-## 1. WFA TOOLS AND EXAMPLES
+## WHAT IS THIS?
 
-### 1.1 What is this?
+The WFA2-lib offers tools that exploits the different libraries features and serve as examples on how to use and exploit the library functions. Also, these tools serve for testing the library and benchmarking its performance against other state-of-the-art tools and libraries for pairwise alignment. If you are interested in benchmarking WFA2-lib and other algorithms (internal or external), checkout the branch `benchmark`.
 
-The wavefront alignment (WFA) algorithm is an exact gap-affine algorithm that takes advantage of  
-homologous regions between the sequences to accelerate the alignment process. As opposed to 
-traditional dynamic programming algorithms that run in quadratic time, the WFA runs in time O(ns),
-proportional to the read length n and the alignment score s, using O(s^2) memory. Moreover, the WFA
-exhibits simple data dependencies that can be easily vectorized, even by the automatic features of 
-modern compilers, for different architectures, without the need to adapt the code.
+* [Generate Dataset](#tool.generate)
+* [Align Benchmark](#tool.align)
 
-This library implements the WFA and the WFA-Adapt algorithms for gap-affine penalties. It also 
-provides support functions to display and verify the results. Moreover, it implements a benchmarking
-tool that serves to evaluate the performance of these two algorithms, together with other 
-high-performance alignment methods (checkout branch `benchmark`). The library can be executed   
-through the benchmarking tool for evaluation purposes or can be integrated into your code by calling
-the WFA functions.
+## <a name="tool.generate"></a> 1. GENERATE DATASET TOOL
 
-If you are interested in benchmarking WFA with other algorithms implemented or integrated into the
-WFA library, checkout branch `benchmark`.
-
-## 2 GENERATE DATASET TOOL
+The *generate-dataset* tool allows generating synthetic random datasets for testing and benchmarking purposes. This tool produces a simple output format (i.e., each pair of sequences in 2 lines) containing the pairs of sequences to be aligned using the *align-benchmark* tool. For example, the following command generates a dataset named 'sample.dataset.seq' of 5M pairs of 100 bases with an alignment error of 5% (i.e., 5 mismatches, insertions, or deletions per alignment).
 
 ```
-        --output|o        <File>
+$> ./bin/generate_dataset -n 5000000 -l 100 -e 0.05 -o sample.dataset.seq
+```
+
+### Command-line Options 
+
+```
+        --output|o <File>
           Filename/Path to the output dataset.
           
-        --num-patterns|n  <Integer>
+        --num-patterns|n <Integer>
           Total number of pairs pattern-text to generate.
           
-        --length|l        <Integer>
-          Total length of the pattern.
+        --length|l <Integer>
+          Length of the generated pattern (ie., query or sequence) and text (i.e., target or reference)
           
-        --error|e         <Float>
+        --pattern-length|P <Integer>
+          Length of the generated pattern (ie., query or sequence)
+        
+        --text-length|T <Integer>
+          Length of the generated text (i.e., target or reference)
+          
+        --error|e <Float>
           Total error-rate between the pattern and the text (allowing single-base mismatches, 
           insertions and deletions). This parameter may modify the final length of the text.
+          
+        --debug|g
+          Output debug information.
           
         --help|h
           Outputs a succinct manual for the tool.
 ```
 
-## 3. ALIGNMENT BENCHMARK TOOL
+## <a name="tool.align"></a> 2. ALIGNMENT BENCHMARK TOOL
 
-### 3.1 Introduction to benchmarking WFA. Simple tests
+### Introduction to Alignment Benchmarking
 
-The WFA includes the benchmarking tool *align-benchmark* to test and compare the performance of 
-several pairwise alignment implementations, including the WFA and WFA-Adapt. This tool takes as 
-input a dataset containing pairs of sequences (i.e., pattern and text) to align. Patterns are 
-preceded by the '>' symbol and texts by the '<' symbol. Example:
+The WFA2-lib includes the benchmarking tool *align-benchmark* to test and compare the performance of various pairwise alignment implementations. This tool takes as input a dataset containing pairs of sequences (i.e., pattern and text) to align. Patterns are preceded by the '>' symbol and texts by the '<' symbol. Example:
 
 ```
 >ATTGGAAAATAGGATTGGGGTTTGTTTATATTTGGGTTGAGGGATGTCCCACCTTCGTCGTCCTTACGTTTCCGGAAGGGAGTGGTTAGCTCGAAGCCCA
@@ -58,17 +58,7 @@ preceded by the '>' symbol and texts by the '<' symbol. Example:
 [...]
 ```
 
-You can either generate a custom dataset of your own, or use the *generate-dataset* tool to generate
-a random dataset. For example, the following command generates a dataset named 'sample.dataset.seq' 
-of 5M pairs of 100 bases with an alignment error of 5% (i.e., 5 mismatches, insertions or deletions 
-per alignment).
-
-```
-$> ./bin/generate_dataset -n 5000000 -l 100 -e 0.05 -o sample.dataset.seq
-```
-
-Once you have the dataset ready, you can run the *align-benchmark* tool to benchmark the performance 
-of a specific pairwise alignment method. For example, the WFA algorithm:
+Once you have the dataset ready, you can run the *align-benchmark* tool to benchmark the performance of a specific pairwise alignment method. For example, the WFA algorithm:
 
 ```
 $> ./bin/align_benchmark -i sample.dataset.seq -a gap-affine-wfa
@@ -82,10 +72,7 @@ $> ./bin/align_benchmark -i sample.dataset.seq -a gap-affine-wfa
   => Time.Alignment      28.20 s  ( 64.20 %) (    5 Mcalls,   5.64 us/call {min438ns,Max47.05ms})
 ```
 
-The *align-benchmark* tool will finish and report overall benchmark time (including reading the 
-input, setup, checking, etc.) and the time taken by the algorithm (i.e., *Time.Alignment*). If you 
-want to measure the accuracy of the alignment method, you can add the option `--check` and all the
-alignments will be verified. 
+The *align-benchmark* tool will finish and report overall benchmark time (including reading the input, setup, checking, etc.) and the time taken by the algorithm (i.e., *Time.Alignment*). If you want to measure the accuracy of the alignment method, you can add the option `--check` and all the alignments will be verified. 
 
 ```
 $> ./bin/align_benchmark -i sample.dataset.seq -a gap-affine-wfa --check
@@ -110,26 +97,34 @@ $> ./bin/align_benchmark -i sample.dataset.seq -a gap-affine-wfa --check
 
 ```
 
-Using the `--check` option, the tool will report *Alignments.Correct* (i.e., total alignments that 
-are correct, not necessarily optimal), and *Score.Correct* (i.e., total alignments that have the 
-optimal score). Note that the overall benchmark time will increase due to the overhead introduced  
-by the checking routine, however the *Time.Alignment* should remain the same.
+Using the `--check` option, the tool will report *Alignments.Correct* (i.e., total alignments that are correct, not necessarily optimal), and *Score.Correct* (i.e., total alignments that have the optimal score). Note that the overall benchmark time will increase due to the overhead introduced by the checking routine, however the *Time.Alignment* should remain the same.
 
-### 3.2 Command-line options
+### Algorithms & Implementations Summary
 
 Summary of algorithms/methods implemented within the benchmarking tool. If you are interested 
 in benchmarking WFA with other algorithms implemented or integrated into the WFA library, 
 checkout branch `benchmark`.
 
-|      Algorithm Name        |       Code-name       | Distance Model |  Output   | Implementation | Extra Parameters                                           |
-|----------------------------|:---------------------:|:--------------:|:---------:|----------------|------------------------------------------------------------|
-|DP Edit                     |edit-dp                |  Edit-distace  | Alignment |WFA             |                                                            |
-|DP Edit Banded              |edit-dp-banded         |  Edit-distace  | Alignment |WFA             | --bandwidth                                                |
-|DP Gap-lineal               |gap-lineal-nw          |   Gap-lineal   | Alignment |WFA             |                                                            |
-|DP Gap-affine               |gap-affine-swg         |   Gap-affine   | Alignment |WFA             |                                                            |
-|DP Gap-affine Banded        |gap-affine-swg-banded  |   Gap-affine   | Alignment |WFA             | --bandwidth                                                |
-|WFA Gap-affine              |gap-affine-wfa         |   Gap-affine   | Alignment |WFA             |                                                            |
-|WFA Gap-affine Adaptive     |gap-affine-wfa-adaptive|   Gap-affine   | Alignment |WFA             | --minimum-wavefront-length / --maximum-difference-distance |
+|          Algorithm Name           |       Code-name       | Distance        |  Output   |    Library     |
+|-----------------------------------|:---------------------:|:---------------:|:---------:|:--------------:|
+| WFA Indel (LCS)                   | indel-wfa             | Indel           | Alignment | WFA2-lib       |
+| Bit-Parallel-Myers (BPM)          | edit-bpm              | Edit            | Alignment | WFA2-lib       |
+| DP Edit                           | edit-dp               | Edit            | Alignment | WFA2-lib       |
+| DP Edit (Banded)                  | edit-dp-banded        | Edit            | Alignment | WFA2-lib       |
+| WFA Edit                          | edit-wfa              | Edit            | Alignment | WFA2-lib       |
+| DP Gap-linear (NW)                | gap-linear-nw         | Gap-linear      | Alignment | WFA2-lib       |
+| WFA Gap-linear                    | gap-linear-wfa        | Gap-linear      | Alignment | WFA2-lib       |
+| DP Gap-affine (SWG)               | gap-affine-swg        | Gap-affine      | Alignment | WFA2-lib       |
+| DP Gap-affine Banded (SWG Banded) | gap-affine-swg-banded | Gap-affine      | Alignment | WFA2-lib       |
+| WFA Gap-affine                    | gap-affine-wfa        | Gap-affine      | Alignment | WFA2-lib       |
+| DP Gap-affine Dual-Cost           | gap-affine2p-dp       | Gap-affine (2P) | Alignment | WFA2-lib       |
+| WFA Gap-affine Dual-Cost          | gap-affine2p-wfa      | Gap-affine (2P) | Alignment | WFA2-lib       |
+
+* DP: Dynamic Programming
+* SWG: Smith-Waterman-Gotoh
+* NW: Needleman-Wunsch
+
+### Command-line Options
 
 #### - Input
 
@@ -141,27 +136,59 @@ checkout branch `benchmark`.
             Filename/path to the input SEQ file. That is, file containing the sequence pairs to
             align. Sequences are stored one per line, grouped by pairs where the pattern is 
             preceded by '>' and text by '<'.
+            
+          --output|o <File>
+            Filename/path of the output file containing a brief report of the alignment. Each line
+            corresponds to the alignment of one input pair with the following tab-separated fields:
+            <SCORE>  <CIGAR>
+          
+          --output-full <File> 
+            Filename/path of the output file containing a report of the alignment. Each line
+            corresponds to the alignment of one input pair with the following tab-separated fields:
+            <PATTERN-LENGTH>  <TEXT-LENGTH>  <SCORE>  <PATTERN>  <TEXT>  <CIGAR>
 ```
                                      
-#### - Penalties
+#### - Penalties & Span
 
 ```                                                  
-          --lineal-penalties|p M,X,I,D
+          --lineal-penalties|p M,X,I
             Selects gap-lineal penalties for those alignment algorithms that use this penalty model.
-            Example: --lineal-penalties="-1,1,2,2"
+            Example: --lineal-penalties="0,1,2"
+              M - Match penalty
+              X - Mismatch penalty
+              I - Indel penalty
                 
           --affine-penalties|g M,X,O,E
             Selects gap-affine penalties for those alignment algorithms that use this penalty model.
-            Example: --affine-penalties="-1,4,2,6" 
+            Example: --affine-penalties="0,4,2,6" 
+              M - Match penalty
+              X - Mismatch penalty
+              O - Open penalty
+              E - Extend penalty
+          
+          --affine2p-penalties M,X,O1,E1,O2,E2 
+            Select gap-affine dual-cost penalties for those alignment algorithms that use this  
+            penalty model. Example: --affine2p-penalties="0,4,2,6,20,2" 
+              M  - Match penalty
+              X  - Mismatch penalty
+              O1 - Open penalty (gap 1)
+              E1 - Extend penalty (gap 1)
+              O2 - Open penalty (gap 2)
+              E2 - Extend penalty (gap 2)
+          
+          --ends-free P0,Pf,T0,Tf
+            Determines the maximum ends length to allow for free in the ends-free alignment mode.
+            Example: --ends-free="100,100,0,0"
+              P0 - Pattern begin (for free)
+              Pf - Pattern end (for free)
+              T0 - Text begin (for free)
+              Tf - Text end (for free)
           
 ```
                          
-#### - Specifics
+#### - Wavefront parameters
 
-```                                                  
-          --bandwidth <INT>
-            Selects the bandwidth size for those algorithms that use bandwidth strategy. 
-                
+```                                                                  
           --minimum-wavefront-length <INT>
             Selects the minimum wavefront length to trigger the WFA-Adapt reduction method.
             
@@ -169,11 +196,19 @@ checkout branch `benchmark`.
             Selects the maximum difference distance for the WFA-Adapt reduction method.  
 ```
                    
-#### - Misc
+#### - Others
 
-```                                                       
-          --progress|P <integer>
-            Set the progress message periodicity.
+```           
+          --bandwidth <INT>
+            Selects the bandwidth size for those algorithms that use bandwidth strategy. 
+            
+          --num-threads|t <INT>
+            Sets the number of threads to use to align the sequences. If the multithreaded mode is
+            enabled, the input is read in batches of multiple sequences and aligned using the number
+            of threads configured. 
+            
+          --batch-size <INT>
+            Selects the number of pairs of sequences to read per batch in the multithreaded mode.
             
           --check|c 'correct'|'score'|'alignment'                    
             Activates the verification of the alignment results. 
@@ -188,20 +223,14 @@ checkout branch `benchmark`.
             Outputs a succinct manual for the tool.
 ```
 
-
-## 4. AUTHORS
+## AUTHORS
 
   Santiago Marco-Sola \- santiagomsola@gmail.com     
 
-## 5. REPORTING BUGS
+## REPORTING BUGS
 
-Feedback and bug reporting it's highly appreciated. 
-Please report any issue or suggestion on github, or by email to the main developer (santiagomsola@gmail.com).
+Feedback and bug reporting it's highly appreciated. Please report any issue or suggestion on github or by email to the main developer (santiagomsola@gmail.com).
 
-## 6. LICENSE
+## LICENSE
 
-WFA is distributed under MIT licence.
-
-## 7. CITATION
-
-**Santiago Marco-Sola, Juan Carlos Moure, Miquel Moreto, Antonio Espinosa**. ["Fast gap-affine pairwise alignment using the wavefront algorithm."](https://doi.org/10.1093/bioinformatics/btaa777) Bioinformatics, 2020.
+WFA Tools are distributed under MIT licence.

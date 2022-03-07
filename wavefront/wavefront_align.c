@@ -29,8 +29,8 @@
  * DESCRIPTION: WaveFront alignment module for sequence pairwise alignment
  */
 
-#include "utils/string_padded.h"
 #include "wavefront_align.h"
+#include "wavefront_aligner.h"
 #include "wavefront_extend.h"
 #include "wavefront_compute.h"
 #include "wavefront_compute_edit.h"
@@ -40,19 +40,6 @@
 #include "wavefront_backtrace.h"
 #include "wavefront_debug.h"
 
-/*
- * Error messages
- */
-char* wf_error_msg[] =
-{
-  /* WF_ALIGN_SUCCESSFUL */ "[WFA] Alignment successful",
-  /* WF_ALIGN_MAX_SCORE */  "[WFA] Alignment failed. Maximum score reached",
-  /* WF_ALIGN_OOM */        "[WFA] Alignment failed. Maximum memory threshold reached",
-};
-char* wavefront_align_strerror(
-    const int wf_error_code) {
-  return wf_error_msg[-wf_error_code];
-}
 /*
  * Checks
  */
@@ -76,17 +63,18 @@ void wavefront_check_endsfree_form(
 /*
  * Limits
  */
-int wavefront_align_reached_limits(
+bool wavefront_align_reached_limits(
     wavefront_aligner_t* const wf_aligner,
     const int score) {
   // Check alignment-score limit
   if (score >= wf_aligner->alignment_form.max_alignment_score) {
     wf_aligner->cigar.score = wf_aligner->alignment_form.max_alignment_score;
-    return WF_ALIGN_MAX_SCORE;
+    wf_aligner->align_status.status = WF_STATUS_MAX_SCORE_REACHED;
+    return true; // Stop
   }
   // Global probing interval
   alignment_system_t* const system = &wf_aligner->system;
-  if ((score%system->probe_interval_global) != 0) return 0;
+  if ((score%system->probe_interval_global) != 0) return false; // Continue
   if (system->verbose) {
     wavefront_aligner_print_status(stderr,wf_aligner,score); // DEBUG
   }
@@ -113,10 +101,11 @@ int wavefront_align_reached_limits(
   // Check overall memory used
   const uint64_t wf_memory_used = wavefront_aligner_get_size(wf_aligner);
   if (wf_memory_used > system->max_memory_abort) {
-    return WF_ALIGN_OOM;
+    wf_aligner->align_status.status = WF_STATUS_OOM;
+    return true; // Stop
   }
-  // Otherwise OK
-  return 0;
+  // Otherwise continue
+  return false;
 }
 /*
  * Initialize end-to-end alignment (Global)
@@ -246,106 +235,101 @@ void wavefront_align_terminate(
  * General Alignment
  */
 int wavefront_align_sequences(
-    wavefront_aligner_t* const wf_aligner,
-    void (*wavefront_align_initialize)(wavefront_aligner_t*),
-    void (*wavefront_align_compute)(wavefront_aligner_t* const,const int),
-    bool (*wavefront_align_extend)(wavefront_aligner_t* const,const int)) {
+    wavefront_aligner_t* const wf_aligner) {
   // Parameters
-  char* const pattern = wf_aligner->pattern;
-  char* const text = wf_aligner->text;
-  const bool plot = wf_aligner->plot_params.plot_enabled;
-  // Initialize wavefront
-  (*wavefront_align_initialize)(wf_aligner);
-  // PROFILE
-  if (plot) wavefront_plot(wf_aligner,pattern,text,0);
+  wavefront_align_status_t* const wf_align_status = &wf_aligner->align_status;
+  void (*wf_align_compute)(wavefront_aligner_t* const,const int) = wf_align_status->wf_align_compute;
+  bool (*wf_align_extend)(wavefront_aligner_t* const,const int) = wf_align_status->wf_align_extend;
   // Compute wavefronts of increasing score
-  int score = 0;
+  int score = wf_aligner->align_status.score;
   while (true) {
     // Exact extend s-wavefront
-    const bool finished = (*wavefront_align_extend)(wf_aligner,score);
+    const bool finished = (*wf_align_extend)(wf_aligner,score);
     if (finished) {
-      wavefront_align_terminate(wf_aligner,score);
-      break;
+      if (wf_aligner->align_status.status == WF_STATUS_SUCCESSFUL) {
+        wavefront_align_terminate(wf_aligner,score);
+      }
+      wf_aligner->align_status.score = score;
+      return wf_aligner->align_status.status;
     }
     // Compute (s+1)-wavefront
     ++score;
-    (*wavefront_align_compute)(wf_aligner,score);
+    (*wf_align_compute)(wf_aligner,score);
     // Probe limits
-    if (score >= wf_aligner->alignment_form.max_alignment_score) {
-      wf_aligner->cigar.score = wf_aligner->alignment_form.max_alignment_score;
-      return WF_ALIGN_MAX_SCORE;
-    }
     if (wavefront_align_reached_limits(wf_aligner,score)) {
-      return WF_ALIGN_OOM;
+      wf_aligner->align_status.score = score;
+      return wf_aligner->align_status.status;
     }
     // PROFILE
-    if (plot) wavefront_plot(wf_aligner,pattern,text,score);
+    if (wf_aligner->plot_params.plot_enabled) {
+      wavefront_plot(wf_aligner,wf_aligner->pattern,wf_aligner->text,score);
+    }
     // DEBUG
-    // wavefront_aligner_print(stderr,wf_aligner,score,score,7,16);
+    // wavefront_aligner_print(stderr,wf_aligner,0,score,7,0);
   }
   // Return OK
-  return WF_ALIGN_SUCCESSFUL;
+  wf_aligner->align_status.score = score;
+  wf_aligner->align_status.status = WF_STATUS_SUCCESSFUL;
+  return WF_STATUS_SUCCESSFUL;
 }
-/*
- * Wavefront Alignment
- */
-int wavefront_align(
+void wavefront_align_begin(
     wavefront_aligner_t* const wf_aligner,
     const char* const pattern,
     const int pattern_length,
     const char* const text,
     const int text_length) {
+  // Parameters
+  wavefront_align_status_t* const wf_align_status = &wf_aligner->align_status;
   // DEBUG
   wavefront_debug_prologue(wf_aligner,pattern,pattern_length,text,text_length);
   // Resize wavefront aligner
-  wavefront_aligner_resize(wf_aligner,pattern_length,text_length);
-  // Init padded strings
-  strings_padded_t* sequences = NULL;
-  if (wf_aligner->match_funct == NULL) {
-    sequences = strings_padded_new_rhomb(
-            pattern,pattern_length,text,text_length,
-            WAVEFRONT_PADDING,wf_aligner->mm_allocator);
-    wf_aligner->pattern = sequences->pattern_padded;
-    wf_aligner->text = sequences->text_padded;
-  } else {
-    wf_aligner->pattern = NULL;
-    wf_aligner->text = NULL;
-  }
-  // Wavefront functions
-  void (*wavefront_align_initialize)(wavefront_aligner_t*);
-  void (*wavefront_align_compute)(wavefront_aligner_t* const,const int);
-  bool (*wavefront_align_extend)(wavefront_aligner_t* const,const int);
-  // Select wavefront functions
+  wavefront_aligner_resize(wf_aligner,pattern,pattern_length,text,text_length);
+  // Configure WF-compute function
   switch (wf_aligner->penalties.distance_metric) {
-    case indel: wavefront_align_compute = &wavefront_compute_edit; break;
-    case edit: wavefront_align_compute = &wavefront_compute_edit; break;
-    case gap_linear: wavefront_align_compute = &wavefront_compute_linear; break;
-    case gap_affine: wavefront_align_compute = &wavefront_compute_affine; break;
-    case gap_affine_2p: wavefront_align_compute = &wavefront_compute_affine2p; break;
+    case indel:
+    case edit:
+      wf_align_status->wf_align_compute = &wavefront_compute_edit;
+      break;
+    case gap_linear:
+      wf_align_status->wf_align_compute = &wavefront_compute_linear;
+      break;
+    case gap_affine:
+      wf_align_status->wf_align_compute = &wavefront_compute_affine;
+      break;
+    case gap_affine_2p:
+      wf_align_status->wf_align_compute = &wavefront_compute_affine2p;
+      break;
     default:
-      fprintf(stderr,"[WFA] Distance function not implemented yet\n"); exit(1);
+      fprintf(stderr,"[WFA] Distance function not implemented\n");
+      exit(1);
       break;
   }
+  // Configure WF-extend function
   const bool end2end = (wf_aligner->alignment_form.span == alignment_end2end);
+  if (wf_aligner->match_funct != NULL) {
+    wf_align_status->wf_align_extend = &wavefront_extend_custom;
+  } else if (end2end) {
+    wf_align_status->wf_align_extend = &wavefront_extend_end2end;
+  } else {
+    wf_align_status->wf_align_extend = &wavefront_extend_endsfree;
+  }
+  // Initialize wavefront
   if (end2end) {
-    wavefront_align_initialize = &wavefront_align_end2end_initialize;
-    wavefront_align_extend = &wavefront_extend_end2end;
+    wavefront_align_end2end_initialize(wf_aligner);
   } else {
     wavefront_check_endsfree_form(wf_aligner,pattern_length,text_length);
-    wavefront_align_initialize = &wavefront_align_endsfree_initialize;
-    wavefront_align_extend = &wavefront_extend_endsfree;
+    wavefront_align_endsfree_initialize(wf_aligner);
   }
-  if (wf_aligner->match_funct != NULL) {
-    wavefront_align_extend = &wavefront_extend_custom;
+  // Plot WF-0
+  const bool plot = wf_aligner->plot_params.plot_enabled;
+  if (plot) {
+    wavefront_plot(wf_aligner,pattern,text,0);
   }
-  // Wavefront align sequences
-  const int wf_status = wavefront_align_sequences(
-      wf_aligner,
-      wavefront_align_initialize,
-      wavefront_align_compute,
-      wavefront_align_extend);
-  // Free padded strings
-  if (sequences!=NULL) strings_padded_delete(sequences);
+}
+void wavefront_align_end(
+    wavefront_aligner_t* const wf_aligner) {
+  // Parameters
+  wavefront_align_status_t* const wf_align_status = &wf_aligner->align_status;
   // Reap memory (controlled reaping)
   uint64_t wf_memory_used = wavefront_aligner_get_size(wf_aligner);
   if (wf_memory_used > wf_aligner->system.max_memory_resident) {
@@ -359,10 +343,53 @@ int wavefront_align(
     }
   }
   // DEBUG
-  wavefront_debug_epilogue(
-      wf_aligner,pattern,pattern_length,
-      text,text_length,wf_status,wf_memory_used);
+  wavefront_debug_epilogue(wf_aligner,
+      wf_aligner->pattern,wf_aligner->pattern_length,
+      wf_aligner->text,wf_aligner->text_length,
+      wf_align_status->status,wf_memory_used);
+}
+/*
+ * Wavefront Alignment
+ */
+int wavefront_align(
+    wavefront_aligner_t* const wf_aligner,
+    const char* const pattern,
+    const int pattern_length,
+    const char* const text,
+    const int text_length) {
+  // Parameters
+  wavefront_align_status_t* const wf_align_status = &wf_aligner->align_status;
+  // Prepare alignment
+  wavefront_align_begin(wf_aligner,pattern,pattern_length,text,text_length);
+  // Wavefront align sequences
+  wavefront_align_sequences(wf_aligner);
+  // Check pause condition
+  if (wf_align_status->status == WF_STATUS_MAX_SCORE_REACHED) {
+    return WF_STATUS_MAX_SCORE_REACHED; // Alignment paused
+  }
+  // Finish alignment
+  wavefront_align_end(wf_aligner);
   // Return
-  return wf_status;
+  return wf_align_status->status;
+}
+int wavefront_align_resume(
+    wavefront_aligner_t* const wf_aligner) {
+  // Parameters
+  wavefront_align_status_t* const wf_align_status = &wf_aligner->align_status;
+  // Check current alignment status
+  if (wf_align_status->status != WF_STATUS_MAX_SCORE_REACHED) {
+    fprintf(stderr,"[WFA] Alignment cannot be resumed (already finished)\n");
+    exit(1);
+  }
+  // Resume aligning sequences
+  wavefront_align_sequences(wf_aligner);
+  // Check pause condition
+  if (wf_align_status->status == WF_STATUS_MAX_SCORE_REACHED) {
+    return WF_STATUS_MAX_SCORE_REACHED; // Alignment paused
+  }
+  // Finish alignment
+  wavefront_align_end(wf_aligner);
+  // Return
+  return wf_align_status->status;
 }
 

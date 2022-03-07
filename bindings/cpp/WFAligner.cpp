@@ -63,17 +63,15 @@ WFAligner::~WFAligner() {
 /*
  * Align End-to-end
  */
-int WFAligner::alignEnd2EndLambda(
+WFAligner::AlignmentStatus WFAligner::alignEnd2EndLambda(
     const int patternLength,
     const int textLength) {
   // Configure
   wavefront_aligner_set_alignment_end_to_end(wfAligner);
   // Align (using custom matching function)
-  return wavefront_align(wfAligner,
-      NULL,patternLength,
-      NULL,textLength);
+  return (WFAligner::AlignmentStatus) wavefront_align(wfAligner,NULL,patternLength,NULL,textLength);
 }
-int WFAligner::alignEnd2End(
+WFAligner::AlignmentStatus WFAligner::alignEnd2End(
     const char* const pattern,
     const int patternLength,
     const char* const text,
@@ -81,23 +79,18 @@ int WFAligner::alignEnd2End(
   // Configure
   wavefront_aligner_set_alignment_end_to_end(wfAligner);
   // Align
-  return wavefront_align(wfAligner,
-      pattern,patternLength,
-      text,textLength);
+  return (WFAligner::AlignmentStatus) wavefront_align(wfAligner,pattern,patternLength,text,textLength);
 }
-int WFAligner::alignEnd2End(
+WFAligner::AlignmentStatus WFAligner::alignEnd2End(
     std::string& pattern,
     std::string& text) {
   // Delegate
-  return alignEnd2End(
-      pattern.c_str(),pattern.length(),
-      text.c_str(),text.length());
+  return alignEnd2End(pattern.c_str(),pattern.length(),text.c_str(),text.length());
 }
 /*
  * Align Ends-free
  */
-// Align Ends-free
-int WFAligner::alignEndsFreeLambda(
+WFAligner::AlignmentStatus WFAligner::alignEndsFreeLambda(
     const int patternLength,
     const int patternBeginFree,
     const int patternEndFree,
@@ -109,11 +102,9 @@ int WFAligner::alignEndsFreeLambda(
       patternBeginFree,patternEndFree,
       textBeginFree,textEndFree);
   // Align (using custom matching function)
-  return wavefront_align(wfAligner,
-      NULL,patternLength,
-      NULL,textLength);
+  return (WFAligner::AlignmentStatus) wavefront_align(wfAligner,NULL,patternLength,NULL,textLength);
 }
-int WFAligner::alignEndsFree(
+WFAligner::AlignmentStatus WFAligner::alignEndsFree(
     const char* const pattern,
     const int patternLength,
     const int patternBeginFree,
@@ -127,11 +118,9 @@ int WFAligner::alignEndsFree(
       patternBeginFree,patternEndFree,
       textBeginFree,textEndFree);
   // Align
-  return wavefront_align(wfAligner,
-      pattern,patternLength,
-      text,textLength);
+  return (WFAligner::AlignmentStatus) wavefront_align(wfAligner,pattern,patternLength,text,textLength);
 }
-int WFAligner::alignEndsFree(
+WFAligner::AlignmentStatus WFAligner::alignEndsFree(
     std::string& pattern,
     const int patternBeginFree,
     const int patternEndFree,
@@ -144,16 +133,50 @@ int WFAligner::alignEndsFree(
       text.c_str(),text.length());
 }
 /*
- * Reduction
+ * Alignment resume
  */
-void WFAligner::setReductionNone() {
-  wavefront_aligner_set_reduction_none(wfAligner);
+WFAligner::AlignmentStatus WFAligner::alignResume() {
+  // Resume alignment
+  return (WFAligner::AlignmentStatus) wavefront_align_resume(wfAligner);
 }
-void WFAligner::setReductionAdaptive(
+/*
+ * Heuristics
+ */
+void WFAligner::setHeuristicNone() {
+  wavefront_aligner_set_heuristic_none(wfAligner);
+}
+void WFAligner::setHeuristicBandedStatic(
+    const int band_min_k,
+    const int band_max_k) {
+  wavefront_aligner_set_heuristic_banded_static(
+      wfAligner,band_min_k,band_max_k);
+}
+void WFAligner::setHeuristicBandedAdaptive(
+    const int band_min_k,
+    const int band_max_k,
+    const int steps_between_cutoffs) {
+  wavefront_aligner_set_heuristic_banded_adaptive(
+      wfAligner,band_min_k,band_max_k,steps_between_cutoffs);
+}
+void WFAligner::setHeuristicWFadaptive(
     const int min_wavefront_length,
-    const int max_distance_threshold) {
-  wavefront_aligner_set_reduction_adaptive(
-      wfAligner,min_wavefront_length,max_distance_threshold);
+    const int max_distance_threshold,
+    const int steps_between_cutoffs) {
+  wavefront_aligner_set_heuristic_wfadaptive(
+      wfAligner,min_wavefront_length,
+      max_distance_threshold,steps_between_cutoffs);
+}
+void WFAligner::setHeuristicXDrop(
+    const int xdrop,
+    const int steps_between_cutoffs) {
+  wavefront_aligner_set_heuristic_xdrop(
+      wfAligner,xdrop,steps_between_cutoffs);
+}
+void WFAligner::setHeuristicZDrop(
+    const int zdrop,
+    const int steps_between_cutoffs) {
+  wavefront_aligner_set_heuristic_zdrop(
+      wfAligner,zdrop,steps_between_cutoffs);
 }
 /*
  * Custom extend-match function (lambda)

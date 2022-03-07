@@ -59,27 +59,33 @@ public:
     Score,
     Alignment,
   };
+  enum AlignmentStatus {
+    StatusSuccessful = WF_STATUS_SUCCESSFUL,
+    StatusDropped = WF_STATUS_HEURISTICALY_DROPPED,
+    StatusMaxScoreReached = WF_STATUS_MAX_SCORE_REACHED,
+    StatusOOM = WF_STATUS_OOM,
+  };
   // Align End-to-end
-  int alignEnd2EndLambda(
+  AlignmentStatus alignEnd2EndLambda(
       const int patternLength,
       const int textLength);
-  int alignEnd2End(
+  AlignmentStatus alignEnd2End(
       const char* const pattern,
       const int patternLength,
       const char* const text,
       const int textLength);
-  int alignEnd2End(
+  AlignmentStatus alignEnd2End(
       std::string& pattern,
       std::string& text);
   // Align Ends-free
-  int alignEndsFreeLambda(
+  AlignmentStatus alignEndsFreeLambda(
       const int patternLength,
       const int patternBeginFree,
       const int patternEndFree,
       const int textLength,
       const int textBeginFree,
       const int textEndFree);
-  int alignEndsFree(
+  AlignmentStatus alignEndsFree(
       const char* const pattern,
       const int patternLength,
       const int patternBeginFree,
@@ -88,18 +94,34 @@ public:
       const int textLength,
       const int textBeginFree,
       const int textEndFree);
-  int alignEndsFree(
+  AlignmentStatus alignEndsFree(
       std::string& pattern,
       const int patternBeginFree,
       const int patternEndFree,
       std::string& text,
       const int textBeginFree,
       const int textEndFree);
-  // Reduction
-  void setReductionNone();
-  void setReductionAdaptive(
-      const int minWavefrontLength,
-      const int maxDistanceThreshold);
+  // Alignment resume
+  AlignmentStatus alignResume();
+  // Heuristics
+  void setHeuristicNone();
+  void setHeuristicBandedStatic(
+      const int band_min_k,
+      const int band_max_k);
+  void setHeuristicBandedAdaptive(
+      const int band_min_k,
+      const int band_max_k,
+      const int steps_between_cutoffs);
+  void setHeuristicWFadaptive(
+      const int min_wavefront_length,
+      const int max_distance_threshold,
+      const int steps_between_cutoffs);
+  void setHeuristicXDrop(
+      const int xdrop,
+      const int steps_between_cutoffs);
+  void setHeuristicZDrop(
+      const int zdrop,
+      const int steps_between_cutoffs);
   // Custom extend-match function (lambda)
   void setMatchFunct(
       int (*matchFunct)(int,int,void*),

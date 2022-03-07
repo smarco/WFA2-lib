@@ -31,8 +31,9 @@
 
 #include "utils/string_padded.h"
 #include "wavefront_extend.h"
+#include "wavefront_align.h"
 #include "wavefront_compute.h"
-#include "wavefront_reduction.h"
+#include "wavefront_heuristic.h"
 
 /*
  * Wavefront check termination (detect end of alignment)
@@ -189,12 +190,19 @@ bool wavefront_extend_end2end(
   if (wf_aligner->wf_components.memory_modular) score = score % wf_aligner->wf_components.max_score_scope;
   // Extend wavefront
   const bool end_reached = wavefront_extend_matches_packed(wf_aligner,score,false);
-  if (end_reached) return true;
-  // Reduce wavefront adaptively
-  if (wf_aligner->reduction.reduction_strategy == wavefront_reduction_adaptive) {
-    wavefront_reduce(wf_aligner,score);
+  if (end_reached) {
+    wf_aligner->align_status.status = WF_STATUS_SUCCESSFUL;
+    return true; // Done
   }
-  return false;
+  // Cut-off wavefront heuristically
+  if (wf_aligner->heuristic.strategy != wf_heuristic_none) {
+    const bool alignment_dropped = wavefront_heuristic_cufoff(wf_aligner,score);
+    if (alignment_dropped) {
+      wf_aligner->align_status.status = WF_STATUS_HEURISTICALY_DROPPED;
+      return true; // Done
+    }
+  }
+  return false; // Not done
 }
 bool wavefront_extend_endsfree(
     wavefront_aligner_t* const wf_aligner,
@@ -203,12 +211,19 @@ bool wavefront_extend_endsfree(
   if (wf_aligner->wf_components.memory_modular) score = score % wf_aligner->wf_components.max_score_scope;
   // Extend wavefront
   const bool end_reached = wavefront_extend_matches_packed(wf_aligner,score,true);
-  if (end_reached) return true;
-  // Reduce wavefront adaptively
-  if (wf_aligner->reduction.reduction_strategy == wavefront_reduction_adaptive) {
-    wavefront_reduce(wf_aligner,score);
+  if (end_reached) {
+    wf_aligner->align_status.status = WF_STATUS_SUCCESSFUL;
+    return true; // Done
   }
-  return false;
+  // Cut-off wavefront heuristically
+  if (wf_aligner->heuristic.strategy != wf_heuristic_none) {
+    const bool alignment_dropped = wavefront_heuristic_cufoff(wf_aligner,score);
+    if (alignment_dropped) {
+      wf_aligner->align_status.status = WF_STATUS_HEURISTICALY_DROPPED;
+      return true; // Done
+    }
+  }
+  return false; // Not done
 }
 bool wavefront_extend_custom(
     wavefront_aligner_t* const wf_aligner,
@@ -218,12 +233,19 @@ bool wavefront_extend_custom(
   // Extend wavefront
   const bool endsfree = (wf_aligner->alignment_form.span == alignment_endsfree);
   const bool end_reached = wavefront_extend_matches_custom(wf_aligner,score,endsfree);
-  if (end_reached) return true;
-  // Reduce wavefront adaptively
-  if (wf_aligner->reduction.reduction_strategy == wavefront_reduction_adaptive) {
-    wavefront_reduce(wf_aligner,score);
+  if (end_reached) {
+    wf_aligner->align_status.status = WF_STATUS_SUCCESSFUL;
+    return true; // Done
   }
-  return false;
+  // Cut-off wavefront heuristically
+  if (wf_aligner->heuristic.strategy != wf_heuristic_none) {
+    const bool alignment_dropped = wavefront_heuristic_cufoff(wf_aligner,score);
+    if (alignment_dropped) {
+      wf_aligner->align_status.status = WF_STATUS_HEURISTICALY_DROPPED;
+      return true; // Done
+    }
+  }
+  return false; // Not done
 }
 
 

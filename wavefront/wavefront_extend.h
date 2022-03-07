@@ -35,11 +35,6 @@
 #include "wavefront_aligner.h"
 
 /*
- * Constants
- */
-#define WAVEFRONT_PADDING  10
-
-/*
  * Wavefront exact "extension"
  */
 bool wavefront_extend_end2end(

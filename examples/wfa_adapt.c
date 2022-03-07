@@ -42,10 +42,11 @@ int main(int argc,char* argv[]) {
   attributes.affine_penalties.mismatch = 4;
   attributes.affine_penalties.gap_opening = 6;
   attributes.affine_penalties.gap_extension = 2;
-  // Set reduction adaptive
-  attributes.reduction.reduction_strategy = wavefront_reduction_adaptive;
-  attributes.reduction.min_wavefront_length = 10;
-  attributes.reduction.max_distance_threshold = 50;
+  // Set heuristic wf-adaptive
+  attributes.heuristic.strategy = wf_heuristic_wfadaptive;
+  attributes.heuristic.min_wavefront_length = 10;
+  attributes.heuristic.max_distance_threshold = 50;
+  attributes.heuristic.steps_between_cutoffs = 1;
   // Initialize Wavefront Aligner
   wavefront_aligner_t* const wf_aligner = wavefront_aligner_new(&attributes);
   // Align

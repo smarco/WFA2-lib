@@ -105,7 +105,7 @@ void cigar_add_mismatches(
         ++p;
         break;
       default:
-        fprintf(stderr,"Aband-gaba. Wrong edit operation\n");
+        fprintf(stderr,"[CIGAR] Wrong edit operation\n");
         exit(1);
         break;
     }
@@ -171,7 +171,7 @@ int cigar_score_gap_affine(
         score -= penalties->gap_extension + ((last_op=='I') ? 0 : penalties->gap_opening);
         break;
       default:
-        fprintf(stderr,"Computing CIGAR score: Unknown operation\n");
+        fprintf(stderr,"[CIGAR] Computing CIGAR score: Unknown operation\n");
         exit(1);
     }
     last_op = cigar->operations[i];
@@ -194,7 +194,7 @@ int cigar_score_gap_affine2p_get_operations_score(
       return MIN(score1,score2);
     }
     default:
-      fprintf(stderr,"Computing CIGAR score: Unknown operation\n");
+      fprintf(stderr,"[CIGAR] Computing CIGAR score: Unknown operation\n");
       exit(1);
   }
 }
@@ -270,7 +270,7 @@ bool cigar_check_alignment(
         if (pattern[pattern_pos] != text[text_pos]) {
           if (verbose) {
             fprintf(stream,
-                "Align Check. Alignment not matching (pattern[%d]=%c != text[%d]=%c)\n",
+                "[AlignCheck] Alignment not matching (pattern[%d]=%c != text[%d]=%c)\n",
                 pattern_pos,pattern[pattern_pos],text_pos,text[text_pos]);
           }
           return false;
@@ -283,7 +283,7 @@ bool cigar_check_alignment(
         if (pattern[pattern_pos] == text[text_pos]) {
           if (verbose) {
             fprintf(stream,
-                "Align Check. Alignment not mismatching (pattern[%d]=%c == text[%d]=%c)\n",
+                "[AlignCheck] Alignment not mismatching (pattern[%d]=%c == text[%d]=%c)\n",
                 pattern_pos,pattern[pattern_pos],text_pos,text[text_pos]);
           }
           return false;
@@ -298,7 +298,7 @@ bool cigar_check_alignment(
         ++pattern_pos;
         break;
       default:
-        fprintf(stderr,"CIGAR check. Unknown edit operation '%c'\n",operations[i]);
+        fprintf(stderr,"[AlignCheck] Unknown edit operation '%c'\n",operations[i]);
         exit(1);
         break;
     }
@@ -307,7 +307,7 @@ bool cigar_check_alignment(
   if (pattern_pos != pattern_length) {
     if (verbose) {
       fprintf(stream,
-          "Align Check. Alignment incorrect length (pattern-aligned=%d,pattern-length=%d)\n",
+          "[AlignCheck] Alignment incorrect length (pattern-aligned=%d,pattern-length=%d)\n",
           pattern_pos,pattern_length);
     }
     return false;
@@ -315,7 +315,7 @@ bool cigar_check_alignment(
   if (text_pos != text_length) {
     if (verbose) {
       fprintf(stream,
-          "Align Check. Alignment incorrect length (text-aligned=%d,text-length=%d)\n",
+          "[AlignCheck] Alignment incorrect length (text-aligned=%d,text-length=%d)\n",
           text_pos,text_length);
     }
     return false;

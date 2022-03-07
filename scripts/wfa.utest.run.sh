@@ -10,7 +10,7 @@ rm *.log *.alg
 
 # Config
 ALGORITHM="gap-affine-wfa"  
-REDUCTION="--wfa-reduction=adaptive --wfa-reduction-parameters 10,50"
+REDUCTION="--wfa-heuristic=wfa-adaptive --wfa-heuristic-parameters 10,50,1"
 LOWMEMORY="--wfa-memory-mode=med"
 
 # Utest for length=100
