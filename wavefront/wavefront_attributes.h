@@ -37,12 +37,13 @@
 #include "alignment/affine_penalties.h"
 #include "alignment/affine2p_penalties.h"
 #include "alignment/linear_penalties.h"
+#include "system/profiler_timer.h"
 #include "system/mm_allocator.h"
 
 #include "wavefront_penalties.h"
-#include "wavefront_reduction.h"
 #include "wavefront_plot.h"
 #include "wavefront_display.h"
+#include "wavefront_heuristic.h"
 
 /*
  * Alignment scope
@@ -107,6 +108,8 @@ typedef struct {
   //  2 - Report each sequence aligned (brief)
   //  3 - Report each sequence aligned (very verbose)
   int verbose;                   // Verbose (regulates messages during alignment)
+  // Profile
+  profiler_timer_t timer;        // Time alignment
 } alignment_system_t;
 
 /*
@@ -131,8 +134,8 @@ typedef struct {
   linear_penalties_t linear_penalties;     // Gap-linear penalties (placeholder)
   affine_penalties_t affine_penalties;     // Gap-affine penalties (placeholder)
   affine2p_penalties_t affine2p_penalties; // Gap-affine-2p penalties (placeholder)
-  // Reduction strategy
-  wavefront_reduction_t reduction;         // Wavefront reduction
+  // Heuristic strategy
+  wavefront_heuristic_t heuristic;         // Wavefront heuristic
   // Memory model
   wavefront_memory_t memory_mode;          // Wavefront memory strategy (modular wavefronts and piggyback)
   // Custom function to compare sequences

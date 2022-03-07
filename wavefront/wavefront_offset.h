@@ -43,7 +43,7 @@ typedef uint32_t wf_unsigned_offset_t;
 /*
  * Constants
  */
-#define WAVEFRONT_OFFSET_NULL (INT32_MIN/2) // TODO Check occurrences and make sure (off < 0) == NULL
+#define WAVEFRONT_OFFSET_NULL (INT32_MIN/2)
 
 /*
  * Translate k and offset to coordinates h,v

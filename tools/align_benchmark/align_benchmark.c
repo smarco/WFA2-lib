@@ -149,9 +149,10 @@ typedef struct {
   double text_end_free;
   // Wavefront parameters
   bool wfa_score_only;
-  wavefront_reduction_type wfa_reduction_type;
-  int wfa_min_wf_length;
-  int wfa_max_dist_th;
+  wf_heuristic_strategy wfa_heuristic;
+  int wfa_heuristic_p1;
+  int wfa_heuristic_p2;
+  int wfa_heuristic_p3;
   wavefront_memory_t wfa_memory_mode;
   alignment_match_funct_t wfa_match_funct;
   void* wfa_match_funct_arguments;
@@ -222,9 +223,10 @@ benchmark_args parameters = {
   .text_end_free = 0.0,
   // Wavefront parameters
   .wfa_score_only = false,
-  .wfa_reduction_type = wavefront_reduction_none,
-  .wfa_min_wf_length = 10,
-  .wfa_max_dist_th = 50,
+  .wfa_heuristic = wf_heuristic_none,
+  .wfa_heuristic_p1 = -1,
+  .wfa_heuristic_p2 = -1,
+  .wfa_heuristic_p3 = -1,
   .wfa_memory_mode = wavefront_memory_high,
   .wfa_match_funct = NULL,
   .wfa_match_funct_arguments = NULL,
@@ -257,13 +259,9 @@ benchmark_args parameters = {
  */
 void align_pairwise_test() {
   // Patters & Texts
-//  char * pattern = "GATTACA";
-//  char * text = "GATCACTA";
-  char* pattern = "AAGGGTAATCTAAGTGTCTGGTCCTTTGTCATTCTGACTTTCTTCATAATGTGATCTCCTCACCTC";
-  char* text =    "AAGGGCAATTTAAGTGTCTGGTCCTTTGTCATTCGACTTTCTTCATAATGTGATCTTCCTCACCTC";
+  char * pattern = "GATTACA";
+  char * text = "GATCACTA";
 
-  // MMAllocator
-  mm_allocator_t* const mm_allocator = mm_allocator_new(BUFFER_SIZE_8M);
   // Penalties
   linear_penalties_t linear_penalties = {
       .match = 0,
@@ -292,10 +290,10 @@ void align_pairwise_test() {
   attributes.distance_metric = gap_affine;
   attributes.linear_penalties = linear_penalties;
   attributes.affine_penalties = affine_penalties;
-  // attributes.affine2p_penalties = affine2p_penalties;
-  attributes.reduction.reduction_strategy = wavefront_reduction_none;
-  attributes.reduction.min_wavefront_length = 256;
-  attributes.reduction.max_distance_threshold = 4096;
+  attributes.heuristic.strategy = wf_heuristic_none;
+  attributes.heuristic.min_wavefront_length = 256;
+  attributes.heuristic.max_distance_threshold = 4096;
+  attributes.heuristic.steps_between_cutoffs = 10;
   attributes.alignment_scope = compute_alignment; // compute_score
   attributes.memory_mode = wavefront_memory_med;
   attributes.alignment_form.span = (endsfree) ? alignment_endsfree : alignment_end2end;
@@ -304,7 +302,6 @@ void align_pairwise_test() {
   attributes.alignment_form.text_begin_free = text_begin_free;
   attributes.alignment_form.text_end_free = text_end_free;
   attributes.plot_params.plot_enabled = false;
-  attributes.mm_allocator = mm_allocator;
   wavefront_aligner_t* const wf_aligner = wavefront_aligner_new(&attributes);
   // Align
   wavefront_align(wf_aligner,
@@ -313,7 +310,7 @@ void align_pairwise_test() {
   fprintf(stderr,">> WFA2");
   cigar_print_pretty(stderr,
       pattern,strlen(pattern),text,strlen(text),
-      &wf_aligner->cigar,mm_allocator);
+      &wf_aligner->cigar,wf_aligner->mm_allocator);
   fprintf(stderr,"SCORE: %d \n",cigar_score_gap_affine(&wf_aligner->cigar,&affine_penalties));
   // Plot
   if (attributes.plot_params.plot_enabled) {
@@ -323,7 +320,6 @@ void align_pairwise_test() {
   }
   // Free
   wavefront_aligner_delete(wf_aligner);
-  mm_allocator_delete(mm_allocator);
 }
 /*
  * Simplest Extend-matching function (for testing purposes)
@@ -355,15 +351,40 @@ wavefront_aligner_t* align_input_configure_wavefront(
   if (parameters.wfa_score_only) {
     attributes.alignment_scope = compute_score;
   }
-  // WF-Reduction
-  if (parameters.wfa_reduction_type == wavefront_reduction_adaptive) {
-    attributes.reduction.reduction_strategy = wavefront_reduction_adaptive;
-    attributes.reduction.min_wavefront_length = parameters.wfa_min_wf_length;
-    attributes.reduction.max_distance_threshold = parameters.wfa_max_dist_th;
-  } else {
-    attributes.reduction.reduction_strategy = wavefront_reduction_none;
-    attributes.reduction.min_wavefront_length = -1;
-    attributes.reduction.max_distance_threshold = -1;
+  // WF-Heuristic
+  switch (parameters.wfa_heuristic) {
+    case wf_heuristic_none:
+      attributes.heuristic.strategy = wf_heuristic_none;
+      break;
+    case wf_heuristic_banded_static:
+      attributes.heuristic.strategy = wf_heuristic_banded_static;
+      attributes.heuristic.min_k = parameters.wfa_heuristic_p1;
+      attributes.heuristic.max_k = parameters.wfa_heuristic_p2;
+      break;
+    case wf_heuristic_banded_adaptive:
+      attributes.heuristic.strategy = wf_heuristic_banded_adaptive;
+      attributes.heuristic.min_k = parameters.wfa_heuristic_p1;
+      attributes.heuristic.max_k = parameters.wfa_heuristic_p2;
+      attributes.heuristic.steps_between_cutoffs = parameters.wfa_heuristic_p3;
+      break;
+    case wf_heuristic_wfadaptive:
+      attributes.heuristic.strategy = wf_heuristic_wfadaptive;
+      attributes.heuristic.min_wavefront_length = parameters.wfa_heuristic_p1;
+      attributes.heuristic.max_distance_threshold = parameters.wfa_heuristic_p2;
+      attributes.heuristic.steps_between_cutoffs = parameters.wfa_heuristic_p3;
+      break;
+    case wf_heuristic_xdrop:
+      attributes.heuristic.strategy = wf_heuristic_xdrop;
+      attributes.heuristic.xdrop = parameters.wfa_heuristic_p1;
+      attributes.heuristic.steps_between_cutoffs = parameters.wfa_heuristic_p2;
+      break;
+    case wf_heuristic_zdrop:
+      attributes.heuristic.strategy = wf_heuristic_zdrop;
+      attributes.heuristic.zdrop = parameters.wfa_heuristic_p1;
+      attributes.heuristic.steps_between_cutoffs = parameters.wfa_heuristic_p2;
+      break;
+    default:
+      break;
   }
   // Select flavor
   switch (parameters.algorithm) {
@@ -536,8 +557,12 @@ void align_benchmark_plot_wf(
     align_input_t* const align_input,
     const int seq_id) {
   // Setup filename
-  char filename[100];
-  sprintf(filename,"%s.seq%03d.wfa",parameters.input_filename,seq_id);
+  char filename[500];
+  if (parameters.output_filename != NULL) {
+    sprintf(filename,"%s.%03d.wfa",parameters.output_filename,seq_id);
+  } else {
+    sprintf(filename,"%s.%03d.wfa",parameters.input_filename,seq_id);
+  }
   // Open file
   FILE* const wf_plot = fopen(filename,"w");
   wavefront_plot_print(wf_plot,align_input->wf_aligner);
@@ -820,7 +845,6 @@ void usage() {
       "            [Gap-linear (Needleman-Wunsch)]                             \n"
       "              gap-linear-nw                                             \n"
       "              gap-linear-wfa                                            \n"
-      "              gap-linear-wfa-adaptive                                   \n"
       "            [Gap-affine (Smith-Waterman-Gotoh)]                         \n"
       "              gap-affine-swg                                            \n"
       "              gap-affine-swg-banded                                     \n"
@@ -866,18 +890,32 @@ void usage() {
       "          --output|o <File>                                             \n"
       "          --output-full <File>                                          \n"
       "        [Penalties & Span]                                              \n"
-      "          --linear-penalties|p M,X,O                                    \n"
+      "          --linear-penalties|p M,X,I                                    \n"
       "          --affine-penalties|g M,X,O,E                                  \n"
       "          --affine2p-penalties M,X,O1,E1,O2,E2                          \n"
       "          --ends-free P0,Pf,T0,Tf                                       \n"
       "        [Wavefront parameters]                                          \n"
       "          --wfa-score-only                                              \n"
       "          --wfa-memory-mode 'high'|'med'|'low'|'ultralow'               \n"
-      "          --wfa-reduction 'none'|'adaptive'                             \n"
-      "          --wfa-reduction-parameters  <P1>,<P2>                         \n"
-      "            [Adaptive]                                                  \n"
+      "          --wfa-heuristic <Strategy>                                    \n"
+      "          --wfa-heuristic-parameters  <P1>,<P2>[,<P3>]                  \n"
+      "            [Strategy='banded-static']                                  \n"
+      "              P1 = minimum-diagonal-band (e.g., -100)                   \n"
+      "              P2 = maximum-diagonal-band (e.g., +100)                   \n"
+      "            [Strategy='banded-adaptive']                                \n"
+      "              P1 = minimum-diagonal-band (e.g., -100)                   \n"
+      "              P2 = maximum-diagonal-band (e.g., +100)                   \n"
+      "              P3 = steps-between-cutoffs                                \n"
+      "            [Strategy='wfa-adaptive']                                   \n"
       "              P1 = minimum-wavefront-length                             \n"
-      "              P2 = maxumum-difference-distance                          \n"
+      "              P2 = maximum-difference-distance                          \n"
+      "              P3 = steps-between-cutoffs                                \n"
+      "            [Strategy='xdrop']                                          \n"
+      "              P1 = x-drop                                               \n"
+      "              P2 = steps-between-cutoffs                                \n"
+      "            [Strategy='zdrop']                                          \n"
+      "              P1 = z-drop                                               \n"
+      "              P2 = steps-between-cutoffs                                \n"
       "          --wfa-max-memory <Bytes>                                      \n"
       "        [Other Parameters]                                              \n"
       "          --bandwidth <INT>                                             \n"
@@ -913,8 +951,8 @@ void parse_arguments(int argc,char** argv) {
     /* Wavefront parameters */
     { "wfa-score-only", no_argument, 0, 1000 },
     { "wfa-memory-mode", required_argument, 0, 1001 },
-    { "wfa-reduction", required_argument, 0, 1002 },
-    { "wfa-reduction-parameters", required_argument, 0, 1003 },
+    { "wfa-heuristic", required_argument, 0, 1002 },
+    { "wfa-heuristic-parameters", required_argument, 0, 1003 },
     { "wfa-custom-match-funct", no_argument, 0, 1004 },
     { "wfa-max-memory", required_argument, 0, 1005 },
     /* Other alignment parameters */
@@ -1062,7 +1100,7 @@ void parse_arguments(int argc,char** argv) {
     /*
      * Penalties
      */
-    case 'p': { // --linear-penalties M,X,O
+    case 'p': { // --linear-penalties M,X,I
       char* sentinel = strtok(optarg,",");
       parameters.linear_penalties.match = atoi(sentinel);
       sentinel = strtok(NULL,",");
@@ -1129,23 +1167,36 @@ void parse_arguments(int argc,char** argv) {
         exit(1);
       }
       break;
-    case 1002: // --wfa-reduction in {'none','adaptive'}
+    case 1002: // --wfa-heuristic in {'none'|'banded-static'|'banded-adaptive'|'wfa-adaptive'|'xdrop'|'zdrop'}
       if (strcmp(optarg,"none")==0) {
-        parameters.wfa_reduction_type = wavefront_reduction_none;
-      } else if (strcmp(optarg,"adaptive")==0) {
-        parameters.wfa_reduction_type = wavefront_reduction_adaptive;
+        parameters.wfa_heuristic = wf_heuristic_none;
+      } else if (strcmp(optarg,"banded-static")==0 || strcmp(optarg,"banded")==0) {
+        parameters.wfa_heuristic = wf_heuristic_banded_static;
+      } else if (strcmp(optarg,"banded-adaptive")==0) {
+        parameters.wfa_heuristic = wf_heuristic_banded_adaptive;
+      } else if (strcmp(optarg,"wfa-adaptive")==0) {
+        parameters.wfa_heuristic = wf_heuristic_wfadaptive;
+      } else if (strcmp(optarg,"xdrop")==0) {
+        parameters.wfa_heuristic = wf_heuristic_xdrop;
+      } else if (strcmp(optarg,"zdrop")==0) {
+        parameters.wfa_heuristic = wf_heuristic_zdrop;
       } else {
-        fprintf(stderr,"Option '--wf-reduction' must be in {'none','adaptive'}\n");
+        fprintf(stderr,"Option '--wf-heuristic' must be in {'none'|'banded-static'|'banded-adaptive'|'wfa-adaptive'|'xdrop'|'zdrop'}\n");
         exit(1);
       }
       break;
-    case 1003: { // --wfa-reduction-parameters  <P1>,<P2>
+    case 1003: { // --wfa-heuristic-parameters  <P1>,<P2>[,<P3>]
       char* sentinel = strtok(optarg,",");
       const int p1 = atoi(sentinel);
-      parameters.wfa_min_wf_length = p1;
+      parameters.wfa_heuristic_p1 = p1;
       sentinel = strtok(NULL,",");
       const int p2 = atoi(sentinel);
-      parameters.wfa_max_dist_th = p2;
+      parameters.wfa_heuristic_p2 = p2;
+      sentinel = strtok(NULL,",");
+      if (sentinel != NULL) {
+        const int p3 = atoi(sentinel);
+        parameters.wfa_heuristic_p3 = p3;
+      }
       break;
     }
     case 1004: // --wfa-custom-match-funct

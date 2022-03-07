@@ -80,16 +80,9 @@ void wavefront_plot_free(
  */
 void wavefront_plot(
     wavefront_aligner_t* const wf_aligner,
-    char* const pattern,
-    char* const text,
+    const char* const pattern,
+    const char* const text,
     const int score);
-void wavefront_plot_reduction(
-    wavefront_aligner_t* const wf_aligner,
-    const int score,
-    const int lo_base,
-    const int lo_reduced,
-    const int hi_base,
-    const int hi_reduced);
 
 /*
  * Display

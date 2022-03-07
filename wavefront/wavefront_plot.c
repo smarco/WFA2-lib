@@ -31,10 +31,6 @@
 
 #include "wavefront_plot.h"
 #include "wavefront_aligner.h"
-//#include <wavefront/wavefront_attributes.h>
-//#include <wavefront/wavefront_components.h>
-//#include <wavefront/wavefront_plot.h>
-//#include <wavefront/wavefront_reduction.h>
 
 /*
  * Setup
@@ -89,9 +85,9 @@ void wavefront_plot_free(
  */
 void wavefront_plot_component(
     wavefront_t* const wavefront,
-    char* const pattern,
+    const char* const pattern,
     const int pattern_length,
-    char* const text,
+    const char* const text,
     const int text_length,
     const int score,
     heatmap_t* const wf_heatmap,
@@ -101,9 +97,10 @@ void wavefront_plot_component(
     for (k=wavefront->lo;k<=wavefront->hi;++k) {
       const wf_offset_t offset = wavefront->offsets[k];
       if (offset >= 0) {
-        // Set score
+        // Compute coordinates
         int v = WAVEFRONT_V(k,offset);
         int h = WAVEFRONT_H(k,offset);
+        if (v>=pattern_length || h>=text_length) continue;
         heatmap_set(wf_heatmap,v,h,score);
         // Simulate extension
         if (extend_heatmap != NULL) {
@@ -118,8 +115,8 @@ void wavefront_plot_component(
 }
 void wavefront_plot(
     wavefront_aligner_t* const wf_aligner,
-    char* const pattern,
-    char* const text,
+    const char* const pattern,
+    const char* const text,
     const int score) {
   // Parameters
   const int pattern_length = wf_aligner->pattern_length;
@@ -154,27 +151,27 @@ void wavefront_plot(
         score,wf_aligner->wf_plot.d2_heatmap,NULL);
   }
 }
-void wavefront_plot_reduction(
-    wavefront_aligner_t* const wf_aligner,
-    const int score,
-    const int lo_base,
-    const int lo_reduced,
-    const int hi_base,
-    const int hi_reduced) {
-  wavefront_components_t* const wf_components = &wf_aligner->wf_components;
-  const int s = (wf_components->memory_modular) ? score%wf_components->max_score_scope : score;
-  wavefront_t* const wavefront = wf_components->mwavefronts[s];
-  heatmap_t* const heatmap = wf_aligner->wf_plot.behavior_heatmap;
-  int k;
-  for (k=lo_base;k<lo_reduced;++k) {
-    const wf_offset_t offset = wavefront->offsets[k];
-    if (offset >= 0) heatmap_set(heatmap,WAVEFRONT_V(k,offset),WAVEFRONT_H(k,offset),20);
-  }
-  for (k=hi_reduced+1;k<=hi_base;++k) {
-    const wf_offset_t offset = wavefront->offsets[k];
-    if (offset >= 0) heatmap_set(heatmap,WAVEFRONT_V(k,offset),WAVEFRONT_H(k,offset),20);
-  }
-}
+//void wavefront_plot_cutoff(
+//    wavefront_aligner_t* const wf_aligner,
+//    const int score,
+//    const int lo_base,
+//    const int lo_reduced,
+//    const int hi_base,
+//    const int hi_reduced) {
+//  wavefront_components_t* const wf_components = &wf_aligner->wf_components;
+//  const int s = (wf_components->memory_modular) ? score%wf_components->max_score_scope : score;
+//  wavefront_t* const wavefront = wf_components->mwavefronts[s];
+//  heatmap_t* const heatmap = wf_aligner->wf_plot.behavior_heatmap;
+//  int k;
+//  for (k=lo_base;k<lo_reduced;++k) {
+//    const wf_offset_t offset = wavefront->offsets[k];
+//    if (offset >= 0) heatmap_set(heatmap,WAVEFRONT_V(k,offset),WAVEFRONT_H(k,offset),20);
+//  }
+//  for (k=hi_reduced+1;k<=hi_base;++k) {
+//    const wf_offset_t offset = wavefront->offsets[k];
+//    if (offset >= 0) heatmap_set(heatmap,WAVEFRONT_V(k,offset),WAVEFRONT_H(k,offset),20);
+//  }
+//}
 /*
  * Display
  */
@@ -214,11 +211,11 @@ void wavefront_plot_print(
   // Alignment mode
   fprintf(stream,"# WFAMode (");
   fprintf(stream,"%s",(wf_aligner->alignment_scope==compute_score)?"S":"A");
-  fprintf(stream,"%c",(wf_aligner->wf_components.bt_piggyback)?'F':'L');
-  fprintf(stream,"%c",(wf_aligner->alignment_form.span==alignment_end2end)?'G':'F');
-  wavefront_reduction_t* const reduction = &wf_aligner->reduction;
-  if (reduction->reduction_strategy == wavefront_reduction_adaptive) {
-    fprintf(stream,"R[%d,%d]",reduction->min_wavefront_length,reduction->max_distance_threshold);
+  fprintf(stream,"%c",(wf_aligner->wf_components.bt_piggyback)?'L':'F');
+  fprintf(stream,"%c",(wf_aligner->alignment_form.span==alignment_end2end)?'G':'S');
+  wavefront_heuristic_t* const wf_heuristic = &wf_aligner->heuristic;
+  if (wf_heuristic->strategy != wf_heuristic_none) {
+    wavefront_heuristic_print(stream,wf_heuristic);
   }
   fprintf(stream,")\n");
   // Wavefront components

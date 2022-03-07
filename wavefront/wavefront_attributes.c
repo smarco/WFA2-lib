@@ -69,9 +69,9 @@ wavefront_aligner_attr_t wavefront_aligner_attr_default = {
         .gap_opening2 = 24,
         .gap_extension2 = 1,
     },
-    // Reduction
-    .reduction = {
-        .reduction_strategy = wavefront_reduction_adaptive,
+    // Heuristic
+    .heuristic = {
+        .strategy = wf_heuristic_wfadaptive,
         .min_wavefront_length = 10,
         .max_distance_threshold = 50,
     },

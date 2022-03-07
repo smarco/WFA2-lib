@@ -63,6 +63,10 @@ build: $(APPS)
 
 setup:
 	@mkdir -p $(FOLDER_BIN) $(FOLDER_BUILD) $(FOLDER_BUILD_CPP) $(FOLDER_LIB)
+ifeq (,$(wildcard ./tools/align_benchmark/external/.built))
+	$(MAKE) --directory=tools/align_benchmark/external all
+	@touch ./tools/align_benchmark/external/.built
+endif
 	
 lib_wfa: $(SUBDIRS)
 	$(AR) $(AR_FLAGS) $(LIB_WFA) $(FOLDER_BUILD)/*.o 2> /dev/null
@@ -80,9 +84,11 @@ external: external-all
 	
 external-all:
 	$(MAKE) --directory=tools/align_benchmark/external all
+	@touch ./tools/align_benchmark/external/.built
 	
 external-clean:
 	$(MAKE) --directory=tools/align_benchmark/external clean
+	@rm ./tools/align_benchmark/external/.built
 	
 ###############################################################################
 # Subdir rule

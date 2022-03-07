@@ -132,7 +132,7 @@ void wavefront_report_lite(
   fprintf(stream,"\t%d",-wf_aligner->cigar.score);
   fprintf(stream,"\t%d\t%d",pattern_length,text_length);
   fprintf(stream,"\t%s",(wf_status==0) ? "OK" : "FAIL");
-  fprintf(stream,"\t%2.3f",TIMER_GET_TOTAL_MS(&wf_aligner->timer));
+  fprintf(stream,"\t%2.3f",TIMER_GET_TOTAL_MS(&wf_aligner->system.timer));
   fprintf(stream,"\t%luMB\t",CONVERT_B_TO_MB(wf_memory_used));
   cigar_print(stream,&wf_aligner->cigar,true);
   if (wf_aligner->match_funct != NULL) {
@@ -176,14 +176,10 @@ void wavefront_report_verbose_begin(
   fprintf(stream,"[WFA::Debug]\tPenalties\t");
   wavefronts_penalties_print(stream,&wf_aligner->penalties);
   fprintf(stream,"\n");
-  // Reduction
-  if (wf_aligner->reduction.reduction_strategy == wavefront_reduction_none) {
-    fprintf(stream,"[WFA::Debug]\tReduction\tnone\n");
-  } else if (wf_aligner->reduction.reduction_strategy == wavefront_reduction_adaptive) {
-    fprintf(stream,"[WFA::Debug]\tReduction\t(adaptive,%d,%d)\n",
-        wf_aligner->reduction.min_wavefront_length,
-        wf_aligner->reduction.max_distance_threshold);
-  }
+  // Heuristic
+  fprintf(stream,"[WFA::Debug]\tHeuristic\t");
+  wavefront_heuristic_print(stream,&wf_aligner->heuristic);
+  fprintf(stream,"\n");
   // Memory mode
   fprintf(stream,"[WFA::Debug]\tMemory.mode\t(%d,%luMB,%luMB,%luMB)\n",
       wf_aligner->memory_mode,
@@ -198,7 +194,7 @@ void wavefront_report_verbose_end(
     const uint64_t wf_memory_used) {
   fprintf(stream,"[WFA::Debug]\tFinish.status\t%d\n",wf_status);
   fprintf(stream,"[WFA::Debug]\tTime.taken\t");
-  timer_print_total(stream,&wf_aligner->timer);
+  timer_print_total(stream,&wf_aligner->system.timer);
   fprintf(stream,"\n");
   fprintf(stream,"[WFA::Debug]\tMemory.used\t%luMB\n",CONVERT_B_TO_MB(wf_memory_used));
   fprintf(stream,"[WFA::Debug]\tWFA.score\t%d\n",-wf_aligner->cigar.score);
@@ -220,7 +216,7 @@ void wavefront_debug_prologue(
     const char* const text,
     const int text_length) {
   if (wf_aligner->system.verbose >= 2) {
-    timer_start(&wf_aligner->timer);
+    timer_start(&wf_aligner->system.timer);
     if (wf_aligner->system.verbose >= 3) {
       wavefront_report_verbose_begin(stderr,wf_aligner,pattern,pattern_length,text,text_length);
     }
@@ -232,28 +228,28 @@ void wavefront_debug_epilogue(
     const int pattern_length,
     const char* const text,
     const int text_length,
-    const int wf_status,
+    const int wf_align_status,
     const uint64_t wf_memory_used) {
   if (wf_aligner->system.verbose >= 2) {
-    timer_stop(&wf_aligner->timer);
+    timer_stop(&wf_aligner->system.timer);
     if (wf_aligner->system.verbose == 2) {
       wavefront_report_lite(stderr,wf_aligner,
           pattern,pattern_length,text,text_length,
-          wf_status,wf_memory_used);
+          wf_align_status,wf_memory_used);
     } else {
       wavefront_report_verbose_end(stderr,
-          wf_aligner,wf_status,wf_memory_used);
+          wf_aligner,wf_align_status,wf_memory_used);
     }
   }
   if (wf_aligner->system.check_alignment_correct &&
-      wf_status == WF_ALIGN_SUCCESSFUL &&
+      wf_align_status == WF_STATUS_SUCCESSFUL &&
       wf_aligner->alignment_scope == compute_score) {
     if (!wavefront_check_alignment(stderr,wf_aligner)) {
     fprintf(stderr,"[WFA::Check] Alignment incorrect\n");
       wavefront_report_verbose_begin(stderr,wf_aligner,
           pattern,pattern_length,text,text_length);
       wavefront_report_verbose_end(stderr,wf_aligner,
-          wf_status,wf_memory_used);
+          wf_align_status,wf_memory_used);
       exit(1);
     }
   }
