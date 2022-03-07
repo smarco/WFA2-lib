@@ -110,17 +110,17 @@ public:
   void setHeuristicBandedAdaptive(
       const int band_min_k,
       const int band_max_k,
-      const int steps_between_cutoffs);
+      const int steps_between_cutoffs = 1);
   void setHeuristicWFadaptive(
       const int min_wavefront_length,
       const int max_distance_threshold,
-      const int steps_between_cutoffs);
+      const int steps_between_cutoffs = 1);
   void setHeuristicXDrop(
       const int xdrop,
-      const int steps_between_cutoffs);
+      const int steps_between_cutoffs = 1);
   void setHeuristicZDrop(
       const int zdrop,
-      const int steps_between_cutoffs);
+      const int steps_between_cutoffs = 1);
   // Custom extend-match function (lambda)
   void setMatchFunct(
       int (*matchFunct)(int,int,void*),
