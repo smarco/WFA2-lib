@@ -7,7 +7,7 @@
 The wavefront alignment (WFA) algorithm is an **exact** gap-affine algorithm that takes advantage of homologous regions between the sequences to accelerate the alignment process. As opposed to traditional dynamic programming algorithms that run in quadratic time, the WFA runs in time `O(ns+s^2)`, proportional to the sequence length `n` and the alignment score `s`, using `O(s^2)` memory. Moreover, the WFA algorithm exhibits simple computational patterns that can be automatically vectorized by the modern compilers for different architectures without the need to adapt the code. To intuitively illustrate why the WFA algorithm is so interesting, have a look at the following figure. On the left, it shows the cells computed by a classical dynamic programming based algorithm (like Smith-Waterman or Needleman Wunsch). On the right, the cells computed by the WFA algorithm to obtain the same result (i.e., the optimal alignment).
 
 <p align = "center">
-<img src = "img/00.wfa.vs.swg.small.png" width = "750px">
+<img src = "img/wfa.vs.swg.png" width="750px">
 </p>
 
 ### 1.2 What is WFA2-lib?
@@ -34,7 +34,7 @@ On the section [WFA2-lib features](#wfa2.features), you can explore the most rel
     * [Alignment Span](#wfa2.span)
     * [Memory modes](#wfa2.mem)
     * [Heuristic modes](#wfa2.heuristics)
-    * [Other options](#wfa2.other)
+    * [Other features](#wfa2.other)
 * [Programming with WFA2-lib](#wfa2.programming)
     * [Simple C example](#wfa2.programming.c)
     * [Simple C++ example](#wfa2.programming.cpp)
@@ -358,10 +358,8 @@ The WFA2 library implements various memory modes: `wavefront_memory_high`, `wave
 <p>
 
 ```C
-
   wavefront_aligner_attr_t attributes = wavefront_aligner_attr_default;
   attributes.memory_mode = wavefront_memory_med;
-  
 ```
 
 </p>
@@ -369,29 +367,151 @@ The WFA2 library implements various memory modes: `wavefront_memory_high`, `wave
 
 ### <a name="wfa2.heuristics"></a> 2.5 Heuristic modes
 
-The WFA algorithm can be used together with many heuristics to reduced the alignment time and memory used. 
-As it happens to other alignment methods, heuristics often result in suboptimal solutions and lost of accuracy.
-Due to the 
+The WFA algorithm can be used together with many heuristics to reduced the alignment time and memory used. As it happens to other alignment methods, heuristics can result in suboptimal solutions and lost of accuracy. Moreover, some heuristic may drop the alignment if the sequences exceed certain divergence thresholds (i.e., x-drop/z-drop). Due to the popularity of these methods and the ever-increasing need to perform pairwise alignment faster, the WFA2 library implements many of these methods. Note, **is not about how little DP-matrix you compute, but about how good the resulting alignments are.**
 
-The WFA2 library implements various of these methods.
+- **None (for comparison)**. If no heuristic is used, the WFA behaves exploring cells of the DP-matrix in increasing score order (increasing scores correspond to colors from blue to red). 
 
-- Adaptive-Wavefront alignment
+<p align="center">
+<table>
+  <tr>
+    <td><p align="center">Full-WFA</p></td>
+  </tr>
+  <tr>
+    <td><img src="img/heuristics.none.png" align="center" width="400px"></td>
+  </tr>
+</table>
+</p>
 
-- Banded alignment
+<details><summary>Exact-mode (i.e., not-heuristic) configuration</summary>
+<p>
 
-### <a name="wfa2.other"></a> 2.7 Other options
+```C
+  wavefront_aligner_attr_t attributes = wavefront_aligner_attr_default;
+  attributes.heuristic.strategy = wf_heuristic_none;
+```
 
-- Pause-and-resume mode
+</p>
+</details>
 
-- Parallel mode
+- **Banded alignment.** Sets a fixed band in the diagonals preventing the wavefront from growing beyond those limits. It allow setting the minimum diagonal (i.e., min_k) and maximum diagonal (i.e., max_k).
 
-- Maximum memory
+<p align="center">
+<table>
+  <tr>
+    <td><p align="center">Banded(10,10)</p></td>
+    <td><p align="center">Banded(10,150)</p></td>
+  </tr>
+  <tr>
+    <td><img src="img/heuristics.band.10.10.png" align="center" width="400px"></td>
+    <td><img src="img/heuristics.band.10.150.png" align="center" width="400px"></td>
+  </tr>
+</table>
+</p>
 
-- Lambda mode
+<details><summary>Static-band configuration</summary>
+<p>
 
-- Plot
+```C
+  wavefront_aligner_attr_t attributes = wavefront_aligner_attr_default;
+  attributes.heuristic.strategy = wf_heuristic_banded_static;
+  attributes.heuristic.min_k = -10;
+  attributes.heuristic.max_k = +10;
+```
 
-- Check
+</p>
+</details>
+
+- **Adaptive-Band alignment.** Similar to the static-band heuristics but allows the band to move towards the diagonals closer to the end of the alignment. Unlike the static-band that is performed on each step, the adaptive-band heuristics allows configuring the number of steps between heuristic band cut-offs.
+
+<p align="center">
+<table>
+  <tr>
+    <td><p align="center">Adaptive-Band(10,10,1)</p></td>
+    <td><p align="center">Adaptive-Band(50,50,1)</p></td>
+  </tr>
+  <tr>
+    <td><img src="img/heuristics.aband.10.10.png" align="center" width="400px"></td>
+    <td><img src="img/heuristics.aband.50.50.png" align="center" width="400px"></td>
+  </tr>
+</table>
+</p>
+
+<details><summary>Adaptive-band configuration</summary>
+<p>
+
+```C
+  wavefront_aligner_attr_t attributes = wavefront_aligner_attr_default;
+  attributes.heuristic.strategy = wf_heuristic_banded_adaptive;
+  attributes.heuristic.min_k = -10;
+  attributes.heuristic.max_k = +10;
+  attributes.heuristic.steps_between_cutoffs = 1;
+```
+
+</p>
+</details>
+
+- **Adaptive-Wavefront alignment.** This WFA heuristic removes outer diagonals that are extremely far behind compared to other ones in the same wavefront. Unlike other methods, the adaptive-wavefront reduction heuristic prunes based on the potential of the diagonal to lead to the optimal solution, without previous knowledge of the error between the sequences.
+
+<p align="center">
+<table>
+  <tr>
+    <td><p align="center">Adaptive-WF(10,50)</p></td>
+    <td><p align="center">Adaptive-WF(10,50,10)</p></td>
+  </tr>
+  <tr>
+    <td><img src="img/heuristics.wfadap.10.50.1.png" align="center" width="400px"></td>
+    <td><img src="img/heuristics.wfadap.10.50.10.png" align="center" width="400px"></td>
+  </tr>
+</table>
+</p>
+
+<details><summary>Adaptive-Wavefront configuration</summary>
+<p>
+
+```C
+  wavefront_aligner_attr_t attributes = wavefront_aligner_attr_default;
+  attributes.heuristic.strategy = wf_heuristic_wfadaptive;
+  attributes.heuristic.min_wavefront_length = 10;
+  attributes.heuristic.max_distance_threshold = 50;
+  attributes.heuristic.steps_between_cutoffs = 1;
+```
+
+</p>
+</details>
+
+- **X-drop.** [Under active testing] Implements the classical X-drop heuristic to abandon diagonals (or even alignments) that fall more than X from the previously best observed score.
+
+<details><summary>X-drop configuration</summary>
+<p>
+
+```C
+  wavefront_aligner_attr_t attributes = wavefront_aligner_attr_default;
+  attributes.heuristic.strategy = wf_heuristic_xdrop;
+  attributes.heuristic.xdrop = 100;
+  attributes.heuristic.steps_between_cutoffs = 100;
+```
+
+</p>
+</details> 
+
+- **Z-drop**. [Under active testing] Implements the Z-drop heuristic. It drops the diagonals (or even the alignment) if the score drops too fast in the diagonal direction.
+
+<details><summary>Z-drop configuration</summary>
+<p>
+
+```C
+  wavefront_aligner_attr_t attributes = wavefront_aligner_attr_default;
+  attributes.heuristic.strategy = wf_heuristic_zdrop;
+  attributes.heuristic.zdrop = 100;
+  attributes.heuristic.steps_between_cutoffs = 100;
+```
+
+</p>
+</details>
+
+### <a name="wfa2.other"></a> 2.7 Other features
+
+
 
 ## <a name="wfa2.programming"></a> 3. PROGRAMMING WITH WFA2-LIB
 
@@ -452,7 +572,7 @@ $> gcc -O3 wfa_example.c -o wfa_example -lwfa
 $> ./wfa_example
 ```
 
-**IMPORTANT.** Once an alignment object is created, **it is strongly recommended to reuse the alignment object to compute multiple alignment**. Creating and destroying the alignment object for every alignment computed can have a significant overhead. Reusing the alignment object allows repurposing internal datastructures, minimize the cost of memory allocations, avoid multiple alignment setups and precomputations, etc.
+**IMPORTANT.** Once an alignment object is created, **it is strongly recommended to reuse the alignment object to compute multiple alignments**. Creating and destroying the alignment object for every alignment computed can have a significant overhead. Reusing the alignment object allows repurposing internal datastructures, minimize the cost of memory allocations, avoid multiple alignment setups and precomputations, etc.
 
 ### <a name="wfa2.programming.cpp"></a> 3.2 Simple C++ example
 
@@ -493,7 +613,7 @@ cout << "TEXT: " << text  << endl;
 cout << "CIGAR: " << cigar  << endl;
 ```
 
-**IMPORTANT.** Once an alignment object is created, **it is strongly recommended to reuse the alignment object to compute multiple alignment**. Creating and destroying the alignment object for every alignment computed can have a significant overhead. Reusing the alignment object allows repurposing internal datastructures, minimize the cost of memory allocations, avoid multiple alignment setups and precomputations, etc.
+**IMPORTANT.** Once an alignment object is created, **it is strongly recommended to reuse the alignment object to compute multiple alignments**. Creating and destroying the alignment object for every alignment computed can have a significant overhead. Reusing the alignment object allows repurposing internal datastructures, minimize the cost of memory allocations, avoid multiple alignment setups and precomputations, etc.
 
 ## <a name="wfa2.complains"></a> 4. REPORTING BUGS AND FEATURE REQUEST
 
@@ -503,6 +623,16 @@ Feedback and bug reporting is highly appreciated. Please report any issue or sug
 
 WFA2-lib is distributed under MIT licence.
 
-## <a name="wfa2.cite"></a> 6. CITATION
+## <a name="wfa2.complains"></a> 6. AUTHORS
+
+[Santiago Marco-Sola](https://github.com/smarco) (santiagomsola@gmail.com) is the main developer and the person you should address your complaints.
+
+[Andrea Guarracino](https://github.com/AndreaGuarracino) and [Erik Garrison](https://github.com/ekg) have contributed to the design of new features and intensive testing of this library.
+
+Mique Moretó has contributed with fruitful technical discussions and tireless efforts seeking funding, so we could keep working on this project.
+
+## <a name="wfa2.cite"></a> 7. CITATION
 
 **Santiago Marco-Sola, Juan Carlos Moure, Miquel Moreto, Antonio Espinosa**. ["Fast gap-affine pairwise alignment using the wavefront algorithm."](https://doi.org/10.1093/bioinformatics/btaa777) Bioinformatics, 2020.
+
+
