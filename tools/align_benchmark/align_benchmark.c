@@ -1160,8 +1160,6 @@ void parse_arguments(int argc,char** argv) {
         parameters.wfa_memory_mode = wavefront_memory_med;
       } else if (strcmp(optarg,"low")==0) {
         parameters.wfa_memory_mode = wavefront_memory_low;
-      } else if (strcmp(optarg,"ultralow")==0) {
-        parameters.wfa_memory_mode = wavefront_memory_ultralow;
       } else {
         fprintf(stderr,"Option '--wfa-memory-mode' must be in {'high','med','low'}\n");
         exit(1);
