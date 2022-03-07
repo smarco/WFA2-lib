@@ -352,7 +352,7 @@ The WFA2 library allows computing alignments with different spans or shapes. Alt
 
 ### <a name="wfa2.mem"></a> 2.4 Memory modes
 
-The WFA2 library implements various memory modes: `wavefront_memory_high`, `wavefront_memory_med`, `wavefront_memory_low`, `wavefront_memory_ultralow`. These modes allow regulating the overall memory consumption at the expense of execution time. The standard WFA algorithm, which stores explicitly all wavefronts in memory, correspond to the mode `wavefront_memory_high`. The other methods progressively reduce the memory usage at the expense of slightlier larger alignment times. These memory modes can be used transparently with other alignment options and generate identical results. Note that the score-only alignment is not affected by this option (using a minimal memory footprint of `O(s)`).
+The WFA2 library implements various memory modes: `wavefront_memory_high`, `wavefront_memory_med`, `wavefront_memory_low`. These modes allow regulating the overall memory consumption at the expense of execution time. The standard WFA algorithm, which stores explicitly all wavefronts in memory, correspond to the mode `wavefront_memory_high`. The other methods progressively reduce the memory usage at the expense of slightlier larger alignment times. These memory modes can be used transparently with other alignment options and generate identical results. Note that the score-only alignment is not affected by this option (using a minimal memory footprint of `O(s)`).
 
 <details><summary>Memory-mode configuration</summary>
 <p>

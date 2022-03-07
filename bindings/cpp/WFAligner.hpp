@@ -53,7 +53,6 @@ public:
     MemoryHigh,
     MemoryMed,
     MemoryLow,
-    MemoryUltralow,
   };
   enum AlignmentScope {
     Score,
