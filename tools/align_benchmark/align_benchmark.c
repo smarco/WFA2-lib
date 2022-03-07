@@ -522,7 +522,7 @@ bool align_benchmark_read_input(
  */
 void align_benchmark_print_progress(
     const int seqs_processed) {
-  const uint64_t time_elapsed_alg = timer_get_total_ns(&parameters.timer_global);
+  const uint64_t time_elapsed_alg = timer_get_current_total_ns(&parameters.timer_global);
   const float rate_alg = (float)seqs_processed/(float)TIMER_CONVERT_NS_TO_S(time_elapsed_alg);
   fprintf(stderr,"...processed %d reads (alignment = %2.3f seq/s)\n",seqs_processed,rate_alg);
 }
@@ -896,7 +896,7 @@ void usage() {
       "          --ends-free P0,Pf,T0,Tf                                       \n"
       "        [Wavefront parameters]                                          \n"
       "          --wfa-score-only                                              \n"
-      "          --wfa-memory-mode 'high'|'med'|'low'|'ultralow'               \n"
+      "          --wfa-memory-mode 'high'|'med'|'low'                          \n"
       "          --wfa-heuristic <Strategy>                                    \n"
       "          --wfa-heuristic-parameters  <P1>,<P2>[,<P3>]                  \n"
       "            [Strategy='banded-static']                                  \n"
@@ -1153,7 +1153,7 @@ void parse_arguments(int argc,char** argv) {
     case 1000: // --wfa-score-only
       parameters.wfa_score_only = true;
       break;
-    case 1001: // --wfa-memory-mode in {'high','med','low','ultralow'}
+    case 1001: // --wfa-memory-mode in {'high','med','low'}
       if (strcmp(optarg,"high")==0) {
         parameters.wfa_memory_mode = wavefront_memory_high;
       } else if (strcmp(optarg,"med")==0) {
@@ -1163,7 +1163,7 @@ void parse_arguments(int argc,char** argv) {
       } else if (strcmp(optarg,"ultralow")==0) {
         parameters.wfa_memory_mode = wavefront_memory_ultralow;
       } else {
-        fprintf(stderr,"Option '--wfa-memory-mode' must be in {'high','med','low','ultralow'}\n");
+        fprintf(stderr,"Option '--wfa-memory-mode' must be in {'high','med','low'}\n");
         exit(1);
       }
       break;
@@ -1345,6 +1345,29 @@ void parse_arguments(int argc,char** argv) {
         fprintf(stderr,"Parameter 'bandwidth' has no effect with the selected algorithm\n");
         exit(1);
       }
+      break;
+  }
+  // Check 'wfa-heuristic'
+  switch (parameters.wfa_heuristic) {
+    case wf_heuristic_banded_static:
+    case wf_heuristic_xdrop:
+    case wf_heuristic_zdrop:
+      if (parameters.wfa_heuristic_p1 == -1 ||
+          parameters.wfa_heuristic_p2 == -1) {
+        fprintf(stderr,"Heuristic requires parameters '--wfa-heuristic-parameters' <P1>,<P2>\n");
+        exit(1);
+      }
+      break;
+    case wf_heuristic_banded_adaptive:
+    case wf_heuristic_wfadaptive:
+      if (parameters.wfa_heuristic_p1 == -1 ||
+          parameters.wfa_heuristic_p2 == -1 ||
+          parameters.wfa_heuristic_p3 == -1) {
+        fprintf(stderr,"Heuristic requires parameters '--wfa-heuristic-parameters' <P1>,<P2>,<P3>\n");
+        exit(1);
+      }
+      break;
+    default:
       break;
   }
   // Checks parallel

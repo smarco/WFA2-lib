@@ -70,37 +70,6 @@ void wavefront_backtrace_offload_blocks_selective(
   }
   wf_backtrace_buffer_add_used(bt_buffer,current_pos-global_pos);
 }
-void wavefront_backtrace_offload_blocks_all(
-    wf_offset_t* const out_offsets,
-    pcigar_t* const out_bt_pcigar,
-    bt_block_idx_t* const out_bt_prev,
-    const int lo,
-    const int hi,
-    wf_backtrace_buffer_t* const bt_buffer) {
-  // Offload all BT-blocks (no matter the occupancy)
-  int k = lo;
-  while (k <= hi) {
-    // Fetch BT-buffer free memory
-    int bt_blocks_available;
-    bt_block_t* bt_block_mem;
-    const bt_block_idx_t global_pos = wf_backtrace_buffer_get_mem(bt_buffer,&bt_block_mem,&bt_blocks_available);
-    // Offload as many BT-blocks as possible
-    const int offloaded_blocks = MIN(hi-k+1,bt_blocks_available);
-    int offset;
-    PRAGMA_LOOP_VECTORIZE
-    for (offset=0;offset<offloaded_blocks;++offset) {
-      // Store
-      bt_block_mem[offset].pcigar = out_bt_pcigar[k+offset];
-      bt_block_mem[offset].prev_idx = out_bt_prev[k+offset];
-      // Reset
-      out_bt_pcigar[k+offset] = 0;
-      out_bt_prev[k+offset] = global_pos+offset;
-    }
-    // Update offloaded
-    wf_backtrace_buffer_add_used(bt_buffer,offloaded_blocks);
-    k += offloaded_blocks;
-  }
-}
 /*
  * Backtrace offloading (linear)
  */
@@ -117,17 +86,12 @@ int wavefront_backtrace_offload_blocks_linear(
   // Select memory-mode
   switch (wavefront_memory) {
     case wavefront_memory_med:
-      wavefront_backtrace_offload_blocks_all(
-          out_offsets,out_bt_pcigar,out_bt_prev,lo,hi,bt_buffer);
-      return 0; // Maximum occupancy (all empty)
-      break;
-    case wavefront_memory_low:
       wavefront_backtrace_offload_blocks_selective(
           out_offsets,out_bt_pcigar,out_bt_prev,
           lo,hi,PCIGAR_HALF_FULL_MASK,bt_buffer);
       return PCIGAR_MAX_LENGTH/2; // Half occupancy
       break;
-    case wavefront_memory_ultralow:
+    case wavefront_memory_low:
       wavefront_backtrace_offload_blocks_selective(
           out_offsets,out_bt_pcigar,out_bt_prev,
           lo,hi,PCIGAR_FULL_MASK,bt_buffer);
@@ -180,16 +144,11 @@ int wavefront_backtrace_offload_blocks_affine(
   // Select memory-mode
   switch (wavefront_memory) {
     case wavefront_memory_med:
-      wavefront_backtrace_offload_blocks_all(
-          out_offsets,out_bt_pcigar,out_bt_prev,lo,hi,bt_buffer);
-      return 0; // Maximum occupancy (all empty)
-      break;
-    case wavefront_memory_low:
       wavefront_backtrace_offload_blocks_selective(
           out_offsets,out_bt_pcigar,out_bt_prev,
           lo,hi,PCIGAR_HALF_FULL_MASK,bt_buffer);
       return PCIGAR_MAX_LENGTH/2; // Half occupancy
-    case wavefront_memory_ultralow:
+    case wavefront_memory_low:
       wavefront_backtrace_offload_blocks_selective(
           out_offsets,out_bt_pcigar,out_bt_prev,
           lo,hi,PCIGAR_ALMOST_FULL_MASK,bt_buffer);

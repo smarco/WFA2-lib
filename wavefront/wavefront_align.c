@@ -205,8 +205,6 @@ void wavefront_align_terminate(
   // Fetch wavefront
   if (wf_components->memory_modular) score = score % wf_components->max_score_scope;
   wavefront_t* const mwavefront = wf_components->mwavefronts[score];
-  // DEBUG
-  //wavefront_aligner_print(stderr,wf_aligner,score_final-10,score_final,6,16);
   // Retrieve alignment
   if (wf_aligner->alignment_scope == compute_score) {
     cigar_clear(&wf_aligner->cigar);
@@ -246,6 +244,8 @@ int wavefront_align_sequences(
     // Exact extend s-wavefront
     const bool finished = (*wf_align_extend)(wf_aligner,score);
     if (finished) {
+      // DEBUG
+      // wavefront_aligner_print(stderr,wf_aligner,0,score,7,0);
       if (wf_aligner->align_status.status == WF_STATUS_SUCCESSFUL) {
         wavefront_align_terminate(wf_aligner,score);
       }

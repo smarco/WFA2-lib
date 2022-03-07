@@ -201,7 +201,8 @@ void wavefront_cufoff_banded_adaptive(
   const int max_wf_length = wf_heuristic->max_k - wf_heuristic->min_k + 1;
   if (wf_length > max_wf_length) {
     // Sample wavefront
-    const int quarter = wf_length/4;
+    const int leeway = (wf_length - max_wf_length) / 2;
+    const int quarter = wf_length / 4;
     const int dist_p0 = wf_compute_distance_end2end(
         offsets[lo],lo,pattern_length,text_length);
     const int dist_p1 = wf_compute_distance_end2end(
@@ -212,11 +213,13 @@ void wavefront_cufoff_banded_adaptive(
         offsets[hi],hi,pattern_length,text_length);
     // Heuristically decide where to place the band
     int new_lo = lo;
-    if (dist_p0 > dist_p3) new_lo += quarter;
-    if (dist_p1 > dist_p2) new_lo += quarter;
+    if (dist_p0 > dist_p3) new_lo += leeway;
+    if (dist_p1 > dist_p2) new_lo += leeway;
     // Set wavefront limits
     wavefront->lo = new_lo;
+    if (wavefront->lo < lo) wavefront->lo = lo;
     wavefront->hi = new_lo + max_wf_length - 1;
+    if (wavefront->hi > hi) wavefront->hi = hi;
   }
   // Set wait steps (don't repeat this heuristic often)
   wf_heuristic->steps_wait = wf_heuristic->steps_between_cutoffs;
