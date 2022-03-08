@@ -1,0 +1,16 @@
+
+
+SUFFIX = $(NAMESPACE:$(NAMESPACE)=.$(NAMESPACE))
+GABA_OBJS = $(shell bash -c "echo gaba.{linear,affine,combined}.{16,32,64}$(SUFFIX).o")
+
+all: $(GABA_OBJS) gaba_common.o
+
+$(GABA_OBJS): gaba.c
+	$(CC) -c -o $@ $(CFLAGS) -DMODEL=`echo $@ | cut -d'.' -f2 | tr a-z A-Z` -DBW=`echo $@ | cut -d'.' -f3` -DSUFFIX $<
+
+gaba_common.o: gaba_common.c
+	$(CC) -c -o $@ $(CFLAGS) $<
+
+gaba.c: gaba.h log.h unittest.h
+gaba_common.c: gaba.h gaba_parse.h
+gaba_wrap.h: gaba.h log.h unittest.h

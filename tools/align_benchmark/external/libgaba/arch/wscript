@@ -1,0 +1,47 @@
+#! /usr/bin/env python
+# encoding: utf-8
+
+def options(opt):
+	pass
+
+def configure(conf):
+	# first check if AVX2 intrinsics are available on the compiler
+	# note: check not the cpu but the compiler thus inline rdtsc is not appropriate here
+	if(conf.check_cc(fragment='''
+		#include <x86intrin.h>
+		int main(void) {
+			volatile __m256i a = _mm256_set1_epi8(1);
+			volatile __m256i b = _mm256_set1_epi8(-2);
+			volatile __m256i c = _mm256_add_epi8(a, b);
+			return 0;
+		}
+		''',
+		execute = True,
+		cflags = '-march=core-avx2' if conf.env.CC_NAME == 'icc' else '-mavx2',
+		mandatory = False,
+		msg = 'Checking for AVX2 instructions')):
+
+		# sse4.1 instructions are also available on the avx2 enabled machines.
+		conf.env.append_value('CFLAGS',
+			['-march=core-avx2', '-axcore-avx2'] if conf.env.CC_NAME == 'icc' else '-mavx2')
+
+	# next, check if SSE4 intrinsics are availavle.
+	elif(conf.check_cc(fragment='''
+		#include <x86intrin.h>
+		int main(void) {
+			volatile __m128i a = _mm_set1_epi8(1);
+			volatile __m128i b = _mm_set1_epi8(-2);
+			volatile __m128i c = _mm_add_epi8(a, b);
+			return 0;
+		}
+		''',
+		execute = True,
+		cflags = '-msse4.1',
+		mandatory = False,
+		msg = 'Checking for SSE4.1 instructions')):
+
+		conf.env.append_value('CFLAGS',
+			['-msse4.1', '-axsse4.1'] if conf.env.CC_NAME == 'icc' else '-msse4.1')
+
+def build(bld):
+	pass

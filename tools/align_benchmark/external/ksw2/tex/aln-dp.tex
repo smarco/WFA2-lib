@@ -1,0 +1,366 @@
+\documentclass{bioinfo}
+\copyrightyear{2017}
+\pubyear{2017}
+
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage[ruled,vlined]{algorithm2e}
+\newcommand\mycommfont[1]{\footnotesize\rmfamily{\it #1}}
+\SetCommentSty{mycommfont}
+\SetKwComment{Comment}{$\triangleright$\ }{}
+
+\usepackage{natbib}
+\bibliographystyle{apalike}
+
+\begin{document}
+\firstpage{1}
+
+\title[Pairwise alignment with DP]{On pairwise alignment with dynamic programming}
+\author[Li]{Heng Li}
+\address{Broad Institute, 415 Main Street, Cambridge, MA 02142, USA}
+
+\maketitle
+
+\begin{abstract}
+This \emph{informal} note introduces important literatures on pairwise
+biological sequence alignment with dynamic programming (DP), disambiguates a
+few different formulations, investigates the choice of gap cost function and
+discusses the implementation of DP-based alignment with a focus on practical
+applications. It targets developers who are interested in the history of
+DP-based alignment and want to understand it in depth.  Importantly, this note
+is not a general tutorial. Audience should be familiar with the basis of
+pairwise alignment before reading the note.
+\end{abstract}
+
+\begin{methods}
+\section{Alignment with dynamic programming}
+
+Let $T$ be the \emph{target} sequence or the \emph{reference} sequence of
+length $n=|T|$ and $Q$ be the \emph{query} sequence of length $m=|Q|$. Gaps on
+the target sequence are \emph{deletions}; gaps on the query sequence are
+\emph{insertions}. Function $s(i,j)$, $0\le i<n$ and $0\le j<m$, gives the
+score between the $T[i]$ and $Q[j]$. We will focus on global alignment
+algorithms because it is usually more complex than local alignment due to
+non-trivial initial conditions.
+
+\subsection{Levenshtein distance}
+
+\emph{Levenshtein distance}~\citep{Levenshtein:1966aa} is the minimum sum of
+substitutions, insertions and deletions among all possible alignments between
+two sequences. The author proposed the measurement but did not provide an
+algorithm to compute the distance. Levenshtein distance is the most common
+measure of edit distance. Other variants of edit distances may include fewer
+(e.g. no substitutions) or more types of primitive edit operations (e.g.
+transpositions).
+
+Levenshtein distance can be computed with dynamic programming (DP). Let
+$H_{ij}$ be the distance between prefixes $T[0..i]$ and $Q[0..j]$. The distance
+between the full sequences will be $H_{n-1,m-1}$, which can be recursively
+computed with
+\begin{equation}\label{eq:ed}
+H_{ij}=\min\{H_{i-1,j-1}+1-\delta_{T[i],Q[j]}, H_{i-1,j}+1, H_{i,j-1}+1\}
+\end{equation}
+where $\delta_{ab}$ is the Kronecker delta function, which equals 1 if $a=b$ or
+0 otherwise. The initial conditions are: $H_{-1,j}=j+1$ and $H_{i,-1}=i+1$.
+This is an $O(mn)$ algorithm.
+
+Practically faster algorithms exist. \citet{Landau:1986aa} found an $O(kn)$
+algorithm that guarantees to find the optimal solution if the edit distance is
+no larger than $k$. It is particularly fast if the distance is
+small~\citep{Sosic:2015aa}.
+
+Following the idea behind the 4-Russian problem~\citep{Arlazarov:1970aa},
+\citet{Wu:1996aa} made an important observation that the differences
+between adjacent cells
+\[\left\{\begin{array}{l}
+u_{ij}\triangleq H_{ij}-H_{i-1,j}\\
+v_{ij}\triangleq H_{ij}-H_{i,j-1}
+\end{array}\right.\]
+only take values $-1$, $0$ or $1$. They transformed Eq.~(\ref{eq:ed}) to
+\begin{equation}
+\left\{\begin{array}{l}
+z_{ij}=\min\{1-\delta_{T[i],Q[j]},v_{i-1,j}+1,u_{i,j-1}+1\}\\
+u_{ij}=z_{ij}-v_{i-1,j}\\
+v_{ij}=z_{ij}-u_{i,j-1}
+\end{array}\right.
+\end{equation}
+and used a lookup table to speed up the computation. \citet{Myers:1999aa}
+furthered this idea with bit-level parallelization, resulting in an $O(mn/w)$
+algorithm where $w$ is the size of a machine word in bits. Combined with
+bounding~\citep{Ukkonen:1985aa}, Myers' algorithm is significantly faster than
+Eq.~(\ref{eq:ed}) for long sequences.  Edlib~\citep{Sosic:2017aa} provides an
+efficient implementation of this algorithm with added functionality.
+
+\subsection{Linear gap cost}
+
+When \citet{Needleman:1970aa} first proposed to align a pair of biological
+sequences with DP, they focused on a linear gap cost function
+$\gamma_0(k;e)=k\cdot e$, $e>0$. Let the optimal score up to cell $(i,j)$ be
+$H_{ij}$. It can be computed with
+\begin{equation}\label{eq:linear}
+H_{ij}=\max\{H_{i-1,j-1}+s(i,j), H_{i-1,j}-e, H_{i,j-1}-e\}
+\end{equation}
+This equation is a generalization of Eq.~(\ref{eq:ed}). It gives matches,
+mismatches and gaps different weights. Typically, we require $2e$ to be larger
+than the mismatch cost; otherwise the alignment would always prefer two gaps
+over a mismatch -- the final alignment would not contain any mismatches.
+
+The Needleman-Wunsch algorithm has a history of multiple inventions in
+different fields. Readers are referred to \citet{Navarro:2001aa} for a more
+complete survey.
+
+It is also possible to apply Myer's bit-parallelis to the linear gap cost
+if $s(i,j)$ and $e$ are small integers~\citep{Loving:2014aa}.
+
+\subsection{Classical formulation of affine gap cost}
+
+With a linear cost function, a long gap is considered to arise from a series of
+small gaps independently. In evolution, however, a long gap at times results
+from one event (e.g. a transposon insertion). A linear gap cost often breaks a
+long gap into small pieces and complicates the interpretation of alignment.
+Therefore, it is discouraged to use a linear cost to produce alignment for
+evolutionarily related sequences.
+
+The limitation of linear cost motivated \citet{Waterman:1976aa} to use a more
+general cost function. This work was later folded to \citet{Smith:1981aa},
+\emph{the} Smith-Waterman paper. With a general cost, the time complexity to
+find the optimal alignment is $O(mn\max\{m,n\})$. \citet{Gotoh:1982aa} showed
+that when the cost function takes a form $\gamma_1(k;q,e)=q+k\cdot e$, which is
+called \emph{affine gap cost}, it is possible to solve the alignment problem in
+$O(mn)$ time. \citet{Altschul:1986aa} fixed an issue in the original Gotoh's
+algorithm and introduced the formulation we commonly use today.
+
+\subsubsection{Durbin's formulation}
+
+To give alignment a probablitistic interpretation, \citet{Durbin:1998uq} 
+introduced
+\begin{equation}\label{eq:durbin}
+\left\{\begin{array}{l}
+M_{ij}=\max\{M_{i-1,j-1}, E_{i-1,j-1}, F_{i-1,j-1}\} + s(i,j)\\
+E_{ij}=\max\{M_{i-1,j}-q, E_{i-1,j}\} - e\\
+F_{ij}=\max\{M_{i,j-1}-q, F_{i,j-1}\} - e
+\end{array}\right.
+\end{equation}
+This formulation has a natural connection to pair-HMM with each state having a
+clear meaning in alignment. It, however, has one problem: it disallows
+transitions between $E$ and $F$ states and thus forbids insertions immediately
+followed by deletions (and vice versa). When the gap extension cost $e$ is
+smaller than the half of a mismatch cost, transitions between $E$ and $F$ may
+yield a better alignment score. It is possible to add transitions between $E$
+and $F$ in Eq.~(\ref{eq:durbin}), but in practice, AE86's
+formulation~\citep{Altschul:1986aa} will be simpler and faster to implement.
+
+\subsubsection{AE86's formulation}
+
+In Eq.~(\ref{eq:durbin}), if we let:
+\[H_{ij}\triangleq\max\{M_{ij},E_{ij},F_{ij}\}\]
+Durbin's formulation allowing $E$--$F$ transitions becomes
+\begin{equation}\label{eq:ae86-ori}
+\left\{\begin{array}{l}
+E_{ij}=\max\{H_{i-1,j}-q, E_{i-1,j}\} - e \\
+F_{ij}=\max\{H_{i,j-1}-q, F_{i,j-1}\} - e \\
+H_{ij}=\max\{H_{i-1,j-1}+s(i,j), E_{ij}, F_{ij}\}
+\end{array}\right.
+\end{equation}
+This is AE86's formulation. In practice, we sometimes compute the cells in the
+following order
+\begin{equation}\label{eq:ae86}
+\left\{\begin{array}{l}
+H_{ij}=\max\{H_{i-1,j-1}+s(i,j), E_{ij}, F_{ij}\}\\
+E_{i+1,j}=\max\{H_{ij}-q, E_{ij}\} - e \\
+F_{i,j+1}=\max\{H_{ij}-q, F_{ij}\} - e
+\end{array}\right.
+\end{equation}
+with initial conditions
+\begin{equation}
+\left\{\begin{array}{ll}
+H_{-1,-1}=0\\
+H_{-1,j}=-q-e-j\cdot e & (0\le j<m)\\
+H_{i,-1}=-q-e-i\cdot e & (0\le i<n)\\
+E_{0j}=-2q-2e-j\cdot e & (0\le j<m)\\
+F_{i0}=-2q-2e-i\cdot e & (0\le i<n)
+\end{array}\right.
+\end{equation}
+We don't need $E_{-1,\cdot}$ or $F_{\cdot,-1}$ because Eq.~(\ref{eq:ae86})
+does not start with these initial values.
+
+AE86 can be impelmented in different ways depending on the order of computation
+and how row scores are stored. Algorithm~\ref{algo:ae86} gives one
+implementation. At the beginning of each iteration at line 2, $f=F_{ij}$,
+$h=H_{i,j-1}$, $H[j]=H_{i-1,j-1}$ and $E[j]=E_{ij}$. The loop computes
+$H$ in cell $(i,j)$, $E$ in the next row and $F$ in the next column.
+This algorithm uses a query profile at line 1. It is a common techique
+to accelerate the inner loop.
+
+\begin{algorithm}[tb]
+\DontPrintSemicolon
+\footnotesize
+\KwIn{Target sequence $T$ and query $Q$; scoring matrix $S(\cdot,\cdot)$ and
+affine gap cost $\gamma_1(k;q,e)=q+k\cdot e$}
+\KwOut{Best alignment score between $T$ and $Q$}
+\BlankLine
+\textbf{Function} {\sc AlignScore}$(T,Q,q,e)$
+\Begin {
+	\nl\For (\Comment*[f]{Generate query profile}) {$a\in\Sigma$} {
+		\For{$j\gets0$ \KwTo $|Q|-1$} {
+			$P[a][j]\gets S(Q[j],a)$\;
+		}
+	}
+	\For{$j\gets0$ \KwTo $|Q|-1$} {
+		$H[j]\gets-q-j\cdot e$\Comment*[r]{$H[j]=H_{-1,j-1}$}
+		$E[j]\gets-2q-2e-j\cdot e$\Comment*[r]{$E[j]=E_{0j}$}
+	}
+	$H[j]\gets 0$\Comment*[r]{$H_{-1,-1}=0$}
+	\For{$i\gets0$ \KwTo $|T|-1$} {
+		$f\gets-2q-2e-i\cdot e$\Comment*[r]{$f=F_{i0}$}
+		$h\gets-q-e-i\cdot e$\Comment*[r]{$h=H_{i,-1}$}
+		$p\gets P[T[i]]$\;
+		\For{$j\gets0$ \KwTo $|Q|-1$} {
+			\nl$s\gets p[j]$\Comment*[r]{$s=S(Q[j],T[i])$}
+			$h'\gets\max\{H[j]+s,E[j],f\}$\;
+			$H[j]\gets h$\Comment*[r]{$H[j]=H_{i,j-1}$}
+			$h\gets h'$\Comment*[r]{$h=H_{ij}$}
+			$E[j]\gets\max\{h-q,E[j]\}-e$\Comment*[r]{$E[j]=E_{i+1,j}$}
+			$f\gets\max\{h-q,f\}-e$\Comment*[r]{$f=F_{i,j+1}$}
+		}
+		$H[|Q|]\gets h$\;
+	}
+	\Return $H[|Q|]$\;
+}
+\caption{AE86's formulation with affine gap cost}\label{algo:ae86}
+\end{algorithm}
+
+\subsubsection{Effect of affine gap cost}\label{sec:affine-eff}
+
+For simplicity, we use one score $a>0$ for all types of matches and one cost
+$b>0$ for all types of mismatches. Ignore gaps for now. If the identity between
+$T$ and $Q$ is below $1-a/(a+b)$, $T$ and $Q$ will get a negative alignment
+score. The $b:a$ ratio sets the minimum identity. Now suppose we have a long
+deletion. If $\lceil q/(a+b)\rceil$ or more residues on the query adjacent to
+the gap are mismatches but have a perfect match to a subsequence in the gap,
+the perfect match will yield a higher alignment score and split the long gap in
+two. Gap open cost $q$ determines how easily a long gap to be split into two or
+more smaller gaps. Gap extension $e$ is directly related to $E$--$F$
+transitions: if $b>2e$, there may be insertions immediately followed by
+deletions. $q$ and $e$ together control the total number of gaps. Suppose in a
+small region there are $x$ mismatches and one gap. We may achieve a better
+score by opening a new gap and add $2y$ gap extensions if $x\cdot b>q+2y\cdot
+e$, approximately. We also note that scoring must satisfy $2(q+e)>b$; otherwise
+the alignment would not contain any mismatches.
+
+\subsection{Affine gap cost: SIMD acceleration}
+
+SIMD CPU instructions perform one action on a vector of data at the same time.
+For example, with SSE2, a type of SIMD, we can compute the sum of two vectors
+of sixteen 8-bit integers with one CPU instruction. This is much faster than
+summing with sixteen standard instructions. How many data can be processed with
+one SIMD instruction depends on the number of bits in the vector and the max
+value of each element in the vector. For example, SSE instructions operate on
+128-bit vectors. We can process four 32-bit integers or eight 16-bit integers
+at the same time. AVX instructions operate on 256-bit vectors. It doubles the
+bandwidth of SSE.
+
+SIMD has been used to speed up DP-based pairwise alignment. There are two
+general classes of SIMD algorithms: inter-sequence and intra-sequence.
+Inter-sequence algorithms~\citep{Rognes:2011aa} align multiple pairs of
+sequences at the same time. It is conceptually easier to implement and faster
+to run but it is tricky to use with other alignment routines. Intra-sequence
+algorithms align one sequence at a time. There are several ways to implement
+intra-sequence pairwise alignment, depending on how to organize multiple data
+into one vector.
+
+For simplicity, we assume each vector consists of four elements.
+\citet{Wozniak:1997aa} put $(H_{ij},H_{i+1,j-1},H_{i+2,j-2},H_{i+3,j-3})$
+into a vector and fills the DP matrix along its diagonal.
+\citet{Rognes:2000aa} took a block of column cells into a vector
+$(H_{ij},H_{i,j+1},H_{i,j+2},H_{i,j+3})$. \citet{Farrar:2007hs} interleaved columns
+into $(H_{ij},H_{i,t+j},H_{i,2t+j},H_{i,3t+j})$ in a striped manner, where
+$t=\lfloor(m+3)/4\rfloor$ -- the algorithm collates cells distant apart. In
+practice, Farrar's striped algorithm is the fastest and most often
+used~\citep{Szalkowski:2008aa,Zhao:2013aa}. \citet{Daily:2016aa} developed a
+programming library that implements all three intra-sequence algorithms.
+
+\subsection{Affine gap cost: Suzuki's formulation}
+
+When working with long sequences that yield large alignment scores,
+we may need to use 32-bit integers to hold the score arrays. With SSE, we can
+only process four cells at a time. Inspired by \citet{Myers:1999aa} and
+\citet{Loving:2014aa}, \href{https://github.com/ocxtal}{Hajime Suzuki} proposed
+to rewrite Eq.~(\ref{eq:ae86}) with differences between cells:
+\begin{equation}
+\left\{\begin{array}{l}
+u_{ij}\triangleq H_{ij}-H_{i-1,j}\\
+v_{ij}\triangleq H_{ij}-H_{i,j-1}\\
+x_{ij}\triangleq E_{i+1,j}-H_{ij}\\
+y_{ij}\triangleq F_{i,j+1}-H_{ij}
+\end{array}\right.
+\end{equation}
+as
+\begin{equation}\label{eq:suzuki}
+\left\{\begin{array}{l}
+z_{ij}=\max\{s(i,j),x_{i-1,j}+v_{i-1,j},y_{i,j-1}+u_{i,j-1}\}\\
+u_{ij}=z_{ij}-v_{i-1,j}\\
+v_{ij}=z_{ij}-u_{i,j-1}\\
+x_{ij}=\max\{0,x_{i-1,j}+v_{i-1,j}-z_{ij}+q\}-q-e\\
+y_{ij}=\max\{0,y_{i,j-1}+u_{i,j-1}-z_{ij}+q\}-q-e
+\end{array}\right.
+\end{equation}
+where $z_{ij}$ is a temporary variable that does not need to be stored.  We can
+prove that all variables in these equations are bounded by gap costs and the
+extreme match and mismatch scores, but not by the sequence lengths or the peak
+alignment score. For small scores, we can encode 16 cells in one SSE vector.
+
+In practice, Suzuki's formulation is about twice as slow as Algorithm~1 without
+SSE vectorization, because it involves more computation and cannot use
+a query profile. For long sequences when the peak score does not fit 16-bit
+integers, 16-way vectorized Suzuki's formulation is twice as fast as striped
+4-way vectorization~\citep{Farrar:2007hs}. Another advantage of Suzuki's
+algorithm is that it can be adapted for banded alignment.
+
+\subsection{Piece-wise affine gap cost}
+
+Affine gap cost still has issues with long gaps. Recall that an exact match of
+length $\lceil q/(a+b)\rceil$ in the middle of a long gap splits the gap into
+two if moving this exact match to either edge of the gap leads to mismatches
+(Section~\ref{sec:affine-eff}). For noisy reads, it is not infrequent for a
+long gap to be split by incidental sequencing errors. We would prefer to
+increase the gap open cost $q$ to avoid such a split, but this would contradict
+the high INDEL error rate of some sequencing data.
+
+The root cause of this dilemma is that gaps are caused by two different
+mechanisms: evolution which may create a long gap with one event, and
+sequencing errors which generate gaps as relatively independent events. A
+better gap cost should be concave, such that $\gamma(k+1)-\gamma(k)$ is smaller
+with larger $k$.
+
+\citet{Miller:1988aa} found an $O(mn\log\max\{m,n\})$ algorithm for a concave
+gap cost function $\gamma(k)$. When $\gamma(k)$ is a piece-wise affine cost
+composed of $p$ affine cost functions, their algorithm finds the optimal
+alignment in $O(mn\log p)$ time. \citet{Gotoh:1990aa} proposed an $O(mn\cdot
+p)$ algorithm, which is simpler and probably faster for small $p$ in practice.
+
+When $p=2$, the two-piece affine cost takes the form
+\[
+\gamma_2(k;q,e,\tilde{q},\tilde{e})=\min\{q+k\cdot e,\tilde{q}+k\cdot\tilde{e}\}
+\]
+It is concave on the condition that $q+e<\tilde{q}+\tilde{e}$ and
+$e>\tilde{e}$. Effectively, this cost function applies $\gamma_1(k;q,e)$ to
+gaps shorter than $\lceil(\tilde{q}-q)/(e-\tilde{e})\rceil$ and applies
+$\gamma_1(k;\tilde{q},\tilde{e})$ to longer gaps. We can compute the maximal
+alignment score under $\gamma_2(k)$ with
+\begin{equation}\label{eq:affine2}
+\left\{\begin{array}{l}
+H_{ij} = \max\{H_{i-1,j-1}+s(i,j),E_{ij},F_{ij},\tilde{E}_{ij},\tilde{F}_{ij}\}\\
+E_{i+1,j}= \max\{H_{ij}-q,E_{ij}\}-e\\
+F_{i,j+1}= \max\{H_{ij}-q,F_{ij}\}-e\\
+\tilde{E}_{i+1,j}= \max\{H_{ij}-\tilde{q},\tilde{E}_{ij}\}-\tilde{e}\\
+\tilde{F}_{i,j+1}= \max\{H_{ij}-\tilde{q},\tilde{F}_{ij}\}-\tilde{e}
+\end{array}\right.
+\end{equation}
+Eq.~(\ref{eq:suzuki}) can be extended to work with piece-wise affine cost in a
+similar manner.
+
+\end{methods}
+
+\bibliography{aln-dp}
+\end{document}

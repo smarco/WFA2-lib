@@ -1,0 +1,56 @@
+[package]
+name = "block-aligner"
+version = "0.2.0"
+authors = ["c0deb0t <daniel.liu02@gmail.com>"]
+edition = "2018"
+license = "MIT"
+description = "SIMD-accelerated library for computing global and X-drop affine gap penalty sequence-to-sequence or sequence-to-profile alignments using an adaptive block-based algorithm."
+homepage = "https://github.com/Daniel-Liu-c0deb0t/block-aligner"
+repository = "https://github.com/Daniel-Liu-c0deb0t/block-aligner"
+readme = "README.md"
+keywords = ["SIMD", "string-distance", "alignment", "biology", "edit-distance"]
+categories = ["algorithms", "hardware-support", "science", "text-processing"]
+exclude = ["vis/*", "!vis/block_img1.png"]
+
+[package.metadata.docs.rs]
+features = ["simd_avx2"]
+
+[lib]
+crate-type = ["lib", "cdylib"]
+
+[features]
+# Enable AVX2
+simd_avx2 = []
+# Enable WASM SIMD
+simd_wasm = []
+
+# Print lots of debug information
+debug = ["debug_size"]
+# Print only the final block sizes
+debug_size = []
+# Prepare code for analysis by llvm-mca
+mca = []
+
+[profile.release]
+debug-assertions = false
+lto = "thin"
+panic = "abort"
+
+[profile.bench]
+debug-assertions = false
+lto = "thin"
+
+[dependencies]
+#wee_alloc = "^0.4"
+rand = { version = "^0.8", default-features = false, features = ["std_rng", "alloc"] }
+
+[dev-dependencies]
+bio = "^0.33"
+
+[build-dependencies]
+cbindgen = "^0.20.0"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
+parasailors = "^0.3.1"
+image = "^0.23.14"
+imageproc = "^0.22.0"
