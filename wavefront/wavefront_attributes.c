@@ -74,6 +74,7 @@ wavefront_aligner_attr_t wavefront_aligner_attr_default = {
         .strategy = wf_heuristic_wfadaptive,
         .min_wavefront_length = 10,
         .max_distance_threshold = 50,
+        .steps_between_cutoffs = 1,
     },
     // Memory model
     .memory_mode = wavefront_memory_high,

@@ -1,4 +1,4 @@
-# WFA
+# WFA2-lib
 
 ## 1. INTRODUCTION
 
