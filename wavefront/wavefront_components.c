@@ -308,8 +308,9 @@ void wavefront_components_resize_null__victim(
     // Parameters
     mm_allocator_t* const mm_allocator = wf_components->mm_allocator;
     // Expand and leave some leeway
-    const int proposed_lo = ((lo-1)*3)/2;
-    const int proposed_hi = ((hi+1)*3)/2;
+    const int wf_inc = (WAVEFRONT_LENGTH(lo,hi)*3)/2;
+    const int proposed_lo = lo - wf_inc/2;
+    const int proposed_hi = hi + wf_inc/2;
     const int proposed_wavefront_length = WAVEFRONT_LENGTH(proposed_lo,proposed_hi);
     // Reallocate victim wavefront
     wavefront_resize(wf_components->wavefront_victim,proposed_wavefront_length,mm_allocator);
