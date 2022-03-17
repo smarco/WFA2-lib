@@ -11,7 +11,7 @@ UNAME=$(shell uname)
 CC=gcc
 CPP=g++
 
-CC_FLAGS=-Wall -g
+CC_FLAGS=-Wall -g -fPIC
 
 AR=ar
 AR_FLAGS=-rsc
@@ -75,7 +75,8 @@ build: lib_wfa
 build: $(APPS)
 
 setup:
-	@mkdir -p $(FOLDER_BIN) $(FOLDER_BUILD) $(FOLDER_BUILD_CPP) $(FOLDER_LIB)
+	$( if ($(BUILD_CPP),1) $(@mkdir -p $(FOLDER_BUILD_CPP)))
+    @mkdir -p $(FOLDER_BIN) $(FOLDER_BUILD) $(FOLDER_BUILD_CPP) $(FOLDER_LIB)
 	
 lib_wfa: $(SUBDIRS)
 	$(AR) $(AR_FLAGS) $(LIB_WFA) $(FOLDER_BUILD)/*.o 2> /dev/null
