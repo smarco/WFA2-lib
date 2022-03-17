@@ -23,22 +23,35 @@ endif
 ifndef BUILD_TOOLS 
 BUILD_TOOLS=1
 endif
+
+# Note BUILD_CPP=0 overrides BUILD_EXAMPLES and BUILD_TOOLS
+ifndef BUILD_CPP
+BUILD_CPP=1
+endif
+
 ###############################################################################
 # Configuration rules
 ###############################################################################
 LIB_WFA=$(FOLDER_LIB)/libwfa.a
 LIB_WFA_CPP=$(FOLDER_LIB)/libwfacpp.a
+
 SUBDIRS=alignment \
-        bindings/cpp \
         system \
         utils \
         wavefront
-ifeq ($(BUILD_TOOLS),1)        
-    APPS+=tools/generate_dataset \
-          tools/align_benchmark
+ifeq ($(BUILD_CPP),1)
+    SUBDIRS+=bindings/cpp
 endif
-ifeq ($(BUILD_EXAMPLES),1)        
-    APPS+=examples
+
+
+ifeq ($(BUILD_CPP),1)
+    ifeq ($(BUILD_TOOLS),1)
+        APPS+=tools/generate_dataset \
+              tools/align_benchmark
+    endif
+    ifeq ($(BUILD_EXAMPLES),1)
+        APPS+=examples
+    endif
 endif
 
 release: CC_FLAGS+=-O3 -march=native -flto
@@ -66,7 +79,7 @@ setup:
 	
 lib_wfa: $(SUBDIRS)
 	$(AR) $(AR_FLAGS) $(LIB_WFA) $(FOLDER_BUILD)/*.o 2> /dev/null
-	$(AR) $(AR_FLAGS) $(LIB_WFA_CPP) $(FOLDER_BUILD)/*.o $(FOLDER_BUILD_CPP)/*.o 2> /dev/null
+	$( if ($(BUILD_CPP),1) $(AR) $((AR_FLAGS) $(LIB_WFA_CPP) $(FOLDER_BUILD)/*.o $(FOLDER_BUILD_CPP)/*.o 2> /dev/null))
 
 clean:
 	rm -rf $(FOLDER_BIN) $(FOLDER_BUILD) $(FOLDER_LIB)
