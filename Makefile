@@ -76,7 +76,7 @@ build: $(APPS)
 
 setup:
 	$( if ($(BUILD_CPP),1) $(@mkdir -p $(FOLDER_BUILD_CPP)))
-    @mkdir -p $(FOLDER_BIN) $(FOLDER_BUILD) $(FOLDER_BUILD_CPP) $(FOLDER_LIB)
+	@mkdir -p $(FOLDER_BIN) $(FOLDER_BUILD) $(FOLDER_BUILD_CPP) $(FOLDER_LIB)
 	
 lib_wfa: $(SUBDIRS)
 	$(AR) $(AR_FLAGS) $(LIB_WFA) $(FOLDER_BUILD)/*.o 2> /dev/null
