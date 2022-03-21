@@ -305,12 +305,13 @@ void wavefront_cufoff_wfadaptive(
   const int base_lo = wavefront->lo;
   if ((base_hi - base_lo + 1) < min_wavefront_length) return;
   // Use victim as temporal buffer
+  wavefront_components_resize_null__victim(&wf_aligner->wf_components,base_lo-1,base_hi+1);
   wf_offset_t* const distances = wf_aligner->wf_components.wavefront_victim->offsets;
   // Compute distance & cut-off
-  const int pattern_end_free = wf_aligner->alignment_form.pattern_end_free;
-  const int text_end_free = wf_aligner->alignment_form.text_end_free;
-  if ((wf_aligner->alignment_form.span == alignment_end2end) ||
-      (pattern_end_free==0 && text_end_free==0)) {
+//  const int pattern_end_free = wf_aligner->alignment_form.pattern_end_free;
+//  const int text_end_free = wf_aligner->alignment_form.text_end_free;
+//  if ((wf_aligner->alignment_form.span == alignment_end2end) ||
+//      (pattern_end_free==0 && text_end_free==0)) {
     const int min_distance = wavefront_compute_distance_end2end(
         wavefront,pattern_length,text_length,distances);
     // Cut-off wavefront
@@ -318,16 +319,17 @@ void wavefront_cufoff_wfadaptive(
     wavefront_cufoff_wfadaptive_reduce(
         wavefront,distances,min_distance,max_distance_threshold,
         alignment_k,alignment_k);
-  } else {
-    const int min_distance = wavefront_compute_distance_endsfree(
-        wavefront,pattern_length,text_length,
-        pattern_end_free,text_end_free,distances);
-    // Cut-off wavefront
-    const int alignment_k = WAVEFRONT_DIAGONAL(text_length,pattern_length);
-    wavefront_cufoff_wfadaptive_reduce(
-        wavefront,distances,min_distance,max_distance_threshold,
-        alignment_k-text_end_free,alignment_k+pattern_end_free);
-  }
+//  }
+//  else {
+//    const int min_distance = wavefront_compute_distance_endsfree(
+//        wavefront,pattern_length,text_length,
+//        pattern_end_free,text_end_free,distances);
+//    // Cut-off wavefront
+//    const int alignment_k = WAVEFRONT_DIAGONAL(text_length,pattern_length);
+//    wavefront_cufoff_wfadaptive_reduce(
+//        wavefront,distances,min_distance,max_distance_threshold,
+//        alignment_k-text_end_free,alignment_k+pattern_end_free);
+//  }
   // Set wait steps (don't repeat this heuristic often)
   wf_heuristic->steps_wait = wf_heuristic->steps_between_cutoffs;
 }
@@ -361,9 +363,12 @@ void wavefront_cufoff_xdrop(
     const int wf_score) {
   // Parameters
   wavefront_heuristic_t* const wf_heuristic = &wf_aligner->heuristic;
+  const int base_hi = wavefront->hi;
+  const int base_lo = wavefront->lo;
   // Check steps
   if (wf_heuristic->steps_wait > 0) return;
   // Use victim as temporal buffer
+  wavefront_components_resize_null__victim(&wf_aligner->wf_components,base_lo-1,base_hi+1);
   wf_offset_t* const sw_scores = wf_aligner->wf_components.wavefront_victim->offsets;
   // Compute SW scores (classic scores)
   wf_offset_t current_max_sw_score;
@@ -403,9 +408,12 @@ void wavefront_cufoff_zdrop(
     const int wf_score) {
   // Parameters
   wavefront_heuristic_t* const wf_heuristic = &wf_aligner->heuristic;
+  const int base_hi = wavefront->hi;
+  const int base_lo = wavefront->lo;
   // Check steps
   if (wf_heuristic->steps_wait > 0) return;
   // Use victim as temporal buffer
+  wavefront_components_resize_null__victim(&wf_aligner->wf_components,base_lo-1,base_hi+1);
   wf_offset_t* const sw_scores = wf_aligner->wf_components.wavefront_victim->offsets;
   // Compute SW scores (classic scores)
   wf_offset_t current_max_sw_score;
