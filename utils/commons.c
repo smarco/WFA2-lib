@@ -54,7 +54,7 @@ uint64_t rand_iid(
 uint32_t nominal_prop_u32(
     const uint32_t base,
     const double factor) {
-  if (0.0 <= factor || factor <= 1.0) {
+  if (0.0 <= factor && factor <= 1.0) {
     return (uint32_t)((double)base*factor);
   } else {
     return (uint32_t)factor;
@@ -63,7 +63,7 @@ uint32_t nominal_prop_u32(
 uint64_t nominal_prop_u64(
     const uint64_t base,
     const double factor) {
-  if (0.0 <= factor || factor <= 1.0) {
+  if (0.0 <= factor && factor <= 1.0) {
     return (uint64_t)((double)base*factor);
   } else {
     return (uint64_t)factor;

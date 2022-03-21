@@ -249,10 +249,6 @@ void wavefront_compute_edit(
   wf_components->mwavefronts[score_curr] = wf_curr;
   wf_components->mwavefronts[score_curr]->lo = lo;
   wf_components->mwavefronts[score_curr]->hi = hi;
-  if (wf_aligner->heuristic.strategy != wf_heuristic_none) { 
-    // For heuristics computations (as a buffer)
-    wavefront_components_resize_null__victim(wf_components,lo-1,hi+1);
-  }
   // Compute next wavefront
   if (wf_aligner->wf_components.bt_piggyback) {
     if (wf_aligner->penalties.distance_metric == indel) {

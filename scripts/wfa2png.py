@@ -205,8 +205,8 @@ def wfa_plot(filename,wfa_info,dpi,compact,extended):
 parser = argparse.ArgumentParser()
 parser.add_argument('-i', '--input', action='store', help='Input file')
 parser.add_argument('--dpi', type=int, action='store', default=1500, help='Plot resolution') # More than 2000 is hard to handle
-parser.add_argument('--compact', action='store_true', default=False, help='Plot M-Wavefront only')
-parser.add_argument('--extended', action='store_true', default=True, help='Plot M-Wavefront and extension/CIGAR')
+parser.add_argument('--compact', action='store_true', default=True, help='Plot M-Wavefront only')
+parser.add_argument('--extended', action='store_true', default=False, help='Plot M-Wavefront and extension/CIGAR')
 parser.add_argument('--full', action='store_true', default=False, help='Plot all info available')
 parser.add_argument('-H', action='store_true', dest="human_readable", default=False)
 
