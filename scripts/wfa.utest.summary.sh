@@ -1,8 +1,8 @@
 #!/bin/bash
-# PROJECT: Wavefront Alignments Algorithms
+# PROJECT: Wavefront Alignments Algorithms (Unitary Tests)
 # LICENCE: MIT License 
 # AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
-# DESCRIPTION: WFA unitary tests (for performance & correcness)
+# DESCRIPTION: WFA unitary tests (Summarise performance results)
 # USAGE: ./wfa.utest.summary.sh
 
 for FILE_ALG in *.alg

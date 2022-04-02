@@ -1,9 +1,9 @@
 #!/bin/bash
-# PROJECT: Wavefront Alignments Algorithms
+# PROJECT: Wavefront Alignments Algorithms (Unitary Tests)
 # LICENCE: MIT License 
 # AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
-# DESCRIPTION: WFA unitary tests (for performance & correcness)
-# USAGE: ./wfa.utest.cmp.sh WFAv1 WFAv2
+# DESCRIPTION: Compares alignments (*.alg) from two folders
+# USAGE: ./wfa.utest.cmp.alignments.sh wfa_results_folder_1 wfa_results_folder_2
 
 # Parameters
 FOLDER1=$1
