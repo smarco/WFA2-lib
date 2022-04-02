@@ -33,6 +33,10 @@
 #include "wavefront_compute.h"
 #include "wavefront_backtrace_offload.h"
 
+#ifdef WFA_PARALLEL
+#include <omp.h>
+#endif
+
 /*
  * Compute Kernels
  */
@@ -47,12 +51,10 @@ void wavefront_compute_indel_idm(
   const int text_length = wf_aligner->text_length;
   const wf_offset_t* const prev_offsets = wf_prev->offsets;
   wf_offset_t* const curr_offsets = wf_curr->offsets;
-  // Loop peeling (k=lo)
-  curr_offsets[lo] = prev_offsets[lo+1];
   // Compute-Next kernel loop
   int k;
   PRAGMA_LOOP_VECTORIZE
-  for (k=lo+1;k<=hi-1;++k) {
+  for (k=lo;k<=hi;++k) {
     // Compute maximum offset
     const wf_offset_t ins = prev_offsets[k-1] + 1;
     const wf_offset_t del = prev_offsets[k+1];
@@ -64,8 +66,6 @@ void wavefront_compute_indel_idm(
     if (v > pattern_length) max = WAVEFRONT_OFFSET_NULL;
     curr_offsets[k] = max;
   }
-  // Loop peeling (k=hi)
-  curr_offsets[hi] = prev_offsets[hi-1] + 1;
 }
 void wavefront_compute_edit_idm(
     wavefront_aligner_t* const wf_aligner,
@@ -78,12 +78,10 @@ void wavefront_compute_edit_idm(
   const int text_length = wf_aligner->text_length;
   const wf_offset_t* const prev_offsets = wf_prev->offsets;
   wf_offset_t* const curr_offsets = wf_curr->offsets;
-  // Loop peeling (k=lo)
-  curr_offsets[lo] = prev_offsets[lo+1];
   // Compute-Next kernel loop
   int k;
   PRAGMA_LOOP_VECTORIZE
-  for (k=lo+1;k<=hi-1;++k) {
+  for (k=lo;k<=hi;++k) {
     // Compute maximum offset
     const wf_offset_t ins = prev_offsets[k-1]; // Lower
     const wf_offset_t del = prev_offsets[k+1]; // Upper
@@ -96,8 +94,6 @@ void wavefront_compute_edit_idm(
     if (v > pattern_length) max = WAVEFRONT_OFFSET_NULL;
     curr_offsets[k] = max;
   }
-  // Loop peeling (k=hi)
-  curr_offsets[hi] = prev_offsets[hi-1] + 1;
 }
 /*
  * Compute Kernel (Piggyback)
@@ -120,14 +116,10 @@ void wavefront_compute_indel_idm_piggyback(
   wf_offset_t* const curr_offsets = wf_curr->offsets;
   pcigar_t* const curr_pcigar = wf_curr->bt_pcigar;
   bt_block_idx_t* const curr_bt_idx = wf_curr->bt_prev;
-  // Loop peeling (k=lo)
-  curr_offsets[lo] = prev_offsets[lo+1];
-  curr_pcigar[lo] = PCIGAR_PUSH_BACK_DEL(prev_pcigar[lo+1]);
-  curr_bt_idx[lo] = prev_bt_idx[lo+1];
   // Compute-Next kernel loop
   int k;
   PRAGMA_LOOP_VECTORIZE // Ifs predicated by the compiler
-  for (k=lo+1;k<=hi-1;++k) {
+  for (k=lo;k<=hi;++k) {
     // Compute maximum offset
     const wf_offset_t ins = prev_offsets[k-1] + 1;
     const wf_offset_t del = prev_offsets[k+1];
@@ -146,15 +138,6 @@ void wavefront_compute_indel_idm_piggyback(
     if (h > text_length) max = WAVEFRONT_OFFSET_NULL;
     if (v > pattern_length) max = WAVEFRONT_OFFSET_NULL;
     curr_offsets[k] = max;
-  }
-  // Loop peeling (k=hi)
-  curr_offsets[hi] = prev_offsets[hi-1] + 1;
-  curr_pcigar[hi] = PCIGAR_PUSH_BACK_INS(prev_pcigar[hi-1]);
-  curr_bt_idx[hi] = prev_bt_idx[hi-1];
-  // Offload backtrace (if necessary)
-  if (score % PCIGAR_MAX_LENGTH == 0) {
-    wavefront_backtrace_offload_blocks_linear(
-        wf_aligner,curr_offsets,curr_pcigar,curr_bt_idx,lo,hi);
   }
 }
 void wavefront_compute_edit_idm_piggyback(
@@ -175,14 +158,10 @@ void wavefront_compute_edit_idm_piggyback(
   wf_offset_t* const curr_offsets = wf_curr->offsets;
   pcigar_t* const curr_pcigar = wf_curr->bt_pcigar;
   bt_block_idx_t* const curr_bt_idx = wf_curr->bt_prev;
-  // Loop peeling (k=lo)
-  curr_offsets[lo] = prev_offsets[lo+1];
-  curr_pcigar[lo] = PCIGAR_PUSH_BACK_DEL(prev_pcigar[lo+1]);
-  curr_bt_idx[lo] = prev_bt_idx[lo+1];
   // Compute-Next kernel loop
   int k;
   PRAGMA_LOOP_VECTORIZE // Ifs predicated by the compiler
-  for (k=lo+1;k<=hi-1;++k) {
+  for (k=lo;k<=hi;++k) {
     // Compute maximum offset
     const wf_offset_t ins = prev_offsets[k-1] + 1; // Lower
     const wf_offset_t del = prev_offsets[k+1];     // Upper
@@ -208,19 +187,31 @@ void wavefront_compute_edit_idm_piggyback(
     if (v > pattern_length) max = WAVEFRONT_OFFSET_NULL;
     curr_offsets[k] = max;
   }
-  // Loop peeling (k=hi)
-  curr_offsets[hi] = prev_offsets[hi-1] + 1;
-  curr_pcigar[hi] = PCIGAR_PUSH_BACK_INS(prev_pcigar[hi-1]);
-  curr_bt_idx[hi] = prev_bt_idx[hi-1];
-  // Offload backtrace (if necessary)
-  if (score % PCIGAR_MAX_LENGTH == 0) {
-    wavefront_backtrace_offload_blocks_linear(
-        wf_aligner,curr_offsets,curr_pcigar,curr_bt_idx,lo,hi);
-  }
 }
 /*
  * Compute next wavefront
  */
+void wavefront_compute_edit_dispatcher(
+    wavefront_aligner_t* const wf_aligner,
+    const int score,
+    wavefront_t* const wf_prev,
+    wavefront_t* const wf_curr,
+    const int lo,
+    const int hi) {
+  if (wf_aligner->wf_components.bt_piggyback) {
+    if (wf_aligner->penalties.distance_metric == indel) {
+      wavefront_compute_indel_idm_piggyback(wf_aligner,wf_prev,wf_curr,lo,hi,score);
+    } else {
+      wavefront_compute_edit_idm_piggyback(wf_aligner,wf_prev,wf_curr,lo,hi,score);
+    }
+  } else {
+    if (wf_aligner->penalties.distance_metric == indel) {
+      wavefront_compute_indel_idm(wf_aligner,wf_prev,wf_curr,lo,hi);
+    } else {
+      wavefront_compute_edit_idm(wf_aligner,wf_prev,wf_curr,lo,hi);
+    }
+  }
+}
 void wavefront_compute_edit(
     wavefront_aligner_t* const wf_aligner,
     const int score) {
@@ -242,26 +233,38 @@ void wavefront_compute_edit(
   const int hi = wf_prev->hi + 1;
   //  wf_components->historic_min_lo = min_lo;
   //  wf_components->historic_max_hi = max_hi;
+  wf_prev->offsets[lo-1] = WAVEFRONT_OFFSET_NULL;
   wf_prev->offsets[lo] = WAVEFRONT_OFFSET_NULL;
   wf_prev->offsets[hi] = WAVEFRONT_OFFSET_NULL;
+  wf_prev->offsets[hi+1] = WAVEFRONT_OFFSET_NULL;
   // Allocate output wavefront
-  wavefront_t* const wf_curr = wavefront_slab_allocate(wf_aligner->wavefront_slab,lo-1,hi+1);
+  wavefront_t* const wf_curr = wavefront_slab_allocate(wf_aligner->wavefront_slab,lo-2,hi+2);
   wf_components->mwavefronts[score_curr] = wf_curr;
   wf_components->mwavefronts[score_curr]->lo = lo;
   wf_components->mwavefronts[score_curr]->hi = hi;
-  // Compute next wavefront
-  if (wf_aligner->wf_components.bt_piggyback) {
-    if (wf_aligner->penalties.distance_metric == indel) {
-      wavefront_compute_indel_idm_piggyback(wf_aligner,wf_prev,wf_curr,lo,hi,score);
-    } else {
-      wavefront_compute_edit_idm_piggyback(wf_aligner,wf_prev,wf_curr,lo,hi,score);
-    }
+  // Multithreading dispatcher
+  const int num_threads = wavefront_compute_num_threads(wf_aligner,lo,hi);
+  if (num_threads == 1) {
+    // Compute next wavefront
+    wavefront_compute_edit_dispatcher(
+        wf_aligner,score,wf_prev,wf_curr,lo,hi);
   } else {
-    if (wf_aligner->penalties.distance_metric == indel) {
-      wavefront_compute_indel_idm(wf_aligner,wf_prev,wf_curr,lo,hi);
-    } else {
-      wavefront_compute_edit_idm(wf_aligner,wf_prev,wf_curr,lo,hi);
+#ifdef WFA_PARALLEL
+    // Compute next wavefront in parallel
+    #pragma omp parallel num_threads(num_threads)
+    {
+      int t_lo, t_hi;
+      wavefront_compute_thread_limits(
+          omp_get_thread_num(),omp_get_num_threads(),lo,hi,&t_lo,&t_hi);
+      wavefront_compute_edit_dispatcher(
+          wf_aligner,score,wf_prev,wf_curr,t_lo,t_hi);
     }
+#endif
+  }
+  // Offload backtrace (if necessary)
+  if (wf_components->bt_piggyback && score % PCIGAR_MAX_LENGTH == 0) {
+    wavefront_backtrace_offload_blocks_linear(
+        wf_aligner,wf_curr->offsets,wf_curr->bt_pcigar,wf_curr->bt_prev,lo,hi);
   }
   // Trim wavefront ends
   wavefront_compute_trim_ends(wf_aligner,wf_curr);

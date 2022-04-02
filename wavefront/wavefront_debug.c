@@ -171,7 +171,7 @@ void wavefront_report_verbose_begin(
         wf_aligner->alignment_form.text_end_free);
   }
   fprintf(stream,"[WFA::Debug]\tMax-score\t%d\n",
-      wf_aligner->alignment_form.max_alignment_score);
+      wf_aligner->system.max_alignment_score);
   // Penalties
   fprintf(stream,"[WFA::Debug]\tPenalties\t");
   wavefronts_penalties_print(stream,&wf_aligner->penalties);

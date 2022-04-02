@@ -67,8 +67,8 @@ bool wavefront_align_reached_limits(
     wavefront_aligner_t* const wf_aligner,
     const int score) {
   // Check alignment-score limit
-  if (score >= wf_aligner->alignment_form.max_alignment_score) {
-    wf_aligner->cigar.score = wf_aligner->alignment_form.max_alignment_score;
+  if (score >= wf_aligner->system.max_alignment_score) {
+    wf_aligner->cigar.score = wf_aligner->system.max_alignment_score;
     wf_aligner->align_status.status = WF_STATUS_MAX_SCORE_REACHED;
     return true; // Stop
   }

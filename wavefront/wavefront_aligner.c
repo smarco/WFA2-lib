@@ -355,7 +355,7 @@ void wavefront_aligner_set_match_funct(
 void wavefront_aligner_set_max_alignment_score(
     wavefront_aligner_t* const wf_aligner,
     const int max_alignment_score) {
-  wf_aligner->alignment_form.max_alignment_score = max_alignment_score;
+  wf_aligner->system.max_alignment_score = max_alignment_score;
 }
 void wavefront_aligner_set_max_memory(
     wavefront_aligner_t* const wf_aligner,

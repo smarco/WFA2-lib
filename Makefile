@@ -16,13 +16,10 @@ CC_FLAGS=-Wall -g
 AR=ar
 AR_FLAGS=-rsc
 
-ifndef BUILD_EXAMPLES 
-BUILD_EXAMPLES=1
-endif
-
-ifndef BUILD_TOOLS 
+BUILD_EXAMPLES=0
 BUILD_TOOLS=1
-endif
+BUILD_WFA_PARALLEL=1
+
 ###############################################################################
 # Configuration rules
 ###############################################################################
@@ -41,10 +38,7 @@ ifeq ($(BUILD_EXAMPLES),1)
     APPS+=examples
 endif
 
-release: CC_FLAGS+=-O3 -march=native -flto
-release: build
-
-all: CC_FLAGS+=-O3 -march=native
+all: CC_FLAGS+=-O3 -march=native#-flto
 all: build
 
 debug: build

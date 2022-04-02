@@ -118,6 +118,7 @@ typedef struct {
   alignment_match_funct_t wfa_match_funct;
   void* wfa_match_funct_arguments;
   uint64_t wfa_max_memory;
+  int wfa_max_threads;
   // Other algorithms parameters
   int bandwidth;
   // Misc
@@ -186,6 +187,7 @@ benchmark_args parameters = {
   .wfa_match_funct = NULL,
   .wfa_match_funct_arguments = NULL,
   .wfa_max_memory = UINT64_MAX,
+  .wfa_max_threads = 1,
   // Other algorithms parameters
   .bandwidth = -1,
   // Misc
@@ -370,6 +372,7 @@ wavefront_aligner_t* align_input_configure_wavefront(
   attributes.plot_params.resolution_points = parameters.plot;
   attributes.system.verbose = parameters.verbose;
   attributes.system.max_memory_abort = parameters.wfa_max_memory;
+  attributes.system.max_num_threads = parameters.wfa_max_threads;
   // Allocate
   return wavefront_aligner_new(&attributes);
 }
@@ -760,6 +763,7 @@ void usage() {
       "              P1 = z-drop                                               \n"
       "              P2 = steps-between-cutoffs                                \n"
       "          --wfa-max-memory <Bytes>                                      \n"
+      "          --wfa-max-threads <INT> (intra-parallelism; default=1)        \n"
       "        [Other Parameters]                                              \n"
       "          --bandwidth <INT>                                             \n"
       "        [Misc]                                                          \n"
@@ -792,6 +796,7 @@ void parse_arguments(int argc,char** argv) {
     { "wfa-heuristic-parameters", required_argument, 0, 1003 },
     { "wfa-custom-match-funct", no_argument, 0, 1004 },
     { "wfa-max-memory", required_argument, 0, 1005 },
+    { "wfa-max-threads", required_argument, 0, 1006 },
     /* Other alignment parameters */
     { "bandwidth", required_argument, 0, 2000 },
     /* Misc */
@@ -977,8 +982,11 @@ void parse_arguments(int argc,char** argv) {
       parameters.wfa_match_funct = match_function;
       parameters.wfa_match_funct_arguments = &match_function_params;
       break;
-    case 1005:
+    case 1005: // --wfa-max-memory
       parameters.wfa_max_memory = atol(optarg);
+      break;
+    case 1006: // --wfa-max-threads
+      parameters.wfa_max_threads = atoi(optarg);
       break;
     /*
      * Other alignment parameters
