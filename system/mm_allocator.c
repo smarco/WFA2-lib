@@ -454,25 +454,30 @@ void mm_allocator_get_occupation(
   for (segment_idx=0;segment_idx<num_segments;++segment_idx) {
     mm_allocator_segment_t* const segment = mm_allocator_get_segment(mm_allocator,segment_idx);
     const uint64_t num_requests = mm_allocator_segment_get_num_requests(segment);
-    bool free_memory = true;
+    bool memory_freed = true;
     for (request_idx=num_requests-1;request_idx>=0;--request_idx) {
       mm_allocator_request_t* const request = mm_allocator_segment_get_request(segment,request_idx);
       const uint64_t size = MM_ALLOCATOR_REQUEST_SIZE(request);
       if (MM_ALLOCATOR_REQUEST_IS_FREE(request)) {
-        if (free_memory) {
+        if (memory_freed) {
           *bytes_free_available += size;
         } else {
           *bytes_free_fragmented += size;
         }
       } else {
-        free_memory = false;
+        memory_freed = false;
         *bytes_used_allocator += size;
       }
     }
     // Account for free space at the end of the segment
     if (num_requests > 0) {
       mm_allocator_request_t* const request = mm_allocator_segment_get_request(segment,num_requests-1);
-      *bytes_free_available += segment->used - (request->offset+request->size);
+      const uint64_t bytes_free_at_end = segment->size - (request->offset+request->size);
+      if (segment_idx == mm_allocator->current_segment_idx) {
+        *bytes_free_available += bytes_free_at_end;
+      } else {
+        *bytes_free_fragmented += bytes_free_at_end;
+      }
     }
   }
   // Check malloc memory
@@ -590,10 +595,16 @@ void mm_allocator_print(
   uint64_t bytes_used_malloc, bytes_used_allocator;
   uint64_t bytes_free_available, bytes_free_fragmented;
   mm_allocator_get_occupation(mm_allocator,&bytes_used_malloc,&bytes_used_allocator,&bytes_free_available,&bytes_free_fragmented);
-  fprintf(stream,"    => Memory.used   %" PRIu64 "\n",bytes_used_allocator);
-  fprintf(stream,"    => Memory.free   %" PRIu64 "\n",bytes_free_available+bytes_free_fragmented);
-  fprintf(stream,"      => Memory.free.available  %" PRIu64 "\n",bytes_free_available);
-  fprintf(stream,"      => Memory.free.fragmented %" PRIu64 "\n",bytes_free_fragmented);
+  const float bytes_total = num_segments * segment_size;
+  const uint64_t bytes_free = bytes_free_available + bytes_free_fragmented;
+  fprintf(stream,"    => Memory.used   %" PRIu64 " (%2.1f %%)\n",
+      bytes_used_allocator,100.0f*(float)bytes_used_allocator/bytes_total);
+  fprintf(stream,"    => Memory.free   %" PRIu64 " (%2.1f %%)\n",
+      bytes_free,100.0f*(float)bytes_free/bytes_total);
+  fprintf(stream,"      => Memory.free.available  %" PRIu64 " (%2.1f %%)\n",
+      bytes_free_available,100.0f*(float)bytes_free_available/bytes_total);
+  fprintf(stream,"      => Memory.free.fragmented %" PRIu64 " (%2.1f %%)\n",
+      bytes_free_fragmented,100.0f*(float)bytes_free_fragmented/bytes_total);
   fprintf(stream,"    => Memory.malloc %" PRIu64 "\n",bytes_used_malloc);
   // Print memory requests
   if (display_requests) {

@@ -425,6 +425,7 @@ int wavefront_compute_num_threads(
     const int hi) {
   // Parameters
   const int max_num_threads = wf_aligner->system.max_num_threads;
+  if (max_num_threads == 1) return 1;
   const int min_offsets_per_thread = wf_aligner->system.min_offsets_per_thread;
   // Compute minimum work-chunks worth spawning threads
   const int num_chunks = WAVEFRONT_LENGTH(lo,hi)/min_offsets_per_thread;

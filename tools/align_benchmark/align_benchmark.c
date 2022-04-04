@@ -201,7 +201,7 @@ benchmark_args parameters = {
   // System
   .num_threads = 1,
   .batch_size = 10000,
-  .progress = 10000,
+  .progress = 100000,
   .verbose = 0,
 };
 
@@ -293,12 +293,10 @@ int match_function(int v,int h,void* arguments) {
  * Configuration
  */
 wavefront_aligner_t* align_input_configure_wavefront(
-    align_input_t* const align_input,
-    mm_allocator_t* const mm_allocator) {
+    align_input_t* const align_input) {
   // Set attributes
   wavefront_aligner_attr_t attributes = wavefront_aligner_attr_default;
   attributes.memory_mode = parameters.wfa_memory_mode;
-  attributes.mm_allocator = mm_allocator;
   if (parameters.wfa_score_only) {
     attributes.alignment_scope = compute_score;
   }
@@ -390,10 +388,10 @@ void align_input_configure_global(
   align_input->output_file = parameters.output_file;
   align_input->output_full = parameters.output_full;
   // MM
-  align_input->mm_allocator = mm_allocator_new(BUFFER_SIZE_8M);
+  align_input->mm_allocator = mm_allocator_new(BUFFER_SIZE_1M);
   // WFA
   if (align_benchmark_is_wavefront(parameters.algorithm)) {
-    align_input->wf_aligner = align_input_configure_wavefront(align_input,align_input->mm_allocator);
+    align_input->wf_aligner = align_input_configure_wavefront(align_input);
   } else {
     align_input->wf_aligner = NULL;
   }
@@ -615,7 +613,7 @@ void align_benchmark_sequential() {
       align_benchmark_print_progress(seqs_processed);
     }
     // DEBUG
-    // mm_allocator_print(stderr,align_input.mm_allocator,true);
+    // mm_allocator_print(stderr,align_input.wf_aligner->mm_allocator,true);
     // Plot
     if (parameters.plot > 0) align_benchmark_plot_wf(&align_input,seqs_processed);
   }
@@ -690,7 +688,7 @@ void align_benchmark_parallel() {
       align_benchmark_print_progress(seqs_processed);
     }
     // DEBUG
-    // mm_allocator_print(stderr,align_input.mm_allocator,true);
+    // mm_allocator_print(stderr,align_input.wf_aligner->mm_allocator,true);
   }
   // Print benchmark results
   timer_stop(&parameters.timer_global);

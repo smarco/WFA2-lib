@@ -284,6 +284,8 @@ void wavefront_align_begin(
   wavefront_debug_prologue(wf_aligner,pattern,pattern_length,text,text_length);
   // Resize wavefront aligner
   wavefront_aligner_resize(wf_aligner,pattern,pattern_length,text,text_length);
+  // DEBUG
+  // mm_allocator_print(stderr,wf_aligner->mm_allocator,false);
   // Configure WF-compute function
   switch (wf_aligner->penalties.distance_metric) {
     case indel:
@@ -339,7 +341,7 @@ void wavefront_align_end(
     wf_memory_used = wavefront_aligner_get_size(wf_aligner);
     // Slab
     if (wf_memory_used > wf_aligner->system.max_memory_resident) {
-      wavefront_slab_reap(wf_aligner->wavefront_slab,wf_slab_reap_all);
+      wavefront_slab_reap(wf_aligner->wavefront_slab);
     }
   }
   // DEBUG
