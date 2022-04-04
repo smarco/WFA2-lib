@@ -108,13 +108,6 @@ void wavefront_heuristic_clear(
 /*
  * Utils
  */
-//int wf_compute_antidiagonal(
-//    const wf_offset_t offset,
-//    const int k) {
-//  const int v = WAVEFRONT_V(k,offset);
-//  const int h = WAVEFRONT_H(k,offset);
-//  return v + h;
-//}
 int wf_compute_distance_end2end(
     const wf_offset_t offset,
     const int k,

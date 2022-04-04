@@ -189,6 +189,85 @@ void wavefront_compute_edit_idm_piggyback(
   }
 }
 /*
+ * Exact pruning paths
+ */
+int wf_compute_edit_best_score(
+    const int pattern_length,
+    const int text_length,
+    const int k,
+    const wf_offset_t offset) {
+  // Compute best-alignment case
+  const int left_v = pattern_length - WAVEFRONT_V(k,offset);
+  const int left_h = text_length - WAVEFRONT_H(k,offset);
+  return (left_v >= left_h) ? left_v - left_h : left_h - left_v;
+}
+int wf_compute_edit_worst_score(
+    const int pattern_length,
+    const int text_length,
+    const int k,
+    const wf_offset_t offset) {
+  // Compute worst-alignment case
+  const int left_v = pattern_length - WAVEFRONT_V(k,offset);
+  const int left_h = text_length - WAVEFRONT_H(k,offset);
+  return MAX(left_v,left_h);
+}
+void wavefront_compute_edit_exact_prune(
+    wavefront_aligner_t* const wf_aligner,
+    wavefront_t* const wavefront) {
+  // Parameters
+  const int plen = wf_aligner->pattern_length;
+  const int tlen = wf_aligner->text_length;
+  wf_offset_t* const offsets = wavefront->offsets;
+  const int lo = wavefront->lo;
+  const int hi = wavefront->hi;
+  // Speculative compute if needed
+  if (WAVEFRONT_LENGTH(lo,hi) < 1000) return;
+  const int sample_k = lo + (hi-lo)/2;
+  const wf_offset_t sample_offset = offsets[sample_k];
+  if (sample_offset < 0) return; // Unlucky null in the middle
+  const int smax_sample = wf_compute_edit_worst_score(plen,tlen,sample_k,offsets[sample_k]);
+  const int smin_lo = wf_compute_edit_best_score(plen,tlen,lo,offsets[lo]);
+  const int smin_hi = wf_compute_edit_best_score(plen,tlen,hi,offsets[hi]);
+  if (smin_lo <= smax_sample && smin_hi <= smax_sample) return;
+  /*
+   * Suggested by Heng Li as an effective exact-prunning technique
+   * for sequences of very different length where some diagonals
+   * can be proven impossible to yield better alignments.
+   */
+  // Compute the best worst-case-alignment
+  int score_min_worst = INT_MAX;
+  int k;
+  for (k=lo;k<=hi;++k) {
+    const wf_offset_t offset = offsets[k];
+    if (offset < 0) continue; // Skip nulls
+    // Compute worst-alignment case
+    const int score_worst = wf_compute_edit_worst_score(plen,tlen,k,offset);
+    if (score_worst < score_min_worst) score_min_worst = score_worst;
+  }
+  // Compare against the best-case-alignment (Prune from bottom)
+  int lo_reduced = lo;
+  for (k=lo;k<=hi;++k) {
+    // Compute best-alignment case
+    const wf_offset_t offset = offsets[k];
+    const int score_best = wf_compute_edit_best_score(plen,tlen,k,offset);
+    // Compare best and worst
+    if (score_best <= score_min_worst) break;
+    ++lo_reduced;
+  }
+  wavefront->lo = lo_reduced;
+  // Compare against the best-case-alignment (Prune from top)
+  int hi_reduced = hi;
+  for (k=hi;k>lo_reduced;--k) {
+    // Compute best-alignment case
+    const wf_offset_t offset = offsets[k];
+    const int score_best = wf_compute_edit_best_score(plen,tlen,k,offset);
+    // Compare best and worst
+    if (score_best <= score_min_worst) break;
+    --hi_reduced;
+  }
+  wavefront->hi = hi_reduced;
+}
+/*
  * Compute next wavefront
  */
 void wavefront_compute_edit_dispatcher(
@@ -268,6 +347,11 @@ void wavefront_compute_edit(
   }
   // Trim wavefront ends
   wavefront_compute_trim_ends(wf_aligner,wf_curr);
+  // Exact pruning paths
+  if (wf_aligner->alignment_form.span == alignment_end2end &&
+      wf_aligner->penalties.distance_metric == edit) {
+    wavefront_compute_edit_exact_prune(wf_aligner,wf_curr);
+  }
 }
 
 

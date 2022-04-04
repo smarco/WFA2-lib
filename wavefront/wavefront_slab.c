@@ -258,7 +258,7 @@ wavefront_t* wavefront_slab_allocate(
 void wavefront_slab_free(
     wavefront_slab_t* const wavefront_slab,
     wavefront_t* const wavefront) {
-  // Check reasons to repurpose wavefront
+  // Check reasons to repurpose wavefront (NOTE: Tight-mode never slab_frees())
   //   (A) Reuse-mode and wavefront has current wf-length
   //   (B) Tight-mode and wavefront has init wf-length
   const int wf_length = wavefront->wf_elements_allocated;
