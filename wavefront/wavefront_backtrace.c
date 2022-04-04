@@ -60,20 +60,6 @@ typedef enum {
 /*
  * Backtrace Detect Limits
  */
-void wavefronts_backtrace_valid_location(
-    wavefront_aligner_t* const wf_aligner,
-    const int k,
-    const wf_offset_t offset) {
-  // Locate offset (remember that backtrace is always +1 offset ahead)
-  const int v = WAVEFRONT_V(k,offset);
-  const int h = WAVEFRONT_H(k,offset);
-  const bool valid_location =
-      (v >= 0 && v <= wf_aligner->pattern_length &&
-       h >= 0 && h <= wf_aligner->text_length);
-  if (!valid_location) {
-    fprintf(stderr,"[WFA::Backtrace] Invalid location\n"); exit(1); // TODO: Impossible situation
-  }
-}
 void wavefronts_backtrace_add_trailing_gap(
     cigar_t* const cigar,
     const int k,
@@ -91,7 +77,7 @@ void wavefronts_backtrace_add_trailing_gap(
   cigar->begin_offset = op_sentinel;
 }
 /*
- * Backtrace Trace Patch Match/Mismsmatch
+ * Backtrace Trace Patch Match/Mismatch
  */
 int64_t wavefronts_backtrace_misms(
     wavefront_aligner_t* const wf_aligner,
@@ -111,22 +97,24 @@ void wavefronts_backtrace_matches(
     wavefront_aligner_t* const wf_aligner,
     const int k,
     wf_offset_t offset,
-    const int num_matches,
+    int num_matches,
     cigar_t* const cigar) {
+  // Parameters
+  const uint64_t matches_lut = 0x4D4D4D4D4D4D4D4Dul; // Matches LUT = "MMMMMMMM"
+  char* operations = cigar->operations + cigar->begin_offset;
+  // Update offset first
+  cigar->begin_offset -= num_matches;
+  // Blocks of 8-matches
+  while (num_matches >= 8) {
+    operations -= 8;
+    *((uint64_t*)(operations+1)) = matches_lut;
+    num_matches -= 8;
+  }
+  // Remaining matches
   int i;
   for (i=0;i<num_matches;++i) {
-    // DEBUG
-#ifdef WAVEFRONT_DEBUG // TODO Remove me
-    const int v = WAVEFRONT_V(k,offset);
-    const int h = WAVEFRONT_H(k,offset);
-    if (wf_aligner->pattern[v-1] != wf_aligner->text[h-1]) { // Check match
-      fprintf(stderr,"[WFA::Backtrace] Checking a match-traceback error (mismatching bases)\n");
-      exit(1);
-    }
-    --offset; // Update state
-#endif
-    // Set Match
-    cigar->operations[(cigar->begin_offset)--] = 'M';
+    *operations = 'M';
+    --operations;
   }
 }
 /*
@@ -267,7 +255,6 @@ void wavefront_backtrace_linear(
   int h = WAVEFRONT_H(k,alignment_offset);
   int v = WAVEFRONT_V(k,alignment_offset);
   wf_offset_t offset = alignment_offset;
-  // DEBUG wavefronts_backtrace_valid_location(wf_aligner,k,offset);
   // Account for ending insertions/deletions
   cigar->end_offset = cigar->max_operations - 1;
   cigar->begin_offset = cigar->max_operations - 2;
@@ -361,7 +348,6 @@ void wavefront_backtrace_affine(
   int h = WAVEFRONT_H(k,alignment_offset);
   int v = WAVEFRONT_V(k,alignment_offset);
   wf_offset_t offset = alignment_offset;
-  // DEBUG wavefronts_backtrace_valid_location(wf_aligner,k,offset);
   // Account for ending insertions/deletions
   cigar->end_offset = cigar->max_operations - 1;
   cigar->begin_offset = cigar->max_operations - 2;
