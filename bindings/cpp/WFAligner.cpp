@@ -127,9 +127,11 @@ WFAligner::AlignmentStatus WFAligner::alignEndsFree(
     const int textBeginFree,
     const int textEndFree) {
   // Delegate
-  return alignEnd2End(
+  return alignEndsFree(
       pattern.c_str(),pattern.length(),
-      text.c_str(),text.length());
+      patternBeginFree,patternEndFree,
+      text.c_str(),text.length(),
+      textBeginFree,textEndFree);
 }
 /*
  * Alignment resume
