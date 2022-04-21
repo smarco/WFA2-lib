@@ -53,6 +53,7 @@ public:
     MemoryHigh,
     MemoryMed,
     MemoryLow,
+    MemoryUltralow,
   };
   enum AlignmentScope {
     Score,
@@ -129,7 +130,6 @@ public:
   void setMaxAlignmentScore(
       const int maxAlignmentScore);
   void setMaxMemory(
-      const uint64_t maxMemoryCompact,
       const uint64_t maxMemoryResident,
       const uint64_t maxMemoryAbort);
   // Accessors

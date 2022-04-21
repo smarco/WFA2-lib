@@ -740,7 +740,7 @@ void usage() {
       "          --ends-free P0,Pf,T0,Tf                                       \n"
       "        [Wavefront parameters]                                          \n"
       "          --wfa-score-only                                              \n"
-      "          --wfa-memory-mode 'high'|'med'|'low'                          \n"
+      "          --wfa-memory-mode 'high'|'med'|'low'|'ultralow'               \n"
       "          --wfa-heuristic <Strategy>                                    \n"
       "          --wfa-heuristic-parameters  <P1>,<P2>[,<P3>]                  \n"
       "            [Strategy='banded-static']                                  \n"
@@ -939,8 +939,10 @@ void parse_arguments(int argc,char** argv) {
         parameters.wfa_memory_mode = wavefront_memory_med;
       } else if (strcmp(optarg,"low")==0) {
         parameters.wfa_memory_mode = wavefront_memory_low;
+      } else if (strcmp(optarg,"ultralow")==0) {
+        parameters.wfa_memory_mode = wavefront_memory_ultralow;
       } else {
-        fprintf(stderr,"Option '--wfa-memory-mode' must be in {'high','med','low'}\n");
+        fprintf(stderr,"Option '--wfa-memory-mode' must be in {'high','med','low','ultralow'}\n");
         exit(1);
       }
       break;

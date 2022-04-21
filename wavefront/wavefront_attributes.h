@@ -49,8 +49,8 @@
  * Alignment scope
  */
 typedef enum {
-  compute_score,          // Only distance/score
-  compute_alignment,      // Full alignment CIGAR
+  compute_score,           // Only distance/score
+  compute_alignment,       // Full alignment CIGAR
 } alignment_scope_t;
 typedef enum {
   alignment_end2end,       // End-to-end alignment (aka global)
@@ -119,9 +119,10 @@ typedef struct {
  * Low-memory modes
  */
 typedef enum {
-  wavefront_memory_high = 0,     // High-memore mode (fastest, stores all WFs explicitly)
-  wavefront_memory_med = 1,      // Succing-memory mode (medium, offloads half-full BT-blocks)
-  wavefront_memory_low = 2,      // Succing-memory mode (slow, offloads only full BT-blocks)
+  wavefront_memory_high     = 0, // High-memore mode (fastest, stores all WFs explicitly)
+  wavefront_memory_med      = 1, // Succing-memory mode piggyback-based (medium, offloads half-full BT-blocks)
+  wavefront_memory_low      = 2, // Succing-memory mode piggyback-based (slow, offloads only full BT-blocks)
+  wavefront_memory_ultralow = 3, // Bidirectional WFA
 } wavefront_memory_t;
 
 /*

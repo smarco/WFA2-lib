@@ -13,6 +13,7 @@ MODULES=wavefront_align \
         wavefront_backtrace_buffer \
         wavefront_backtrace_offload \
         wavefront_backtrace \
+        wavefront_bialign \
         wavefront_components \
         wavefront_compute_affine \
         wavefront_compute_affine2p \
