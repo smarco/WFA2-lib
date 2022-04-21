@@ -36,6 +36,16 @@
 #include "wavefront_display.h" // For convenience
 
 /*
+ * Initialize alignment
+ */
+void wavefront_align_end2end_initialize(
+    wavefront_aligner_t* const wf_aligner);
+void wavefront_align_endsfree_initialize(
+    wavefront_aligner_t* const wf_aligner,
+    const int pattern_length,
+    const int text_length);
+
+/*
  * Wavefront Alignment
  */
 int wavefront_align(

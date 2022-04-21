@@ -104,6 +104,17 @@ int cigar_cmp(
 void cigar_copy(
     cigar_t* const cigar_dst,
     cigar_t* const cigar_src);
+
+void cigar_append(
+    cigar_t* const cigar_dst,
+    cigar_t* const cigar_src);
+void cigar_append_deletion(
+    cigar_t* const cigar,
+    const int length);
+void cigar_append_insertion(
+    cigar_t* const cigar,
+    const int length);
+
 bool cigar_check_alignment(
     FILE* const stream,
     const char* const pattern,

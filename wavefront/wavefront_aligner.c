@@ -178,9 +178,7 @@ wavefront_aligner_t* wavefront_aligner_new(
   wf_aligner->alignment_scope = attributes->alignment_scope;
   wf_aligner->alignment_form = attributes->alignment_form;
   wavefront_aligner_set_penalties(wf_aligner,attributes);
-  // Memory mode
   wf_aligner->memory_mode = attributes->memory_mode;
-  // Heuristic strategy
   wavefront_aligner_set_heuristic(wf_aligner,attributes);
   // Custom matching functions
   wf_aligner->match_funct = attributes->match_funct;
@@ -190,7 +188,9 @@ wavefront_aligner_t* wavefront_aligner_new(
       &wf_aligner->wf_components,pattern_length,text_length,
       &wf_aligner->penalties,memory_modular,bt_piggyback,mm_allocator);
   // CIGAR
-  cigar_allocate(&wf_aligner->cigar,2*(pattern_length+text_length),mm_allocator);
+  if (!score_only) {
+    cigar_allocate(&wf_aligner->cigar,2*(pattern_length+text_length),mm_allocator);
+  }
   // Display
   wf_aligner->plot_params = attributes->plot_params;
   if (attributes->plot_params.plot_enabled) {
@@ -209,7 +209,10 @@ void wavefront_aligner_resize(
     const char* const pattern,
     const int pattern_length,
     const char* const text,
-    const int text_length) {
+    const int text_length,
+    const bool reverse_sequences) {
+  // Parameters
+  const bool score_only = (wf_aligner->alignment_scope == compute_score);
   // Configure sequences and status
   wf_aligner->pattern_length = pattern_length;
   wf_aligner->text_length = text_length;
@@ -217,7 +220,8 @@ void wavefront_aligner_resize(
     if (wf_aligner->sequences != NULL) strings_padded_delete(wf_aligner->sequences);
     wf_aligner->sequences = strings_padded_new_rhomb(
             pattern,pattern_length,text,text_length,
-            SEQUENCES_PADDING,wf_aligner->mm_allocator);
+            SEQUENCES_PADDING,reverse_sequences,
+            wf_aligner->mm_allocator);
     wf_aligner->pattern = wf_aligner->sequences->pattern_padded;
     wf_aligner->text = wf_aligner->sequences->text_padded;
   } else {
@@ -232,7 +236,9 @@ void wavefront_aligner_resize(
   wavefront_components_resize(&wf_aligner->wf_components,
       pattern_length,text_length,&wf_aligner->penalties);
   // CIGAR
-  cigar_resize(&wf_aligner->cigar,2*(pattern_length+text_length));
+  if (!score_only) {
+    cigar_resize(&wf_aligner->cigar,2*(pattern_length+text_length));
+  }
   // Slab
   wavefront_slab_clear(wf_aligner->wavefront_slab);
   // Display
@@ -260,6 +266,7 @@ void wavefront_aligner_reap(
 void wavefront_aligner_delete(
     wavefront_aligner_t* const wf_aligner) {
   // Parameters
+  const bool score_only = (wf_aligner->alignment_scope == compute_score);
   mm_allocator_t* const mm_allocator = wf_aligner->mm_allocator;
   // Padded sequences
   if (wf_aligner->sequences != NULL) {
@@ -268,7 +275,9 @@ void wavefront_aligner_delete(
   // Wavefront components
   wavefront_components_free(&wf_aligner->wf_components);
   // CIGAR
-  cigar_free(&wf_aligner->cigar);
+  if (!score_only) {
+    cigar_free(&wf_aligner->cigar);
+  }
   // Slab
   wavefront_slab_delete(wf_aligner->wavefront_slab);
   // Display

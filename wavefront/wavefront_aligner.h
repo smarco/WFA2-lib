@@ -67,7 +67,7 @@ typedef struct {
   int score;                                                      // Current WF-alignment score
   // Wavefront alignment functions
   void (*wf_align_compute)(wavefront_aligner_t* const,const int); // WF Compute function
-  bool (*wf_align_extend)(wavefront_aligner_t* const,const int);  // WF Extend function
+  int (*wf_align_extend)(wavefront_aligner_t* const,const int);   // WF Extend function
 } wavefront_align_status_t;
 
 /*
@@ -93,6 +93,7 @@ typedef struct _wavefront_aligner_t {
   void* match_funct_arguments;             // Generic arguments passed to matching function (args)
   // Wavefront components
   wavefront_components_t wf_components;    // Wavefront components
+  wavefront_pos_t alignment_end_pos;       // Alignment end position
   // CIGAR
   cigar_t cigar;                           // Alignment CIGAR
   // MM
@@ -116,7 +117,8 @@ void wavefront_aligner_resize(
     const char* const pattern,
     const int pattern_length,
     const char* const text,
-    const int text_length);
+    const int text_length,
+    const bool reverse_sequences);
 void wavefront_aligner_reap(
     wavefront_aligner_t* const wf_aligner);
 void wavefront_aligner_delete(

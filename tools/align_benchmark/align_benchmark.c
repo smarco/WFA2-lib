@@ -798,7 +798,7 @@ void parse_arguments(int argc,char** argv) {
     /* Other alignment parameters */
     { "bandwidth", required_argument, 0, 2000 },
     /* Misc */
-    { "check", optional_argument, 0, 'c' },
+    { "check", required_argument, 0, 'c' },
     { "check-distance", required_argument, 0, 3001 },
     { "check-bandwidth", required_argument, 0, 3002 },
     { "plot", optional_argument, 0, 3003 },
@@ -996,9 +996,9 @@ void parse_arguments(int argc,char** argv) {
      * Misc
      */
     case 'c':
-      if (optarg ==  NULL) { // default = score
+      if (optarg ==  NULL) { // default = correct
         parameters.check_correct = true;
-        parameters.check_score = true;
+        parameters.check_score = false;
         parameters.check_alignments = false;
       } else if (strcasecmp(optarg,"display")==0) {
         parameters.check_display = true;

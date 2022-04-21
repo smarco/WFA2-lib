@@ -44,7 +44,7 @@ ifeq ($(BUILD_EXAMPLES),1)
     APPS+=examples
 endif
 
-all: CC_FLAGS+=-O3 -march=native -flto
+all: CC_FLAGS+=-O3 -march=native #-flto -ffat-lto-objects
 all: build
 
 debug: build

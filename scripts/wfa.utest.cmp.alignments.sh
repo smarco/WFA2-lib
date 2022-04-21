@@ -17,15 +17,21 @@ do
   FILE_ALG2="$FOLDER2/$FILENAME"
   echo -ne "[UTest::$PREFIX]  \t"
   # Check existence
-  if [[ ! -f "$FILE_ALG2" ]]; then
+  if [[ ! -f "$FILE_ALG2" ]]
+  then
     echo "$FILE_ALG2 doesn't exist."
     continue
   fi
   # Check diff
   if [[ $(diff $FILE_ALG1 $FILE_ALG2) ]] 
   then
-    echo "Error"
-    continue
+    if [[ $(diff  <(awk '{print $1}' $FILE_ALG1) <(awk '{print $1}' $FILE_ALG2)) ]]
+    then
+      echo "Error"
+      continue
+    else
+      echo -n "OK-Score"
+    fi
   else
     echo -n "OK"
   fi

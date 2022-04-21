@@ -37,14 +37,17 @@
 /*
  * Wavefront exact "extension"
  */
-bool wavefront_extend_end2end(
+int wavefront_extend_end2end(
     wavefront_aligner_t* const wf_aligner,
-    int score);
-bool wavefront_extend_endsfree(
+    const int score);
+int wavefront_extend_end2end_max(
     wavefront_aligner_t* const wf_aligner,
-    int score);
-bool wavefront_extend_custom(
+    const int score);
+int wavefront_extend_endsfree(
     wavefront_aligner_t* const wf_aligner,
-    int score);
+    const int score);
+int wavefront_extend_custom(
+    wavefront_aligner_t* const wf_aligner,
+    const int score);
 
 #endif /* WAVEFRONT_EXTEND_H_ */

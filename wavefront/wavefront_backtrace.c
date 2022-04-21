@@ -58,26 +58,7 @@ typedef enum {
 } backtrace_type;
 
 /*
- * Backtrace Detect Limits
- */
-void wavefronts_backtrace_add_trailing_gap(
-    cigar_t* const cigar,
-    const int k,
-    const int alignment_k) {
-  // Parameters
-  char* const operations = cigar->operations;
-  int op_sentinel = cigar->begin_offset;
-  // Add trailing gap
-  int i;
-  if (k < alignment_k) {
-    for (i=k;i<alignment_k;++i) operations[op_sentinel--] = 'I';
-  } else if (k > alignment_k) {
-    for (i=alignment_k;i<k;++i) operations[op_sentinel--] = 'D';
-  }
-  cigar->begin_offset = op_sentinel;
-}
-/*
- * Backtrace Trace Patch Match/Mismatch
+ * Backtrace Trace Patch Match/Mismsmatch
  */
 int64_t wavefronts_backtrace_misms(
     wavefront_aligner_t* const wf_aligner,

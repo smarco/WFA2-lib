@@ -107,7 +107,7 @@ void benchmark_print_output_lite(
     const int score,
     cigar_t* const cigar) {
   // Retrieve CIGAR
-  char* const cigar_str = malloc(cigar->end_offset-cigar->begin_offset);
+  char* const cigar_str = malloc(2*(cigar->end_offset-cigar->begin_offset));
   cigar_sprint(cigar_str,cigar,true);
   // Print
   fprintf(stream,"%d\t%s\n",score,cigar_str);
@@ -120,7 +120,7 @@ void benchmark_print_output_full(
     const int score,
     cigar_t* const cigar) {
   // Retrieve CIGAR
-  char* const cigar_str = malloc(cigar->end_offset-cigar->begin_offset);
+  char* const cigar_str = malloc(2*(cigar->end_offset-cigar->begin_offset));
   cigar_sprint(cigar_str,cigar,true);
   // Print
   fprintf(stream,"%d\t%d\t%d\t%s\t%s\t%s\n",
