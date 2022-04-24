@@ -120,47 +120,71 @@ void wavefront_align_end2end_initialize(
   const int effective_lo = -(max_score_scope+1);
   const int effective_hi = (max_score_scope+1);
   // Init wavefronts
-  if (wf_aligner->component_begin == affine_matrix_M) {
-    wf_components->mwavefronts[0] = wavefront_slab_allocate(wavefront_slab,effective_lo,effective_hi);
-    wf_components->mwavefronts[0]->offsets[0] = 0;
-    wf_components->mwavefronts[0]->lo = 0;
-    wf_components->mwavefronts[0]->hi = 0;
-    if (wf_components->bt_piggyback) { // Store initial BT-piggypack element
-      wf_components->mwavefronts[0]->bt_pcigar[0] = 0;
-      wf_components->mwavefronts[0]->bt_prev[0] =
-          wf_backtrace_buffer_init_block(wf_components->bt_buffer,0,0);
-    }
-    // Nullify unused WFs
-    if (distance_metric <= gap_linear) return;
-    wf_components->d1wavefronts[0] = NULL;
-    wf_components->i1wavefronts[0] = NULL;
-    if (distance_metric==gap_affine) return;
-    wf_components->d2wavefronts[0] = NULL;
-    wf_components->i2wavefronts[0] = NULL;
-  } else if (wf_aligner->component_begin == affine_matrix_I) {
-    wf_components->mwavefronts[0] = NULL;
-    wf_components->i1wavefronts[0] = wavefront_slab_allocate(wavefront_slab,effective_lo,effective_hi);
-    wf_components->i1wavefronts[0]->offsets[0] = 0;
-    wf_components->i1wavefronts[0]->lo = 0;
-    wf_components->i1wavefronts[0]->hi = 0;
-    // TODO Piggyback
-    wf_components->d1wavefronts[0] = NULL;
-    // Nullify unused WFs
-    if (distance_metric==gap_affine) return;
-    wf_components->d2wavefronts[0] = NULL;
-    wf_components->i2wavefronts[0] = NULL;
-  } else { // wf_aligner->component_begin == affine_matrix_D
-    wf_components->mwavefronts[0] = NULL;
-    wf_components->i1wavefronts[0] = NULL;
-    wf_components->d1wavefronts[0] = wavefront_slab_allocate(wavefront_slab,effective_lo,effective_hi);
-    wf_components->d1wavefronts[0]->offsets[0] = 0;
-    wf_components->d1wavefronts[0]->lo = 0;
-    wf_components->d1wavefronts[0]->hi = 0;
-    // TODO Piggyback
-    // Nullify unused WFs
-    if (distance_metric==gap_affine) return;
-    wf_components->d2wavefronts[0] = NULL;
-    wf_components->i2wavefronts[0] = NULL;
+  switch (wf_aligner->component_begin) {
+    case affine2p_matrix_M:
+      wf_components->mwavefronts[0] = wavefront_slab_allocate(wavefront_slab,effective_lo,effective_hi);
+      wf_components->mwavefronts[0]->offsets[0] = 0;
+      wf_components->mwavefronts[0]->lo = 0;
+      wf_components->mwavefronts[0]->hi = 0;
+      if (wf_components->bt_piggyback) { // Store initial BT-piggypack element
+        wf_components->mwavefronts[0]->bt_pcigar[0] = 0;
+        wf_components->mwavefronts[0]->bt_prev[0] =
+            wf_backtrace_buffer_init_block(wf_components->bt_buffer,0,0);
+      }
+      // Nullify unused WFs
+      if (distance_metric <= gap_linear) return;
+      wf_components->i1wavefronts[0] = NULL;
+      wf_components->d1wavefronts[0] = NULL;
+      if (distance_metric==gap_affine) return;
+      wf_components->i2wavefronts[0] = NULL;
+      wf_components->d2wavefronts[0] = NULL;
+      break;
+    case affine2p_matrix_I1:
+      wf_components->mwavefronts[0] = NULL;
+      wf_components->i1wavefronts[0] = wavefront_slab_allocate(wavefront_slab,effective_lo,effective_hi);
+      wf_components->i1wavefronts[0]->offsets[0] = 0;
+      wf_components->i1wavefronts[0]->lo = 0;
+      wf_components->i1wavefronts[0]->hi = 0;
+      wf_components->d1wavefronts[0] = NULL;
+      // Nullify unused WFs
+      if (distance_metric==gap_affine) return;
+      wf_components->i2wavefronts[0] = NULL;
+      wf_components->d2wavefronts[0] = NULL;
+      break;
+    case affine2p_matrix_I2:
+      wf_components->mwavefronts[0] = NULL;
+      wf_components->i1wavefronts[0] = NULL;
+      wf_components->d1wavefronts[0] = NULL;
+      wf_components->i2wavefronts[0] = wavefront_slab_allocate(wavefront_slab,effective_lo,effective_hi);
+      wf_components->i2wavefronts[0]->offsets[0] = 0;
+      wf_components->i2wavefronts[0]->lo = 0;
+      wf_components->i2wavefronts[0]->hi = 0;
+      wf_components->d2wavefronts[0] = NULL;
+      break;
+    case affine2p_matrix_D1:
+      wf_components->mwavefronts[0] = NULL;
+      wf_components->i1wavefronts[0] = NULL;
+      wf_components->d1wavefronts[0] = wavefront_slab_allocate(wavefront_slab,effective_lo,effective_hi);
+      wf_components->d1wavefronts[0]->offsets[0] = 0;
+      wf_components->d1wavefronts[0]->lo = 0;
+      wf_components->d1wavefronts[0]->hi = 0;
+      // Nullify unused WFs
+      if (distance_metric==gap_affine) return;
+      wf_components->i2wavefronts[0] = NULL;
+      wf_components->d2wavefronts[0] = NULL;
+      break;
+    case affine2p_matrix_D2:
+      wf_components->mwavefronts[0] = NULL;
+      wf_components->i1wavefronts[0] = NULL;
+      wf_components->d1wavefronts[0] = NULL;
+      wf_components->i2wavefronts[0] = NULL;
+      wf_components->d2wavefronts[0] = wavefront_slab_allocate(wavefront_slab,effective_lo,effective_hi);
+      wf_components->d2wavefronts[0]->offsets[0] = 0;
+      wf_components->d2wavefronts[0]->lo = 0;
+      wf_components->d2wavefronts[0]->hi = 0;
+      break;
+    default:
+      break;
   }
 }
 void wavefront_align_endsfree_initialize(
@@ -247,15 +271,12 @@ void wavefront_align_terminate(
           mwavefront->bt_prev[alignment_end_k]);
     } else {
       // Backtrace alignment
-      const affine_matrix_type component_begin = wf_aligner->component_begin;
-      const affine_matrix_type component_end = wf_aligner->component_end;
       if (wf_aligner->penalties.distance_metric <= gap_linear) {
-        wavefront_backtrace_linear(
-            wf_aligner,component_begin,component_end,
+        wavefront_backtrace_linear(wf_aligner,
             score,alignment_end_k,alignment_end_offset);
       } else {
-        wavefront_backtrace_affine(
-            wf_aligner,component_begin,component_end,
+        wavefront_backtrace_affine(wf_aligner,
+            wf_aligner->component_begin,wf_aligner->component_end,
             score,alignment_end_k,alignment_end_offset);
       }
     }

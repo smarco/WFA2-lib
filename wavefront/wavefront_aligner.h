@@ -100,8 +100,8 @@ typedef struct _wavefront_aligner_t {
   void* match_funct_arguments;                // Generic arguments passed to matching function (args)
   // Wavefront components
   wavefront_components_t wf_components;       // Wavefront components
-  affine_matrix_type component_begin;         // Alignment begin component
-  affine_matrix_type component_end;           // Alignment end component
+  affine2p_matrix_type component_begin;       // Alignment begin component
+  affine2p_matrix_type component_end;         // Alignment end component
   wavefront_pos_t alignment_end_pos;          // Alignment end position
   // Bidirectional Alignment
   bool bidirectional_alignment;               // Enable bidirectional WFA alignment

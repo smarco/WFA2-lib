@@ -152,8 +152,8 @@ void wavefront_aligner_init_alignment(
       &wf_aligner->wf_components,pattern_length,text_length,
       &wf_aligner->penalties,memory_modular,bt_piggyback,
       wf_aligner->mm_allocator);
-  wf_aligner->component_begin = affine_matrix_M;
-  wf_aligner->component_end = affine_matrix_M;
+  wf_aligner->component_begin = affine2p_matrix_M;
+  wf_aligner->component_end = affine2p_matrix_M;
   // Wavefront bidirectional
   const bool bidirectional_alignment = (attributes->memory_mode == wavefront_memory_ultralow);
   wf_aligner->bidirectional_alignment = bidirectional_alignment;

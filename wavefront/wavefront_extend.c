@@ -50,43 +50,74 @@ bool wavefront_extend_end2end_check_termination(
   // Parameters
   const int pattern_length = wf_aligner->pattern_length;
   const int text_length = wf_aligner->text_length;
-  const affine_matrix_type component_end = wf_aligner->component_end;
+  const affine2p_matrix_type component_end = wf_aligner->component_end;
   const int alignment_k = DPMATRIX_DIAGONAL(text_length,pattern_length);
   const wf_offset_t alignment_offset = DPMATRIX_OFFSET(text_length,pattern_length);
-  // Alignment ends in M
-  if (component_end == affine_matrix_M) {
-    // Check diagonal/offset
-    if (mwavefront->lo > alignment_k || alignment_k > mwavefront->hi) return false; // Not done
-    const wf_offset_t moffset = mwavefront->offsets[alignment_k];
-    if (moffset < alignment_offset) return false; // Not done
-    // We are done
-    wf_aligner->alignment_end_pos.score = score;
-    wf_aligner->alignment_end_pos.k = alignment_k;
-    wf_aligner->alignment_end_pos.offset = alignment_offset;
-    return true;
-  } else if (component_end == affine_matrix_I) {
-    // Fetch I-wavefront & check diagonal/offset
-    wavefront_t* const iwavefront = wf_aligner->wf_components.i1wavefronts[score_mod];
-    if (iwavefront == NULL || iwavefront->lo > alignment_k || alignment_k > iwavefront->hi) return false; // Not done
-    const wf_offset_t ioffset = iwavefront->offsets[alignment_k];
-    if (ioffset < alignment_offset) return false; // Not done
-    // We are done
-    wf_aligner->alignment_end_pos.score = score;
-    wf_aligner->alignment_end_pos.k = alignment_k;
-    wf_aligner->alignment_end_pos.offset = alignment_offset;
-    return true;
-  } else { // wf_aligner->end_component == affine_matrix_D
-    // Fetch D-wavefront & check diagonal/offset
-    wavefront_t* const dwavefront = wf_aligner->wf_components.d1wavefronts[score_mod];
-    if (dwavefront == NULL || dwavefront->lo > alignment_k || alignment_k > dwavefront->hi) return false; // Not done
-    const wf_offset_t doffset = dwavefront->offsets[alignment_k];
-    if (doffset < alignment_offset) return false; // Not done
-    // We are done
-    wf_aligner->alignment_end_pos.score = score;
-    wf_aligner->alignment_end_pos.k = alignment_k;
-    wf_aligner->alignment_end_pos.offset = alignment_offset;
-    return true;
+  // Select end component
+  switch (component_end) {
+    case affine2p_matrix_M: {
+      // Check diagonal/offset
+      if (mwavefront->lo > alignment_k || alignment_k > mwavefront->hi) return false; // Not done
+      const wf_offset_t moffset = mwavefront->offsets[alignment_k];
+      if (moffset < alignment_offset) return false; // Not done
+      // We are done
+      wf_aligner->alignment_end_pos.score = score;
+      wf_aligner->alignment_end_pos.k = alignment_k;
+      wf_aligner->alignment_end_pos.offset = alignment_offset;
+      return true;
+    }
+    case affine2p_matrix_I1: {
+      // Fetch I1-wavefront & check diagonal/offset
+      wavefront_t* const i1wavefront = wf_aligner->wf_components.i1wavefronts[score_mod];
+      if (i1wavefront == NULL || i1wavefront->lo > alignment_k || alignment_k > i1wavefront->hi) return false; // Not done
+      const wf_offset_t i1offset = i1wavefront->offsets[alignment_k];
+      if (i1offset < alignment_offset) return false; // Not done
+      // We are done
+      wf_aligner->alignment_end_pos.score = score;
+      wf_aligner->alignment_end_pos.k = alignment_k;
+      wf_aligner->alignment_end_pos.offset = alignment_offset;
+      return true;
+    }
+    case affine2p_matrix_I2: {
+      // Fetch I2-wavefront & check diagonal/offset
+      wavefront_t* const i2wavefront = wf_aligner->wf_components.i2wavefronts[score_mod];
+      if (i2wavefront == NULL || i2wavefront->lo > alignment_k || alignment_k > i2wavefront->hi) return false; // Not done
+      const wf_offset_t i2offset = i2wavefront->offsets[alignment_k];
+      if (i2offset < alignment_offset) return false; // Not done
+      // We are done
+      wf_aligner->alignment_end_pos.score = score;
+      wf_aligner->alignment_end_pos.k = alignment_k;
+      wf_aligner->alignment_end_pos.offset = alignment_offset;
+      return true;
+    }
+    case affine2p_matrix_D1: {
+      // Fetch D1-wavefront & check diagonal/offset
+      wavefront_t* const d1wavefront = wf_aligner->wf_components.d1wavefronts[score_mod];
+      if (d1wavefront == NULL || d1wavefront->lo > alignment_k || alignment_k > d1wavefront->hi) return false; // Not done
+      const wf_offset_t d1offset = d1wavefront->offsets[alignment_k];
+      if (d1offset < alignment_offset) return false; // Not done
+      // We are done
+      wf_aligner->alignment_end_pos.score = score;
+      wf_aligner->alignment_end_pos.k = alignment_k;
+      wf_aligner->alignment_end_pos.offset = alignment_offset;
+      return true;
+    }
+    case affine2p_matrix_D2: {
+      // Fetch D2-wavefront & check diagonal/offset
+      wavefront_t* const d2wavefront = wf_aligner->wf_components.d2wavefronts[score_mod];
+      if (d2wavefront == NULL || d2wavefront->lo > alignment_k || alignment_k > d2wavefront->hi) return false; // Not done
+      const wf_offset_t d2offset = d2wavefront->offsets[alignment_k];
+      if (d2offset < alignment_offset) return false; // Not done
+      // We are done
+      wf_aligner->alignment_end_pos.score = score;
+      wf_aligner->alignment_end_pos.k = alignment_k;
+      wf_aligner->alignment_end_pos.offset = alignment_offset;
+      return true;
+    }
+    default:
+      break;
   }
+  return false;
 }
 bool wavefront_extend_endsfree_check_termination(
     wavefront_aligner_t* const wf_aligner,

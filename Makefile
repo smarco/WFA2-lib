@@ -49,8 +49,12 @@ all: build
 
 debug: build
 
+ASAN_OPT=-fsanitize=address -fsanitize=undefined -fsanitize=shift -fsanitize=alignment
+ASAN_OPT+=-fsanitize=signed-integer-overflow -fsanitize=bool -fsanitize=enum
+ASAN_OPT+=-fsanitize=pointer-compare -fsanitize=pointer-overflow -fsanitize=builtin
+
 # ASAN: ASAN_OPTIONS=detect_leaks=1:symbolize=1 LSAN_OPTIONS=verbosity=2:log_threads=1
-asan: CC_FLAGS+=-fsanitize=address -fno-omit-frame-pointer -fno-common
+asan: CC_FLAGS+=$(ASAN_OPT) -fno-omit-frame-pointer -fno-common
 asan: build
 
 ###############################################################################
