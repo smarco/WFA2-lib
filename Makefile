@@ -8,8 +8,8 @@ FOLDER_LIB=lib
 
 UNAME=$(shell uname)
 
-CC=gcc
-CPP=g++
+CC:=gcc
+CPP:=g++
 
 CC_FLAGS=-Wall -g
 
