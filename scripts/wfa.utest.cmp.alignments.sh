@@ -15,7 +15,9 @@ do
   FILENAME=$(basename -- "$FILE_ALG1")
   PREFIX=${FILENAME%.*}
   FILE_ALG2="$FOLDER2/$FILENAME"
-  echo -ne "[UTest::$PREFIX]  \t"
+  echo -ne "[UTest::$PREFIX]"
+  if [[ ${#PREFIX} < 15 ]]; then echo -ne "   "; fi
+  echo -ne "\t"
   # Check existence
   if [[ ! -f "$FILE_ALG2" ]]
   then
@@ -25,12 +27,12 @@ do
   # Check diff
   if [[ $(diff $FILE_ALG1 $FILE_ALG2) ]] 
   then
-    if [[ $(diff  <(awk '{print $1}' $FILE_ALG1) <(awk '{print $1}' $FILE_ALG2)) ]]
+    if [[ $(diff <(awk '{if ($1<0) print -$1; else print $1}' $FILE_ALG1) <(awk '{if ($1<0) print -$1; else print $1}' $FILE_ALG2)) ]]
     then
       echo "Error"
       continue
     else
-      echo -n "OK-Score"
+      echo -n "OK" # Only score
     fi
   else
     echo -n "OK"

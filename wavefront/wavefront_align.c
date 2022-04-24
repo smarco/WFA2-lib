@@ -249,10 +249,12 @@ void wavefront_align_endsfree_initialize(
 void wavefront_align_terminate(
     wavefront_aligner_t* const wf_aligner,
     const int score) {
+  // Parameters
+  const distance_metric_t distance_metric = wf_aligner->penalties.distance_metric;
   // Retrieve alignment
   if (wf_aligner->alignment_scope == compute_score) {
     cigar_clear(&wf_aligner->cigar);
-    wf_aligner->cigar.score = -score;
+    wf_aligner->cigar.score = (distance_metric <= edit) ? score : -score;
   } else {
     // Parameters
     wavefront_components_t* const wf_components = &wf_aligner->wf_components;
@@ -281,7 +283,7 @@ void wavefront_align_terminate(
       }
     }
     // Set score & finish
-    wf_aligner->cigar.score = -score;
+    wf_aligner->cigar.score = (distance_metric <= edit) ? score : -score;
   }
 }
 /*
