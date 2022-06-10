@@ -501,7 +501,7 @@ void wavefront_bialign(
   const int breakpoint_h = WAVEFRONT_H(breakpoint.k_forward,breakpoint.offset_forward);
   const int breakpoint_v = WAVEFRONT_V(breakpoint.k_forward,breakpoint.offset_forward);
   // DEBUG
-  if (wf_aligner->system.verbose == 1) wavefront_bialign_debug(&breakpoint,rlevel);
+  if (wf_aligner->system.verbose >= 2) wavefront_bialign_debug(&breakpoint,rlevel);
   // Align half_0
   alignment_form_t form_0;
   wavefront_bialign_init_half_0(form,&form_0);

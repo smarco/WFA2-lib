@@ -139,7 +139,7 @@ typedef struct {
 } benchmark_args;
 benchmark_args parameters = {
   // Algorithm
-  .algorithm = alignment_test,
+  .algorithm = alignment_edit_wavefront,
   // I/O
   .input_filename = NULL,
   .output_filename = NULL,

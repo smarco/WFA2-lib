@@ -441,7 +441,7 @@ int wavefront_extend_custom(
   const int max_score_scope = wf_aligner->wf_components.max_score_scope;
   const int score_mod = (memory_modular) ? score % max_score_scope : score;
   // Fetch m-wavefront
-  wavefront_t* const mwavefront = wf_aligner->wf_components.mwavefronts[score];
+  wavefront_t* const mwavefront = wf_aligner->wf_components.mwavefronts[score_mod];
   if (mwavefront==NULL) return 0; // Not done
   // Multithreading dispatcher
   const bool endsfree = (wf_aligner->alignment_form.span == alignment_endsfree);

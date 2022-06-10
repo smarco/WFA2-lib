@@ -43,7 +43,7 @@ void wavefront_heuristic_set_banded_static(
     wavefront_heuristic_t* const wf_heuristic,
     const int band_min_k,
     const int band_max_k) {
-  wf_heuristic->strategy |= wf_heuristic_banded_static;
+  wf_heuristic->strategy = wf_heuristic_banded_static;
   wf_heuristic->min_k = band_min_k;
   wf_heuristic->max_k = band_max_k;
 }
@@ -52,7 +52,7 @@ void wavefront_heuristic_set_banded_adaptive(
     const int band_min_k,
     const int band_max_k,
     const int steps_between_cutoffs) {
-  wf_heuristic->strategy |= wf_heuristic_banded_adaptive;
+  wf_heuristic->strategy = wf_heuristic_banded_adaptive;
   wf_heuristic->min_k = band_min_k;
   wf_heuristic->max_k = band_max_k;
   wf_heuristic->steps_between_cutoffs = steps_between_cutoffs;
@@ -64,7 +64,7 @@ void wavefront_heuristic_set_wfadaptive(
     const int min_wavefront_length,
     const int max_distance_threshold,
     const int steps_between_cutoffs) {
-  wf_heuristic->strategy |= wf_heuristic_wfadaptive;
+  wf_heuristic->strategy = wf_heuristic_wfadaptive;
   wf_heuristic->min_wavefront_length = min_wavefront_length;
   wf_heuristic->max_distance_threshold = max_distance_threshold;
   wf_heuristic->steps_between_cutoffs = steps_between_cutoffs;
@@ -75,7 +75,7 @@ void wavefront_heuristic_set_xdrop(
     wavefront_heuristic_t* const wf_heuristic,
     const int xdrop,
     const int steps_between_cutoffs) {
-  wf_heuristic->strategy |= wf_heuristic_xdrop;
+  wf_heuristic->strategy = wf_heuristic_xdrop;
   wf_heuristic->xdrop = xdrop;
   wf_heuristic->steps_between_cutoffs = steps_between_cutoffs;
   // Internals
@@ -88,7 +88,7 @@ void wavefront_heuristic_set_zdrop(
     wavefront_heuristic_t* const wf_heuristic,
     const int zdrop,
     const int steps_between_cutoffs) {
-  wf_heuristic->strategy |= wf_heuristic_zdrop;
+  wf_heuristic->strategy = wf_heuristic_zdrop;
   wf_heuristic->zdrop = zdrop;
   wf_heuristic->steps_between_cutoffs = steps_between_cutoffs;
   // Internals
@@ -480,19 +480,19 @@ bool wavefront_heuristic_cufoff(
   if (mwavefront==NULL || mwavefront->lo > mwavefront->hi) return false; // Not dropped
   // Cut-off m-wavefront
   --(wf_heuristic->steps_wait);
-  if ((wf_heuristic->strategy & wf_heuristic_banded_static) != 0) {
+  if (wf_heuristic->strategy == wf_heuristic_banded_static) {
     wavefront_cufoff_banded_static(wf_aligner,mwavefront);
   }
-  if ((wf_heuristic->strategy & wf_heuristic_banded_adaptive) != 0) {
+  if (wf_heuristic->strategy == wf_heuristic_banded_adaptive) {
     wavefront_cufoff_banded_adaptive(wf_aligner,mwavefront);
   }
-  if ((wf_heuristic->strategy & wf_heuristic_wfadaptive) != 0) {
+  if (wf_heuristic->strategy == wf_heuristic_wfadaptive) {
     wavefront_cufoff_wfadaptive(wf_aligner,mwavefront);
   }
-  if ((wf_heuristic->strategy & wf_heuristic_xdrop) != 0) {
+  if (wf_heuristic->strategy == wf_heuristic_xdrop) {
     wavefront_cufoff_xdrop(wf_aligner,mwavefront,score);
   }
-  if ((wf_heuristic->strategy & wf_heuristic_zdrop) != 0) {
+  if (wf_heuristic->strategy == wf_heuristic_zdrop) {
     wavefront_cufoff_zdrop(wf_aligner,mwavefront,score);
   }
   // Check wavefront length
@@ -531,33 +531,27 @@ void wavefront_heuristic_print(
   // Select heuristic strategy
   if (wf_heuristic->strategy == wf_heuristic_none) {
     fprintf(stream,"(none)");
-  } else {
-    if ((wf_heuristic->strategy & wf_heuristic_banded_static) != 0) {
-      fprintf(stream,"(banded-static,%d,%d)",
-          wf_heuristic->min_k,
-          wf_heuristic->max_k);
-    }
-    if ((wf_heuristic->strategy & wf_heuristic_banded_adaptive) != 0) {
-      fprintf(stream,"(banded-adapt,%d,%d,%d)",
-          wf_heuristic->min_k,
-          wf_heuristic->max_k,
-          wf_heuristic->steps_between_cutoffs);
-    }
-    if ((wf_heuristic->strategy & wf_heuristic_wfadaptive) != 0) {
-      fprintf(stream,"(wf-adapt,%d,%d,%d)",
-          wf_heuristic->min_wavefront_length,
-          wf_heuristic->max_distance_threshold,
-          wf_heuristic->steps_between_cutoffs);
-    }
-    if ((wf_heuristic->strategy & wf_heuristic_xdrop) != 0) {
-      fprintf(stream,"(xdrop,%d,%d)",
-          wf_heuristic->xdrop,
-          wf_heuristic->steps_between_cutoffs);
-    }
-    if ((wf_heuristic->strategy & wf_heuristic_zdrop) != 0) {
-      fprintf(stream,"(zdrop,%d,%d)",
-          wf_heuristic->zdrop,
-          wf_heuristic->steps_between_cutoffs);
-    }
+  } else if (wf_heuristic->strategy == wf_heuristic_banded_static) {
+    fprintf(stream,"(banded-static,%d,%d)",
+        wf_heuristic->min_k,
+        wf_heuristic->max_k);
+  } else if (wf_heuristic->strategy == wf_heuristic_banded_adaptive) {
+    fprintf(stream,"(banded-adapt,%d,%d,%d)",
+        wf_heuristic->min_k,
+        wf_heuristic->max_k,
+        wf_heuristic->steps_between_cutoffs);
+  } else if (wf_heuristic->strategy == wf_heuristic_wfadaptive) {
+    fprintf(stream,"(wf-adapt,%d,%d,%d)",
+        wf_heuristic->min_wavefront_length,
+        wf_heuristic->max_distance_threshold,
+        wf_heuristic->steps_between_cutoffs);
+  } else if (wf_heuristic->strategy == wf_heuristic_xdrop) {
+    fprintf(stream,"(xdrop,%d,%d)",
+        wf_heuristic->xdrop,
+        wf_heuristic->steps_between_cutoffs);
+  } else if (wf_heuristic->strategy == wf_heuristic_zdrop) {
+    fprintf(stream,"(zdrop,%d,%d)",
+        wf_heuristic->zdrop,
+        wf_heuristic->steps_between_cutoffs);
   }
 }
