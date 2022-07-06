@@ -518,7 +518,10 @@ void wavefront_bialign(
       &form_1,breakpoint.component,component_end,
       breakpoint.score_reverse,cigar,rlevel+1);
   // Set score
-  cigar->score = -breakpoint.score;
+  const distance_metric_t distance_metric = wf_aligner->penalties.distance_metric;
+  const int swg_match_score = wf_aligner->penalties.match;
+  cigar->score = (distance_metric <= edit) ? breakpoint.score :
+      WF_PENALTIES_GET_SW_SCORE(swg_match_score,pattern_length,text_length,breakpoint.score);
 }
 
 

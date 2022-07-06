@@ -83,7 +83,7 @@ void benchmark_edit_dp(
       align_input->mm_allocator);
   // Align
   timer_start(&align_input->timer);
-  edit_dp_compute(&score_matrix,
+  edit_dp_align(&score_matrix,
       align_input->pattern,pattern_length,
       align_input->text,text_length,&cigar);
   timer_stop(&align_input->timer);
@@ -116,7 +116,7 @@ void benchmark_edit_dp_banded(
       align_input->mm_allocator);
   // Align
   timer_start(&align_input->timer);
-  edit_dp_compute_banded(&score_matrix,
+  edit_dp_align_banded(&score_matrix,
       align_input->pattern,pattern_length,
       align_input->text,text_length,
       bandwidth,&cigar);

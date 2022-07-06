@@ -1,9 +1,9 @@
 #!/bin/bash
-# PROJECT: Wavefront Alignments Algorithms (Unitary Tests)
+# PROJECT: Wavefront Alignments Algorithms 
 # LICENCE: MIT License 
 # AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
 # DESCRIPTION: Compare alignment files (*.alg)
-# USAGE: ./wfa.utest.cmp.score.sh file1.alg file2.alg
+# USAGE: ./wfa.alg.cmp.score.sh file1.alg file2.alg
 
 # Parameters
 FILE1=$1

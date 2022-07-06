@@ -56,7 +56,7 @@ void nw_traceback(
       --h;
     } else {
       operations[op_sentinel--] =
-          (dp[h][v] == dp[h-1][v-1]+penalties->mismatch) ? 'X' : 'M';
+          (dp[h][v] == dp[h-1][v-1] + penalties->mismatch) ? 'X' : 'M';
       --h;
       --v;
     }
@@ -65,7 +65,7 @@ void nw_traceback(
   while (v>0) {operations[op_sentinel--] = 'D'; --v;}
   cigar->begin_offset = op_sentinel + 1;
 }
-void nw_compute(
+void nw_align(
     score_matrix_t* const score_matrix,
     linear_penalties_t* const penalties,
     const char* const pattern,
@@ -87,7 +87,7 @@ void nw_compute(
   // Compute DP
   for (h=1;h<=text_length;++h) {
     for (v=1;v<=pattern_length;++v) {
-      int min = dp[h-1][v-1] + ((pattern[v-1]==text[h-1]) ? 0 : penalties->mismatch); // Misms
+      int min = dp[h-1][v-1] + ((pattern[v-1]==text[h-1]) ? penalties->match : penalties->mismatch); // Misms
       min = MIN(min,dp[h-1][v]+penalties->indel); // Ins
       min = MIN(min,dp[h][v-1]+penalties->indel); // Del
       dp[h][v] = min;

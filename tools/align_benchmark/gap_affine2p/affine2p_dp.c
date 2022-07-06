@@ -114,7 +114,7 @@ void affine2p_dp_traceback(
 /*
  * Gap-affine 2-piece alignment computation using dynamic-programming matrix
  */
-void affine2p_dp_compute(
+void affine2p_dp_align(
     affine2p_matrix_t* const matrix,
     affine2p_penalties_t* const penalties,
     const char* const pattern,
@@ -179,76 +179,4 @@ void affine2p_dp_compute(
 //  // DEBUG
 //  affine2p_matrix_print(stderr,matrix,pattern,text);
 }
-// /*
-//  * Gap-affine 2-piece alignment computation using dynamic-programming matrix (banded)
-//  */
-// void affine2p_dp_compute_banded(
-//     affine2p_matrix_t* const matrix,
-//     affine2p_penalties_t* const penalties,
-//     const char* const pattern,
-//     const int pattern_length,
-//     const char* const text,
-//     const int text_length,
-//     const int bandwidth,
-//     cigar_t* const cigar) {
-//  // Parameters
-//  const int k_end = ABS(text_length-pattern_length)+1;
-//  int effective_bandwidth = bandwidth;
-//  if (effective_bandwidth < k_end) effective_bandwidth = k_end;
-//  if (effective_bandwidth > pattern_length) effective_bandwidth = pattern_length;
-//  if (effective_bandwidth > text_length) effective_bandwidth = text_length;
-//  affine_cell_t** const dp = affine_matrix->columns;
-//  int h, v;
-//  // Initialize
-//  dp[0][0].D = AFFINE2P_SCORE_MAX;
-//  dp[0][0].I = AFFINE2P_SCORE_MAX;
-//  dp[0][0].M = 0;
-//  for (v=1;v<=effective_bandwidth;++v) {
-//    dp[0][v].D = penalties->gap_opening + v*penalties->gap_extension;
-//    dp[0][v].I = AFFINE2P_SCORE_MAX;
-//    dp[0][v].M = dp[0][v].D;
-//  }
-//  // Compute DP
-//  for (h=1;h<=text_length;++h) {
-//    // Compute lo limit
-//    int lo;
-//    if (h <= effective_bandwidth) {
-//      lo = 1;
-//      dp[h][lo-1].D = AFFINE2P_SCORE_MAX;
-//      dp[h][lo-1].I = penalties->gap_opening + h*penalties->gap_extension;
-//      dp[h][lo-1].M = dp[h][lo-1].I;
-//    } else {
-//      lo = h - effective_bandwidth;
-//      dp[h][lo-1].D = AFFINE2P_SCORE_MAX;
-//      dp[h][lo-1].I = AFFINE2P_SCORE_MAX;
-//      dp[h][lo-1].M = AFFINE2P_SCORE_MAX;
-//    }
-//    // Compute hi limit
-//    int hi = h + effective_bandwidth - 1;
-//    if (hi > pattern_length) {
-//      hi = pattern_length;
-//    } else if (h > 1) {
-//      dp[h-1][hi].D = AFFINE2P_SCORE_MAX;
-//      dp[h-1][hi].I = AFFINE2P_SCORE_MAX;
-//      dp[h-1][hi].M = AFFINE2P_SCORE_MAX;
-//    }
-//    // Compute column
-//    for (v=lo;v<=hi;++v) {
-//      // Update DP.D
-//      const int del_new = dp[h][v-1].M + penalties->gap_opening + penalties->gap_extension;
-//      const int del_ext = dp[h][v-1].D + penalties->gap_extension;
-//      const int del = MIN(del_new,del_ext);
-//      dp[h][v].D = del;
-//      // Update DP.I
-//      const int ins_new = dp[h-1][v].M + penalties->gap_opening + penalties->gap_extension;
-//      const int ins_ext = dp[h-1][v].I + penalties->gap_extension;
-//      const int ins = MIN(ins_new,ins_ext);
-//      dp[h][v].I = ins;
-//      // Update DP.M
-//      const int m_match = dp[h-1][v-1].M + ((pattern[v-1]==text[h-1]) ? penalties->match : penalties->mismatch);
-//      dp[h][v].M = MIN(m_match,MIN(ins,del));
-//    }
-//  }
-//  // Compute traceback
-//  swg_traceback(affine_matrix,penalties,cigar);
-//}
+

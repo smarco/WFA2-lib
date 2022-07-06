@@ -79,20 +79,17 @@ void wavefront_aligner_init_penalties(
     case gap_linear:
       wavefronts_penalties_set_linear(
           &wf_aligner->penalties,
-          &attributes->linear_penalties,
-          wavefronts_penalties_shifted_penalties);
+          &attributes->linear_penalties);
       break;
     case gap_affine:
       wavefronts_penalties_set_affine(
           &wf_aligner->penalties,
-          &attributes->affine_penalties,
-          wavefronts_penalties_shifted_penalties);
+          &attributes->affine_penalties);
       break;
     case gap_affine_2p:
       wavefronts_penalties_set_affine2p(
           &wf_aligner->penalties,
-          &attributes->affine2p_penalties,
-          wavefronts_penalties_shifted_penalties);
+          &attributes->affine2p_penalties);
       break;
   }
 }

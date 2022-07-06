@@ -66,6 +66,7 @@ typedef struct {
   // Status
   int status;                                                     // Status code
   int score;                                                      // Current WF-alignment score
+  uint64_t memory_used;                                           // Total memory used
   // Wavefront alignment functions
   void (*wf_align_compute)(wavefront_aligner_t* const,const int); // WF Compute function
   int (*wf_align_extend)(wavefront_aligner_t* const,const int);   // WF Extend function
