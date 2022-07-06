@@ -43,6 +43,7 @@ void strings_padded_add_padding(
     const char padding_value,
     char** const buffer_padded,
     char** const buffer_padded_begin,
+    const bool reverse_sequence,
     mm_allocator_t* const mm_allocator) {
   // Allocate
   const int buffer_padded_length = begin_padding_length + buffer_length + end_padding_length;
@@ -51,7 +52,14 @@ void strings_padded_add_padding(
   memset(*buffer_padded,padding_value,begin_padding_length);
   // Copy buffer
   *buffer_padded_begin = *buffer_padded + begin_padding_length;
-  memcpy(*buffer_padded_begin,buffer,buffer_length);
+  if (reverse_sequence) {
+    int i;
+    for (i=0;i<buffer_length;i++) {
+      (*buffer_padded_begin)[i] = buffer[buffer_length-1-i];
+    }
+  } else {
+    memcpy(*buffer_padded_begin,buffer,buffer_length);
+  }
   // Add end padding
   memset(*buffer_padded_begin+buffer_length,padding_value,end_padding_length);
 }
@@ -61,6 +69,7 @@ strings_padded_t* strings_padded_new(
     const char* const text,
     const int text_length,
     const int padding_length,
+    const bool reverse_sequences,
     mm_allocator_t* const mm_allocator) {
   // Allocate
   strings_padded_t* const strings_padded =
@@ -76,12 +85,14 @@ strings_padded_t* strings_padded_new(
       pattern,pattern_length,
       pattern_begin_padding_length,pattern_end_padding_length,'?',
       &(strings_padded->pattern_padded_buffer),
-      &(strings_padded->pattern_padded),mm_allocator);
+      &(strings_padded->pattern_padded),
+      reverse_sequences,mm_allocator);
   strings_padded_add_padding(
       text,text_length,
       text_begin_padding_length,text_end_padding_length,'!',
       &(strings_padded->text_padded_buffer),
-      &(strings_padded->text_padded),mm_allocator);
+      &(strings_padded->text_padded),
+      reverse_sequences,mm_allocator);
   // Return
   return strings_padded;
 }
@@ -91,6 +102,7 @@ strings_padded_t* strings_padded_new_rhomb(
     const char* const text,
     const int text_length,
     const int padding_length,
+    const bool reverse_sequences,
     mm_allocator_t* const mm_allocator) {
   // Allocate
   strings_padded_t* const strings_padded =
@@ -106,12 +118,14 @@ strings_padded_t* strings_padded_new_rhomb(
       pattern,pattern_length,
       pattern_begin_padding_length,pattern_end_padding_length,'?',
       &(strings_padded->pattern_padded_buffer),
-      &(strings_padded->pattern_padded),mm_allocator);
+      &(strings_padded->pattern_padded),
+      reverse_sequences,mm_allocator);
   strings_padded_add_padding(
       text,text_length,
       text_begin_padding_length,text_end_padding_length,'!',
       &(strings_padded->text_padded_buffer),
-      &(strings_padded->text_padded),mm_allocator);
+      &(strings_padded->text_padded),
+      reverse_sequences,mm_allocator);
   // Set lengths
   strings_padded->pattern_length = pattern_length;
   strings_padded->text_length = text_length;

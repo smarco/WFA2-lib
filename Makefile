@@ -17,12 +17,15 @@ AR=ar
 AR_FLAGS=-rsc
 
 ifndef BUILD_EXAMPLES 
-BUILD_EXAMPLES=1
+BUILD_EXAMPLES=0
 endif
-
 ifndef BUILD_TOOLS 
 BUILD_TOOLS=1
 endif
+ifndef BUILD_WFA_PARALLEL
+BUILD_WFA_PARALLEL=1
+endif
+
 ###############################################################################
 # Configuration rules
 ###############################################################################
@@ -41,16 +44,17 @@ ifeq ($(BUILD_EXAMPLES),1)
     APPS+=examples
 endif
 
-release: CC_FLAGS+=-O3 -march=native -flto
-release: build
-
-all: CC_FLAGS+=-O3 -march=native
+all: CC_FLAGS+=-O3 -march=native #-flto -ffat-lto-objects
 all: build
 
 debug: build
 
+ASAN_OPT=-fsanitize=address -fsanitize=undefined -fsanitize=shift -fsanitize=alignment
+ASAN_OPT+=-fsanitize=signed-integer-overflow -fsanitize=bool -fsanitize=enum
+ASAN_OPT+=-fsanitize=pointer-compare -fsanitize=pointer-overflow -fsanitize=builtin
+
 # ASAN: ASAN_OPTIONS=detect_leaks=1:symbolize=1 LSAN_OPTIONS=verbosity=2:log_threads=1
-asan: CC_FLAGS+=-fsanitize=address -fno-omit-frame-pointer -fno-common
+asan: CC_FLAGS+=$(ASAN_OPT) -fno-omit-frame-pointer -fno-common
 asan: build
 
 ###############################################################################

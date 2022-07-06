@@ -49,8 +49,8 @@
  * Alignment scope
  */
 typedef enum {
-  compute_score,          // Only distance/score
-  compute_alignment,      // Full alignment CIGAR
+  compute_score,           // Only distance/score
+  compute_alignment,       // Full alignment CIGAR
 } alignment_scope_t;
 typedef enum {
   alignment_end2end,       // End-to-end alignment (aka global)
@@ -64,8 +64,6 @@ typedef struct {
   int pattern_end_free;    // Allow free-gap at the end of the pattern
   int text_begin_free;     // Allow free-gap at the beginning of the text
   int text_end_free;       // Allow free-gap at the end of the text
-  // Limits
-  int max_alignment_score; // Maximum score allowed before quit
 } alignment_form_t;
 
 /*
@@ -92,8 +90,8 @@ typedef int (*alignment_match_funct_t)(int,int,void*);
  * Alignment system configuration
  */
 typedef struct {
-  // Debug
-  bool check_alignment_correct;  // Verify that the alignment CIGAR output is correct
+  // Limits
+  int max_alignment_score;       // Maximum score allowed before quit
   // Probing intervals
   int probe_interval_global;     // Score-ticks interval to check any limits
   int probe_interval_compact;    // Score-ticks interval to check BT-buffer compacting
@@ -108,17 +106,23 @@ typedef struct {
   //  2 - Report each sequence aligned (brief)
   //  3 - Report each sequence aligned (very verbose)
   int verbose;                   // Verbose (regulates messages during alignment)
+  // Debug
+  bool check_alignment_correct;  // Verify that the alignment CIGAR output is correct
   // Profile
   profiler_timer_t timer;        // Time alignment
+  // OS
+  int max_num_threads;           // Maximum number of threads to use to compute/extend WFs
+  int min_offsets_per_thread;    // Minimum amount of offsets to spawn a thread
 } alignment_system_t;
 
 /*
  * Low-memory modes
  */
 typedef enum {
-  wavefront_memory_high = 0,     // High-memore mode (fastest, stores all WFs explicitly)
-  wavefront_memory_med = 1,      // Succing-memory mode (medium, offloads half-full BT-blocks)
-  wavefront_memory_low = 2,      // Succing-memory mode (slow, offloads only full BT-blocks)
+  wavefront_memory_high     = 0, // High-memore mode (fastest, stores all WFs explicitly)
+  wavefront_memory_med      = 1, // Succing-memory mode piggyback-based (medium, offloads half-full BT-blocks)
+  wavefront_memory_low      = 2, // Succing-memory mode piggyback-based (slow, offloads only full BT-blocks)
+  wavefront_memory_ultralow = 3, // Bidirectional WFA
 } wavefront_memory_t;
 
 /*

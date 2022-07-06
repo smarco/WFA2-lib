@@ -48,12 +48,16 @@ typedef uint32_t wf_unsigned_offset_t;
 /*
  * Translate k and offset to coordinates h,v
  */
-#define WAVEFRONT_V(k,offset)   ((offset)-(k))
-#define WAVEFRONT_H(k,offset)   (offset)
-#define WAVEFRONT_DIAGONAL(h,v) ((h)-(v))
-#define WAVEFRONT_OFFSET(h,v)   (h)
-#define WAVEFRONT_LENGTH(lo,hi) ((hi)-(lo)+1) // (lo/hi inclusive and +1 for WF[0])
+#define WAVEFRONT_LENGTH(lo,hi)           ((hi)-(lo)+1)    // (lo/hi inclusive and +1 for WF[0])
+#define WAVEFRONT_V(k,offset)             ((offset)-(k))
+#define WAVEFRONT_H(k,offset)             (offset)
+#define WAVEFRONT_ANTIDIAGONAL(k,offset)  (2*(offset)-(k))
 
-#define WAVEFRONT_DIAGONAL_NULL INT_MAX
+#define DPMATRIX_DIAGONAL_NULL            INT_MAX
+#define DPMATRIX_DIAGONAL(h,v)            ((h)-(v))
+#define DPMATRIX_ANTIDIAGONAL(h,v)        ((h)+(v))
+#define DPMATRIX_OFFSET(h,v)              (h)
+
+#define WAVEFRONT_K_INVERSE(k,plen,tlen)  ((tlen)-(plen)-(k))
 
 #endif /* WAVEFRONT_OFFSET_H_ */

@@ -26,38 +26,47 @@
  *
  * PROJECT: Wavefront Alignment Algorithms
  * AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
- * DESCRIPTION: WaveFront-Alignment module for backtracing alignments
  */
 
-#ifndef WAVEFRONT_BACKTRACE_H_
-#define WAVEFRONT_BACKTRACE_H_
+#ifndef WAVEFRONT_WAVEFRONT_BIALIGN_H_
+#define WAVEFRONT_WAVEFRONT_BIALIGN_H_
 
-#include "wavefront_aligner.h"
+#include "utils/commons.h"
+#include "alignment/affine_penalties.h"
+#include "alignment/cigar.h"
+#include "wavefront_offset.h"
+#include "wavefront_attributes.h"
+
+// Wavefront ahead definition
+typedef struct _wavefront_aligner_t wavefront_aligner_t;
+
+typedef struct {
+  // Scores
+  int score;                      // Score total
+  int score_forward;              // Score (forward)
+  int score_reverse;              // Score (reverse)
+  // Location
+  int k_forward;                  // Breakpoint diagonal (forward)
+  int k_reverse;                  // Breakpoint diagonal (reverse)
+  wf_offset_t offset_forward;     // Offset (forward)
+  wf_offset_t offset_reverse;     // Offset (reverse)
+  affine2p_matrix_type component; // Component (M/I/D)
+} wf_bialign_breakpoint_t;
 
 /*
- * Backtrace wavefronts
+ * Bidirectional WFA
  */
-void wavefront_backtrace_linear(
+void wavefront_bialign(
     wavefront_aligner_t* const wf_aligner,
-    const int alignment_score,
-    const int alignment_k,
-    const wf_offset_t alignment_offset);
-void wavefront_backtrace_affine(
-    wavefront_aligner_t* const wf_aligner,
+    const char* const pattern,
+    const int pattern_length,
+    const char* const text,
+    const int text_length,
+    alignment_form_t* const form,
     const affine2p_matrix_type component_begin,
     const affine2p_matrix_type component_end,
-    const int alignment_score,
-    const int alignment_k,
-    const wf_offset_t alignment_offset);
+    const int score_remaining,
+    cigar_t* const cigar,
+    const int rlevel);
 
-/*
- * Backtrace from BT-Buffer (pcigar)
- */
-void wavefront_backtrace_pcigar(
-    wavefront_aligner_t* const wf_aligner,
-    const int alignment_k,
-    const int alignment_offset,
-    const pcigar_t pcigar_last,
-    const bt_block_idx_t prev_idx_last);
-
-#endif /* WAVEFRONT_BACKTRACE_H_ */
+#endif /* WAVEFRONT_WAVEFRONT_BIALIGN_H_ */

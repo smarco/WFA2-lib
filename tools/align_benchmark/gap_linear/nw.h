@@ -37,9 +37,9 @@
 #include "alignment/score_matrix.h"
 
 /*
- * Edit distance computation using raw dynamic-programming matrix
+ * Alignment computation using raw dynamic-programming matrix
  */
-void nw_compute(
+void nw_align(
     score_matrix_t* const score_matrix,
     linear_penalties_t* const penalties,
     const char* const pattern,

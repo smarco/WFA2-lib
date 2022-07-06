@@ -118,6 +118,7 @@ typedef struct {
   alignment_match_funct_t wfa_match_funct;
   void* wfa_match_funct_arguments;
   uint64_t wfa_max_memory;
+  int wfa_max_threads;
   // Other algorithms parameters
   int bandwidth;
   // Misc
@@ -138,7 +139,7 @@ typedef struct {
 } benchmark_args;
 benchmark_args parameters = {
   // Algorithm
-  .algorithm = alignment_test,
+  .algorithm = alignment_edit_wavefront,
   // I/O
   .input_filename = NULL,
   .output_filename = NULL,
@@ -186,6 +187,7 @@ benchmark_args parameters = {
   .wfa_match_funct = NULL,
   .wfa_match_funct_arguments = NULL,
   .wfa_max_memory = UINT64_MAX,
+  .wfa_max_threads = 1,
   // Other algorithms parameters
   .bandwidth = -1,
   // Misc
@@ -199,7 +201,7 @@ benchmark_args parameters = {
   // System
   .num_threads = 1,
   .batch_size = 10000,
-  .progress = 10000,
+  .progress = 100000,
   .verbose = 0,
 };
 
@@ -291,12 +293,10 @@ int match_function(int v,int h,void* arguments) {
  * Configuration
  */
 wavefront_aligner_t* align_input_configure_wavefront(
-    align_input_t* const align_input,
-    mm_allocator_t* const mm_allocator) {
+    align_input_t* const align_input) {
   // Set attributes
   wavefront_aligner_attr_t attributes = wavefront_aligner_attr_default;
   attributes.memory_mode = parameters.wfa_memory_mode;
-  attributes.mm_allocator = mm_allocator;
   if (parameters.wfa_score_only) {
     attributes.alignment_scope = compute_score;
   }
@@ -370,6 +370,7 @@ wavefront_aligner_t* align_input_configure_wavefront(
   attributes.plot_params.resolution_points = parameters.plot;
   attributes.system.verbose = parameters.verbose;
   attributes.system.max_memory_abort = parameters.wfa_max_memory;
+  attributes.system.max_num_threads = parameters.wfa_max_threads;
   // Allocate
   return wavefront_aligner_new(&attributes);
 }
@@ -387,10 +388,10 @@ void align_input_configure_global(
   align_input->output_file = parameters.output_file;
   align_input->output_full = parameters.output_full;
   // MM
-  align_input->mm_allocator = mm_allocator_new(BUFFER_SIZE_8M);
+  align_input->mm_allocator = mm_allocator_new(BUFFER_SIZE_1M);
   // WFA
   if (align_benchmark_is_wavefront(parameters.algorithm)) {
-    align_input->wf_aligner = align_input_configure_wavefront(align_input,align_input->mm_allocator);
+    align_input->wf_aligner = align_input_configure_wavefront(align_input);
   } else {
     align_input->wf_aligner = NULL;
   }
@@ -612,7 +613,7 @@ void align_benchmark_sequential() {
       align_benchmark_print_progress(seqs_processed);
     }
     // DEBUG
-    // mm_allocator_print(stderr,align_input.mm_allocator,true);
+    // mm_allocator_print(stderr,align_input.wf_aligner->mm_allocator,true);
     // Plot
     if (parameters.plot > 0) align_benchmark_plot_wf(&align_input,seqs_processed);
   }
@@ -687,7 +688,7 @@ void align_benchmark_parallel() {
       align_benchmark_print_progress(seqs_processed);
     }
     // DEBUG
-    // mm_allocator_print(stderr,align_input.mm_allocator,true);
+    // mm_allocator_print(stderr,align_input.wf_aligner->mm_allocator,true);
   }
   // Print benchmark results
   timer_stop(&parameters.timer_global);
@@ -707,10 +708,10 @@ void align_benchmark_parallel() {
  */
 void usage() {
   fprintf(stderr,
-      "USE: ./align_benchmark -a <algorithm> -i <input>                        \n"
+      "USE: ./align_benchmark -a ALGORITHM -i PATH                             \n"
       "      Options::                                                         \n"
       "        [Algorithm]                                                     \n"
-      "          --algorithm|a <algorithm>                                     \n"
+      "          --algorithm|a ALGORITHM                                       \n"
       "            [Indel (Longest Common Subsequence)]                        \n"
       "              indel-wfa                                                 \n"
       "            [Edit (Levenshtein)]                                        \n"
@@ -729,9 +730,9 @@ void usage() {
       "              gap-affine2p-dp                                           \n"
       "              gap-affine2p-wfa                                          \n"
       "        [Input & Output]                                                \n"
-      "          --input|i <File>                                              \n"
-      "          --output|o <File>                                             \n"
-      "          --output-full <File>                                          \n"
+      "          --input|i PATH                                                \n"
+      "          --output|o PATH                                               \n"
+      "          --output-full PATH                                            \n"
       "        [Penalties & Span]                                              \n"
       "          --linear-penalties|p M,X,I                                    \n"
       "          --affine-penalties|g M,X,O,E                                  \n"
@@ -739,38 +740,39 @@ void usage() {
       "          --ends-free P0,Pf,T0,Tf                                       \n"
       "        [Wavefront parameters]                                          \n"
       "          --wfa-score-only                                              \n"
-      "          --wfa-memory-mode 'high'|'med'|'low'                          \n"
-      "          --wfa-heuristic <Strategy>                                    \n"
-      "          --wfa-heuristic-parameters  <P1>,<P2>[,<P3>]                  \n"
-      "            [Strategy='banded-static']                                  \n"
+      "          --wfa-memory-mode 'high'|'med'|'low'|'ultralow'               \n"
+      "          --wfa-heuristic STRATEGY                                      \n"
+      "          --wfa-heuristic-parameters  P1,P2[,P3]                        \n"
+      "            [STRATEGY='banded-static']                                  \n"
       "              P1 = minimum-diagonal-band (e.g., -100)                   \n"
       "              P2 = maximum-diagonal-band (e.g., +100)                   \n"
-      "            [Strategy='banded-adaptive']                                \n"
+      "            [STRATEGY='banded-adaptive']                                \n"
       "              P1 = minimum-diagonal-band (e.g., -100)                   \n"
       "              P2 = maximum-diagonal-band (e.g., +100)                   \n"
       "              P3 = steps-between-cutoffs                                \n"
-      "            [Strategy='wfa-adaptive']                                   \n"
+      "            [STRATEGY='wfa-adaptive']                                   \n"
       "              P1 = minimum-wavefront-length                             \n"
       "              P2 = maximum-difference-distance                          \n"
       "              P3 = steps-between-cutoffs                                \n"
-      "            [Strategy='xdrop']                                          \n"
+      "            [STRATEGY='xdrop']                                          \n"
       "              P1 = x-drop                                               \n"
       "              P2 = steps-between-cutoffs                                \n"
-      "            [Strategy='zdrop']                                          \n"
+      "            [STRATEGY='zdrop']                                          \n"
       "              P1 = z-drop                                               \n"
       "              P2 = steps-between-cutoffs                                \n"
-      "          --wfa-max-memory <Bytes>                                      \n"
+      "          --wfa-max-memory BYTES                                        \n"
+      "          --wfa-max-threads INT (intra-parallelism; default=1)          \n"
       "        [Other Parameters]                                              \n"
-      "          --bandwidth <INT>                                             \n"
+      "          --bandwidth INT                                               \n"
       "        [Misc]                                                          \n"
       "          --check|c 'correct'|'score'|'alignment'                       \n"
       "          --check-distance 'indel'|'edit'|'linear'|'affine'|'affine2p'  \n"
-      "          --check-bandwidth <INT>                                       \n"
+      "          --check-bandwidth INT                                         \n"
       "          --plot                                                        \n"
       "        [System]                                                        \n"
-      "          --num-threads|t <INT>                                         \n"
-      "          --batch-size <INT>                                            \n"
-    //"          --progress|P <INT>                                            \n"
+      "          --num-threads|t INT                                           \n"
+      "          --batch-size INT                                              \n"
+    //"          --progress|P INT                                              \n"
       "          --help|h                                                      \n");
 }
 void parse_arguments(int argc,char** argv) {
@@ -792,10 +794,11 @@ void parse_arguments(int argc,char** argv) {
     { "wfa-heuristic-parameters", required_argument, 0, 1003 },
     { "wfa-custom-match-funct", no_argument, 0, 1004 },
     { "wfa-max-memory", required_argument, 0, 1005 },
+    { "wfa-max-threads", required_argument, 0, 1006 },
     /* Other alignment parameters */
     { "bandwidth", required_argument, 0, 2000 },
     /* Misc */
-    { "check", optional_argument, 0, 'c' },
+    { "check", required_argument, 0, 'c' },
     { "check-distance", required_argument, 0, 3001 },
     { "check-bandwidth", required_argument, 0, 3002 },
     { "plot", optional_argument, 0, 3003 },
@@ -936,8 +939,10 @@ void parse_arguments(int argc,char** argv) {
         parameters.wfa_memory_mode = wavefront_memory_med;
       } else if (strcmp(optarg,"low")==0) {
         parameters.wfa_memory_mode = wavefront_memory_low;
+      } else if (strcmp(optarg,"ultralow")==0) {
+        parameters.wfa_memory_mode = wavefront_memory_ultralow;
       } else {
-        fprintf(stderr,"Option '--wfa-memory-mode' must be in {'high','med','low'}\n");
+        fprintf(stderr,"Option '--wfa-memory-mode' must be in {'high','med','low','ultralow'}\n");
         exit(1);
       }
       break;
@@ -977,8 +982,11 @@ void parse_arguments(int argc,char** argv) {
       parameters.wfa_match_funct = match_function;
       parameters.wfa_match_funct_arguments = &match_function_params;
       break;
-    case 1005:
+    case 1005: // --wfa-max-memory
       parameters.wfa_max_memory = atol(optarg);
+      break;
+    case 1006: // --wfa-max-threads
+      parameters.wfa_max_threads = atoi(optarg);
       break;
     /*
      * Other alignment parameters
@@ -990,9 +998,9 @@ void parse_arguments(int argc,char** argv) {
      * Misc
      */
     case 'c':
-      if (optarg ==  NULL) { // default = score
+      if (optarg ==  NULL) { // default = correct
         parameters.check_correct = true;
-        parameters.check_score = true;
+        parameters.check_score = false;
         parameters.check_alignments = false;
       } else if (strcasecmp(optarg,"display")==0) {
         parameters.check_display = true;

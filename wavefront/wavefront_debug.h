@@ -38,18 +38,8 @@
  * Debug
  */
 void wavefront_debug_prologue(
-    wavefront_aligner_t* const wf_aligner,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length);
+    wavefront_aligner_t* const wf_aligner);
 void wavefront_debug_epilogue(
-    wavefront_aligner_t* const wf_aligner,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
-    const int wf_status,
-    const uint64_t wf_memory_used);
+    wavefront_aligner_t* const wf_aligner);
 
 #endif /* WAVEFRONT_DEBUG_H_ */

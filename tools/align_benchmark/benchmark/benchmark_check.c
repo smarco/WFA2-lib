@@ -161,11 +161,11 @@ void benchmark_check_alignment_edit(
       align_input->pattern_length+align_input->text_length,
       align_input->mm_allocator);
   if (align_input->check_bandwidth <= 0) {
-    edit_dp_compute(&score_matrix,
+    edit_dp_align(&score_matrix,
         align_input->pattern,align_input->pattern_length,
         align_input->text,align_input->text_length,&cigar);
   } else {
-    edit_dp_compute_banded(&score_matrix,
+    edit_dp_align_banded(&score_matrix,
         align_input->pattern,align_input->pattern_length,
         align_input->text,align_input->text_length,
         align_input->check_bandwidth,&cigar);
@@ -192,7 +192,7 @@ void benchmark_check_alignment_gap_linear(
   cigar_allocate(&cigar,
       align_input->pattern_length+align_input->text_length,
       align_input->mm_allocator);
-  nw_compute(&score_matrix,
+  nw_align(&score_matrix,
       align_input->check_linear_penalties,
       align_input->pattern,align_input->pattern_length,
       align_input->text,align_input->text_length,&cigar);
@@ -222,11 +222,11 @@ void benchmark_check_alignment_gap_affine(
       align_input->mm_allocator);
   // Compute correct
   if (align_input->check_bandwidth <= 0) {
-    swg_compute(&affine_matrix,align_input->check_affine_penalties,
+    swg_align(&affine_matrix,align_input->check_affine_penalties,
         align_input->pattern,align_input->pattern_length,
         align_input->text,align_input->text_length,&cigar);
   } else {
-    swg_compute_banded(&affine_matrix,align_input->check_affine_penalties,
+    swg_align_banded(&affine_matrix,align_input->check_affine_penalties,
         align_input->pattern,align_input->pattern_length,
         align_input->text,align_input->text_length,
         align_input->check_bandwidth,&cigar);
@@ -256,7 +256,7 @@ void benchmark_check_alignment_gap_affine2p(
       align_input->pattern_length+align_input->text_length,
       align_input->mm_allocator);
   // Compute correct
-  affine2p_dp_compute(
+  affine2p_dp_align(
       &affine_matrix,align_input->check_affine2p_penalties,
       align_input->pattern,align_input->pattern_length,
       align_input->text,align_input->text_length,&cigar);

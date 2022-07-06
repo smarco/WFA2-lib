@@ -415,3 +415,35 @@ void wavefront_compute_trim_ends_set(
   if (wavefront_set->out_i2wavefront) wavefront_compute_trim_ends(wf_aligner,wavefront_set->out_i2wavefront);
   if (wavefront_set->out_d2wavefront) wavefront_compute_trim_ends(wf_aligner,wavefront_set->out_d2wavefront);
 }
+/*
+ * Multithread dispatcher
+ */
+#ifdef WFA_PARALLEL
+int wavefront_compute_num_threads(
+    wavefront_aligner_t* const wf_aligner,
+    const int lo,
+    const int hi) {
+  // Parameters
+  const int max_num_threads = wf_aligner->system.max_num_threads;
+  if (max_num_threads == 1) return 1;
+  const int min_offsets_per_thread = wf_aligner->system.min_offsets_per_thread;
+  // Compute minimum work-chunks worth spawning threads
+  const int num_chunks = WAVEFRONT_LENGTH(lo,hi)/min_offsets_per_thread;
+  const int max_workers = MIN(num_chunks,max_num_threads);
+  return MAX(max_workers,1);
+}
+void wavefront_compute_thread_limits(
+    const int thread_id,
+    const int num_theads,
+    const int lo,
+    const int hi,
+    int* const thread_lo,
+    int* const thread_hi) {
+  const int chunk_size = WAVEFRONT_LENGTH(lo,hi)/num_theads;
+  const int t_lo = lo + thread_id*chunk_size;
+  const int t_hi = (thread_id+1 == num_theads) ? hi : t_lo + chunk_size - 1;
+  *thread_lo = t_lo;
+  *thread_hi = t_hi;
+}
+#endif
+

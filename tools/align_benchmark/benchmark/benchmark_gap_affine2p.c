@@ -52,7 +52,7 @@ void benchmark_gap_affine2p_dp(
       align_input->mm_allocator);
   // Align
   timer_start(&align_input->timer);
-  affine2p_dp_compute(&matrix,penalties,
+  affine2p_dp_align(&matrix,penalties,
       align_input->pattern,align_input->pattern_length,
       align_input->text,align_input->text_length,&cigar);
   timer_stop(&align_input->timer);

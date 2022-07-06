@@ -94,7 +94,7 @@ bool wavefront_check_alignment(
         ++pattern_pos;
         break;
       default:
-        fprintf(stderr,"[WFA::Check] Unknown edit operation '%c'\n",operations[i]);
+        fprintf(stream,"[WFA::Check] Unknown edit operation '%c'\n",operations[i]);
         exit(1);
         break;
     }
@@ -120,20 +120,22 @@ bool wavefront_check_alignment(
  */
 void wavefront_report_lite(
     FILE* const stream,
-    wavefront_aligner_t* const wf_aligner,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
-    const int wf_status,
-    const uint64_t wf_memory_used) {
+    wavefront_aligner_t* const wf_aligner) {
+  // Parameters
+  const char* const pattern = wf_aligner->pattern;
+  const int pattern_length = wf_aligner->pattern_length;
+  const char* const text = wf_aligner->text;
+  const int text_length = wf_aligner->text_length;
+  const int status = wf_aligner->align_status.status;
+  const uint64_t memory_used = wf_aligner->align_status.memory_used;
+  // Banner
   fprintf(stream,"[WFA::Debug]");
   // Sequences
   fprintf(stream,"\t%d",-wf_aligner->cigar.score);
   fprintf(stream,"\t%d\t%d",pattern_length,text_length);
-  fprintf(stream,"\t%s",(wf_status==0) ? "OK" : "FAIL");
+  fprintf(stream,"\t%s",(status==0) ? "OK" : "FAIL");
   fprintf(stream,"\t%2.3f",TIMER_GET_TOTAL_MS(&wf_aligner->system.timer));
-  fprintf(stream,"\t%luMB\t",CONVERT_B_TO_MB(wf_memory_used));
+  fprintf(stream,"\t%luMB\t",CONVERT_B_TO_MB(memory_used));
   cigar_print(stream,&wf_aligner->cigar,true);
   if (wf_aligner->match_funct != NULL) {
     fprintf(stream,"\t-\t-");
@@ -144,13 +146,14 @@ void wavefront_report_lite(
 }
 void wavefront_report_verbose_begin(
     FILE* const stream,
-    wavefront_aligner_t* const wf_aligner,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length) {
+    wavefront_aligner_t* const wf_aligner) {
+  // Parameters
+  const char* const pattern = wf_aligner->pattern;
+  const int pattern_length = wf_aligner->pattern_length;
+  const char* const text = wf_aligner->text;
+  const int text_length = wf_aligner->text_length;
   // Input sequences
-  fprintf(stream,"[WFA::Debug] WFA-Alignment\n");
+  fprintf(stream,"[WFA::Debug] WFA-Alignment (obj=%p)\n",wf_aligner);
   if (wf_aligner->match_funct != NULL) {
     fprintf(stream,"[WFA::Debug]\tPattern\t%d\tcustom-funct()\n",pattern_length);
     fprintf(stream,"[WFA::Debug]\tText\t%d\tcustom-funct()\n",text_length);
@@ -171,7 +174,7 @@ void wavefront_report_verbose_begin(
         wf_aligner->alignment_form.text_end_free);
   }
   fprintf(stream,"[WFA::Debug]\tMax-score\t%d\n",
-      wf_aligner->alignment_form.max_alignment_score);
+      wf_aligner->system.max_alignment_score);
   // Penalties
   fprintf(stream,"[WFA::Debug]\tPenalties\t");
   wavefronts_penalties_print(stream,&wf_aligner->penalties);
@@ -189,15 +192,15 @@ void wavefront_report_verbose_begin(
 }
 void wavefront_report_verbose_end(
     FILE* const stream,
-    wavefront_aligner_t* const wf_aligner,
-    const int wf_status,
-    const uint64_t wf_memory_used) {
-  fprintf(stream,"[WFA::Debug]\tFinish.status\t%d\n",wf_status);
+    wavefront_aligner_t* const wf_aligner) {
+  // Finish report
+  fprintf(stream,"[WFA::Debug]\tFinish.status\t%d\n",wf_aligner->align_status.status);
   fprintf(stream,"[WFA::Debug]\tTime.taken\t");
   timer_print_total(stream,&wf_aligner->system.timer);
   fprintf(stream,"\n");
-  fprintf(stream,"[WFA::Debug]\tMemory.used\t%luMB\n",CONVERT_B_TO_MB(wf_memory_used));
-  fprintf(stream,"[WFA::Debug]\tWFA.score\t%d\n",-wf_aligner->cigar.score);
+  fprintf(stream,"[WFA::Debug]\tMemory.used\t%luMB\n",
+      CONVERT_B_TO_MB(wf_aligner->align_status.memory_used));
+  fprintf(stream,"[WFA::Debug]\tWFA.score\t%d\n",-(wf_aligner->cigar.score));
   fprintf(stream,"[WFA::Debug]\tWFA.cigar\t");
   cigar_print(stream,&wf_aligner->cigar,true);
   fprintf(stream,"\n");
@@ -210,46 +213,33 @@ void wavefront_report_verbose_end(
  * Debug
  */
 void wavefront_debug_prologue(
-    wavefront_aligner_t* const wf_aligner,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length) {
+    wavefront_aligner_t* const wf_aligner) {
+  // Check verbose level
   if (wf_aligner->system.verbose >= 2) {
     timer_start(&wf_aligner->system.timer);
-    if (wf_aligner->system.verbose >= 3) {
-      wavefront_report_verbose_begin(stderr,wf_aligner,pattern,pattern_length,text,text_length);
+    if (wf_aligner->system.verbose > 2) {
+      wavefront_report_verbose_begin(stderr,wf_aligner);
     }
   }
 }
 void wavefront_debug_epilogue(
-    wavefront_aligner_t* const wf_aligner,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
-    const int wf_align_status,
-    const uint64_t wf_memory_used) {
+    wavefront_aligner_t* const wf_aligner) {
+  // Print Summary
   if (wf_aligner->system.verbose >= 2) {
     timer_stop(&wf_aligner->system.timer);
     if (wf_aligner->system.verbose == 2) {
-      wavefront_report_lite(stderr,wf_aligner,
-          pattern,pattern_length,text,text_length,
-          wf_align_status,wf_memory_used);
+      wavefront_report_lite(stderr,wf_aligner);
     } else {
-      wavefront_report_verbose_end(stderr,
-          wf_aligner,wf_align_status,wf_memory_used);
+      wavefront_report_verbose_end(stderr,wf_aligner);
     }
   }
+  // Check correct
   if (wf_aligner->system.check_alignment_correct &&
-      wf_align_status == WF_STATUS_SUCCESSFUL &&
-      wf_aligner->alignment_scope == compute_score) {
+      wf_aligner->align_status.status == WF_STATUS_SUCCESSFUL &&
+      wf_aligner->alignment_scope == compute_alignment) {
     if (!wavefront_check_alignment(stderr,wf_aligner)) {
-    fprintf(stderr,"[WFA::Check] Alignment incorrect\n");
-      wavefront_report_verbose_begin(stderr,wf_aligner,
-          pattern,pattern_length,text,text_length);
-      wavefront_report_verbose_end(stderr,wf_aligner,
-          wf_align_status,wf_memory_used);
+      fprintf(stderr,"[WFA::Check] Alignment incorrect\n");
+      wavefront_report_verbose_end(stderr,wf_aligner);
       exit(1);
     }
   }
