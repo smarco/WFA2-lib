@@ -352,7 +352,7 @@ void wavefront_bialign_find_breakpoint_init(
     wavefront_align_endsfree_initialize(wf_aligner_reverse,pattern_length,text_length);
   }
 }
-void wavefront_bialign_find_breakpoint(
+int wavefront_bialign_find_breakpoint(
     wavefront_aligner_t* const wf_aligner_forward,
     wavefront_aligner_t* const wf_aligner_reverse,
     const char* const pattern,
@@ -370,6 +370,7 @@ void wavefront_bialign_find_breakpoint(
       pattern,pattern_length,text,text_length,
       distance_metric,form,component_begin,component_end);
   // Compute wavefronts of increasing score until both wavefronts overlap
+  const int max_alignment_score = wf_aligner_forward->system.max_alignment_score;
   const int max_antidiagonal = DPMATRIX_ANTIDIAGONAL(pattern_length,text_length) - 1;
   void (*wf_align_compute)(wavefront_aligner_t* const,const int) = wf_aligner_forward->align_status.wf_align_compute;
   breakpoint->score = INT_MAX;
@@ -395,6 +396,8 @@ void wavefront_bialign_find_breakpoint(
     max_ak = wavefront_extend_end2end_max(wf_aligner_reverse,score_reverse);
     if (reverse_max_ak < max_ak) reverse_max_ak = max_ak;
     last_wf_forward = false;
+    // Check max-score reached (to stop)
+    if (score_reverse + score_forward >= max_alignment_score) return WF_STATUS_MAX_SCORE_REACHED;
   }
   // Advance until overlap is found
   const int max_score_scope = wf_aligner_forward->wf_components.max_score_scope;
@@ -418,9 +421,13 @@ void wavefront_bialign_find_breakpoint(
     ++score_forward;
     (*wf_align_compute)(wf_aligner_forward,score_forward);
     wavefront_extend_end2end(wf_aligner_forward,score_forward);
+    // Check max-score reached (to stop)
+    if (score_reverse + score_forward >= max_alignment_score) return WF_STATUS_MAX_SCORE_REACHED;
     // Enable always
     last_wf_forward = true;
   }
+  // Return OK
+  return WF_STATUS_SUCCESSFUL;
 }
 /*
  * Bidirectional Alignment
@@ -493,11 +500,15 @@ void wavefront_bialign(
   }
   // Find breakpoint in the alignment
   wf_bialign_breakpoint_t breakpoint;
-  wavefront_bialign_find_breakpoint(
+  const int align_status = wavefront_bialign_find_breakpoint(
       wf_aligner->aligner_forward,wf_aligner->aligner_reverse,
       pattern,pattern_length,text,text_length,
       wf_aligner->penalties.distance_metric,
       form,component_begin,component_end,&breakpoint);
+  if (align_status == WF_STATUS_MAX_SCORE_REACHED) {
+    wf_aligner->align_status.status = WF_STATUS_MAX_SCORE_REACHED;
+    return;
+  }
   const int breakpoint_h = WAVEFRONT_H(breakpoint.k_forward,breakpoint.offset_forward);
   const int breakpoint_v = WAVEFRONT_V(breakpoint.k_forward,breakpoint.offset_forward);
   // DEBUG

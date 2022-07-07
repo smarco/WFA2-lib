@@ -134,6 +134,7 @@ public:
       const uint64_t maxMemoryAbort);
   // Accessors
   int getAlignmentScore();
+  int getAlignmentStatus();
   void getAlignmentCigar(
       char** const cigarOperations,
       int* cigarLength);

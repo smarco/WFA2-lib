@@ -162,6 +162,8 @@ void wavefront_aligner_init_alignment(
     subsidiary_attr.heuristic.strategy = wf_heuristic_none;
     subsidiary_attr.memory_mode = wavefront_memory_high;
     subsidiary_attr.alignment_scope = compute_score;
+    // Set other parameter for subsidiary aligners
+    subsidiary_attr.system = attributes->system;
     // Allocate subsidiary aligners
     wf_aligner->aligner_forward = wavefront_aligner_new(&subsidiary_attr);
     wf_aligner->aligner_reverse = wavefront_aligner_new(&subsidiary_attr);
