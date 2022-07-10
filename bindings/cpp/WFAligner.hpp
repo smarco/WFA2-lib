@@ -61,7 +61,7 @@ public:
   };
   enum AlignmentStatus {
     StatusSuccessful = WF_STATUS_SUCCESSFUL,
-    StatusDropped = WF_STATUS_HEURISTICALY_DROPPED,
+    StatusUnfeasible = WF_STATUS_UNFEASIBLE,
     StatusMaxScoreReached = WF_STATUS_MAX_SCORE_REACHED,
     StatusOOM = WF_STATUS_OOM,
   };
@@ -134,6 +134,7 @@ public:
       const uint64_t maxMemoryAbort);
   // Accessors
   int getAlignmentScore();
+  int getAlignmentStatus();
   void getAlignmentCigar(
       char** const cigarOperations,
       int* cigarLength);
@@ -182,6 +183,12 @@ public:
       const int indel,
       const AlignmentScope alignmentScope,
       const MemoryModel memoryModel = MemoryHigh);
+  WFAlignerGapLinear(
+      const int match,
+      const int mismatch,
+      const int indel,
+      const AlignmentScope alignmentScope,
+      const MemoryModel memoryModel = MemoryHigh);
 };
 /*
  * Gap-Affine Aligner (a.k.a Smith-Waterman-Gotoh)
@@ -194,6 +201,13 @@ public:
       const int gapExtension,
       const AlignmentScope alignmentScope,
       const MemoryModel memoryModel = MemoryHigh);
+  WFAlignerGapAffine(
+      const int match,
+      const int mismatch,
+      const int gapOpening,
+      const int gapExtension,
+      const AlignmentScope alignmentScope,
+      const MemoryModel memoryModel = MemoryHigh);
 };
 /*
  * Gap-Affine Dual-Cost Aligner (a.k.a. concave 2-pieces)
@@ -201,6 +215,15 @@ public:
 class WFAlignerGapAffine2Pieces : public WFAligner {
 public:
   WFAlignerGapAffine2Pieces(
+      const int mismatch,
+      const int gapOpening1,
+      const int gapExtension1,
+      const int gapOpening2,
+      const int gapExtension2,
+      const AlignmentScope alignmentScope,
+      const MemoryModel memoryModel = MemoryHigh);
+  WFAlignerGapAffine2Pieces(
+      const int match,
       const int mismatch,
       const int gapOpening1,
       const int gapExtension1,

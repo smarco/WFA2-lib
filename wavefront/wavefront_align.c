@@ -79,7 +79,7 @@ bool wavefront_align_reached_limits(
     wavefront_aligner_print_status(stderr,wf_aligner,score); // DEBUG
   }
   // BT-Buffer
-  wavefront_components_t*const wf_components = &wf_aligner->wf_components;
+  wavefront_components_t* const wf_components = &wf_aligner->wf_components;
   if (wf_components->bt_buffer!=NULL && (score%system->probe_interval_compact)==0) {
     uint64_t bt_memory = wf_backtrace_buffer_get_size_used(wf_components->bt_buffer);
     // Check BT-buffer memory
@@ -297,41 +297,42 @@ void wavefront_align_terminate(
 int wavefront_align_sequences(
     wavefront_aligner_t* const wf_aligner) {
   // Parameters
-  wavefront_align_status_t* const wf_align_status = &wf_aligner->align_status;
-  void (*wf_align_compute)(wavefront_aligner_t* const,const int) = wf_align_status->wf_align_compute;
-  int (*wf_align_extend)(wavefront_aligner_t* const,const int) = wf_align_status->wf_align_extend;
+  wavefront_align_status_t* const align_status = &wf_aligner->align_status;
+  void (*wf_align_compute)(wavefront_aligner_t* const,const int) = align_status->wf_align_compute;
+  int (*wf_align_extend)(wavefront_aligner_t* const,const int) = align_status->wf_align_extend;
   // Compute wavefronts of increasing score
-  int score = wf_aligner->align_status.score;
+  align_status->num_null_steps = 0;
+  int score = align_status->score;
   while (true) {
     // Exact extend s-wavefront
     const int finished = (*wf_align_extend)(wf_aligner,score);
     if (finished) {
       // DEBUG
       // wavefront_aligner_print(stderr,wf_aligner,0,score,7,0);
-      if (wf_aligner->align_status.status == WF_STATUS_SUCCESSFUL) {
+      if (align_status->status == WF_STATUS_SUCCESSFUL) {
         wavefront_align_terminate(wf_aligner,score);
       }
-      wf_aligner->align_status.score = score;
-      return wf_aligner->align_status.status;
+      align_status->score = score;
+      return align_status->status;
     }
     // Compute (s+1)-wavefront
     ++score;
     (*wf_align_compute)(wf_aligner,score);
     // Probe limits
     if (wavefront_align_reached_limits(wf_aligner,score)) {
-      wf_aligner->align_status.score = score;
-      return wf_aligner->align_status.status;
+      align_status->score = score;
+      return align_status->status;
     }
     // PROFILE
     if (wf_aligner->plot_params.plot_enabled) {
       wavefront_plot(wf_aligner,wf_aligner->pattern,wf_aligner->text,score);
     }
     // DEBUG
-    // wavefront_aligner_print(stderr,wf_aligner,0,score,7,0);
+    //wavefront_aligner_print(stderr,wf_aligner,score,score,7,0);
   }
   // Return OK
-  wf_aligner->align_status.score = score;
-  wf_aligner->align_status.status = WF_STATUS_SUCCESSFUL;
+  align_status->score = score;
+  align_status->status = WF_STATUS_SUCCESSFUL;
   return WF_STATUS_SUCCESSFUL;
 }
 /*
@@ -344,23 +345,23 @@ void wavefront_align_sequences_init(
     const char* const text,
     const int text_length) {
   // Parameters
-  wavefront_align_status_t* const wf_align_status = &wf_aligner->align_status;
+  wavefront_align_status_t* const align_status = &wf_aligner->align_status;
   // Resize wavefront aligner
   wavefront_aligner_resize(wf_aligner,pattern,pattern_length,text,text_length,false);
   // Configure WF-compute function
   switch (wf_aligner->penalties.distance_metric) {
     case indel:
     case edit:
-      wf_align_status->wf_align_compute = &wavefront_compute_edit;
+      align_status->wf_align_compute = &wavefront_compute_edit;
       break;
     case gap_linear:
-      wf_align_status->wf_align_compute = &wavefront_compute_linear;
+      align_status->wf_align_compute = &wavefront_compute_linear;
       break;
     case gap_affine:
-      wf_align_status->wf_align_compute = &wavefront_compute_affine;
+      align_status->wf_align_compute = &wavefront_compute_affine;
       break;
     case gap_affine_2p:
-      wf_align_status->wf_align_compute = &wavefront_compute_affine2p;
+      align_status->wf_align_compute = &wavefront_compute_affine2p;
       break;
     default:
       fprintf(stderr,"[WFA] Distance function not implemented\n");
@@ -370,11 +371,11 @@ void wavefront_align_sequences_init(
   // Configure WF-extend function
   const bool end2end = (wf_aligner->alignment_form.span == alignment_end2end);
   if (wf_aligner->match_funct != NULL) {
-    wf_align_status->wf_align_extend = &wavefront_extend_custom;
+    align_status->wf_align_extend = &wavefront_extend_custom;
   } else if (end2end) {
-    wf_align_status->wf_align_extend = &wavefront_extend_end2end;
+    align_status->wf_align_extend = &wavefront_extend_end2end;
   } else {
-    wf_align_status->wf_align_extend = &wavefront_extend_endsfree;
+    align_status->wf_align_extend = &wavefront_extend_endsfree;
   }
   // Initialize wavefront
   wf_aligner->alignment_end_pos.score = -1; // Not aligned
@@ -391,17 +392,24 @@ void wavefront_align_sequences_init(
   }
 }
 void wavefront_align_start(
-    wavefront_aligner_t* const wf_aligner) {
+    wavefront_aligner_t* const wf_aligner,
+    const char* const pattern,
+    const int pattern_length,
+    const char* const text,
+    const int text_length,
+    const bool subalignment) {
   // DEBUG
-  wavefront_debug_prologue(wf_aligner);
+  wavefront_debug_prologue(wf_aligner,
+      pattern,pattern_length,text,text_length,subalignment);
 }
 void wavefront_align_finish(
-    wavefront_aligner_t* const wf_aligner) {
+    wavefront_aligner_t* const wf_aligner,
+    const bool subalignment) {
   // Compute memory used
   uint64_t memory_used = wavefront_aligner_get_size(wf_aligner);
   wf_aligner->align_status.memory_used = memory_used;
   // DEBUG
-  wavefront_debug_epilogue(wf_aligner);
+  wavefront_debug_epilogue(wf_aligner,subalignment);
   // Reap memory (controlled reaping)
   if (memory_used > wf_aligner->system.max_memory_resident) {
     // Wavefront components
@@ -429,11 +437,17 @@ void wavefront_align_unidirectional(
     const char* const pattern,
     const int pattern_length,
     const char* const text,
-    const int text_length) {
+    const int text_length,
+    const bool subalignment) {
+  // Start alignment
+  wavefront_align_start(wf_aligner,pattern,pattern_length,text,text_length,subalignment);
   // Prepare alignment
   wavefront_align_sequences_init(wf_aligner,pattern,pattern_length,text,text_length);
   // Wavefront align sequences
   wavefront_align_sequences(wf_aligner);
+  // Finish alignment
+  if (wf_aligner->align_status.status == WF_STATUS_MAX_SCORE_REACHED) return; // Alignment paused
+  wavefront_align_finish(wf_aligner,subalignment);
 }
 void wavefront_align_bidirectional(
     wavefront_aligner_t* const wf_aligner,
@@ -441,22 +455,12 @@ void wavefront_align_bidirectional(
     const int pattern_length,
     const char* const text,
     const int text_length) {
-  // Parameters
-  wavefront_align_status_t* const wf_align_status = &wf_aligner->align_status;
-  // Allocate cigar
-  cigar_t cigar;
-  cigar_allocate(&cigar,2*(pattern_length+text_length),wf_aligner->mm_allocator);
+  // Start alignment
+  wavefront_align_start(wf_aligner,pattern,pattern_length,text,text_length,false);
   // Bidirectional alignment
-  wavefront_bialign(wf_aligner,
-      pattern,pattern_length,text,text_length,
-      &wf_aligner->alignment_form,
-      affine_matrix_M,affine_matrix_M,
-      INT_MAX,&cigar,0);
-  // Swap and free cigar
-  SWAP(wf_aligner->cigar,cigar);
-  cigar_free(&cigar);
-  // Finish
-  wf_align_status->status = WF_STATUS_SUCCESSFUL; // For the moment, all good
+  wavefront_bialign(wf_aligner,pattern,pattern_length,text,text_length);
+  // Finish alignment
+  wavefront_align_finish(wf_aligner,false);
 }
 int wavefront_align(
     wavefront_aligner_t* const wf_aligner,
@@ -464,43 +468,31 @@ int wavefront_align(
     const int pattern_length,
     const char* const text,
     const int text_length) {
-  // Parameters
-  wavefront_align_status_t* const wf_align_status = &wf_aligner->align_status;
-  // Start alignment
-  wavefront_align_start(wf_aligner);
   // Dispatcher
   if (wf_aligner->bidirectional_alignment) {
     wavefront_align_bidirectional(wf_aligner,pattern,pattern_length,text,text_length);
   } else {
-    wavefront_align_unidirectional(wf_aligner,pattern,pattern_length,text,text_length);
-    // Check pause condition
-    if (wf_align_status->status == WF_STATUS_MAX_SCORE_REACHED) {
-      return WF_STATUS_MAX_SCORE_REACHED; // Alignment paused
-    }
+    wavefront_align_unidirectional(wf_aligner,pattern,pattern_length,text,text_length,false);
   }
-  // Finish alignment
-  wavefront_align_finish(wf_aligner);
   // Return
-  return wf_align_status->status;
+  return wf_aligner->align_status.status;
 }
 int wavefront_align_resume(
     wavefront_aligner_t* const wf_aligner) {
   // Parameters
-  wavefront_align_status_t* const wf_align_status = &wf_aligner->align_status;
+  wavefront_align_status_t* const align_status = &wf_aligner->align_status;
   // Check current alignment status
-  if (wf_align_status->status != WF_STATUS_MAX_SCORE_REACHED) {
+  if (align_status->status != WF_STATUS_MAX_SCORE_REACHED) {
     fprintf(stderr,"[WFA] Alignment cannot be resumed (already finished)\n");
     exit(1);
   }
   // Resume aligning sequences
   wavefront_align_sequences(wf_aligner);
-  // Check pause condition
-  if (wf_align_status->status == WF_STATUS_MAX_SCORE_REACHED) {
+  // Finish alignment
+  if (align_status->status == WF_STATUS_MAX_SCORE_REACHED) {
     return WF_STATUS_MAX_SCORE_REACHED; // Alignment paused
   }
-  // Finish alignment
-  wavefront_align_finish(wf_aligner);
-  // Return
-  return wf_align_status->status;
+  wavefront_align_finish(wf_aligner,false);
+  return align_status->status;
 }
 

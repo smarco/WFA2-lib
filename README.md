@@ -37,7 +37,7 @@ Section [WFA2-lib features](#wfa2.features) explores the most relevant options a
     * [Alignment Span](#wfa2.span)
     * [Memory modes](#wfa2.mem)
     * [Heuristic modes](#wfa2.heuristics)
-    <!-- * [Other features](#wfa2.other) -->
+    * [Technical notes](#wfa2.other.notes)
 * [Reporting Bugs and Feature Request](#wfa2.complains)
 * [License](#wfa2.licence)
 * [Citation](#wfa2.cite) 
@@ -502,7 +502,7 @@ The WFA algorithm can be used combined with many heuristics to reduce the alignm
 
 ### <a name="wfa2.other.notes"></a> 3.6 Some technical notes
 
-- Thanks to Eizenga's formulation, WFA2-lib can operate with any match score. Although, in practice, M=0 is still the most efficient choice as it takes advantage of matches between the sequences to accelerate the alignment computation.
+- Thanks to Eizenga's formulation, WFA2-lib can operate with any match score. Although, in practice, M=0 is still the most efficient choice.
 
 - All WFA2-lib algorithms/variants are stable. That is, for alignments having the same score, the library always resolves ties (between M, X, I,and D) using the same criteria: M (highest prio) > X > D > I (lowest prio). Nevertheless, the memory mode `ultralow` (BiWFA) is optimal (always reports the best alignment) but not stable.
 

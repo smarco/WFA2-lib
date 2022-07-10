@@ -467,7 +467,7 @@ void wavefront_cufoff_zdrop(
 /*
  * Cut-offs dispatcher
  */
-bool wavefront_heuristic_cufoff(
+void wavefront_heuristic_cufoff(
     wavefront_aligner_t* const wf_aligner,
     const int score,
     const int score_mod) {
@@ -477,7 +477,7 @@ bool wavefront_heuristic_cufoff(
   wavefront_heuristic_t* const wf_heuristic = &wf_aligner->heuristic;
   // Fetch m-wavefront
   wavefront_t* const mwavefront = wf_components->mwavefronts[score_mod];
-  if (mwavefront==NULL || mwavefront->lo > mwavefront->hi) return false; // Not dropped
+  if (mwavefront == NULL || mwavefront->lo > mwavefront->hi) return;
   // Cut-off m-wavefront
   --(wf_heuristic->steps_wait);
   if (wf_heuristic->strategy == wf_heuristic_banded_static) {
@@ -496,24 +496,22 @@ bool wavefront_heuristic_cufoff(
     wavefront_cufoff_zdrop(wf_aligner,mwavefront,score);
   }
   // Check wavefront length
-  if (mwavefront->lo > mwavefront->hi) return true; // Dropped alignment
+  if (mwavefront->lo > mwavefront->hi) mwavefront->null = true;
   // Save min/max WF initialized
   mwavefront->wf_elements_init_min = mwavefront->lo;
   mwavefront->wf_elements_init_max = mwavefront->hi;
   // Equate other wavefronts
-  if (distance_metric <= gap_linear) return false; // Not dropped
+  if (distance_metric <= gap_linear) return;
   // Cut-off the other wavefronts (same dimensions as M)
   wavefront_t* const i1wavefront = wf_components->i1wavefronts[score_mod];
   wavefront_t* const d1wavefront = wf_components->d1wavefronts[score_mod];
   wavefront_heuristic_cutoff_equate(i1wavefront,mwavefront);
   wavefront_heuristic_cutoff_equate(d1wavefront,mwavefront);
-  if (distance_metric == gap_affine) return false; // Not dropped
+  if (distance_metric == gap_affine) return;
   wavefront_t* const i2wavefront = wf_components->i2wavefronts[score_mod];
   wavefront_t* const d2wavefront = wf_components->d2wavefronts[score_mod];
   wavefront_heuristic_cutoff_equate(i2wavefront,mwavefront);
   wavefront_heuristic_cutoff_equate(d2wavefront,mwavefront);
-  // Return
-  return false; // Not dropped
   // DEBUG
   //  if (wf_aligner->system.verbose) {
   //    const int wf_length_base = hi_base-lo_base+1;

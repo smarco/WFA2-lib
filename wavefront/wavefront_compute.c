@@ -236,6 +236,11 @@ void wavefront_compute_allocate_output(
     score = score % wf_components->max_score_scope;
     wavefront_compute_free_output(wf_aligner,score);
   }
+  // Check
+  if (score >= wf_components->num_wavefronts) {
+    fprintf(stderr,"[WFA::Compute] Maximum allocated wavefronts reached\n");
+    exit(1);
+  }
   // Allocate M-Wavefront
   wavefront_set->out_mwavefront = wavefront_slab_allocate(wavefront_slab,padded_lo,padded_hi);
   wf_components->mwavefronts[score] = wavefront_set->out_mwavefront;
@@ -400,6 +405,7 @@ void wavefront_compute_trim_ends(
   }
   wavefront->lo = k; // Set new lo
   wavefront->wf_elements_init_min = k;
+  wavefront->null = (wavefront->lo > wavefront->hi);
 }
 void wavefront_compute_trim_ends_set(
     wavefront_aligner_t* const wf_aligner,

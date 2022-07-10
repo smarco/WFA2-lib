@@ -317,9 +317,11 @@ void wavefront_compute_affine2p(
       wavefront_set.in_i2wavefront_ext->null &&
       wavefront_set.in_d1wavefront_ext->null &&
       wavefront_set.in_d2wavefront_ext->null) {
+    wf_aligner->align_status.num_null_steps++; // Increment null-steps
     wavefront_compute_allocate_output_null(wf_aligner,score); // Null s-wavefront
     return;
   }
+  wf_aligner->align_status.num_null_steps = 0;
   // Set limits
   int hi, lo;
   wavefront_compute_limits(wf_aligner,&wavefront_set,&lo,&hi);

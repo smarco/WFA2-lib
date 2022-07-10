@@ -42,7 +42,8 @@ int wavefront_extend_end2end(
     const int score);
 int wavefront_extend_end2end_max(
     wavefront_aligner_t* const wf_aligner,
-    const int score);
+    const int score,
+    int* const max_antidiagonal);
 int wavefront_extend_endsfree(
     wavefront_aligner_t* const wf_aligner,
     const int score);

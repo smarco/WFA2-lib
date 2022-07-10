@@ -55,6 +55,7 @@ WFAligner::WFAligner(
     default: this->attributes.memory_mode = wavefront_memory_high; break;
   }
   this->attributes.alignment_scope = (alignmentScope==Score) ? compute_score : compute_alignment;
+  //this->attributes.system.verbose = 2;
   this->wfAligner = nullptr;
 }
 WFAligner::~WFAligner() {
@@ -207,6 +208,9 @@ void WFAligner::setMaxMemory(
 int WFAligner::getAlignmentScore() {
   return wfAligner->cigar.score;
 }
+int WFAligner::getAlignmentStatus() {
+  return wfAligner->align_status.status;
+}
 void WFAligner::getAlignmentCigar(
     char** const cigarOperations,
     int* cigarLength) {
@@ -267,6 +271,19 @@ WFAlignerGapLinear::WFAlignerGapLinear(
   attributes.linear_penalties.indel = indel;
   wfAligner = wavefront_aligner_new(&attributes);
 }
+WFAlignerGapLinear::WFAlignerGapLinear(
+    const int match,
+    const int mismatch,
+    const int indel,
+    const AlignmentScope alignmentScope,
+    const MemoryModel memoryModel) :
+        WFAligner(alignmentScope,memoryModel) {
+  attributes.distance_metric = gap_linear;
+  attributes.linear_penalties.match = match;
+  attributes.linear_penalties.mismatch = mismatch;
+  attributes.linear_penalties.indel = indel;
+  wfAligner = wavefront_aligner_new(&attributes);
+}
 /*
  * Gap-Affine Aligner (a.k.a Smith-Waterman-Gotoh)
  */
@@ -279,6 +296,21 @@ WFAlignerGapAffine::WFAlignerGapAffine(
         WFAligner(alignmentScope,memoryModel) {
   attributes.distance_metric = gap_affine;
   attributes.affine_penalties.match = 0;
+  attributes.affine_penalties.mismatch = mismatch;
+  attributes.affine_penalties.gap_opening = gapOpening;
+  attributes.affine_penalties.gap_extension = gapExtension;
+  wfAligner = wavefront_aligner_new(&attributes);
+}
+WFAlignerGapAffine::WFAlignerGapAffine(
+    const int match,
+    const int mismatch,
+    const int gapOpening,
+    const int gapExtension,
+    const AlignmentScope alignmentScope,
+    const MemoryModel memoryModel) :
+        WFAligner(alignmentScope,memoryModel) {
+  attributes.distance_metric = gap_affine;
+  attributes.affine_penalties.match = match;
   attributes.affine_penalties.mismatch = mismatch;
   attributes.affine_penalties.gap_opening = gapOpening;
   attributes.affine_penalties.gap_extension = gapExtension;
@@ -298,6 +330,25 @@ WFAlignerGapAffine2Pieces::WFAlignerGapAffine2Pieces(
         WFAligner(alignmentScope,memoryModel) {
   attributes.distance_metric = gap_affine_2p;
   attributes.affine2p_penalties.match = 0;
+  attributes.affine2p_penalties.mismatch = mismatch;
+  attributes.affine2p_penalties.gap_opening1 = gapOpening1;
+  attributes.affine2p_penalties.gap_extension1 = gapExtension1;
+  attributes.affine2p_penalties.gap_opening2 = gapOpening2;
+  attributes.affine2p_penalties.gap_extension2 = gapExtension2;
+  wfAligner = wavefront_aligner_new(&attributes);
+}
+WFAlignerGapAffine2Pieces::WFAlignerGapAffine2Pieces(
+    const int match,
+    const int mismatch,
+    const int gapOpening1,
+    const int gapExtension1,
+    const int gapOpening2,
+    const int gapExtension2,
+    const AlignmentScope alignmentScope,
+    const MemoryModel memoryModel) :
+        WFAligner(alignmentScope,memoryModel) {
+  attributes.distance_metric = gap_affine_2p;
+  attributes.affine2p_penalties.match = match;
   attributes.affine2p_penalties.mismatch = mismatch;
   attributes.affine2p_penalties.gap_opening1 = gapOpening1;
   attributes.affine2p_penalties.gap_extension1 = gapExtension1;
