@@ -135,9 +135,11 @@ void wavefront_compute_linear(
   // Check null wavefronts
   if (wavefront_set.in_mwavefront_misms->null &&
       wavefront_set.in_mwavefront_open1->null) {
+    wf_aligner->align_status.num_null_steps++; // Increment null-steps
     wavefront_compute_allocate_output_null(wf_aligner,score); // Null s-wavefront
     return;
   }
+  wf_aligner->align_status.num_null_steps = 0;
   // Parameters
   const bool bt_piggyback = wf_aligner->wf_components.bt_piggyback;
   int hi, lo;

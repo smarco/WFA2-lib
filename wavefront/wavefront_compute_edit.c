@@ -347,6 +347,7 @@ void wavefront_compute_edit(
   }
   // Trim wavefront ends
   wavefront_compute_trim_ends(wf_aligner,wf_curr);
+  if (wf_curr->null) wf_aligner->align_status.num_null_steps = INT_MAX;
   // Exact pruning paths
   if (wf_aligner->alignment_form.span == alignment_end2end &&
       wf_aligner->penalties.distance_metric == edit) {

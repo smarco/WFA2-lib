@@ -50,11 +50,11 @@
 /*
  * Error codes & messages
  */
-#define WF_STATUS_SUCCESSFUL            0
-#define WF_STATUS_IN_PROGRESS           1
-#define WF_STATUS_HEURISTICALY_DROPPED -1
-#define WF_STATUS_MAX_SCORE_REACHED    -2
-#define WF_STATUS_OOM                  -3
+#define WF_STATUS_SUCCESSFUL               0
+#define WF_STATUS_IN_PROGRESS              1
+#define WF_STATUS_UNFEASIBLE              -1
+#define WF_STATUS_MAX_SCORE_REACHED       -2
+#define WF_STATUS_OOM                     -3
 extern char* wf_error_msg[5];
 char* wavefront_align_strerror(const int wf_error_code);
 
@@ -66,6 +66,7 @@ typedef struct {
   // Status
   int status;                                                     // Status code
   int score;                                                      // Current WF-alignment score
+  int num_null_steps;                                             // Total contiguous null-steps performed
   uint64_t memory_used;                                           // Total memory used
   // Wavefront alignment functions
   void (*wf_align_compute)(wavefront_aligner_t* const,const int); // WF Compute function

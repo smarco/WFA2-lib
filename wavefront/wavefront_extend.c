@@ -296,14 +296,23 @@ bool wavefront_extend_matches_custom(
  */
 int wavefront_extend_end2end_max(
     wavefront_aligner_t* const wf_aligner,
-    const int score) {
+    const int score,
+    int* const max_antidiagonal) {
   // Compute score
   const bool memory_modular = wf_aligner->wf_components.memory_modular;
   const int max_score_scope = wf_aligner->wf_components.max_score_scope;
   const int score_mod = (memory_modular) ? score % max_score_scope : score;
+  *max_antidiagonal = 0; // Init
   // Fetch m-wavefront
   wavefront_t* const mwavefront = wf_aligner->wf_components.mwavefronts[score_mod];
-  if (mwavefront==NULL) return 0; // Not done
+  if (mwavefront == NULL) {
+    // Check alignment feasibility (for heuristic variants that can lead to no solution)
+    if (wf_aligner->align_status.num_null_steps > wf_aligner->wf_components.max_score_scope) {
+      wf_aligner->align_status.status = WF_STATUS_UNFEASIBLE;
+      return 1; // Done
+    }
+    return 0; // Not done
+  }
   // Multithreading dispatcher
   const int lo = mwavefront->lo;
   const int hi = mwavefront->hi;
@@ -330,16 +339,18 @@ int wavefront_extend_end2end_max(
     }
 #endif
   }
+  // Check end-to-end finished
+  const bool end_reached = wavefront_extend_end2end_check_termination(wf_aligner,mwavefront,score,score_mod);
+  if (end_reached) {
+    wf_aligner->align_status.status = WF_STATUS_SUCCESSFUL;
+    return 1; // Done
+  }
   // Cut-off wavefront heuristically
   if (wf_aligner->heuristic.strategy != wf_heuristic_none) {
-    const bool alignment_dropped = wavefront_heuristic_cufoff(wf_aligner,score,score_mod);
-    if (alignment_dropped) {
-      wf_aligner->align_status.status = WF_STATUS_HEURISTICALY_DROPPED;
-      fprintf(stderr,"[WFA:Extend_max] Heuristically dropped error \n");
-      exit(-1);
-    }
+    wavefront_heuristic_cufoff(wf_aligner,score,score_mod);
   }
-  return max_antidiag;
+  *max_antidiagonal = max_antidiag;
+  return 0; // Not done
 }
 int wavefront_extend_end2end(
     wavefront_aligner_t* const wf_aligner,
@@ -350,7 +361,14 @@ int wavefront_extend_end2end(
   const int score_mod = (memory_modular) ? score % max_score_scope : score;
   // Fetch m-wavefront
   wavefront_t* const mwavefront = wf_aligner->wf_components.mwavefronts[score_mod];
-  if (mwavefront==NULL) return 0; // Not done
+  if (mwavefront == NULL) {
+    // Check alignment feasibility (for heuristic variants that can lead to no solution)
+    if (wf_aligner->align_status.num_null_steps > wf_aligner->wf_components.max_score_scope) {
+      wf_aligner->align_status.status = WF_STATUS_UNFEASIBLE;
+      return 1; // Done
+    }
+    return 0; // Not done
+  }
   // Multithreading dispatcher
   const int lo = mwavefront->lo;
   const int hi = mwavefront->hi;
@@ -379,11 +397,7 @@ int wavefront_extend_end2end(
   }
   // Cut-off wavefront heuristically
   if (wf_aligner->heuristic.strategy != wf_heuristic_none) {
-    const bool alignment_dropped = wavefront_heuristic_cufoff(wf_aligner,score,score_mod);
-    if (alignment_dropped) {
-      wf_aligner->align_status.status = WF_STATUS_HEURISTICALY_DROPPED;
-      return 1; // Done
-    }
+    wavefront_heuristic_cufoff(wf_aligner,score,score_mod);
   }
   return 0; // Not done
 }
@@ -396,7 +410,14 @@ int wavefront_extend_endsfree(
   const int score_mod = (memory_modular) ? score % max_score_scope : score;
   // Fetch m-wavefront
   wavefront_t* const mwavefront = wf_aligner->wf_components.mwavefronts[score_mod];
-  if (mwavefront==NULL) return 0; // Not done
+  if (mwavefront == NULL) {
+    // Check alignment feasibility (for heuristic variants that can lead to no solution)
+    if (wf_aligner->align_status.num_null_steps > wf_aligner->wf_components.max_score_scope) {
+      wf_aligner->align_status.status = WF_STATUS_UNFEASIBLE;
+      return 1; // Done
+    }
+    return 0; // Not done
+  }
   // Multithreading dispatcher
   const int lo = mwavefront->lo;
   const int hi = mwavefront->hi;
@@ -425,11 +446,7 @@ int wavefront_extend_endsfree(
   }
   // Cut-off wavefront heuristically
   if (wf_aligner->heuristic.strategy != wf_heuristic_none) {
-    const bool alignment_dropped = wavefront_heuristic_cufoff(wf_aligner,score,score_mod);
-    if (alignment_dropped) {
-      wf_aligner->align_status.status = WF_STATUS_HEURISTICALY_DROPPED;
-      return 1; // Done
-    }
+    wavefront_heuristic_cufoff(wf_aligner,score,score_mod);
   }
   return 0; // Not done
 }
@@ -442,7 +459,14 @@ int wavefront_extend_custom(
   const int score_mod = (memory_modular) ? score % max_score_scope : score;
   // Fetch m-wavefront
   wavefront_t* const mwavefront = wf_aligner->wf_components.mwavefronts[score_mod];
-  if (mwavefront==NULL) return 0; // Not done
+  if (mwavefront == NULL) {
+    // Check alignment feasibility (for heuristic variants that can lead to no solution)
+    if (wf_aligner->align_status.num_null_steps > wf_aligner->wf_components.max_score_scope) {
+      wf_aligner->align_status.status = WF_STATUS_UNFEASIBLE;
+      return 1; // Done
+    }
+    return 0; // Not done
+  }
   // Multithreading dispatcher
   const bool endsfree = (wf_aligner->alignment_form.span == alignment_endsfree);
   const int lo = mwavefront->lo;
@@ -476,11 +500,7 @@ int wavefront_extend_custom(
   }
   // Cut-off wavefront heuristically
   if (wf_aligner->heuristic.strategy != wf_heuristic_none) {
-    const bool alignment_dropped = wavefront_heuristic_cufoff(wf_aligner,score,score_mod);
-    if (alignment_dropped) {
-      wf_aligner->align_status.status = WF_STATUS_HEURISTICALY_DROPPED;
-      return 1; // Done
-    }
+    wavefront_heuristic_cufoff(wf_aligner,score,score_mod);
   }
   return 0; // Not done
 }

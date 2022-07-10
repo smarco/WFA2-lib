@@ -55,6 +55,7 @@ WFAligner::WFAligner(
     default: this->attributes.memory_mode = wavefront_memory_high; break;
   }
   this->attributes.alignment_scope = (alignmentScope==Score) ? compute_score : compute_alignment;
+  //this->attributes.system.verbose = 2;
   this->wfAligner = nullptr;
 }
 WFAligner::~WFAligner() {

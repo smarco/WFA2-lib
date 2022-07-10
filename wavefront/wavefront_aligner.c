@@ -48,7 +48,7 @@ char* wf_error_msg[] =
 {
   /* WF_STATUS_OOM                  == -3 */ "[WFA] Alignment failed. Maximum memory threshold reached",
   /* WF_STATUS_MAX_SCORE_REACHED    == -2 */ "[WFA] Alignment failed. Maximum score reached",
-  /* WF_STATUS_HEURISTICALY_DROPPED == -1 */ "[WFA] Alignment dropped heuristically",
+  /* WF_STATUS_UNFEASIBLE           == -1 */ "[WFA] Alignment unfeasible (possible due to heuristic parameters)",
   /* WF_STATUS_SUCCESSFUL           ==  0 */ "[WFA] Alignment successful",
   /* WF_STATUS_IN_PROGRESS          ==  1 */ "[WFA] Alignment in progress",
 };
@@ -159,8 +159,8 @@ void wavefront_aligner_init_alignment(
     subsidiary_attr.match_funct = attributes->match_funct;
     subsidiary_attr.match_funct_arguments = attributes->match_funct_arguments;
     // Set specifics for subsidiary aligners
-    subsidiary_attr.heuristic.strategy = wf_heuristic_none;
-    subsidiary_attr.memory_mode = wavefront_memory_high;
+    subsidiary_attr.heuristic = attributes->heuristic; // Inherit same heuristic
+    subsidiary_attr.memory_mode = wavefront_memory_high; // Classic WFA
     subsidiary_attr.alignment_scope = compute_score;
     // Set other parameter for subsidiary aligners
     subsidiary_attr.system = attributes->system;

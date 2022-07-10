@@ -1060,8 +1060,8 @@ void parse_arguments(int argc,char** argv) {
         parameters.verbose = 1;
       } else {
         parameters.verbose = atoi(optarg);
-        if (parameters.verbose < 0 || parameters.verbose > 3) {
-          fprintf(stderr,"Option '--verbose' must be in {0,1,2,3}\n");
+        if (parameters.verbose < 0 || parameters.verbose > 4) {
+          fprintf(stderr,"Option '--verbose' must be in {0,1,2,3,4}\n");
           exit(1);
         }
       }

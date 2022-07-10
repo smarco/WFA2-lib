@@ -61,7 +61,7 @@ public:
   };
   enum AlignmentStatus {
     StatusSuccessful = WF_STATUS_SUCCESSFUL,
-    StatusDropped = WF_STATUS_HEURISTICALY_DROPPED,
+    StatusUnfeasible = WF_STATUS_UNFEASIBLE,
     StatusMaxScoreReached = WF_STATUS_MAX_SCORE_REACHED,
     StatusOOM = WF_STATUS_OOM,
   };
