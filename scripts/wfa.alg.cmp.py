@@ -122,7 +122,7 @@ def plot_score_distribution(stats,input_path1,input_path2):
   n, bins, patches = ax1.hist(stats.scores1,50,range=[range_min,range_max],color="royalblue",edgecolor='black',alpha=0.5) 
   n, bins, patches = ax1.hist(stats.scores2,50,range=[range_min,range_max],color="darkorange",edgecolor='black',alpha=0.5)
   start, end = ax1.get_xlim()
-  ax1.set_xticks(np.arange(start,end,(end-start)/10))
+  ax1.set_xticks(np.arange(start,end,(end-start)/5))
   # Leyend
   handles = [Rectangle((0,0),1,1,color=c,ec="k") for c in ["royalblue","darkorange"]]
   labels= [input_path1,input_path2]
@@ -159,8 +159,8 @@ def compare_alignments(input_path1,input_path2,penalties,use_score,ignore_misms,
       if use_score:
         cigar1 = None
         cigar2 = None
-        score1 = fields1[0] if len(fields1)<=2 else fields1[2]
-        score2 = fields2[0] if len(fields2)<=2 else fields2[2]
+        score1 = int(fields1[0]) if len(fields1)<=2 else int(fields1[2])
+        score2 = int(fields2[0]) if len(fields2)<=2 else int(fields2[2])
       else:
         cigar1 = fields1[1] if len(fields1)<=2 else fields1[5]
         cigar2 = fields2[1] if len(fields2)<=2 else fields2[5]

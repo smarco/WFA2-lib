@@ -457,19 +457,8 @@ void wavefront_align_bidirectional(
     const int text_length) {
   // Start alignment
   wavefront_align_start(wf_aligner,pattern,pattern_length,text,text_length,false);
-  // Allocate cigar
-  cigar_t cigar;
-  cigar_allocate(&cigar,2*(pattern_length+text_length),wf_aligner->mm_allocator);
   // Bidirectional alignment
-  wf_aligner->align_status.status = WF_STATUS_SUCCESSFUL; // Init OK
-  wavefront_bialign(wf_aligner,
-      pattern,pattern_length,text,text_length,
-      &wf_aligner->alignment_form,
-      affine_matrix_M,affine_matrix_M,
-      INT_MAX,&cigar,0);
-  // Swap and free cigar
-  SWAP(wf_aligner->cigar,cigar);
-  cigar_free(&cigar);
+  wavefront_bialign(wf_aligner,pattern,pattern_length,text,text_length);
   // Finish alignment
   wavefront_align_finish(wf_aligner,false);
 }
@@ -479,8 +468,6 @@ int wavefront_align(
     const int pattern_length,
     const char* const text,
     const int text_length) {
-  // Parameters
-  wavefront_align_status_t* const align_status = &wf_aligner->align_status;
   // Dispatcher
   if (wf_aligner->bidirectional_alignment) {
     wavefront_align_bidirectional(wf_aligner,pattern,pattern_length,text,text_length);
@@ -488,7 +475,7 @@ int wavefront_align(
     wavefront_align_unidirectional(wf_aligner,pattern,pattern_length,text,text_length,false);
   }
   // Return
-  return align_status->status;
+  return wf_aligner->align_status.status;
 }
 int wavefront_align_resume(
     wavefront_aligner_t* const wf_aligner) {

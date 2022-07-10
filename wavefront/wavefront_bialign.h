@@ -61,12 +61,6 @@ void wavefront_bialign(
     const char* const pattern,
     const int pattern_length,
     const char* const text,
-    const int text_length,
-    alignment_form_t* const form,
-    const affine2p_matrix_type component_begin,
-    const affine2p_matrix_type component_end,
-    const int score_remaining,
-    cigar_t* const cigar,
-    const int rlevel);
+    const int text_length);
 
 #endif /* WAVEFRONT_WAVEFRONT_BIALIGN_H_ */
