@@ -110,6 +110,7 @@ typedef struct _wavefront_aligner_t {
   wavefront_aligner_t* aligner_forward;       // Forward aligner
   wavefront_aligner_t* aligner_reverse;       // Reverse aligner
   wf_bialign_breakpoint_t bialign_breakpoint; // Breakpoint of two wavefronts (bialigner)
+  cigar_t bialign_cigar;                      // Global BiWFA Alignment CIGAR
   // CIGAR
   cigar_t cigar;                              // Alignment CIGAR
   // MM
