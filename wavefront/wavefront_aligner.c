@@ -167,6 +167,9 @@ void wavefront_aligner_init_alignment(
     // Allocate subsidiary aligners
     wf_aligner->aligner_forward = wavefront_aligner_new(&subsidiary_attr);
     wf_aligner->aligner_reverse = wavefront_aligner_new(&subsidiary_attr);
+    // Allocate global CIGAR
+    cigar_allocate(&wf_aligner->bialign_cigar,
+        2*(pattern_length+text_length),wf_aligner->mm_allocator);
   } else {
     wf_aligner->aligner_forward = NULL;
     wf_aligner->aligner_reverse = NULL;
@@ -295,12 +298,15 @@ void wavefront_aligner_reap(
   // Padded sequences
   if (wf_aligner->sequences != NULL) {
     strings_padded_delete(wf_aligner->sequences);
+    wf_aligner->sequences = NULL;
   }
   // Wavefront components
   wavefront_components_reap(&wf_aligner->wf_components);
   // Subsidiary aligners
-  if (wf_aligner->aligner_forward != NULL) wavefront_aligner_reap(wf_aligner->aligner_forward);
-  if (wf_aligner->aligner_reverse != NULL) wavefront_aligner_reap(wf_aligner->aligner_reverse);
+  if (wf_aligner->bidirectional_alignment) {
+    wavefront_aligner_reap(wf_aligner->aligner_forward);
+    wavefront_aligner_reap(wf_aligner->aligner_reverse);
+  }
   // Slab
   wavefront_slab_reap(wf_aligner->wavefront_slab);
 }
@@ -316,8 +322,11 @@ void wavefront_aligner_delete(
   // Wavefront components
   wavefront_components_free(&wf_aligner->wf_components);
   // Subsidiary aligners
-  if (wf_aligner->aligner_forward != NULL) wavefront_aligner_delete(wf_aligner->aligner_forward);
-  if (wf_aligner->aligner_reverse != NULL) wavefront_aligner_delete(wf_aligner->aligner_reverse);
+  if (wf_aligner->bidirectional_alignment) {
+    wavefront_aligner_delete(wf_aligner->aligner_forward);
+    wavefront_aligner_delete(wf_aligner->aligner_reverse);
+    cigar_free(&wf_aligner->bialign_cigar);
+  }
   // CIGAR
   if (!score_only) {
     cigar_free(&wf_aligner->cigar);

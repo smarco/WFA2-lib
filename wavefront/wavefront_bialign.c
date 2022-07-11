@@ -617,17 +617,15 @@ void wavefront_bialign(
   if (wf_aligner->alignment_scope == compute_score) {
     wavefront_bialign_compute_score(wf_aligner,pattern,pattern_length,text,text_length);
   } else {
-    cigar_t cigar;
-    cigar_allocate(&cigar,2*(pattern_length+text_length),wf_aligner->mm_allocator);
+    SWAP(wf_aligner->cigar,wf_aligner->bialign_cigar);
+    cigar_resize(&wf_aligner->bialign_cigar,2*(pattern_length+text_length));
     // Bidirectional alignment
     wavefront_bialign_alignment(wf_aligner,
         pattern,pattern_length,text,text_length,
         &wf_aligner->alignment_form,
         affine_matrix_M,affine_matrix_M,
-        INT_MAX,&cigar,0);
-    // Swap and free cigar
-    SWAP(wf_aligner->cigar,cigar);
-    cigar_free(&cigar);
+        INT_MAX,&wf_aligner->bialign_cigar,0);
+    SWAP(wf_aligner->cigar,wf_aligner->bialign_cigar);
   }
 }
 
