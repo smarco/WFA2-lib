@@ -613,7 +613,9 @@ void align_benchmark_sequential() {
       align_benchmark_print_progress(seqs_processed);
     }
     // DEBUG
-    // mm_allocator_print(stderr,align_input.wf_aligner->mm_allocator,true);
+    //mm_allocator_print(stderr,align_input.wf_aligner->mm_allocator,false);
+    //mm_allocator_print(stderr,align_input.wf_aligner->aligner_forward->mm_allocator,false);
+    //mm_allocator_print(stderr,align_input.wf_aligner->aligner_reverse->mm_allocator,false);
     // Plot
     if (parameters.plot > 0) align_benchmark_plot_wf(&align_input,seqs_processed);
   }
@@ -688,7 +690,7 @@ void align_benchmark_parallel() {
       align_benchmark_print_progress(seqs_processed);
     }
     // DEBUG
-    // mm_allocator_print(stderr,align_input.wf_aligner->mm_allocator,true);
+    //mm_allocator_print(stderr,align_input->wf_aligner->mm_allocator,false);
   }
   // Print benchmark results
   timer_stop(&parameters.timer_global);

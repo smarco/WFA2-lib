@@ -369,38 +369,71 @@ void wavefront_aligner_set_alignment_free_ends(
 void wavefront_aligner_set_heuristic_none(
     wavefront_aligner_t* const wf_aligner) {
   wavefront_heuristic_set_none(&wf_aligner->heuristic);
+  if (wf_aligner->bidirectional_alignment) {
+    wavefront_heuristic_set_none(&wf_aligner->aligner_forward->heuristic);
+    wavefront_heuristic_set_none(&wf_aligner->aligner_reverse->heuristic);
+  }
 }
 void wavefront_aligner_set_heuristic_banded_static(
     wavefront_aligner_t* const wf_aligner,
     const int band_min_k,
     const int band_max_k) {
   wavefront_heuristic_set_banded_static(&wf_aligner->heuristic,band_min_k,band_max_k);
+  if (wf_aligner->bidirectional_alignment) {
+    wavefront_heuristic_set_banded_static(&wf_aligner->aligner_forward->heuristic,band_min_k,band_max_k);
+    wavefront_heuristic_set_banded_static(&wf_aligner->aligner_reverse->heuristic,band_min_k,band_max_k);
+  }
 }
 void wavefront_aligner_set_heuristic_banded_adaptive(
     wavefront_aligner_t* const wf_aligner,
     const int band_min_k,
     const int band_max_k,
     const int score_steps) {
-  wavefront_heuristic_set_banded_adaptive(&wf_aligner->heuristic,band_min_k,band_max_k,score_steps);
+  wavefront_heuristic_set_banded_adaptive(
+      &wf_aligner->heuristic,band_min_k,band_max_k,score_steps);
+  if (wf_aligner->bidirectional_alignment) {
+    wavefront_heuristic_set_banded_adaptive(
+        &wf_aligner->aligner_forward->heuristic,band_min_k,band_max_k,score_steps);
+    wavefront_heuristic_set_banded_adaptive(
+        &wf_aligner->aligner_reverse->heuristic,band_min_k,band_max_k,score_steps);
+  }
 }
 void wavefront_aligner_set_heuristic_wfadaptive(
     wavefront_aligner_t* const wf_aligner,
     const int min_wavefront_length,
     const int max_distance_threshold,
     const int score_steps) {
-  wavefront_heuristic_set_wfadaptive(&wf_aligner->heuristic,min_wavefront_length,max_distance_threshold,score_steps);
+  wavefront_heuristic_set_wfadaptive(
+      &wf_aligner->heuristic,
+      min_wavefront_length,max_distance_threshold,score_steps);
+  if (wf_aligner->bidirectional_alignment) {
+    wavefront_heuristic_set_wfadaptive(
+        &wf_aligner->aligner_forward->heuristic,
+        min_wavefront_length,max_distance_threshold,score_steps);
+    wavefront_heuristic_set_wfadaptive(
+        &wf_aligner->aligner_reverse->heuristic,
+        min_wavefront_length,max_distance_threshold,score_steps);
+  }
 }
 void wavefront_aligner_set_heuristic_xdrop(
     wavefront_aligner_t* const wf_aligner,
     const int xdrop,
     const int score_steps) {
   wavefront_heuristic_set_xdrop(&wf_aligner->heuristic,xdrop,score_steps);
+  if (wf_aligner->bidirectional_alignment) {
+    wavefront_heuristic_set_xdrop(&wf_aligner->aligner_forward->heuristic,xdrop,score_steps);
+    wavefront_heuristic_set_xdrop(&wf_aligner->aligner_reverse->heuristic,xdrop,score_steps);
+  }
 }
 void wavefront_aligner_set_heuristic_zdrop(
     wavefront_aligner_t* const wf_aligner,
     const int ydrop,
     const int score_steps) {
   wavefront_heuristic_set_zdrop(&wf_aligner->heuristic,ydrop,score_steps);
+  if (wf_aligner->bidirectional_alignment) {
+    wavefront_heuristic_set_zdrop(&wf_aligner->aligner_forward->heuristic,ydrop,score_steps);
+    wavefront_heuristic_set_zdrop(&wf_aligner->aligner_reverse->heuristic,ydrop,score_steps);
+  }
 }
 /*
  * Match-funct configuration

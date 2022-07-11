@@ -52,6 +52,7 @@
  */
 #define WF_STATUS_SUCCESSFUL               0
 #define WF_STATUS_IN_PROGRESS              1
+#define WF_STATUS_END_REACHED              2 /* Internal */
 #define WF_STATUS_UNFEASIBLE              -1
 #define WF_STATUS_MAX_SCORE_REACHED       -2
 #define WF_STATUS_OOM                     -3
