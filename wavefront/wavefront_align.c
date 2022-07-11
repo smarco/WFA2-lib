@@ -70,11 +70,12 @@ bool wavefront_align_reached_limits(
   if (score >= wf_aligner->system.max_alignment_score) {
     wf_aligner->cigar.score = wf_aligner->system.max_alignment_score;
     wf_aligner->align_status.status = WF_STATUS_MAX_SCORE_REACHED;
+    wf_aligner->align_status.score = score;
     return true; // Stop
   }
   // Global probing interval
   alignment_system_t* const system = &wf_aligner->system;
-  if ((score%system->probe_interval_global) != 0) return false; // Continue
+  if (score % system->probe_interval_global != 0) return false; // Continue
   if (system->verbose) {
     wavefront_aligner_print_status(stderr,wf_aligner,score); // DEBUG
   }
@@ -102,6 +103,7 @@ bool wavefront_align_reached_limits(
   const uint64_t wf_memory_used = wavefront_aligner_get_size(wf_aligner);
   if (wf_memory_used > system->max_memory_abort) {
     wf_aligner->align_status.status = WF_STATUS_OOM;
+    wf_aligner->align_status.score = score;
     return true; // Stop
   }
   // Otherwise continue
@@ -290,6 +292,8 @@ void wavefront_align_terminate(
     wf_aligner->cigar.score = (distance_metric <= edit) ? score :
         WF_PENALTIES_GET_SW_SCORE(swg_match_score,pattern_length,text_length,score);
   }
+  // Set successful
+  wf_aligner->align_status.status = WF_STATUS_SUCCESSFUL;
 }
 /*
  * General Alignment
@@ -309,20 +313,16 @@ int wavefront_align_sequences(
     if (finished) {
       // DEBUG
       // wavefront_aligner_print(stderr,wf_aligner,0,score,7,0);
-      if (align_status->status == WF_STATUS_SUCCESSFUL) {
+      if (align_status->status == WF_STATUS_END_REACHED) {
         wavefront_align_terminate(wf_aligner,score);
       }
-      align_status->score = score;
       return align_status->status;
     }
     // Compute (s+1)-wavefront
     ++score;
     (*wf_align_compute)(wf_aligner,score);
     // Probe limits
-    if (wavefront_align_reached_limits(wf_aligner,score)) {
-      align_status->score = score;
-      return align_status->status;
-    }
+    if (wavefront_align_reached_limits(wf_aligner,score)) return align_status->status;
     // PROFILE
     if (wf_aligner->plot_params.plot_enabled) {
       wavefront_plot(wf_aligner,wf_aligner->pattern,wf_aligner->text,score);

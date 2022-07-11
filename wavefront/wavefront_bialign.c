@@ -381,9 +381,9 @@ int wavefront_bialign_find_breakpoint(
   // Prepare and perform first bialignment step
   breakpoint->score = INT_MAX;
   end_reached = wavefront_extend_end2end_max(wf_aligner_forward,score_forward,&forward_max_ak);
-  if (end_reached) return WF_STATUS_UNFEASIBLE;
+  if (end_reached) return wf_aligner_forward->align_status.status;
   end_reached = wavefront_extend_end2end_max(wf_aligner_reverse,score_reverse,&reverse_max_ak);
-  if (end_reached) return WF_STATUS_UNFEASIBLE;
+  if (end_reached) return wf_aligner_reverse->align_status.status;
   // Compute wavefronts of increasing score until both wavefronts overlap
   int max_ak = 0;
   bool last_wf_forward;
@@ -394,7 +394,7 @@ int wavefront_bialign_find_breakpoint(
     ++score_forward;
     (*wf_align_compute)(wf_aligner_forward,score_forward);
     end_reached = wavefront_extend_end2end_max(wf_aligner_forward,score_forward,&max_ak);
-    if (end_reached) return WF_STATUS_UNFEASIBLE;
+    if (end_reached) return wf_aligner_forward->align_status.status;
     if (forward_max_ak < max_ak) forward_max_ak = max_ak;
     last_wf_forward = true;
     // Check if they are close to collision
@@ -403,7 +403,7 @@ int wavefront_bialign_find_breakpoint(
     ++score_reverse;
     (*wf_align_compute)(wf_aligner_reverse,score_reverse);
     end_reached = wavefront_extend_end2end_max(wf_aligner_reverse,score_reverse,&max_ak);
-    if (end_reached) return WF_STATUS_UNFEASIBLE;
+    if (end_reached) return wf_aligner_reverse->align_status.status;
     if (reverse_max_ak < max_ak) reverse_max_ak = max_ak;
     last_wf_forward = false;
     // Check max-score reached (to stop)
@@ -422,7 +422,7 @@ int wavefront_bialign_find_breakpoint(
       ++score_reverse;
       (*wf_align_compute)(wf_aligner_reverse,score_reverse);
       end_reached = wavefront_extend_end2end(wf_aligner_reverse,score_reverse);
-      if (end_reached) return WF_STATUS_UNFEASIBLE;
+      if (end_reached) return wf_aligner_reverse->align_status.status;
     }
     // Check overlapping wavefronts
     const int min_score_forward = (score_forward > max_score_scope-1) ? score_forward - (max_score_scope-1) : 0;
@@ -432,7 +432,7 @@ int wavefront_bialign_find_breakpoint(
     ++score_forward;
     (*wf_align_compute)(wf_aligner_forward,score_forward);
     end_reached = wavefront_extend_end2end(wf_aligner_forward,score_forward);
-    if (end_reached) return WF_STATUS_UNFEASIBLE;
+    if (end_reached) return wf_aligner_forward->align_status.status;
     // Check max-score reached (to stop)
     if (score_reverse + score_forward >= max_alignment_score) return WF_STATUS_MAX_SCORE_REACHED;
     // Enable always
@@ -499,6 +499,48 @@ void wavefront_bialign_base(
       pattern,pattern_length,
       text,text_length,true);
   cigar_append(cigar,&wf_aligner->cigar);
+  if (rlevel == 0) cigar->score = wf_aligner->cigar.score;
+}
+void wavefront_bialign_exception(
+    wavefront_aligner_t* const wf_aligner,
+    const char* const pattern,
+    const int pattern_length,
+    const char* const text,
+    const int text_length,
+    alignment_form_t* const form,
+    const affine2p_matrix_type component_begin,
+    const affine2p_matrix_type component_end,
+    cigar_t* const cigar,
+    const int rlevel,
+    const int align_status) {
+  // Check max-score reached or unfeasible alignment
+  if (align_status == WF_STATUS_MAX_SCORE_REACHED ||
+      align_status == WF_STATUS_UNFEASIBLE) {
+    wf_aligner->align_status.status = align_status;
+    return;
+  }
+  // Check end reached
+  if (align_status == WF_STATUS_END_REACHED) {
+    // Retrieve score when end was reached
+    int score_reached;
+    if (wf_aligner->aligner_forward->align_status.status == WF_STATUS_END_REACHED) {
+      score_reached = wf_aligner->aligner_forward->align_status.score;
+    } else {
+      score_reached = wf_aligner->aligner_reverse->align_status.score;
+    }
+    // Fallback if possible
+    if (score_reached <= WF_BIALIGN_FALLBACK_MIN_SCORE) {
+      wavefront_bialign_base(
+          wf_aligner,pattern,pattern_length,text,text_length,
+          form,component_begin,component_end,cigar,rlevel);
+    } else {
+      wf_aligner->align_status.status = WF_STATUS_UNFEASIBLE;
+    }
+    return;
+  }
+  // Otherwise
+  fprintf(stderr,"[WFA::BiAlign] Unknown condition \n");
+  exit(1);
 }
 void wavefront_bialign_alignment(
     wavefront_aligner_t* const wf_aligner,
@@ -534,16 +576,13 @@ void wavefront_bialign_alignment(
       pattern,pattern_length,text,text_length,
       wf_aligner->penalties.distance_metric,
       form,component_begin,component_end,&breakpoint);
-  if (align_status == WF_STATUS_UNFEASIBLE) {
-    wavefront_bialign_base(
+  if (align_status != WF_STATUS_SUCCESSFUL) {
+    wavefront_bialign_exception(
         wf_aligner,pattern,pattern_length,text,text_length,
-        form,component_begin,component_end,cigar,rlevel);
+        form,component_begin,component_end,cigar,rlevel,align_status);
     return;
   }
-  if (align_status == WF_STATUS_MAX_SCORE_REACHED) {
-    wf_aligner->align_status.status = WF_STATUS_MAX_SCORE_REACHED;
-    return;
-  }
+  // Breakpoint found
   const int breakpoint_h = WAVEFRONT_H(breakpoint.k_forward,breakpoint.offset_forward);
   const int breakpoint_v = WAVEFRONT_V(breakpoint.k_forward,breakpoint.offset_forward);
   // DEBUG
@@ -587,13 +626,16 @@ void wavefront_bialign_compute_score(
       pattern,pattern_length,text,text_length,
       wf_aligner->penalties.distance_metric,
       &wf_aligner->alignment_form,affine_matrix_M,affine_matrix_M,&breakpoint);
-  if (align_status == WF_STATUS_UNFEASIBLE) {
-    wf_aligner->align_status.status = WF_STATUS_UNFEASIBLE;
+  if (align_status == WF_STATUS_MAX_SCORE_REACHED || align_status == WF_STATUS_UNFEASIBLE) {
+    wf_aligner->align_status.status = align_status;
     return;
   }
-  if (align_status == WF_STATUS_MAX_SCORE_REACHED) {
-    wf_aligner->align_status.status = WF_STATUS_MAX_SCORE_REACHED;
-    return;
+  if (align_status == WF_STATUS_END_REACHED) {
+    if (wf_aligner->aligner_forward->align_status.status == WF_STATUS_END_REACHED) {
+      breakpoint.score = wf_aligner->aligner_forward->align_status.score;
+    } else {
+      breakpoint.score = wf_aligner->aligner_reverse->align_status.score;
+    }
   }
   // Report score
   const distance_metric_t distance_metric = wf_aligner->penalties.distance_metric;
@@ -601,6 +643,7 @@ void wavefront_bialign_compute_score(
   cigar_clear(&wf_aligner->cigar);
   wf_aligner->cigar.score = (distance_metric <= edit) ? breakpoint.score :
       WF_PENALTIES_GET_SW_SCORE(swg_match_score,pattern_length,text_length,breakpoint.score);
+  wf_aligner->align_status.status = WF_STATUS_SUCCESSFUL;
 }
 /*
  * Bidirectional dispatcher
