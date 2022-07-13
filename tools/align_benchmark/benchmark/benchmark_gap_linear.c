@@ -51,7 +51,7 @@ void benchmark_gap_linear_nw(
       align_input->mm_allocator);
   // Align
   timer_start(&align_input->timer);
-  nw_compute(&score_matrix,penalties,
+  nw_align(&score_matrix,penalties,
       align_input->pattern,align_input->pattern_length,
       align_input->text,align_input->text_length,&cigar);
   timer_stop(&align_input->timer);

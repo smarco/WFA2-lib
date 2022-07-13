@@ -38,6 +38,15 @@
 #include "wavefront_backtrace_buffer.h"
 
 /*
+ * Alignment position
+ */
+typedef struct {
+  int score;          // Score
+  int k;              // Diagonal
+  wf_offset_t offset; // Offset
+} wavefront_pos_t;
+
+/*
  * Wavefront
  */
 typedef enum {
@@ -50,7 +59,6 @@ typedef struct {
   bool null;                           // Is null interval?
   int lo;                              // Lowest diagonal (inclusive)
   int hi;                              // Highest diagonal (inclusive)
-  int k_alignment_end;                 // Mark WF's diagonal that reached the end of the alignment (semi-global)
   int bt_occupancy_max;                // Maximum number of pcigar-ops stored on the Backtrace-block
   // Wavefront elements
   wf_offset_t* offsets;                // Offsets (k-centered)

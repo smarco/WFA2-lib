@@ -251,6 +251,41 @@ void cigar_copy(
          cigar_src->operations+cigar_src->begin_offset,
          cigar_src->end_offset-cigar_src->begin_offset);
 }
+void cigar_append(
+    cigar_t* const cigar_dst,
+    cigar_t* const cigar_src) {
+  // Append
+  const int cigar_length = cigar_src->end_offset - cigar_src->begin_offset;
+  char* const operations_src = cigar_src->operations + cigar_src->begin_offset;
+  char* const operations_dst = cigar_dst->operations + cigar_dst->end_offset;
+  memcpy(operations_dst,operations_src,cigar_length);
+  // Update offset
+  cigar_dst->end_offset += cigar_length;
+}
+void cigar_append_deletion(
+    cigar_t* const cigar,
+    const int length) {
+  // Append deletions
+  char* const operations = cigar->operations + cigar->end_offset;
+  int i;
+  for (i=0;i<length;++i) {
+    operations[i] = 'D';
+  }
+  // Update offset
+  cigar->end_offset += length;
+}
+void cigar_append_insertion(
+    cigar_t* const cigar,
+    const int length) {
+  // Append insertions
+  char* const operations = cigar->operations + cigar->end_offset;
+  int i;
+  for (i=0;i<length;++i) {
+    operations[i] = 'I';
+  }
+  // Update offset
+  cigar->end_offset += length;
+}
 bool cigar_check_alignment(
     FILE* const stream,
     const char* const pattern,

@@ -102,9 +102,10 @@ void wavefront_heuristic_clear(
 /*
  * Wavefront heuristic cut-off
  */
-bool wavefront_heuristic_cufoff(
+void wavefront_heuristic_cufoff(
     wavefront_aligner_t* const wf_aligner,
-    const int score);
+    const int score,
+    const int score_mod);
 
 /*
  * Display

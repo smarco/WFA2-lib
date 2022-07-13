@@ -44,29 +44,27 @@ typedef enum {
   edit          = 1, // Levenshtein
   gap_linear    = 2, // Needleman-Wunsch
   gap_affine    = 3, // Smith-Waterman-Gotoh
-  gap_affine_2p = 4  // Concave 2-pieces
+  gap_affine_2p = 4  // Gap-Affine 2-pieces
 } distance_metric_t;
-
-/*
- * Penalty adaptation strategy
- */
-typedef enum {
-  wavefronts_penalties_force_zero_match,
-  wavefronts_penalties_shifted_penalties,
-} wf_penalties_strategy_type;
 
 /*
  * Wavefront Penalties
  */
 typedef struct {
   distance_metric_t distance_metric;  // Alignment metric/distance used
-  // int match;          // (M = 0)
+  int match;             // (M <= 0) (Internal variable change to M=0 for WFA)
   int mismatch;          // (X > 0)
-  int gap_opening1;      // (O1 > 0)
+  int gap_opening1;      // (O1 >= 0)
   int gap_extension1;    // (E1 > 0)
-  int gap_opening2;      // (O2 > 0)
+  int gap_opening2;      // (O2 >= 0)
   int gap_extension2;    // (E2 > 0)
 } wavefronts_penalties_t;
+
+/*
+ * Compute SW-score equivalent (thanks to Eizenga's formula)
+ */
+#define WF_PENALTIES_GET_SW_SCORE(swg_match_score,plen,tlen,wf_score) \
+  (swg_match_score*(plen+tlen))/2 - wf_score
 
 /*
  * Penalties adjustment
@@ -77,16 +75,32 @@ void wavefronts_penalties_set_edit(
     wavefronts_penalties_t* const wavefronts_penalties);
 void wavefronts_penalties_set_linear(
     wavefronts_penalties_t* const wavefronts_penalties,
-    linear_penalties_t* const linear_penalties,
-    const wf_penalties_strategy_type penalties_strategy);
+    linear_penalties_t* const linear_penalties);
 void wavefronts_penalties_set_affine(
     wavefronts_penalties_t* const wavefronts_penalties,
-    affine_penalties_t* const affine_penalties,
-    const wf_penalties_strategy_type penalties_strategy);
+    affine_penalties_t* const affine_penalties);
 void wavefronts_penalties_set_affine2p(
     wavefronts_penalties_t* const wavefronts_penalties,
-    affine2p_penalties_t* const affine2p_penalties,
-    const wf_penalties_strategy_type penalties_strategy);
+    affine2p_penalties_t* const affine2p_penalties);
+
+/*
+ * Score conversion
+ */
+int wavefronts_penalties_get_score_indel(
+    wavefronts_penalties_t* const wavefronts_penalties,
+    const int score);
+int wavefronts_penalties_get_score_edit(
+    wavefronts_penalties_t* const wavefronts_penalties,
+    const int score);
+int wavefronts_penalties_get_score_linear(
+    wavefronts_penalties_t* const wavefronts_penalties,
+    const int score);
+int wavefronts_penalties_get_score_affine(
+    wavefronts_penalties_t* const wavefronts_penalties,
+    const int score);
+int wavefronts_penalties_get_score_affine2p(
+    wavefronts_penalties_t* const wavefronts_penalties,
+    const int score);
 
 /*
  * Display

@@ -32,19 +32,6 @@
 #include "wavefront_penalties.h"
 
 /*
- * Shift penalties
- */
-void wavefronts_penalties_shift(
-    wavefronts_penalties_t* const wavefronts_penalties,
-    const int match) {
-  // Shift to zero match score
-  wavefronts_penalties->mismatch -= match;
-  wavefronts_penalties->gap_opening1 -= match;
-  wavefronts_penalties->gap_extension1 -= match;
-  wavefronts_penalties->gap_opening2 -= match;
-  wavefronts_penalties->gap_extension2 -= match;
-}
-/*
  * Penalties adjustment
  */
 void wavefronts_penalties_set_indel(
@@ -71,29 +58,27 @@ void wavefronts_penalties_set_edit(
 }
 void wavefronts_penalties_set_linear(
     wavefronts_penalties_t* const wavefronts_penalties,
-    linear_penalties_t* const linear_penalties,
-    const wf_penalties_strategy_type penalties_strategy) {
+    linear_penalties_t* const linear_penalties) {
   // Set distance model
   wavefronts_penalties->distance_metric = gap_linear;
   // Check base penalties
   if (linear_penalties->match > 0) {
     fprintf(stderr,"[WFA::Penalties] Match score must be negative or zero (M=%d)\n",linear_penalties->match);
     exit(1);
-  } else if (linear_penalties->mismatch <= 0 ||
-             linear_penalties->indel <= 0) {
-    fprintf(stderr,"[WFA::Penalties] Penalties must be strictly positive (X=%d,O=%d). "
-                   "Must be (X>0,D>0,I>0)\n",
-        linear_penalties->mismatch,
-        linear_penalties->indel);
+  } else if (linear_penalties->mismatch <= 0 || linear_penalties->indel <= 0) {
+    fprintf(stderr,"[WFA::Penalties] Penalties (X=%d,D=%d,I=%d) must be (X>0,D>0,I>0)\n",
+        linear_penalties->mismatch,linear_penalties->indel,linear_penalties->indel);
     exit(1);
   }
-  // Copy base penalties
-  wavefronts_penalties->mismatch = linear_penalties->mismatch;
-  wavefronts_penalties->gap_opening1 = linear_penalties->indel;
-  // Adjust scores
-  if (linear_penalties->match > 0 &&
-      penalties_strategy == wavefronts_penalties_shifted_penalties) {
-    wavefronts_penalties_shift(wavefronts_penalties,linear_penalties->match);
+  // Set penalties (if needed, adjust using Eizenga's formula)
+  if (linear_penalties->match < 0) {
+    wavefronts_penalties->match = linear_penalties->match;
+    wavefronts_penalties->mismatch = 2*linear_penalties->mismatch - 2*linear_penalties->match;
+    wavefronts_penalties->gap_opening1 = 2*linear_penalties->indel - linear_penalties->match;
+  } else {
+    wavefronts_penalties->match = 0;
+    wavefronts_penalties->mismatch = linear_penalties->mismatch;
+    wavefronts_penalties->gap_opening1 = linear_penalties->indel;
   }
   // Set unused
   wavefronts_penalties->gap_extension1 = -1;
@@ -102,8 +87,7 @@ void wavefronts_penalties_set_linear(
 }
 void wavefronts_penalties_set_affine(
     wavefronts_penalties_t* const wavefronts_penalties,
-    affine_penalties_t* const affine_penalties,
-    const wf_penalties_strategy_type penalties_strategy) {
+    affine_penalties_t* const affine_penalties) {
   // Set distance model
   wavefronts_penalties->distance_metric = gap_affine;
   // Check base penalties
@@ -113,21 +97,23 @@ void wavefronts_penalties_set_affine(
   } else if (affine_penalties->mismatch <= 0 ||
              affine_penalties->gap_opening < 0 ||
              affine_penalties->gap_extension <= 0) {
-    fprintf(stderr,"[WFA::Penalties] Penalties must be positive (X=%d,O=%d,E=%d). "
-                   "Must be (X>0,O>=0,E>0)\n",
+    fprintf(stderr,"[WFA::Penalties] Penalties (X=%d,O=%d,E=%d) must be (X>0,O>=0,E>0)\n",
         affine_penalties->mismatch,
         affine_penalties->gap_opening,
         affine_penalties->gap_extension);
     exit(1);
   }
-  // Copy base penalties
-  wavefronts_penalties->mismatch = affine_penalties->mismatch;
-  wavefronts_penalties->gap_opening1 = affine_penalties->gap_opening;
-  wavefronts_penalties->gap_extension1 = affine_penalties->gap_extension;
-  // Adjust scores
-  if (affine_penalties->match > 0 &&
-      penalties_strategy == wavefronts_penalties_shifted_penalties) {
-    wavefronts_penalties_shift(wavefronts_penalties,affine_penalties->match);
+  // Set penalties (if needed, adjust using Eizenga's formula)
+  if (affine_penalties->match < 0) {
+    wavefronts_penalties->match = affine_penalties->match;
+    wavefronts_penalties->mismatch = 2*affine_penalties->mismatch - 2*affine_penalties->match;
+    wavefronts_penalties->gap_opening1 = 2*affine_penalties->gap_opening;
+    wavefronts_penalties->gap_extension1 = 2*affine_penalties->gap_extension - affine_penalties->match;
+  } else {
+    wavefronts_penalties->match = 0;
+    wavefronts_penalties->mismatch = affine_penalties->mismatch;
+    wavefronts_penalties->gap_opening1 = affine_penalties->gap_opening;
+    wavefronts_penalties->gap_extension1 = affine_penalties->gap_extension;
   }
   // Set unused
   wavefronts_penalties->gap_opening2 = -1;
@@ -135,8 +121,7 @@ void wavefronts_penalties_set_affine(
 }
 void wavefronts_penalties_set_affine2p(
     wavefronts_penalties_t* const wavefronts_penalties,
-    affine2p_penalties_t* const affine2p_penalties,
-    const wf_penalties_strategy_type penalties_strategy) {
+    affine2p_penalties_t* const affine2p_penalties) {
   // Set distance model
   wavefronts_penalties->distance_metric = gap_affine_2p;
   // Check base penalties
@@ -148,8 +133,7 @@ void wavefronts_penalties_set_affine2p(
              affine2p_penalties->gap_extension1 <= 0 ||
              affine2p_penalties->gap_opening2 <= 0 ||
              affine2p_penalties->gap_extension2 <= 0) {
-    fprintf(stderr,"[WFA::Penalties] Penalties must be strictly positive (X=%d,O1=%d,E1=%d,O2=%d,E2=%d). "
-                   "Must be (X>0,O1>0,E1>0,O1>0,E1>0)\n",
+    fprintf(stderr,"[WFA::Penalties] Penalties (X=%d,O1=%d,E1=%d,O2=%d,E2=%d) must be (X>0,O1>=0,E1>0,O1>=0,E1>0)\n",
         affine2p_penalties->mismatch,
         affine2p_penalties->gap_opening1,
         affine2p_penalties->gap_extension1,
@@ -157,16 +141,21 @@ void wavefronts_penalties_set_affine2p(
         affine2p_penalties->gap_extension2);
     exit(1);
   }
-  // Copy base penalties
-  wavefronts_penalties->mismatch = affine2p_penalties->mismatch;
-  wavefronts_penalties->gap_opening1 = affine2p_penalties->gap_opening1;
-  wavefronts_penalties->gap_extension1 = affine2p_penalties->gap_extension1;
-  wavefronts_penalties->gap_opening2 = affine2p_penalties->gap_opening2;
-  wavefronts_penalties->gap_extension2 = affine2p_penalties->gap_extension2;
-  // Adjust scores
-  if (affine2p_penalties->match > 0 &&
-      penalties_strategy == wavefronts_penalties_shifted_penalties) {
-    wavefronts_penalties_shift(wavefronts_penalties,affine2p_penalties->match);
+  // Set penalties (if needed, adjust using Eizenga's formula)
+  if (affine2p_penalties->match < 0) {
+    wavefronts_penalties->match = affine2p_penalties->match;
+    wavefronts_penalties->mismatch = 2*affine2p_penalties->mismatch - 2*wavefronts_penalties->match;
+    wavefronts_penalties->gap_opening1 = 2*affine2p_penalties->gap_opening1;
+    wavefronts_penalties->gap_extension1 = 2*affine2p_penalties->gap_extension1 - affine2p_penalties->match;
+    wavefronts_penalties->gap_opening2 = 2*affine2p_penalties->gap_opening2;
+    wavefronts_penalties->gap_extension2 = 2*affine2p_penalties->gap_extension2 - affine2p_penalties->match;
+  } else {
+    wavefronts_penalties->match = 0;
+    wavefronts_penalties->mismatch = affine2p_penalties->mismatch;
+    wavefronts_penalties->gap_opening1 = affine2p_penalties->gap_opening1;
+    wavefronts_penalties->gap_extension1 = affine2p_penalties->gap_extension1;
+    wavefronts_penalties->gap_opening2 = affine2p_penalties->gap_opening2;
+    wavefronts_penalties->gap_extension2 = affine2p_penalties->gap_extension2;
   }
 }
 /*
@@ -206,8 +195,5 @@ void wavefronts_penalties_print(
       break;
   }
 }
-
-
-
 
 

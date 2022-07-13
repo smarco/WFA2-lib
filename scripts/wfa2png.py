@@ -1,4 +1,10 @@
 #!/usr/bin/python3
+# PROJECT: Wavefront Alignments Algorithms 
+# LICENCE: MIT License 
+# AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
+# DESCRIPTION: Plot WFA alignment matrices
+# USAGE: python3 wfa2png.py -h
+
 import sys
 import copy
 import glob

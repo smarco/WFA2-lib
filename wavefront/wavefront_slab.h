@@ -40,42 +40,46 @@
 /*
  * Memory Manager for Wavefront
  */
+typedef enum {
+  wf_slab_reuse = 1, // Keep all wavefronts (Reap only by demand)
+  wf_slab_tight = 2, // Reap all if wavefronts are resized
+} wf_slab_mode_t;
 typedef struct {
   // Attributes
-  bool allocate_backtrace;
+  bool allocate_backtrace;         // WFs require BT-vector
+  wf_slab_mode_t slab_mode;        // Slab strategy
   // Wavefront Slabs
-  int wf_elements_allocated;    // Maximum wf-elements allocated (max. wf. size)
-  vector_t* wavefronts;         // All wavefronts (wavefront_t*)
-  vector_t* wavefronts_free;    // Free wavefronts (wavefront_t*)
+  int init_wf_length;              // Initial wf-elements allocated
+  int current_wf_length;           // Current wf-elements allocated
+  vector_t* wavefronts;            // All wavefronts (wavefront_t*)
+  vector_t* wavefronts_free;       // Free wavefronts (wavefront_t*)
   // Stats
-  uint64_t memory_used;         // Memory used (Bytes)
+  uint64_t memory_used;            // Memory used (Bytes)
   // MM
-  mm_allocator_t* mm_allocator; // MM-Allocator
+  mm_allocator_t* mm_allocator;    // MM-Allocator
 } wavefront_slab_t;
-
-typedef enum {
-  wf_slab_reap_free_unfit = 1, // Reap only the free wavefronts that are unfit
-  wf_slab_reap_all_unfit  = 2, // Reap all unfit wavefronts
-  wf_slab_reap_all        = 3  // Reap all (free memory)
-} wf_slab_reap_mode_t;
 
 /*
  * Setup
  */
 wavefront_slab_t* wavefront_slab_new(
-    const int wf_elements_allocated,
+    const int init_wf_length,
     const bool allocate_backtrace,
+    const wf_slab_mode_t slab_mode,
     mm_allocator_t* const mm_allocator);
 void wavefront_slab_reap(
-    wavefront_slab_t* const wavefront_slab,
-    const wf_slab_reap_mode_t reap_mode);
-void wavefront_slab_resize(
-    wavefront_slab_t* const wavefront_slab,
-    const int wf_elements_allocated);
+    wavefront_slab_t* const wavefront_slab);
 void wavefront_slab_clear(
     wavefront_slab_t* const wavefront_slab);
 void wavefront_slab_delete(
     wavefront_slab_t* const wavefront_slab);
+
+/*
+ * Accessors
+ */
+void wavefront_slab_set_mode(
+    wavefront_slab_t* const wavefront_slab,
+    const wf_slab_mode_t slab_mode);
 
 /*
  * Allocator

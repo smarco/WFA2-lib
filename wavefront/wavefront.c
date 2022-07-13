@@ -92,7 +92,6 @@ void wavefront_init(
   wavefront->null = false;
   wavefront->lo =  1;
   wavefront->hi = -1;
-  wavefront->k_alignment_end = WAVEFRONT_DIAGONAL_NULL;
   wavefront->bt_occupancy_max = 0;
   // Setup elements
   wavefront->offsets = wavefront->offsets_mem - min_lo; // Center at k=0
@@ -114,7 +113,6 @@ void wavefront_init_null(
   wavefront->null = true;
   wavefront->lo =  1;
   wavefront->hi = -1;
-  wavefront->k_alignment_end = WAVEFRONT_DIAGONAL_NULL;
   wavefront->bt_occupancy_max = 0;
   // Setup elements
   wavefront->offsets = wavefront->offsets_mem - min_lo; // Center at k=0

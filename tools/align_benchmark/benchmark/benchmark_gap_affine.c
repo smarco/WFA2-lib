@@ -52,7 +52,7 @@ void benchmark_gap_affine_swg(
       align_input->mm_allocator);
   // Align
   timer_start(&align_input->timer);
-  swg_compute(&affine_matrix,penalties,
+  swg_align(&affine_matrix,penalties,
       align_input->pattern,align_input->pattern_length,
       align_input->text,align_input->text_length,&cigar);
   timer_stop(&align_input->timer);
@@ -82,7 +82,7 @@ void benchmark_gap_affine_swg_endsfree(
       align_input->mm_allocator);
   // Align
   timer_start(&align_input->timer);
-  swg_compute_endsfree(&affine_matrix,penalties,
+  swg_align_endsfree(&affine_matrix,penalties,
       align_input->pattern,align_input->pattern_length,
       align_input->text,align_input->text_length,
       align_input->pattern_begin_free,align_input->pattern_begin_free,
@@ -115,7 +115,7 @@ void benchmark_gap_affine_swg_banded(
       align_input->mm_allocator);
   // Align
   timer_start(&align_input->timer);
-  swg_compute_banded(&affine_matrix,penalties,
+  swg_align_banded(&affine_matrix,penalties,
       align_input->pattern,align_input->pattern_length,
       align_input->text,align_input->text_length,bandwidth,&cigar);
   timer_stop(&align_input->timer);

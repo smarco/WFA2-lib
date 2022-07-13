@@ -244,6 +244,12 @@ uint32_t nominal_prop_u32(const uint32_t base,const double factor);
 uint64_t nominal_prop_u64(const uint64_t base,const double factor);
 
 /*
+ * Inline
+ */
+#define FORCE_INLINE __attribute__((always_inline)) inline
+#define FORCE_NO_INLINE __attribute__ ((noinline))
+
+/*
  * Vectorize
  */
 #if defined(__clang__)

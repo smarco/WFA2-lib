@@ -83,4 +83,23 @@ void wavefront_compute_trim_ends_set(
     wavefront_aligner_t* const wf_aligner,
     wavefront_set_t* const wavefront_set);
 
+/*
+ * Multithread dispatcher
+ */
+#ifdef WFA_PARALLEL
+int wavefront_compute_num_threads(
+    wavefront_aligner_t* const wf_aligner,
+    const int lo,
+    const int hi);
+void wavefront_compute_thread_limits(
+    const int thread_id,
+    const int num_theads,
+    const int lo,
+    const int hi,
+    int* const thread_lo,
+    int* const thread_hi);
+#else
+#define wavefront_compute_num_threads(wf_aligner,lo,hi) 1
+#endif
+
 #endif /* WAVEFRONT_COMPUTE_H_ */

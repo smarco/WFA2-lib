@@ -38,7 +38,7 @@
 /*
  * Edit distance computation using dynamic-programming matrix
  */
-void edit_dp_compute(
+void edit_dp_align(
     score_matrix_t* const score_matrix,
     const char* const pattern,
     const int pattern_length,
@@ -48,7 +48,7 @@ void edit_dp_compute(
 /*
  * Edit distance computation using dynamic-programming matrix (banded)
  */
-void edit_dp_compute_banded(
+void edit_dp_align_banded(
     score_matrix_t* const score_matrix,
     const char* const pattern,
     const int pattern_length,

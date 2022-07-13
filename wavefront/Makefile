@@ -13,6 +13,7 @@ MODULES=wavefront_align \
         wavefront_backtrace_buffer \
         wavefront_backtrace_offload \
         wavefront_backtrace \
+        wavefront_bialign \
         wavefront_components \
         wavefront_compute_affine \
         wavefront_compute_affine2p \
@@ -32,7 +33,10 @@ MODULES=wavefront_align \
 SRCS=$(addsuffix .c, $(MODULES))
 OBJS=$(addprefix $(FOLDER_BUILD)/, $(SRCS:.c=.o))
 
-#CC_XFLAGS=-fopt-info-vec-optimized
+ifeq ($(BUILD_WFA_PARALLEL),1) 
+PFLAGS=-DWFA_PARALLEL -fopenmp
+endif
+#CC_XFLAGS+=-fopt-info-vec-optimized
 
 ###############################################################################
 # Rules
@@ -41,6 +45,6 @@ all: $(OBJS)
 
 # General building rule
 $(FOLDER_BUILD)/%.o : %.c
-	$(CC) $(CC_FLAGS) $(CC_XFLAGS) -I$(FOLDER_ROOT) -c $< -o $@
+	$(CC) $(CC_FLAGS) $(PFLAGS) -I$(FOLDER_ROOT) -c $< -o $@
 	
 

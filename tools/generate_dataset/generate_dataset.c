@@ -108,13 +108,13 @@ void sequence_generate_random(
  * Extract sequence
  */
 int sequence_extract(
-    char* const reference,
-    const int reference_length,
-    char* const candidate,
-    const int candidate_length) {
-  const int length_diff = reference_length - candidate_length;
+    char* const seqlong,
+    const int seqlong_length,
+    char* const seqshort,
+    const int seqshort_length) {
+  const int length_diff = seqlong_length - seqshort_length;
   const int offset = rand_iid(0,length_diff+1);
-  strncpy(candidate,reference+offset,candidate_length);
+  strncpy(seqshort,seqlong+offset,seqshort_length);
   // Return offset
   return offset;
 }
@@ -123,10 +123,9 @@ int sequence_extract(
  */
 void sequence_errors_print(
     FILE* const stream,
-    seq_error_t* const errors_log,
-    const int num_errors) {
-  int i;
-  for (i=0;i<num_errors;++i) {
+    seq_error_t* const errors_log) {
+  int i = 0;
+  while (errors_log[i].operation != '\0') {
     switch (errors_log[i].operation) {
       case 'M':
         fprintf(stream,"(M,%d,%c->%c)",errors_log[i].position,
@@ -136,10 +135,11 @@ void sequence_errors_print(
         fprintf(stream,"(%c,%d)",errors_log[i].operation,errors_log[i].position);
         break;
     }
+    ++i;
   }
 }
 /*
- * Generate sequence errors
+ * Sequence errors generation
  */
 void sequence_generate_mismatch(
     char* const sequence,
@@ -212,6 +212,46 @@ int sequence_generate_errors(
   }
   // Close sequence and return length
   sequence[length] = '\0';
+  errors_log[num_errors].operation = '\0';
+  return length;
+}
+/*
+ * Large-Indel generation
+ */
+void sequence_generate_indel(
+    char* const sequence,
+    int* const sequence_length,
+    const int deletion_length,
+    seq_error_t* const errors_log) {
+  // Generate random deletion
+  const int position = rand_iid(0,*sequence_length);
+  if (deletion_length >= *sequence_length) return;
+  const int new_sequence_length = *sequence_length - deletion_length;
+  int i;
+  for (i=position;i<new_sequence_length;++i) {
+    sequence[i] = sequence[i+deletion_length];
+  }
+  *sequence_length = new_sequence_length;
+  // Log
+  errors_log->operation = 'N';
+  errors_log->position = position;
+}
+int sequence_generate_indels(
+    char* const sequence,
+    const int sequence_length,
+    const int max_indels,
+    const int deletion_length,
+    seq_error_t* const errors_log) {
+  int length = sequence_length;
+  // Generate random indels
+  int i;
+  const int indels = rand_iid(0,max_indels+1);
+  for (i=0;i<indels;++i) {
+    sequence_generate_indel(sequence,&length,deletion_length,errors_log+i);
+  }
+  // Close sequence and return length
+  sequence[length] = '\0';
+  errors_log[indels].operation = '\0';
   return length;
 }
 /*
@@ -220,17 +260,21 @@ int sequence_generate_errors(
 typedef struct {
   int num_reads;
   char *output;
-  int pattern_length;
-  int text_length;
+  int length;
+  float length_diff;
   float error_degree;
+  int indels_num;
+  int indels_length;
   int debug;
 } countour_bench_args;
 countour_bench_args parameters = {
     .num_reads = 1000,
     .output = NULL,
-    .pattern_length = 100,
-    .text_length = 100,
+    .length = 100,
+    .length_diff = 1.0,
     .error_degree = 0.04,
+    .indels_num = 0,
+    .indels_length = 0,
     .debug = 0,
 };
 /*
@@ -239,23 +283,25 @@ countour_bench_args parameters = {
 void usage() {
   fprintf(stderr, "USE: ./generate-datasets [OPTIONS]...\n"
                   "      Options::\n"
-                  "        --output|o         <File>    \n"
-                  "        --num-patterns|n   <Integer> \n"
-                  "        --length|l         <Integer> \n"
-                  "        --pattern-length|P <Integer> \n"
-                  "        --text-length|T    <Integer> \n"
-                  "        --error|e          <Float>   \n"
-                  "        --debug|g                    \n"
-                  "        --help|h                     \n");
+                  "        --output|o         PATH        Output path of the generated sequences\n"
+                  "        --num-patterns|n   INT         Total number of sequence-pairs generated\n"
+                  "        --length|l         INT         Length of the pattern-sequence (pattern-length) \n"
+                  "        --length-diff      FLOAT       Length of the text-sequence as percentage\n"
+                  "                                       of the pattern-length (default=1.0)\n"
+                  "        --error|e          FLOAT       Simulated errors (mismatch/insertion/deletion)\n"
+                  "                                       as a percentage of the pattern-length (default=0.04)\n"
+                  "        --indels           NUM,LENGTH  Insert up to additional INT indels of LENGTH (default=0,0)\n"
+                  //"        --debug|g                    \n"
+                  "        --help|h                       \n");
 }
 void parse_arguments(int argc,char** argv) {
   struct option long_options[] = {
     { "num-patterns", required_argument, 0, 'n' },
     { "output", required_argument, 0, 'o' },
     { "length", required_argument, 0, 'l' },
-    { "pattern-length", required_argument, 0, 'P' },
-    { "text-length", required_argument, 0, 'T' },
+    { "length-diff", required_argument, 0, 1000 },
     { "error", required_argument, 0, 'e' },
+    { "indels", required_argument, 0, 1001 },
     { "debug", no_argument, 0, 'g' },
     { "help", no_argument, 0, 'h' },
     { 0, 0, 0, 0 } };
@@ -265,7 +311,7 @@ void parse_arguments(int argc,char** argv) {
     exit(0);
   }
   while (1) {
-    c=getopt_long(argc,argv,"n:o:l:P:T:e:gh",long_options,&option_index);
+    c=getopt_long(argc,argv,"n:o:l:e:gh",long_options,&option_index);
     if (c==-1) break;
     switch (c) {
       case 'n':
@@ -274,21 +320,22 @@ void parse_arguments(int argc,char** argv) {
       case 'o':
         parameters.output = optarg;
         break;
-      case 'l': {
-        const int length = atoi(optarg);
-        parameters.pattern_length = length;
-        parameters.text_length = length;
+      case 'l':
+        parameters.length = atoi(optarg);
         break;
-      }
-      case 'P':
-        parameters.pattern_length = atoi(optarg);
-        break;
-      case 'T':
-        parameters.text_length = atoi(optarg);
+      case 1000: // --length-diff
+        parameters.length_diff = atof(optarg);
         break;
       case 'e':
         parameters.error_degree = atof(optarg);
         break;
+      case 1001: { // --indels
+        char* sentinel = strtok(optarg,",");
+        parameters.indels_num = atof(sentinel);
+        sentinel = strtok(NULL,",");
+        parameters.indels_length = atof(sentinel);
+        break;
+      }
       case 'g':
         parameters.debug = 1;
         break;
@@ -306,42 +353,48 @@ int main(int argc,char* argv[]) {
   // Open file
   FILE* const output_file = (parameters.output==NULL) ? stdout : fopen(parameters.output,"w");
   // Allocate sequences
-  const int reference_length = MAX(parameters.pattern_length,parameters.text_length); // Long sequence
-  const int candidate_length = MIN(parameters.pattern_length,parameters.text_length); // Short sequence
+  const int pattern_length = parameters.length;
+  const int text_length = ceil((float)pattern_length * parameters.length_diff);
+  const int seqlong_length = MAX(pattern_length,text_length); // Long sequence
+  const int seqshort_length = MIN(pattern_length,text_length); // Short sequence
   const int num_errors = (parameters.error_degree >= 1.0) ?
-      (int) parameters.error_degree :
-      ceil((float)candidate_length * parameters.error_degree);
-  char* const reference = malloc(reference_length+1);
-  char* const candidate = malloc(candidate_length+num_errors+1);
-  seq_error_t* const errors_log = malloc(num_errors*sizeof(seq_error_t));
+      (int) parameters.error_degree : ceil((float)pattern_length * parameters.error_degree);
+  char* const seqlong = malloc(seqlong_length+1);
+  char* const seqshort = malloc(seqshort_length+1+num_errors+parameters.indels_num*parameters.indels_length);
+  seq_error_t* const errors_log = malloc((num_errors+parameters.indels_num+1)*sizeof(seq_error_t));
   // Read-align loop
   srand(time(0));
   int i;
   for (i=0;i<parameters.num_reads;++i) {
     // Generate random sequence
-    sequence_generate_random(reference,reference_length);
+    sequence_generate_random(seqlong,seqlong_length);
     // Extract short sequence from long
-    const int offset = sequence_extract(reference,reference_length,candidate,candidate_length);
-    // Add errors
-    sequence_generate_errors(candidate,candidate_length,num_errors,errors_log);
+    const int offset = sequence_extract(seqlong,seqlong_length,seqshort,seqshort_length);
+    // Generate errors
+    if (num_errors > 0) sequence_generate_errors(seqshort,seqshort_length,num_errors,errors_log);
+    // Generate indels
+    if (parameters.indels_num > 0) {
+      sequence_generate_indels(seqshort,seqshort_length,
+          parameters.indels_num,parameters.indels_length,errors_log+num_errors);
+    }
     // DEBUG
     if (parameters.debug) {
       fprintf(output_file,"#DEBUG offset=%d errors=",offset);
-      sequence_errors_print(output_file,errors_log,num_errors);
+      sequence_errors_print(output_file,errors_log);
       fprintf(output_file,"\n");
     }
     // Print
-    if (parameters.pattern_length <= parameters.text_length) {
-      fprintf(output_file,">%s\n",candidate);
-      fprintf(output_file,"<%s\n",reference);
+    if (pattern_length <= text_length) {
+      fprintf(output_file,">%s\n",seqshort);
+      fprintf(output_file,"<%s\n",seqlong);
     } else {
-      fprintf(output_file,"<%s\n",reference);
-      fprintf(output_file,">%s\n",candidate);
+      fprintf(output_file,"<%s\n",seqlong);
+      fprintf(output_file,">%s\n",seqshort);
     }
   }
   // Close files & free
   if (parameters.output!=NULL) fclose(output_file);
-  free(reference);
-  free(candidate);
+  free(seqlong);
+  free(seqshort);
   free(errors_log);
 }

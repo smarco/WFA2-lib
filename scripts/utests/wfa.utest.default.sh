@@ -1,9 +1,9 @@
 #!/bin/bash -x
-# PROJECT: Wavefront Alignments Algorithms
+# PROJECT: Wavefront Alignments Algorithms (Unitary Tests)
 # LICENCE: MIT License 
 # AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
 # DESCRIPTION: WFA unitary tests (for performance & correcness)
-# USAGE: ./wfa.utest.run.sh
+# USAGE: ./wfa.utest.default.sh
 
 # Clear
 rm *.log *.alg
@@ -24,8 +24,7 @@ LOWMEMORY="--wfa-memory-mode=med"
 \time -v ./bin/align_benchmark -a $ALGORITHM -i ../data/sim.l1K.n10K.e20.seq -o sim.l1K.e20.Wa.alg $REDUCTION    &> sim.l1K.e20.Wa.log
 
 # Utest for length=10K
-\time -v ./bin/align_benchmark -a $ALGORITHM -i ../data/sim.l10K.n1K.e20.seq -o sim.l10K.e20.W.alg -P 100        &> sim.l10K.e20.W.log
-\time -v ./bin/align_benchmark -a $ALGORITHM -i ../data/sim.l10K.n1K.e20.seq -o sim.l10K.e20.Wl.alg $LOWMEMORY   &> sim.l10K.e20.Wl.log
+\time -v ./bin/align_benchmark -a $ALGORITHM -i ../data/sim.l10K.n1K.e20.seq -o sim.l10K.e20.W.alg               &> sim.l10K.e20.W.log
 \time -v ./bin/align_benchmark -a $ALGORITHM -i ../data/sim.l10K.n1K.e20.seq -o sim.l10K.e20.Wa.alg $REDUCTION   &> sim.l10K.e20.Wa.log
 
 # Utest for length=100K

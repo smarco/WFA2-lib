@@ -88,4 +88,3 @@ $(APPS):
 	$(MAKE) --directory=$@ all
 
 .PHONY: $(SUBDIRS) $(APPS)
-
