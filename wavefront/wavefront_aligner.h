@@ -50,14 +50,17 @@
 /*
  * Error codes & messages
  */
+// Success
 #define WF_STATUS_SUCCESSFUL               0
-#define WF_STATUS_IN_PROGRESS              1
-#define WF_STATUS_END_REACHED              2 /* Internal */
+// Errors
 #define WF_STATUS_UNFEASIBLE              -1
 #define WF_STATUS_MAX_SCORE_REACHED       -2
 #define WF_STATUS_OOM                     -3
+// Internal
+#define WF_STATUS_END_REACHED              1
+// Error messages
 extern char* wf_error_msg[5];
-char* wavefront_align_strerror(const int wf_error_code);
+char* wavefront_align_strerror(const int error_code);
 
 /*
  * Alignment status
@@ -141,6 +144,15 @@ void wavefront_aligner_reap(
     wavefront_aligner_t* const wf_aligner);
 void wavefront_aligner_delete(
     wavefront_aligner_t* const wf_aligner);
+
+/*
+ * Accessors
+ */
+int wavefront_get_classic_score(
+    wavefront_aligner_t* const wf_aligner,
+    const int pattern_length,
+    const int text_length,
+    const int wf_score);
 
 /*
  * Span configuration

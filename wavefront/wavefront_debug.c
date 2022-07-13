@@ -132,7 +132,7 @@ void wavefront_report_lite(
   // Banner
   fprintf(stream,"[WFA::Debug]");
   // Sequences
-  fprintf(stream,"\t%d",-wf_aligner->cigar.score);
+  fprintf(stream,"\t%d",wf_aligner->cigar.score);
   fprintf(stream,"\t%d\t%d",pattern_length,text_length);
   fprintf(stream,"\t%s",(status==0) ? "OK" : "FAIL");
   fprintf(stream,"\t%2.3f",TIMER_GET_TOTAL_MS(&wf_aligner->system.timer));
@@ -207,7 +207,7 @@ void wavefront_report_verbose_end(
   fprintf(stream,"\n");
   fprintf(stream,"[WFA::Debug]\tMemory.used\t%luMB\n",
       CONVERT_B_TO_MB(wf_aligner->align_status.memory_used));
-  fprintf(stream,"[WFA::Debug]\tWFA.score\t%d\n",-(wf_aligner->cigar.score));
+  fprintf(stream,"[WFA::Debug]\tWFA.score\t%d\n",wf_aligner->cigar.score);
   fprintf(stream,"[WFA::Debug]\tWFA.cigar\t");
   cigar_print(stream,&wf_aligner->cigar,true);
   fprintf(stream,"\n");

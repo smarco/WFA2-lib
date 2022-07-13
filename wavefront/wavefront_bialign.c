@@ -605,10 +605,7 @@ void wavefront_bialign_alignment(
       breakpoint.score_reverse,cigar,rlevel+1);
   if (wf_aligner->align_status.status != WF_STATUS_SUCCESSFUL) return;
   // Set score
-  const distance_metric_t distance_metric = wf_aligner->penalties.distance_metric;
-  const int swg_match_score = wf_aligner->penalties.match;
-  cigar->score = (distance_metric <= edit) ? breakpoint.score :
-      WF_PENALTIES_GET_SW_SCORE(swg_match_score,pattern_length,text_length,breakpoint.score);
+  cigar->score = wavefront_get_classic_score(wf_aligner,pattern_length,text_length,breakpoint.score);
 }
 /*
  * Bidirectional compute score
@@ -638,11 +635,8 @@ void wavefront_bialign_compute_score(
     }
   }
   // Report score
-  const distance_metric_t distance_metric = wf_aligner->penalties.distance_metric;
-  const int swg_match_score = wf_aligner->penalties.match;
   cigar_clear(&wf_aligner->cigar);
-  wf_aligner->cigar.score = (distance_metric <= edit) ? breakpoint.score :
-      WF_PENALTIES_GET_SW_SCORE(swg_match_score,pattern_length,text_length,breakpoint.score);
+  wf_aligner->cigar.score = wavefront_get_classic_score(wf_aligner,pattern_length,text_length,breakpoint.score);
   wf_aligner->align_status.status = WF_STATUS_SUCCESSFUL;
 }
 /*

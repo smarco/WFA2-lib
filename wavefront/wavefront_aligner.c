@@ -49,19 +49,22 @@ char* wf_error_msg[] =
   /* WF_STATUS_OOM                  == -3 */ "[WFA] Alignment failed. Maximum memory threshold reached",
   /* WF_STATUS_MAX_SCORE_REACHED    == -2 */ "[WFA] Alignment failed. Maximum score reached",
   /* WF_STATUS_UNFEASIBLE           == -1 */ "[WFA] Alignment unfeasible (possible due to heuristic parameters)",
-  /* WF_STATUS_SUCCESSFUL           ==  0 */ "[WFA] Alignment successful",
-  /* WF_STATUS_IN_PROGRESS          ==  1 */ "[WFA] Alignment in progress",
+  /* WF_STATUS_SUCCESSFUL           ==  0 */ "[WFA] Alignment finished successfully",
 };
-char* wavefront_align_strerror(const int wf_error_code) {
-  return wf_error_msg[wf_error_code+3];
+char* wavefront_align_strerror(const int error_code) {
+  if (error_code > 0) {
+    fprintf(stderr,"[WFA] Internal alignment error code (%d)",error_code);
+    exit(1);
+  }
+  return wf_error_msg[error_code+3];
 }
 /*
  * Alignment status
  */
 void wavefront_align_status_clear(
-    wavefront_align_status_t* const wf_align_status) {
-  wf_align_status->status = WF_STATUS_IN_PROGRESS;
-  wf_align_status->score = 0;
+    wavefront_align_status_t* const align_status) {
+  align_status->status = WF_STATUS_SUCCESSFUL;
+  align_status->score = 0;
 }
 /*
  * Setup
@@ -343,6 +346,22 @@ void wavefront_aligner_delete(
   if (mm_allocator_own) {
     mm_allocator_delete(mm_allocator);
   }
+}
+/*
+ * Accessors
+ */
+int wavefront_get_classic_score(
+    wavefront_aligner_t* const wf_aligner,
+    const int pattern_length,
+    const int text_length,
+    const int wf_score) {
+  // Parameters
+  const int plen = wf_aligner->pattern_length;
+  const int tlen = wf_aligner->text_length;
+  const int swg_match = -(wf_aligner->penalties.match);
+  const distance_metric_t distance_metric = wf_aligner->penalties.distance_metric;
+  // Adapt score
+  return (distance_metric <= edit) ? wf_score : WF_SCORE_TO_SW_SCORE(swg_match,plen,tlen,wf_score);
 }
 /*
  * Span configuration

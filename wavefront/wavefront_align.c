@@ -252,15 +252,13 @@ void wavefront_align_terminate(
     wavefront_aligner_t* const wf_aligner,
     const int score) {
   // Parameters
-  const distance_metric_t distance_metric = wf_aligner->penalties.distance_metric;
   const int pattern_length = wf_aligner->pattern_length;
   const int text_length = wf_aligner->text_length;
-  const int swg_match_score = -(wf_aligner->penalties.match);
   // Retrieve alignment
   if (wf_aligner->alignment_scope == compute_score) {
     cigar_clear(&wf_aligner->cigar);
-    wf_aligner->cigar.score = (distance_metric <= edit) ? score :
-        WF_PENALTIES_GET_SW_SCORE(swg_match_score,pattern_length,text_length,score);
+    wf_aligner->cigar.score =
+        wavefront_get_classic_score(wf_aligner,pattern_length,text_length,score);
   } else {
     // Parameters
     wavefront_components_t* const wf_components = &wf_aligner->wf_components;
@@ -289,8 +287,8 @@ void wavefront_align_terminate(
       }
     }
     // Set score & finish
-    wf_aligner->cigar.score = (distance_metric <= edit) ? score :
-        WF_PENALTIES_GET_SW_SCORE(swg_match_score,pattern_length,text_length,score);
+    wf_aligner->cigar.score =
+        wavefront_get_classic_score(wf_aligner,pattern_length,text_length,score);
   }
   // Set successful
   wf_aligner->align_status.status = WF_STATUS_SUCCESSFUL;

@@ -63,8 +63,7 @@ typedef struct {
 /*
  * Compute SW-score equivalent (thanks to Eizenga's formula)
  */
-#define WF_PENALTIES_GET_SW_SCORE(swg_match_score,plen,tlen,wf_score) \
-  (swg_match_score*(plen+tlen))/2 - wf_score
+#define WF_SCORE_TO_SW_SCORE(swg_match,plen,tlen,wf_score) ((swg_match*(plen+tlen) - wf_score)/2)
 
 /*
  * Penalties adjustment
