@@ -3,6 +3,8 @@
  *
  * Wavefront Alignment Algorithms
  * Copyright (c) 2017 by Santiago Marco-Sola  <santiagomsola@gmail.com>
+ * Copyright (c) 2022 by Quim Aguado-Puig <quim.aguado.p@gmail.com>
+ * Copyright (c) 2022 by Christos Matzoros <christos.matzoros@bsc.es>
  *
  * This file is part of Wavefront Alignment Algorithms.
  *
