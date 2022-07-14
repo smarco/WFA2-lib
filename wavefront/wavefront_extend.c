@@ -35,6 +35,10 @@
 #include "wavefront_compute.h"
 #include "wavefront_heuristic.h"
 
+#if __AVX2__
+#include <immintrin.h>
+#endif
+
 #ifdef WFA_PARALLEL
 #include <omp.h>
 #endif
@@ -194,6 +198,23 @@ FORCE_INLINE wf_offset_t wavefront_extend_matches_packed_kernel(
   // Return extended offset
   return offset;
 }
+
+#if __AVX2__
+FORCE_INLINE  __m256i avx2_lzcnt_epi32 (__m256i v) {
+#if __AVX512CD__ && __AVX512VL__
+  return _mm256_lzcnt_epi32(v);
+#else
+  // Emulate clz for AVX2: https://stackoverflow.com/a/58827596
+  v = _mm256_andnot_si256(_mm256_srli_epi32(v, 8), v); // keep 8 MSB
+  v = _mm256_castps_si256(_mm256_cvtepi32_ps(v)); // convert an integer to float
+  v = _mm256_srli_epi32(v, 23); // shift down the exponent
+  v = _mm256_subs_epu16(_mm256_set1_epi32(158), v); // undo bias
+  v = _mm256_min_epi16(v, _mm256_set1_epi32(32)); // clamp at 32
+  return v;
+#endif
+}
+#endif
+
 /*
  * Wavefront offset extension comparing characters
  *   Remember:
@@ -205,6 +226,154 @@ FORCE_NO_INLINE void wavefront_extend_matches_packed_end2end(
     wavefront_t* const mwavefront,
     const int lo,
     const int hi) {
+#if __AVX2__
+  // Parameters
+  wf_offset_t* const offsets = mwavefront->offsets;
+  int k_min = lo;
+  int k_max = hi;
+  const int pattern_length = wf_aligner->pattern_length;
+  const int text_length = wf_aligner->text_length;
+  const char* pattern = wf_aligner->pattern;
+  const char* text = wf_aligner->text;
+
+  // Extend diagonally each wavefront point
+  int k;
+
+  const __m256i vector_null = _mm256_set1_epi32(WAVEFRONT_OFFSET_NULL);
+  const __m256i fours = _mm256_set1_epi32(4);
+  const __m256i eights = _mm256_set1_epi32(8);
+  const __m256i vecShuffle = _mm256_set_epi8(28,29,30,31,24,25,26,27,
+                                           20,21,22,23,16,17,18,19,
+                                           12,13,14,15, 8, 9,10,11,
+                                           4 , 5, 6, 7, 0, 1, 2 ,3);
+
+  const int elems_per_register = 8;
+
+  int num_of_diagonals = k_max-k_min+1;
+  int loop_peeling_iters = num_of_diagonals%elems_per_register;
+
+  for(int i=k_min;i<k_min+loop_peeling_iters;i++){
+    const uint32_t v = offsets[i] - i; // Make unsigned to avoid checking negative
+    if (v >= pattern_length) continue;
+    const uint32_t h = offsets[i]; // Make unsigned to avoid checking negative
+    if (h >= text_length) continue;
+
+    // Fetch pattern/text blocks
+    uint64_t* pattern_blocks = (uint64_t*)(pattern+v);
+    uint64_t* text_blocks = (uint64_t*)(text+h);
+    uint64_t pattern_block = *pattern_blocks;
+    uint64_t text_block = *text_blocks;
+    // Compare 64-bits blocks
+    uint64_t cmp = pattern_block ^ text_block;
+
+    while (__builtin_expect(!cmp,0)) {
+      // Increment offset (full block)
+      offsets[i] += 8;
+      // Next blocks
+      ++pattern_blocks;
+      ++text_blocks;
+      // Fetch
+      pattern_block = *pattern_blocks;
+      text_block = *text_blocks;
+
+      // Compare
+      cmp = pattern_block ^ text_block;
+    }
+
+    // Count equal characters
+    const int equal_right_bits = __builtin_ctzl(cmp);
+    const int equal_chs = DIV_FLOOR(equal_right_bits,8);
+
+    offsets[i] += equal_chs;
+  }
+
+  if (num_of_diagonals <= 8) return;
+
+  k_min+=loop_peeling_iters;
+
+  __m256i ks = _mm256_set_epi32 (k_min+7,k_min+6,k_min+5,k_min+4,k_min+3,
+                                 k_min+2,k_min+1,k_min);
+
+  // Main SIMD extension loop
+  for (k=k_min;k<=k_max;k+=elems_per_register) {
+    __m256i offsets_vector = _mm256_lddqu_si256 ((__m256i*)&offsets[k]);
+    __m256i h_vector = offsets_vector;
+    __m256i v_vector = _mm256_sub_epi32(offsets_vector, ks);
+    ks =_mm256_add_epi32 (ks, eights);
+
+    // NULL offsets will read at index 0 (avoid segfaults)
+    __m256i null_mask = _mm256_cmpeq_epi32(offsets_vector, vector_null);
+    v_vector = _mm256_andnot_si256(null_mask, v_vector);
+    h_vector = _mm256_andnot_si256(null_mask, h_vector);
+
+    __m256i pattern_vector = _mm256_i32gather_epi32((int const*)&pattern[0],v_vector, 1);
+    __m256i text_vector = _mm256_i32gather_epi32((int const*)&text[0],h_vector, 1);
+
+    // Change endianess to make the xor + clz character comparison
+    pattern_vector = _mm256_shuffle_epi8(pattern_vector, vecShuffle);
+    text_vector = _mm256_shuffle_epi8(text_vector, vecShuffle);
+    __m256i xor_result_vector = _mm256_xor_si256(pattern_vector,text_vector);
+    __m256i clz_vector = avx2_lzcnt_epi32 (xor_result_vector);
+
+    // Divide clz by 8 to get the number of equal characters
+    // Assume there are sentinels on sequences so we won't count characters
+    // outside the sequences
+    __m256i equal_chars =  _mm256_srli_epi32 (clz_vector,3);
+    offsets_vector =  _mm256_add_epi32 (offsets_vector, equal_chars);
+
+    v_vector = _mm256_add_epi32 (v_vector, fours);
+    h_vector = _mm256_add_epi32 (h_vector, fours);
+
+    // Lanes to continue == 0xffffffff, other lanes = 0
+    __m256i vector_mask = _mm256_cmpeq_epi32(equal_chars, fours);
+
+    _mm256_storeu_si256((__m256i*)&offsets[k], offsets_vector);
+
+    int mask = _mm256_movemask_epi8(vector_mask);
+
+    if(mask == 0) continue;
+
+    // ctz(0) is undefined
+    while (mask != 0) {
+      int tz = __builtin_ctz(mask);
+      int curr_k = k + (tz/4);
+
+      const uint32_t v = offsets[curr_k] - (curr_k); // Make unsigned to avoid checking negative
+      const uint32_t h = offsets[curr_k]; // Make unsigned to avoid checking negative
+
+      if ((v < pattern_length) && (h < text_length)) {
+        // Fetch pattern/text blocks
+        uint64_t* pattern_blocks = (uint64_t*)(pattern+v);
+        uint64_t* text_blocks = (uint64_t*)(text+h);
+        uint64_t pattern_block = *pattern_blocks;
+        uint64_t text_block = *text_blocks;
+        // Compare 64-bits blocks
+        uint64_t cmp = pattern_block ^ text_block;
+
+        while (__builtin_expect(!cmp,0)) {
+          // Increment offset (full block)
+          offsets[curr_k] += 8;
+          // Next blocks
+          ++pattern_blocks;
+          ++text_blocks;
+          // Fetch
+          pattern_block = *pattern_blocks;
+          text_block = *text_blocks;
+
+          // Compare
+          cmp = pattern_block ^ text_block;
+        }
+
+        // Count equal characters
+        const int equal_right_bits = __builtin_ctzl(cmp);
+        const int equal_chs = DIV_FLOOR(equal_right_bits,8);
+
+        offsets[curr_k] += equal_chs;
+      }
+      mask &= (0xfffffff0 << tz);
+    }
+  }
+#else // No AVX2 available
   wf_offset_t* const offsets = mwavefront->offsets;
   int k;
   for (k=lo;k<=hi;++k) {
@@ -214,7 +383,9 @@ FORCE_NO_INLINE void wavefront_extend_matches_packed_end2end(
     // Extend offset
     offsets[k] = wavefront_extend_matches_packed_kernel(wf_aligner,k,offset);
   }
+#endif
 }
+
 FORCE_NO_INLINE wf_offset_t wavefront_extend_matches_packed_max(
     wavefront_aligner_t* const wf_aligner,
     wavefront_t* const mwavefront,
