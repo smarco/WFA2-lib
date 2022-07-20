@@ -171,15 +171,6 @@ void wavefront_aligner_set_alignment_free_ends(
  */
 void wavefront_aligner_set_heuristic_none(
     wavefront_aligner_t* const wf_aligner);
-void wavefront_aligner_set_heuristic_banded_static(
-    wavefront_aligner_t* const wf_aligner,
-    const int band_min_k,
-    const int band_max_k);
-void wavefront_aligner_set_heuristic_banded_adaptive(
-    wavefront_aligner_t* const wf_aligner,
-    const int band_min_k,
-    const int band_max_k,
-    const int score_steps);
 void wavefront_aligner_set_heuristic_wfadaptive(
     wavefront_aligner_t* const wf_aligner,
     const int min_wavefront_length,
@@ -192,6 +183,15 @@ void wavefront_aligner_set_heuristic_xdrop(
 void wavefront_aligner_set_heuristic_zdrop(
     wavefront_aligner_t* const wf_aligner,
     const int ydrop,
+    const int score_steps);
+void wavefront_aligner_set_heuristic_banded_static(
+    wavefront_aligner_t* const wf_aligner,
+    const int band_min_k,
+    const int band_max_k);
+void wavefront_aligner_set_heuristic_banded_adaptive(
+    wavefront_aligner_t* const wf_aligner,
+    const int band_min_k,
+    const int band_max_k,
     const int score_steps);
 
 /*

@@ -3,7 +3,7 @@
 # LICENCE: MIT License 
 # AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
 # DESCRIPTION: Plot WFA alignment matrices
-# USAGE: python3 wfa2png.py -h
+# USAGE: python3 wfa.plot.py -h
 
 import sys
 import copy
@@ -146,7 +146,7 @@ def wfa_cigar(ax,wfa_info,plen,tlen,xlen,ylen):
   if (cigar_d is not None): wfa_cigar_scale__plot(cigar_d,x_ratio,y_ratio,'v','blue','del')
   ax.legend(loc="upper right",prop={'size': 5},markerscale=5)
  
-def wfa_plot(filename,wfa_info,dpi,compact,extended):
+def wfa_plot(filename,wfa_info,dpi,mode):
   # Log
   print('[Plotting]',end='',flush=True)
   # Parameters
@@ -154,7 +154,9 @@ def wfa_plot(filename,wfa_info,dpi,compact,extended):
   tlen = int(wfa_info["TextLength"])
   ylen = wfa_info["M"].shape[0]
   xlen = wfa_info["M"].shape[1]
-  # Create plot 
+  # Create plot
+  compact = (mode=="compact");
+  extended = (mode=="extended"); 
   if compact: 
     fig, ax1 = plt.subplots(nrows=1,ncols=1,dpi=dpi,sharex=True)
     im1 = wfa_plot_wavefront('M-Wavefront',ax1,wfa_info["M"],plen,tlen,xlabel=True,ylabel=True)
@@ -209,12 +211,10 @@ def wfa_plot(filename,wfa_info,dpi,compact,extended):
 ################################################################################
 # Configure arguments
 parser = argparse.ArgumentParser()
-parser.add_argument('-i', '--input', action='store', help='Input file')
-parser.add_argument('--dpi', type=int, action='store', default=1500, help='Plot resolution') # More than 2000 is hard to handle
-parser.add_argument('--compact', action='store_true', default=False, help='Plot M-Wavefront only')
-parser.add_argument('--extended', action='store_true', default=True, help='Plot M-Wavefront and extension/CIGAR')
-parser.add_argument('--full', action='store_true', default=False, help='Plot all info available')
-parser.add_argument('-H', action='store_true', dest="human_readable", default=False)
+parser.add_argument('-i','--input',action='store',help='Input file')
+parser.add_argument('--dpi',type=int,action='store',default=1000,help='Plot resolution (default=1000)') # More than 2000 is hard to handle
+parser.add_argument('--mode',action='store',default='compact',help='Plot mode in {compact,extended,full}')
+parser.add_argument('-H',action='store_true',dest="human_readable",default=False)
 
 # Parse arguments
 args = parser.parse_args()
@@ -232,10 +232,9 @@ idx = 0
 for filename in input_files:
   print('[WFA2png] [#%d] Generating \'%s\' ' % (idx,filename),end='',flush=True)
   wfa_info = wfa_parse_file(filename)
-  wfa_plot(filename,wfa_info,args.dpi,args.compact,args.extended)
+  wfa_plot(filename,wfa_info,args.dpi,args.mode)
   print('[Done!]',)
   idx += 1
-
 
 
   

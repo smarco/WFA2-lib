@@ -104,22 +104,29 @@ void wavefront_aligner_init_heuristic(
   // Select and configure heuristics
   if (wf_heuristic->strategy == wf_heuristic_none) {
     wavefront_heuristic_set_none(&wf_aligner->heuristic);
-  } else if (wf_heuristic->strategy == wf_heuristic_banded_static) {
-    wavefront_heuristic_set_banded_static(&wf_aligner->heuristic,
-        wf_heuristic->min_k,wf_heuristic->max_k);
-  } else if (wf_heuristic->strategy == wf_heuristic_banded_adaptive) {
-    wavefront_heuristic_set_banded_adaptive(&wf_aligner->heuristic,
-        wf_heuristic->min_k,wf_heuristic->max_k,wf_heuristic->steps_between_cutoffs);
-  } else if (wf_heuristic->strategy == wf_heuristic_wfadaptive) {
-    wavefront_heuristic_set_wfadaptive(
-        &wf_aligner->heuristic,wf_heuristic->min_wavefront_length,
-        wf_heuristic->max_distance_threshold,wf_heuristic->steps_between_cutoffs);
-  } else if (wf_heuristic->strategy == wf_heuristic_xdrop) {
-    wavefront_heuristic_set_xdrop(&wf_aligner->heuristic,
-        wf_heuristic->xdrop,wf_heuristic->steps_between_cutoffs);
-  } else if (wf_heuristic->strategy == wf_heuristic_zdrop) {
-    wavefront_heuristic_set_zdrop(&wf_aligner->heuristic,
-        wf_heuristic->zdrop,wf_heuristic->steps_between_cutoffs);
+  } else {
+    // WF-Adaptive
+    if (wf_heuristic->strategy & wf_heuristic_wfadaptive) {
+      wavefront_heuristic_set_wfadaptive(
+          &wf_aligner->heuristic,wf_heuristic->min_wavefront_length,
+          wf_heuristic->max_distance_threshold,wf_heuristic->steps_between_cutoffs);
+    }
+    // Drops
+    if (wf_heuristic->strategy & wf_heuristic_xdrop) {
+      wavefront_heuristic_set_xdrop(&wf_aligner->heuristic,
+          wf_heuristic->xdrop,wf_heuristic->steps_between_cutoffs);
+    } else if (wf_heuristic->strategy & wf_heuristic_zdrop) {
+      wavefront_heuristic_set_zdrop(&wf_aligner->heuristic,
+          wf_heuristic->zdrop,wf_heuristic->steps_between_cutoffs);
+    }
+    // Banded
+    if (wf_heuristic->strategy & wf_heuristic_banded_static) {
+      wavefront_heuristic_set_banded_static(&wf_aligner->heuristic,
+          wf_heuristic->min_k,wf_heuristic->max_k);
+    } else if (wf_heuristic->strategy & wf_heuristic_banded_adaptive) {
+      wavefront_heuristic_set_banded_adaptive(&wf_aligner->heuristic,
+          wf_heuristic->min_k,wf_heuristic->max_k,wf_heuristic->steps_between_cutoffs);
+    }
   }
 }
 void wavefront_aligner_init_alignment(
@@ -356,12 +363,11 @@ int wavefront_get_classic_score(
     const int text_length,
     const int wf_score) {
   // Parameters
-  const int plen = wf_aligner->pattern_length;
-  const int tlen = wf_aligner->text_length;
   const int swg_match = -(wf_aligner->penalties.match);
   const distance_metric_t distance_metric = wf_aligner->penalties.distance_metric;
   // Adapt score
-  return (distance_metric <= edit) ? wf_score : WF_SCORE_TO_SW_SCORE(swg_match,plen,tlen,wf_score);
+  return (distance_metric <= edit) ? wf_score :
+      WF_SCORE_TO_SW_SCORE(swg_match,pattern_length,text_length,wf_score);
 }
 /*
  * Span configuration
