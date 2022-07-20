@@ -47,6 +47,7 @@ typedef enum {
   wf_heuristic_wfadaptive      = 0x0000000000000004ul,
   wf_heuristic_xdrop           = 0x0000000000000010ul,
   wf_heuristic_zdrop           = 0x0000000000000020ul,
+  wf_heuristic_wfmash          = 0x0000000000000040ul,
 } wf_heuristic_strategy;
 typedef struct {
   // Heuristic
@@ -75,6 +76,11 @@ void wavefront_heuristic_set_none(
     wavefront_heuristic_t* const wf_heuristic);
 
 void wavefront_heuristic_set_wfadaptive(
+    wavefront_heuristic_t* const wf_heuristic,
+    const int min_wavefront_length,
+    const int max_distance_threshold,
+    const int steps_between_cutoffs);
+void wavefront_heuristic_set_wfmash(
     wavefront_heuristic_t* const wf_heuristic,
     const int min_wavefront_length,
     const int max_distance_threshold,

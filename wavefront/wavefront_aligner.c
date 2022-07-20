@@ -110,6 +110,10 @@ void wavefront_aligner_init_heuristic(
       wavefront_heuristic_set_wfadaptive(
           &wf_aligner->heuristic,wf_heuristic->min_wavefront_length,
           wf_heuristic->max_distance_threshold,wf_heuristic->steps_between_cutoffs);
+    } else if (wf_heuristic->strategy & wf_heuristic_wfmash) {
+      wavefront_heuristic_set_wfmash(
+          &wf_aligner->heuristic,wf_heuristic->min_wavefront_length,
+          wf_heuristic->max_distance_threshold,wf_heuristic->steps_between_cutoffs);
     }
     // Drops
     if (wf_heuristic->strategy & wf_heuristic_xdrop) {
