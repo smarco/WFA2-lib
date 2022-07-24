@@ -452,7 +452,7 @@ WFA2's heuristics are classified into the following categories: ['wf-adaptive'](
   attributes.heuristic.steps_between_cutoffs = 100;
 ```
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Z-drop** implements the Z-drop heuristic (as described in Minimap2). This heuristic halts the alignment process if the score drops too fast in the diagonal direction. Let $sw_{max}$, computed at cell ($i'$,$j'$), be the maximum observed score so far. Then, let $sw$, computed at cell ($i$,$j$), the maximum score found in the last computed wavefront. The Z-drop heuristic stops the alignment process if $sw_{max} - sw > zdrop + gap_e·|(i-i')-(j-j')|$, being $gap_e$ the gap-extension penalty and $zdrop$ a parameter of the heuristic.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Z-drop** implements the Z-drop heuristic (as described in Minimap2). This heuristic halts the alignment process if the score drops too fast in the diagonal direction. Let $sw_{max}$ be the maximum observed score so far, computed at cell ($i'$,$j'$). Then, let $sw$ be the maximum score found in the last computed wavefront, computed at cell ($i$,$j$). The Z-drop heuristic stops the alignment process if $sw_{max} - sw > zdrop + gap_e·|(i-i')-(j-j')|$, being $gap_e$ the gap-extension penalty and $zdrop$ a parameter of the heuristic.
   
 
 ```C

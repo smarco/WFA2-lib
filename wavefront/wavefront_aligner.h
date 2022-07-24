@@ -78,10 +78,20 @@ typedef struct {
 } wavefront_align_status_t;
 
 /*
+ * Alignment type
+ */
+typedef enum {
+  wavefront_align_regular,
+  wavefront_align_biwfa,
+  wavefront_align_biwfa_subwfa
+} wavefront_align_mode_t;
+
+/*
  * Wavefront Aligner
  */
 typedef struct _wavefront_aligner_t {
-  // Status
+  // Mode and status
+  wavefront_align_mode_t align_mode;          // WFA alignment mode
   wavefront_align_status_t align_status;      // Current alignment status
   // Sequences
   strings_padded_t* sequences;                // Padded sequences
@@ -95,26 +105,22 @@ typedef struct _wavefront_aligner_t {
   int pattern_length_rev;                     // Pattern length reversed
   char* text_rev;                             // Text sequence (padded & reversed)
   int text_length_rev;                        // Text length reversed
+  // Custom function to compare sequences
+  alignment_match_funct_t match_funct;        // Custom matching function (match(v,h,args))
+  void* match_funct_arguments;                // Generic arguments passed to matching function (args)
   // Alignment Attributes
   alignment_scope_t alignment_scope;          // Alignment scope (score only or full-CIGAR)
   alignment_form_t alignment_form;            // Alignment form (end-to-end/ends-free)
   wavefronts_penalties_t penalties;           // Alignment penalties
   wavefront_heuristic_t heuristic;            // Heuristic's parameters
   wavefront_memory_t memory_mode;             // Wavefront memory strategy (modular wavefronts and piggyback)
-  // Custom function to compare sequences
-  alignment_match_funct_t match_funct;        // Custom matching function (match(v,h,args))
-  void* match_funct_arguments;                // Generic arguments passed to matching function (args)
   // Wavefront components
   wavefront_components_t wf_components;       // Wavefront components
   affine2p_matrix_type component_begin;       // Alignment begin component
   affine2p_matrix_type component_end;         // Alignment end component
   wavefront_pos_t alignment_end_pos;          // Alignment end position
   // Bidirectional Alignment
-  bool bidirectional_alignment;               // Enable bidirectional WFA alignment
-  wavefront_aligner_t* aligner_forward;       // Forward aligner
-  wavefront_aligner_t* aligner_reverse;       // Reverse aligner
-  wf_bialign_breakpoint_t bialign_breakpoint; // Breakpoint of two wavefronts (bialigner)
-  cigar_t bialign_cigar;                      // Global BiWFA Alignment CIGAR
+  wavefront_bialigner_t* bialigner;           // BiWFA aligner
   // CIGAR
   cigar_t cigar;                              // Alignment CIGAR
   // MM
@@ -222,6 +228,12 @@ uint64_t wavefront_aligner_get_size(
 /*
  * Display
  */
+void wavefront_aligner_print_type(
+    FILE* const stream,
+    wavefront_aligner_t* const wf_aligner);
+void wavefront_aligner_print_scope(
+    FILE* const stream,
+    wavefront_aligner_t* const wf_aligner);
 void wavefront_aligner_print_status(
     FILE* const stream,
     wavefront_aligner_t* const wf_aligner,

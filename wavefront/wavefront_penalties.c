@@ -184,7 +184,7 @@ void wavefronts_penalties_print(
           wavefronts_penalties->gap_extension1);
       break;
     case gap_affine_2p:
-      fprintf(stream,"(GapAffine2p%d,%d,%d,%d,%d)",
+      fprintf(stream,"(GapAffine2p,%d,%d,%d,%d,%d)",
           wavefronts_penalties->mismatch,
           wavefronts_penalties->gap_opening1,
           wavefronts_penalties->gap_extension1,

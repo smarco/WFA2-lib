@@ -300,7 +300,8 @@ void wf_heuristic_compute_sw_scores(
     wf_offset_t* const max_k,
     wf_offset_t* const max_offset) {
   // Parameters
-  const int swg_match = (wf_aligner->penalties.match==0) ? 1 : -(wf_aligner->penalties.match);
+  const int wf_match = wf_aligner->penalties.match;
+  const int swg_match = (wf_match==0) ? 1 : -(wf_aligner->penalties.match);
   // Compute min-distance
   const wf_offset_t* const offsets = wavefront->offsets;
   int k, cmax_sw_score = INT_MIN, cmax_k = 0, cmax_offset = 0;
@@ -310,7 +311,9 @@ void wf_heuristic_compute_sw_scores(
     if (offset < 0) continue;
     const int v = WAVEFRONT_V(k,offset);
     const int h = WAVEFRONT_H(k,offset);
-    const int sw_score = WF_SCORE_TO_SW_SCORE(swg_match,v,h,wf_score);
+    const int sw_score = (wf_match==0) ?
+        (swg_match*(v+h) - wf_score) :
+        WF_SCORE_TO_SW_SCORE(swg_match,v,h,wf_score);
     sw_scores[k] = sw_score;
     if (cmax_sw_score < sw_score) {
       cmax_sw_score = sw_score;

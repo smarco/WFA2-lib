@@ -610,7 +610,7 @@ void align_benchmark_sequential() {
     ++seqs_processed;
     if (++progress == parameters.progress) {
       progress = 0;
-      align_benchmark_print_progress(seqs_processed);
+      if (parameters.verbose >= 0) align_benchmark_print_progress(seqs_processed);
     }
     // DEBUG
     //mm_allocator_print(stderr,align_input.wf_aligner->mm_allocator,false);
@@ -621,7 +621,7 @@ void align_benchmark_sequential() {
   }
   // Print benchmark results
   timer_stop(&parameters.timer_global);
-  align_benchmark_print_results(&align_input,seqs_processed,true);
+  if (parameters.verbose >= 0) align_benchmark_print_results(&align_input,seqs_processed,true);
   // Free
   align_benchmark_free(&align_input);
   fclose(parameters.input_file);
@@ -687,14 +687,14 @@ void align_benchmark_parallel() {
     progress += seqs_batch;
     if (progress >= parameters.progress) {
       progress -= parameters.progress;
-      align_benchmark_print_progress(seqs_processed);
+      if (parameters.verbose >= 0) align_benchmark_print_progress(seqs_processed);
     }
     // DEBUG
     //mm_allocator_print(stderr,align_input->wf_aligner->mm_allocator,false);
   }
   // Print benchmark results
   timer_stop(&parameters.timer_global);
-  align_benchmark_print_results(align_input,seqs_processed,true);
+  if (parameters.verbose >= 0) align_benchmark_print_results(align_input,seqs_processed,true);
   // Free
   for (int tid=0;tid<parameters.num_threads;++tid) {
     align_benchmark_free(align_input+tid);
@@ -775,6 +775,8 @@ void usage() {
       "          --num-threads|t INT                                           \n"
       "          --batch-size INT                                              \n"
     //"          --progress|P INT                                              \n"
+      "          --verbose|v INT                                               \n"
+      "          --quiet|q                                                     \n"
       "          --help|h                                                      \n");
 }
 void parse_arguments(int argc,char** argv) {
@@ -809,6 +811,7 @@ void parse_arguments(int argc,char** argv) {
     { "batch-size", required_argument, 0, 4000 },
     { "progress", required_argument, 0, 'P' },
     { "verbose", optional_argument, 0, 'v' },
+    { "quiet", no_argument, 0, 'q' },
     { "help", no_argument, 0, 'h' },
     { 0, 0, 0, 0 } };
   int c,option_index;
@@ -817,7 +820,7 @@ void parse_arguments(int argc,char** argv) {
     exit(0);
   }
   while (1) {
-    c=getopt_long(argc,argv,"a:i:o:p:g:P:c:v::t:h",long_options,&option_index);
+    c=getopt_long(argc,argv,"a:i:o:p:g:P:c:v::qt:h",long_options,&option_index);
     if (c==-1) break;
     switch (c) {
     /*
@@ -1067,6 +1070,9 @@ void parse_arguments(int argc,char** argv) {
           exit(1);
         }
       }
+      break;
+    case 'q':
+      parameters.verbose = -1;
       break;
     case 'h':
       usage();
