@@ -18,13 +18,13 @@ AR=ar
 AR_FLAGS=-rsc
 
 ifndef BUILD_EXAMPLES 
-BUILD_EXAMPLES=0
+BUILD_EXAMPLES=1
 endif
 ifndef BUILD_TOOLS 
 BUILD_TOOLS=1
 endif
 ifndef BUILD_WFA_PARALLEL
-BUILD_WFA_PARALLEL=0
+BUILD_WFA_PARALLEL=1
 endif
 
 ###############################################################################
@@ -77,7 +77,7 @@ clean:
 	rm -rf $(FOLDER_BIN) $(FOLDER_BUILD) $(FOLDER_LIB) 2> /dev/null
 	$(MAKE) --directory=tools/align_benchmark clean
 	$(MAKE) --directory=examples clean
-	rm -rf $(FOLDER_TESTS)/*.alg $(FOLDER_TESTS)/*.log.* 2> /dev/null
+	rm -rf $(FOLDER_TESTS)/*.alg $(FOLDER_TESTS)/*.log* 2> /dev/null
 	
 ###############################################################################
 # Subdir rule

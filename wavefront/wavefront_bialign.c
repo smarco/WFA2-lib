@@ -321,6 +321,7 @@ void wavefront_bialign_find_breakpoint_init(
   alg_forward->align_status.num_null_steps = 0;
   alg_forward->alignment_form = form_forward;
   alg_forward->component_begin = component_begin;
+  alg_forward->component_end = component_end;
   if (span_forward == alignment_end2end) {
     wavefront_unialign_initialize_end2end(alg_forward);
   } else {
@@ -330,6 +331,7 @@ void wavefront_bialign_find_breakpoint_init(
   alg_reverse->align_status.num_null_steps = 0;
   alg_reverse->alignment_form = form_reverse;
   alg_reverse->component_begin = component_end;
+  alg_reverse->component_end = component_begin;
   if (span_reverse == alignment_end2end) {
     wavefront_unialign_initialize_end2end(alg_reverse);
   } else {
@@ -467,15 +469,15 @@ void wavefront_bialign_base(
   wavefront_aligner_t* const alg_subsidiary = wf_aligner->bialigner->alg_subsidiary;
   const int verbose = wf_aligner->system.verbose;
   // Configure
-  alg_subsidiary->component_begin = component_begin;
-  alg_subsidiary->component_end = component_end;
   alg_subsidiary->alignment_form = *form;
+  wavefront_unialign_init(
+      alg_subsidiary,pattern,pattern_length,
+      text,text_length,component_begin,component_end);
   // DEBUG
   if (verbose >= 2) {
     wavefront_debug_prologue(alg_subsidiary,pattern,pattern_length,text,text_length);
   }
   // Wavefront align sequences
-  wavefront_unialign_init(alg_subsidiary,pattern,pattern_length,text,text_length);
   wavefront_unialign(alg_subsidiary);
   wf_aligner->align_status.status = alg_subsidiary->align_status.status;
   // DEBUG

@@ -97,10 +97,12 @@ void wavefront_align_unidirectional(
     const int pattern_length,
     const char* const text,
     const int text_length) {
+  // Prepare alignment
+  wavefront_unialign_init(
+      wf_aligner,pattern,pattern_length,text,text_length,
+      affine2p_matrix_M,affine2p_matrix_M);
   // DEBUG
   wavefront_debug_prologue(wf_aligner,pattern,pattern_length,text,text_length);
-  // Prepare alignment
-  wavefront_unialign_init(wf_aligner,pattern,pattern_length,text,text_length);
   // Wavefront align sequences
   wavefront_unialign(wf_aligner);
   // Finish

@@ -59,7 +59,9 @@ void wavefront_unialign_init(
     const char* const pattern,
     const int pattern_length,
     const char* const text,
-    const int text_length);
+    const int text_length,
+    const affine2p_matrix_type component_begin,
+    const affine2p_matrix_type component_end);
 
 /*
  * Classic WF-Alignment (Unidirectional)

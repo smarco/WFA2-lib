@@ -283,7 +283,9 @@ void wavefront_unialign_init(
     const char* const pattern,
     const int pattern_length,
     const char* const text,
-    const int text_length) {
+    const int text_length,
+    const affine2p_matrix_type component_begin,
+    const affine2p_matrix_type component_end) {
   // Parameters
   wavefront_align_status_t* const align_status = &wf_aligner->align_status;
   // Resize wavefront aligner
@@ -320,6 +322,8 @@ void wavefront_unialign_init(
   // Initialize wavefront
   wf_aligner->alignment_end_pos.score = -1; // Not aligned
   wf_aligner->alignment_end_pos.k = DPMATRIX_DIAGONAL_NULL;
+  wf_aligner->component_begin = component_begin;
+  wf_aligner->component_end = component_end;
   if (end2end) {
     wavefront_unialign_initialize_end2end(wf_aligner);
   } else {

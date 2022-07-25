@@ -199,8 +199,6 @@ wavefront_aligner_t* wavefront_aligner_new(
         &wf_aligner->wf_components,PATTERN_LENGTH_INIT,TEXT_LENGTH_INIT,
         &wf_aligner->penalties,memory_modular,bt_piggyback,
         wf_aligner->mm_allocator);
-    wf_aligner->component_begin = affine2p_matrix_M;
-    wf_aligner->component_end = affine2p_matrix_M;
   }
   // Sequences
   wf_aligner->sequences = NULL;
