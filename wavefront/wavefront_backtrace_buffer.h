@@ -162,7 +162,7 @@ void wf_backtrace_buffer_mark_backtrace_batch(
 bt_block_idx_t wf_backtrace_buffer_compact_marked(
     wf_backtrace_buffer_t* const bt_buffer,
     bitmap_t* const bitmap,
-    const bool verbose);
+    const int verbose);
 
 /*
  * Utils

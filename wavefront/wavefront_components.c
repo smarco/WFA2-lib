@@ -431,10 +431,10 @@ void wavefront_components_translate_wavefronts(
 void wavefront_components_compact_bt_buffer(
     wavefront_components_t* const wf_components,
     const int score,
-    const bool verbose) {
+    const int verbose) {
   // PROFILE
   profiler_timer_t timer;
-  if (verbose) { timer_reset(&timer); timer_start(&timer); }
+  if (verbose >= 3) { timer_reset(&timer); timer_start(&timer); }
   // Parameters
   wf_backtrace_buffer_t* const bt_buffer = wf_components->bt_buffer;
   const uint64_t bt_buffer_used = wf_backtrace_buffer_get_used(bt_buffer);
@@ -452,7 +452,7 @@ void wavefront_components_compact_bt_buffer(
   // Free
   bitmap_delete(bitmap);
   // PROFILE
-  if (verbose) {
+  if (verbose >= 3) {
     timer_stop(&timer);
     fprintf(stderr,"[");
     timer_print_total(stderr,&timer);

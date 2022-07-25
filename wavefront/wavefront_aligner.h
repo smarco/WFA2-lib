@@ -44,8 +44,7 @@
 #include "wavefront_penalties.h"
 #include "wavefront_attributes.h"
 #include "wavefront_components.h"
-#include "wavefront_align.h"
-#include "wavefront_bialign.h"
+#include "wavefront_bialigner.h"
 
 /*
  * Error codes & messages
@@ -83,7 +82,6 @@ typedef struct {
 typedef enum {
   wavefront_align_regular,
   wavefront_align_biwfa,
-  wavefront_align_biwfa_subwfa
 } wavefront_align_mode_t;
 
 /*
@@ -92,6 +90,7 @@ typedef enum {
 typedef struct _wavefront_aligner_t {
   // Mode and status
   wavefront_align_mode_t align_mode;          // WFA alignment mode
+  char* align_mode_tag;                       // WFA mode tag
   wavefront_align_status_t align_status;      // Current alignment status
   // Sequences
   strings_padded_t* sequences;                // Padded sequences
@@ -99,12 +98,6 @@ typedef struct _wavefront_aligner_t {
   int pattern_length;                         // Pattern length
   char* text;                                 // Text sequence (padded)
   int text_length;                            // Text length
-  // Sequences (reversed)
-  strings_padded_t* sequences_rev;            // Padded sequences reversed
-  char* pattern_rev;                          // Pattern sequence (padded & reversed)
-  int pattern_length_rev;                     // Pattern length reversed
-  char* text_rev;                             // Text sequence (padded & reversed)
-  int text_length_rev;                        // Text length reversed
   // Custom function to compare sequences
   alignment_match_funct_t match_funct;        // Custom matching function (match(v,h,args))
   void* match_funct_arguments;                // Generic arguments passed to matching function (args)
@@ -139,13 +132,6 @@ typedef struct _wavefront_aligner_t {
  */
 wavefront_aligner_t* wavefront_aligner_new(
     wavefront_aligner_attr_t* attributes);
-void wavefront_aligner_resize(
-    wavefront_aligner_t* const wf_aligner,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
-    const bool reverse_sequences);
 void wavefront_aligner_reap(
     wavefront_aligner_t* const wf_aligner);
 void wavefront_aligner_delete(
@@ -234,9 +220,5 @@ void wavefront_aligner_print_type(
 void wavefront_aligner_print_scope(
     FILE* const stream,
     wavefront_aligner_t* const wf_aligner);
-void wavefront_aligner_print_status(
-    FILE* const stream,
-    wavefront_aligner_t* const wf_aligner,
-    const int current_score);
 
 #endif /* WAVEFRONT_ALIGNER_H_ */

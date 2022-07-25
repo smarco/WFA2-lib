@@ -29,15 +29,14 @@
  */
 
 #include "wavefront_bialign.h"
+#include "wavefront_unialign.h"
+#include "wavefront_bialigner.h"
 
-#include "wavefront_align.h"
-#include "wavefront_extend.h"
-#include "wavefront_compute.h"
-#include "wavefront_compute_edit.h"
-#include "wavefront_compute_linear.h"
 #include "wavefront_compute_affine.h"
 #include "wavefront_compute_affine2p.h"
-#include "wavefront_backtrace.h"
+#include "wavefront_compute_edit.h"
+#include "wavefront_compute_linear.h"
+#include "wavefront_extend.h"
 #include "wavefront_debug.h"
 
 /*
@@ -46,67 +45,7 @@
 #define WF_BIALIGN_FALLBACK_MIN_SCORE 100
 
 /*
- * Setup
- */
-wavefront_bialigner_t* wavefront_bialigner_new(
-    wavefront_aligner_attr_t* const attributes) {
-  // Allocate
-  wavefront_bialigner_t* const wf_bialigner = malloc(sizeof(wavefront_bialigner_t));
-  // Configure subsidiary aligners
-  wavefront_aligner_attr_t subsidiary_attr = wavefront_aligner_attr_default;
-  // Inherit attributes from master aligner
-  subsidiary_attr.distance_metric = attributes->distance_metric;
-  subsidiary_attr.linear_penalties = attributes->linear_penalties;
-  subsidiary_attr.affine_penalties = attributes->affine_penalties;
-  subsidiary_attr.affine2p_penalties = attributes->affine2p_penalties;
-  subsidiary_attr.match_funct = attributes->match_funct;
-  subsidiary_attr.match_funct_arguments = attributes->match_funct_arguments;
-  // Set specifics for subsidiary aligners
-  subsidiary_attr.heuristic = attributes->heuristic; // Inherit same heuristic
-  subsidiary_attr.memory_mode = wavefront_memory_high; // Classic WFA
-  subsidiary_attr.alignment_scope = compute_score;
-  // Set other parameter for subsidiary aligners
-  subsidiary_attr.system = attributes->system;
-  // Allocate forward/reverse aligners
-  wf_bialigner->aligner_forward = wavefront_aligner_new(&subsidiary_attr);
-  wf_bialigner->aligner_reverse = wavefront_aligner_new(&subsidiary_attr);
-  // Allocate subsidiary aligner
-  subsidiary_attr.alignment_scope = compute_alignment;
-  wf_bialigner->aligner_subsidiary = wavefront_aligner_new(&subsidiary_attr);
-  wf_bialigner->aligner_subsidiary->align_mode = wavefront_align_biwfa_subwfa;
-  // Return
-  return wf_bialigner;
-}
-void wavefront_bialigner_reap(
-    wavefront_bialigner_t* const wf_bialigner) {
-  wavefront_aligner_reap(wf_bialigner->aligner_forward);
-  wavefront_aligner_reap(wf_bialigner->aligner_reverse);
-  wavefront_aligner_reap(wf_bialigner->aligner_subsidiary);
-}
-void wavefront_bialigner_delete(
-    wavefront_bialigner_t* const wf_bialigner) {
-  wavefront_aligner_delete(wf_bialigner->aligner_forward);
-  wavefront_aligner_delete(wf_bialigner->aligner_reverse);
-  wavefront_aligner_delete(wf_bialigner->aligner_subsidiary);
-}
-/*
- * Accessors
- */
-uint64_t wavefront_bialigner_get_size(
-    wavefront_bialigner_t* const wf_bialigner) {
-  return wavefront_aligner_get_size(wf_bialigner->aligner_forward) +
-      wavefront_aligner_get_size(wf_bialigner->aligner_reverse) +
-      wavefront_aligner_get_size(wf_bialigner->aligner_subsidiary);
-}
-void wavefront_bialigner_heuristic_inherit(
-    wavefront_bialigner_t* const wf_bialigner,
-    wavefront_heuristic_t* const heuristic) {
-  wf_bialigner->aligner_forward->heuristic = *heuristic;
-  wf_bialigner->aligner_reverse->heuristic = *heuristic;
-  wf_bialigner->aligner_subsidiary->heuristic = *heuristic;
-}
-/*
- * Utils
+ * Debug
  */
 void wavefront_bialign_debug(
     wf_bialign_breakpoint_t* const breakpoint,
@@ -128,21 +67,6 @@ void wavefront_bialign_debug(
     default: fprintf(stderr,"?"); break;
   }
   fprintf(stderr,")\n");
-}
-int wavefront_bialign_gap_opening_adjustment(
-    wavefront_aligner_t* const wf_aligner,
-    const distance_metric_t distance_metric) {
-  switch (distance_metric) {
-    case gap_affine:
-      return wf_aligner->penalties.gap_opening1;
-    case gap_affine_2p:
-      return MAX(wf_aligner->penalties.gap_opening1,wf_aligner->penalties.gap_opening2);
-    case indel:
-    case edit:
-    case gap_linear:
-    default:
-      return 0;
-  }
 }
 /*
  * Bidirectional check breakpoints
@@ -352,8 +276,8 @@ void wavefront_bialign_find_breakpoint_init(
     const affine2p_matrix_type component_begin,
     const affine2p_matrix_type component_end) {
   // Resize wavefront aligner
-  wavefront_aligner_resize(wf_aligner_forward,pattern,pattern_length,text,text_length,false);
-  wavefront_aligner_resize(wf_aligner_reverse,pattern,pattern_length,text,text_length,true);
+  wavefront_unialign_resize(wf_aligner_forward,pattern,pattern_length,text,text_length,false);
+  wavefront_unialign_resize(wf_aligner_reverse,pattern,pattern_length,text,text_length,true);
   // Configure form forward and reverse
   alignment_span_t span_forward =
       (form->pattern_begin_free > 0 || form->text_begin_free > 0) ? alignment_endsfree : alignment_end2end;
@@ -398,18 +322,33 @@ void wavefront_bialign_find_breakpoint_init(
   wf_aligner_forward->alignment_form = form_forward;
   wf_aligner_forward->component_begin = component_begin;
   if (span_forward == alignment_end2end) {
-    wavefront_align_end2end_initialize(wf_aligner_forward);
+    wavefront_unialign_initialize_end2end(wf_aligner_forward);
   } else {
-    wavefront_align_endsfree_initialize(wf_aligner_forward,pattern_length,text_length);
+    wavefront_unialign_initialize_endsfree(wf_aligner_forward,pattern_length,text_length);
   }
   // Initialize wavefront (reverse)
   wf_aligner_reverse->align_status.num_null_steps = 0;
   wf_aligner_reverse->alignment_form = form_reverse;
   wf_aligner_reverse->component_begin = component_end;
   if (span_reverse == alignment_end2end) {
-    wavefront_align_end2end_initialize(wf_aligner_reverse);
+    wavefront_unialign_initialize_end2end(wf_aligner_reverse);
   } else {
-    wavefront_align_endsfree_initialize(wf_aligner_reverse,pattern_length,text_length);
+    wavefront_unialign_initialize_endsfree(wf_aligner_reverse,pattern_length,text_length);
+  }
+}
+int wavefront_bialign_overlap_gopen_adjust(
+    wavefront_aligner_t* const wf_aligner,
+    const distance_metric_t distance_metric) {
+  switch (distance_metric) {
+    case gap_affine:
+      return wf_aligner->penalties.gap_opening1;
+    case gap_affine_2p:
+      return MAX(wf_aligner->penalties.gap_opening1,wf_aligner->penalties.gap_opening2);
+    case indel:
+    case edit:
+    case gap_linear:
+    default:
+      return 0;
   }
 }
 int wavefront_bialign_find_breakpoint(
@@ -431,6 +370,13 @@ int wavefront_bialign_find_breakpoint(
       wf_aligner_forward,wf_aligner_reverse,
       pattern,pattern_length,text,text_length,
       distance_metric,form,component_begin,component_end);
+  // DEBUG
+  alignment_system_t* const system = &wf_aligner_forward->system;
+  const int verbose = system->verbose;
+  if (verbose >= 2) {
+    wavefront_debug_prologue(wf_aligner_forward,pattern,pattern_length,text,text_length);
+    wavefront_debug_prologue(wf_aligner_reverse,pattern,pattern_length,text,text_length);
+  }
   // Parameters
   const int max_alignment_score = wf_aligner_forward->system.max_alignment_score;
   const int max_antidiagonal = DPMATRIX_ANTIDIAGONAL(pattern_length,text_length) - 1;
@@ -467,10 +413,14 @@ int wavefront_bialign_find_breakpoint(
     last_wf_forward = false;
     // Check max-score reached (to stop)
     if (score_reverse + score_forward >= max_alignment_score) return WF_STATUS_MAX_SCORE_REACHED;
+    // DEBUG
+    if (verbose >= 3 && score_forward % system->probe_interval_global == 0) {
+      wavefront_unialign_print_status(stderr,wf_aligner_forward,score_forward);
+    }
   }
   // Advance until overlap is found
   const int max_score_scope = wf_aligner_forward->wf_components.max_score_scope;
-  const int gap_opening = wavefront_bialign_gap_opening_adjustment(wf_aligner_forward,distance_metric);
+  const int gap_opening = wavefront_bialign_overlap_gopen_adjust(wf_aligner_forward,distance_metric);
   while (true) {
     if (last_wf_forward) {
       // Check overlapping wavefronts
@@ -503,12 +453,6 @@ int wavefront_bialign_find_breakpoint(
 /*
  * Bidirectional Alignment (base cases)
  */
-void wavefront_align_unidirectional(
-    wavefront_aligner_t* const wf_aligner,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length);
 void wavefront_bialign_base(
     wavefront_aligner_t* const wf_aligner,
     const char* const pattern,
@@ -521,14 +465,24 @@ void wavefront_bialign_base(
     const int rlevel) {
   // Parameters
   wavefront_aligner_t* const alg_subsidiary = wf_aligner->bialigner->aligner_subsidiary;
+  const int verbose = wf_aligner->system.verbose;
   // Configure
   alg_subsidiary->component_begin = component_begin;
   alg_subsidiary->component_end = component_end;
   alg_subsidiary->alignment_form = *form;
-  // Align
-  wavefront_align_unidirectional(alg_subsidiary,
-      pattern,pattern_length,text,text_length);
+  // DEBUG
+  if (verbose >= 2) {
+    wavefront_debug_prologue(alg_subsidiary,pattern,pattern_length,text,text_length);
+  }
+  // Wavefront align sequences
+  wavefront_unialign_init(alg_subsidiary,pattern,pattern_length,text,text_length);
+  wavefront_unialign(alg_subsidiary);
   wf_aligner->align_status.status = alg_subsidiary->align_status.status;
+  // DEBUG
+  if (verbose >= 2) {
+    wavefront_debug_epilogue(alg_subsidiary);
+    wavefront_debug_check_correct(wf_aligner);
+  }
   // Append CIGAR
   cigar_append(&wf_aligner->cigar,&alg_subsidiary->cigar);
   if (rlevel == 0) wf_aligner->cigar.score = alg_subsidiary->cigar.score;
@@ -638,6 +592,12 @@ void wavefront_bialign_alignment(
       wf_aligner->bialigner,pattern,pattern_length,text,text_length,
       wf_aligner->penalties.distance_metric,
       form,component_begin,component_end,&breakpoint);
+  // DEBUG
+  if (wf_aligner->system.verbose >= 2) {
+    wavefront_debug_epilogue(wf_aligner->bialigner->aligner_forward);
+    wavefront_debug_epilogue(wf_aligner->bialigner->aligner_reverse);
+  }
+  // Check status
   if (align_status != WF_STATUS_SUCCESSFUL) {
     wavefront_bialign_exception(
         wf_aligner,pattern,pattern_length,text,text_length,
@@ -648,7 +608,7 @@ void wavefront_bialign_alignment(
   const int breakpoint_h = WAVEFRONT_H(breakpoint.k_forward,breakpoint.offset_forward);
   const int breakpoint_v = WAVEFRONT_V(breakpoint.k_forward,breakpoint.offset_forward);
   // DEBUG
-  if (wf_aligner->system.verbose >= 4) wavefront_bialign_debug(&breakpoint,rlevel);
+  if (wf_aligner->system.verbose >= 3) wavefront_bialign_debug(&breakpoint,rlevel);
   // Align half_0
   alignment_form_t form_0;
   wavefront_bialign_init_half_0(form,&form_0);
@@ -685,6 +645,12 @@ void wavefront_bialign_compute_score(
       wf_aligner->bialigner,pattern,pattern_length,text,text_length,
       wf_aligner->penalties.distance_metric,&wf_aligner->alignment_form,
       affine_matrix_M,affine_matrix_M,&breakpoint);
+  // DEBUG
+  if (wf_aligner->system.verbose >= 2) {
+    wavefront_debug_epilogue(wf_aligner->bialigner->aligner_forward);
+    wavefront_debug_epilogue(wf_aligner->bialigner->aligner_reverse);
+  }
+  // Check status
   if (align_status == WF_STATUS_MAX_SCORE_REACHED || align_status == WF_STATUS_UNFEASIBLE) {
     wf_aligner->align_status.status = align_status;
     return;

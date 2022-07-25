@@ -613,9 +613,10 @@ void align_benchmark_sequential() {
       if (parameters.verbose >= 0) align_benchmark_print_progress(seqs_processed);
     }
     // DEBUG
-    //mm_allocator_print(stderr,align_input.wf_aligner->mm_allocator,false);
-    //mm_allocator_print(stderr,align_input.wf_aligner->aligner_forward->mm_allocator,false);
-    //mm_allocator_print(stderr,align_input.wf_aligner->aligner_reverse->mm_allocator,false);
+    // mm_allocator_print(stderr,align_input.wf_aligner->mm_allocator,false);
+    // mm_allocator_print(stderr,align_input.wf_aligner->bialigner->aligner_forward->mm_allocator,false);
+    // mm_allocator_print(stderr,align_input.wf_aligner->bialigner->aligner_reverse->mm_allocator,false);
+    // mm_allocator_print(stderr,align_input.wf_aligner->bialigner->aligner_subsidiary->mm_allocator,false);
     // Plot
     if (parameters.plot > 0) align_benchmark_plot_wf(&align_input,seqs_processed);
   }
@@ -810,7 +811,8 @@ void parse_arguments(int argc,char** argv) {
     { "num-threads", required_argument, 0, 't' },
     { "batch-size", required_argument, 0, 4000 },
     { "progress", required_argument, 0, 'P' },
-    { "verbose", optional_argument, 0, 'v' },
+    { "verbose", required_argument, 0, 4001 },
+    { "verbose1", no_argument, 0, 'v' },
     { "quiet", no_argument, 0, 'q' },
     { "help", no_argument, 0, 'h' },
     { 0, 0, 0, 0 } };
@@ -820,7 +822,7 @@ void parse_arguments(int argc,char** argv) {
     exit(0);
   }
   while (1) {
-    c=getopt_long(argc,argv,"a:i:o:p:g:P:c:v::qt:h",long_options,&option_index);
+    c=getopt_long(argc,argv,"a:i:o:p:g:P:c:vqt:h",long_options,&option_index);
     if (c==-1) break;
     switch (c) {
     /*
@@ -1061,14 +1063,13 @@ void parse_arguments(int argc,char** argv) {
       parameters.progress = atoi(optarg);
       break;
     case 'v':
-      if (optarg==NULL) {
-        parameters.verbose = 1;
-      } else {
-        parameters.verbose = atoi(optarg);
-        if (parameters.verbose < 0 || parameters.verbose > 4) {
-          fprintf(stderr,"Option '--verbose' must be in {0,1,2,3,4}\n");
-          exit(1);
-        }
+      parameters.verbose = 1;
+      break;
+    case 4001: // --verbose (long option)
+      parameters.verbose = atoi(optarg);
+      if (parameters.verbose < 0 || parameters.verbose > 4) {
+        fprintf(stderr,"Option '--verbose' must be in {0,1,2,3,4}\n");
+        exit(1);
       }
       break;
     case 'q':

@@ -102,10 +102,10 @@ typedef struct {
   uint64_t max_memory_abort;     // Maximum memory allowed to be used before aborting alignment
   // Verbose
   //  0 - Quiet
-  //  1 - Report WFA progress and heavy tasks               (brief)
-  //  2 - Report each sequence aligned                      (succinct)
-  //  3 - Full report of each sequence aligned              (verbose)
-  //  4 - Full report of each sequence aligned + debug info (very verbose)
+  //  1 - Report each sequence aligned                      (brief)
+  //  2 - Report each sequence/subsequence aligned          (brief)
+  //  3 - Report WFA progress (heavy tasks)                 (verbose)
+  //  4 - Full report of each sequence/subsequence aligned  (very verbose)
   int verbose;                   // Verbose (regulates messages during alignment)
   // Debug
   bool check_alignment_correct;  // Verify that the alignment CIGAR output is correct
