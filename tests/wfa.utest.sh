@@ -76,9 +76,12 @@ diff tests/wfa.utest.check/test.affine.wfapt1.alg tests/wfa.utest.check/test.pb.
 grep "Alignments.Correct" $LOG >> $LOG.correct
 grep "Time.Alignment" $LOG | awk '{if ($4 != "ms") print $3" "$4}' | sort -n > $LOG.time
 grep "Maximum resident set size" $LOG | awk '{print $6}' | sort -n > $LOG.mem
-./tests/wfa.utest.cmp.sh $OUTPUT $OUTPUT/wfa.utest.check
+
+echo -n ">>> Correct: "
 tail -n 4 $OUTPUT/wfa.utest.log.time $OUTPUT/wfa.utest.check/wfa.utest.log.time
 tail -n 4 $OUTPUT/wfa.utest.log.mem $OUTPUT/wfa.utest.check/wfa.utest.log.mem
-echo -n "Correct: "
+./tests/wfa.utest.cmp.sh $OUTPUT $OUTPUT/wfa.utest.check
+grep "Exit status:" $LOG | sort | uniq -c
+grep "Command terminated by signal" $LOG | sort | uniq -c
 cat $OUTPUT/wfa.utest.log.correct | awk '{print $5$6}' | sort | uniq -c
 

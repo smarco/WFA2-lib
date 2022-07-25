@@ -34,10 +34,11 @@
 /*
  * Setup
  */
-void cigar_allocate(
-    cigar_t* const cigar,
+cigar_t* cigar_new(
     const int max_operations,
     mm_allocator_t* const mm_allocator) {
+  // Allocate
+  cigar_t* const cigar = mm_allocator_alloc(mm_allocator,cigar_t);
   // Allocate buffer
   cigar->max_operations = max_operations;
   cigar->operations = mm_allocator_malloc(mm_allocator,cigar->max_operations);
@@ -46,6 +47,8 @@ void cigar_allocate(
   cigar->score = INT32_MIN;
   // MM
   cigar->mm_allocator = mm_allocator;
+  // Return
+  return cigar;
 }
 void cigar_clear(
     cigar_t* const cigar) {
@@ -70,6 +73,7 @@ void cigar_resize(
 void cigar_free(
     cigar_t* const cigar) {
   mm_allocator_free(cigar->mm_allocator,cigar->operations);
+  mm_allocator_free(cigar->mm_allocator,cigar);
 }
 /*
  * Accessors

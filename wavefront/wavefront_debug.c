@@ -48,7 +48,7 @@ bool wavefront_check_alignment(
   alignment_match_funct_t match_funct = wf_aligner->match_funct;
   void* match_funct_arguments = wf_aligner->match_funct_arguments;
   // CIGAR
-  cigar_t* const cigar = &wf_aligner->cigar;
+  cigar_t* const cigar = wf_aligner->cigar;
   char* const operations = cigar->operations;
   const int begin_offset = cigar->begin_offset;
   const int end_offset = cigar->end_offset;
@@ -133,7 +133,7 @@ void wavefront_report_lite(
   // Sequences
   const int score = wavefront_get_classic_score(
       wf_aligner,wf_aligner->pattern_length,
-      wf_aligner->text_length,wf_aligner->cigar.score);
+      wf_aligner->text_length,wf_aligner->cigar->score);
   fprintf(stream,"\t%d",score);
   fprintf(stream,"\t%d\t%d",pattern_length,text_length);
   fprintf(stream,"\t%s",(status==0) ? "OK" : "FAIL");
@@ -146,7 +146,7 @@ void wavefront_report_lite(
   fprintf(stream,",");
   wavefronts_penalties_print(stream,&wf_aligner->penalties);
   fprintf(stream,"]\t");
-  cigar_print(stream,&wf_aligner->cigar,true);
+  cigar_print(stream,wf_aligner->cigar,true);
   if (wf_aligner->match_funct != NULL) {
     fprintf(stream,"\t-\t-");
   } else {
@@ -205,10 +205,10 @@ void wavefront_report_verbose_end(
       wf_aligner->wf_components.historic_max_hi);
   const int score = wavefront_get_classic_score(
       wf_aligner,wf_aligner->pattern_length,
-      wf_aligner->text_length,wf_aligner->cigar.score);
+      wf_aligner->text_length,wf_aligner->cigar->score);
   fprintf(stream," WFA.score=%d",score);
   fprintf(stream," WFA.cigar=");
-  cigar_print(stream,&wf_aligner->cigar,true);
+  cigar_print(stream,wf_aligner->cigar,true);
   fprintf(stream,"\n");
 }
 /*

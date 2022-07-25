@@ -484,8 +484,8 @@ void wavefront_bialign_base(
     wavefront_debug_check_correct(wf_aligner);
   }
   // Append CIGAR
-  cigar_append(&wf_aligner->cigar,&alg_subsidiary->cigar);
-  if (rlevel == 0) wf_aligner->cigar.score = alg_subsidiary->cigar.score;
+  cigar_append(wf_aligner->cigar,alg_subsidiary->cigar);
+  if (rlevel == 0) wf_aligner->cigar->score = alg_subsidiary->cigar->score;
 }
 void wavefront_bialign_exception(
     wavefront_aligner_t* const wf_aligner,
@@ -573,10 +573,10 @@ void wavefront_bialign_alignment(
     const int rlevel) {
   // Trivial cases
   if (text_length == 0) {
-    cigar_append_deletion(&wf_aligner->cigar,pattern_length);
+    cigar_append_deletion(wf_aligner->cigar,pattern_length);
     return;
   } else if (pattern_length == 0) {
-    cigar_append_insertion(&wf_aligner->cigar,text_length);
+    cigar_append_insertion(wf_aligner->cigar,text_length);
     return;
   }
   // Fall back to regular WFA
@@ -627,7 +627,7 @@ void wavefront_bialign_alignment(
       breakpoint.score_reverse,rlevel+1);
   if (wf_aligner->align_status.status != WF_STATUS_SUCCESSFUL) return;
   // Set score
-  wf_aligner->cigar.score = wavefront_get_classic_score(
+  wf_aligner->cigar->score = wavefront_get_classic_score(
       wf_aligner,pattern_length,text_length,breakpoint.score);
 }
 /*
@@ -665,8 +665,8 @@ void wavefront_bialign_compute_score(
     }
   }
   // Report score
-  cigar_clear(&wf_aligner->cigar);
-  wf_aligner->cigar.score = wavefront_get_classic_score(
+  cigar_clear(wf_aligner->cigar);
+  wf_aligner->cigar->score = wavefront_get_classic_score(
       wf_aligner,pattern_length,text_length,breakpoint.score);
   wf_aligner->align_status.status = WF_STATUS_SUCCESSFUL;
 }
@@ -685,7 +685,7 @@ void wavefront_bialign(
   if (wf_aligner->alignment_scope == compute_score) {
     wavefront_bialign_compute_score(wf_aligner,pattern,pattern_length,text,text_length);
   } else {
-    cigar_resize(&wf_aligner->cigar,2*(pattern_length+text_length));
+    cigar_resize(wf_aligner->cigar,2*(pattern_length+text_length));
     // Bidirectional alignment
     wavefront_bialign_alignment(wf_aligner,
         pattern,pattern_length,text,text_length,

@@ -233,16 +233,16 @@ void wavefront_plot_print(
   // CIGAR
   if (wf_aligner->alignment_scope == compute_alignment) {
     fprintf(stream,"# List CIGAR-M ");
-    wavefront_plot_print_cigar(stream,&wf_aligner->cigar,'M');
+    wavefront_plot_print_cigar(stream,wf_aligner->cigar,'M');
     fprintf(stream,"\n");
     fprintf(stream,"# List CIGAR-X ");
-    wavefront_plot_print_cigar(stream,&wf_aligner->cigar,'X');
+    wavefront_plot_print_cigar(stream,wf_aligner->cigar,'X');
     fprintf(stream,"\n");
     fprintf(stream,"# List CIGAR-I ");
-    wavefront_plot_print_cigar(stream,&wf_aligner->cigar,'I');
+    wavefront_plot_print_cigar(stream,wf_aligner->cigar,'I');
     fprintf(stream,"\n");
     fprintf(stream,"# List CIGAR-D ");
-    wavefront_plot_print_cigar(stream,&wf_aligner->cigar,'D');
+    wavefront_plot_print_cigar(stream,wf_aligner->cigar,'D');
     fprintf(stream,"\n");
   }
 }

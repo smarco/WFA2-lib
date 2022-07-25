@@ -205,9 +205,8 @@ wavefront_aligner_t* wavefront_aligner_new(
   // Sequences
   wf_aligner->sequences = NULL;
   // CIGAR
-  if (!score_only) {
-    cigar_allocate(&wf_aligner->cigar,2*(PATTERN_LENGTH_INIT+TEXT_LENGTH_INIT),wf_aligner->mm_allocator);
-  }
+  const int cigar_length = (score_only) ? 10 : 2*(PATTERN_LENGTH_INIT+TEXT_LENGTH_INIT);
+  wf_aligner->cigar = cigar_new(cigar_length,wf_aligner->mm_allocator);
   // Display
   wf_aligner->plot_params = attributes->plot_params;
   if (attributes->plot_params.plot_enabled) {
@@ -243,7 +242,6 @@ void wavefront_aligner_delete(
   // Parameters
   mm_allocator_t* const mm_allocator = wf_aligner->mm_allocator;
   const bool mm_allocator_own = wf_aligner->mm_allocator_own;
-  const bool score_only = (wf_aligner->alignment_scope == compute_score);
   // Padded sequences
   if (wf_aligner->sequences != NULL) {
     strings_padded_delete(wf_aligner->sequences);
@@ -258,9 +256,7 @@ void wavefront_aligner_delete(
     wavefront_slab_delete(wf_aligner->wavefront_slab);
   }
   // CIGAR
-  if (!score_only) {
-    cigar_free(&wf_aligner->cigar);
-  }
+  cigar_free(wf_aligner->cigar);
   // Display
   if (wf_aligner->plot_params.plot_enabled) {
     wavefront_plot_free(&wf_aligner->wf_plot);

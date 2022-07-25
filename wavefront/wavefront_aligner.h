@@ -115,7 +115,7 @@ typedef struct _wavefront_aligner_t {
   // Bidirectional Alignment
   wavefront_bialigner_t* bialigner;           // BiWFA aligner
   // CIGAR
-  cigar_t cigar;                              // Alignment CIGAR
+  cigar_t* cigar;                             // Alignment CIGAR
   // MM
   bool mm_allocator_own;                      // Ownership of MM-Allocator
   mm_allocator_t* mm_allocator;               // MM-Allocator

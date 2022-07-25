@@ -261,8 +261,9 @@ void align_pairwise_test() {
   fprintf(stderr,">> WFA2");
   cigar_print_pretty(stderr,
       pattern,strlen(pattern),text,strlen(text),
-      &wf_aligner->cigar,wf_aligner->mm_allocator);
-  fprintf(stderr,"SCORE: %d \n",cigar_score_gap_affine(&wf_aligner->cigar,&affine_penalties));
+      wf_aligner->cigar,wf_aligner->mm_allocator);
+  fprintf(stderr,"SCORE: %d \n",cigar_score_gap_affine(
+      wf_aligner->cigar,&affine_penalties));
   // Plot
   if (attributes.plot_params.plot_enabled) {
     FILE* const wf_plot = fopen("test.wfa","w");

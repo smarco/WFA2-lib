@@ -86,8 +86,6 @@ void wavefront_unialign_resize(
     const char* const text,
     const int text_length,
     const bool reverse_sequences) {
-  // Parameters
-  const bool score_only = (wf_aligner->alignment_scope == compute_score);
   // Configure sequences and status
   wf_aligner->pattern_length = pattern_length;
   wf_aligner->text_length = text_length;
@@ -111,8 +109,8 @@ void wavefront_unialign_resize(
   wavefront_components_resize(&wf_aligner->wf_components,
       pattern_length,text_length,&wf_aligner->penalties);
   // CIGAR
-  if (!score_only) {
-    cigar_resize(&wf_aligner->cigar,2*(pattern_length+text_length));
+  if (wf_aligner->alignment_scope == compute_alignment) {
+    cigar_resize(wf_aligner->cigar,2*(pattern_length+text_length));
   }
   // Slab
   wavefront_slab_clear(wf_aligner->wavefront_slab);
@@ -341,7 +339,7 @@ bool wavefront_unialign_reached_limits(
     const int score) {
   // Check alignment-score limit
   if (score >= wf_aligner->system.max_alignment_score) {
-    wf_aligner->cigar.score = wf_aligner->system.max_alignment_score;
+    wf_aligner->cigar->score = wf_aligner->system.max_alignment_score;
     wf_aligner->align_status.status = WF_STATUS_MAX_SCORE_REACHED;
     wf_aligner->align_status.score = score;
     return true; // Stop
@@ -393,8 +391,8 @@ void wavefront_unialign_terminate(
   const int text_length = wf_aligner->text_length;
   // Retrieve alignment
   if (wf_aligner->alignment_scope == compute_score) {
-    cigar_clear(&wf_aligner->cigar);
-    wf_aligner->cigar.score =
+    cigar_clear(wf_aligner->cigar);
+    wf_aligner->cigar->score =
         wavefront_get_classic_score(wf_aligner,pattern_length,text_length,score);
   } else {
     // Parameters
@@ -424,7 +422,7 @@ void wavefront_unialign_terminate(
       }
     }
     // Set score & finish
-    wf_aligner->cigar.score =
+    wf_aligner->cigar->score =
         wavefront_get_classic_score(wf_aligner,pattern_length,text_length,score);
   }
   // Set successful

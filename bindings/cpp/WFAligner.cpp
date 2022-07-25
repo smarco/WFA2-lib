@@ -206,7 +206,7 @@ void WFAligner::setMaxMemory(
  * Accessors
  */
 int WFAligner::getAlignmentScore() {
-  return wfAligner->cigar.score;
+  return wfAligner->cigar->score;
 }
 int WFAligner::getAlignmentStatus() {
   return wfAligner->align_status.status;
@@ -214,8 +214,8 @@ int WFAligner::getAlignmentStatus() {
 void WFAligner::getAlignmentCigar(
     char** const cigarOperations,
     int* cigarLength) {
- *cigarOperations = wfAligner->cigar.operations + wfAligner->cigar.begin_offset;
- *cigarLength = wfAligner->cigar.end_offset - wfAligner->cigar.begin_offset;
+ *cigarOperations = wfAligner->cigar->operations + wfAligner->cigar->begin_offset;
+ *cigarLength = wfAligner->cigar->end_offset - wfAligner->cigar->begin_offset;
 }
 std::string WFAligner::getAlignmentCigar() {
   // Fetch CIGAR
