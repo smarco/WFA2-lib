@@ -614,9 +614,9 @@ void align_benchmark_sequential() {
     }
     // DEBUG
     // mm_allocator_print(stderr,align_input.wf_aligner->mm_allocator,false);
-    // mm_allocator_print(stderr,align_input.wf_aligner->bialigner->aligner_forward->mm_allocator,false);
-    // mm_allocator_print(stderr,align_input.wf_aligner->bialigner->aligner_reverse->mm_allocator,false);
-    // mm_allocator_print(stderr,align_input.wf_aligner->bialigner->aligner_subsidiary->mm_allocator,false);
+    // mm_allocator_print(stderr,align_input.wf_aligner->bialigner->alg_forward->mm_allocator,false);
+    // mm_allocator_print(stderr,align_input.wf_aligner->bialigner->alg_reverse->mm_allocator,false);
+    // mm_allocator_print(stderr,align_input.wf_aligner->bialigner->alg_subsidiary->mm_allocator,false);
     // Plot
     if (parameters.plot > 0) align_benchmark_plot_wf(&align_input,seqs_processed);
   }
