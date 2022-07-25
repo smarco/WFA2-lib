@@ -206,7 +206,7 @@ void wavefront_plot_print(
   fprintf(stream,"# PatternLength %d\n",wf_aligner->pattern_length);
   fprintf(stream,"# TextLength %d\n",wf_aligner->text_length);
   fprintf(stream,"# Penalties ");
-  wavefronts_penalties_print(stream,&wf_aligner->penalties);
+  wavefront_penalties_print(stream,&wf_aligner->penalties);
   fprintf(stream,"\n");
   // Alignment mode
   fprintf(stream,"# WFAMode (");

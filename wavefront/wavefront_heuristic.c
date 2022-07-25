@@ -412,7 +412,7 @@ void wavefront_heuristic_zdrop(
       wf_aligner,wavefront,score,sw_scores,
       &cmax_sw_score,&cmax_k,&cmax_offset);
   // Apply Z-Drop
-  wavefronts_penalties_t* const penalties = &wf_aligner->penalties;
+  wavefront_penalties_t* const penalties = &wf_aligner->penalties;
   const int gap_e = (penalties->gap_extension1 > 0) ? penalties->gap_extension1 : 1;
   const int zdrop = wf_heuristic->zdrop;
   const int max_sw_score = wf_heuristic->max_sw_score;

@@ -133,7 +133,7 @@ void wavefront_compute_fetch_input(
   wavefront_components_t* const wf_components = &wf_aligner->wf_components;
   const distance_metric_t distance_metric = wf_aligner->penalties.distance_metric;
   // Compute scores
-  const wavefronts_penalties_t* const penalties = &(wf_aligner->penalties);
+  const wavefront_penalties_t* const penalties = &(wf_aligner->penalties);
   if (distance_metric == gap_linear) {
     int mismatch = score - penalties->mismatch;
     int gap_open1 = score - penalties->gap_opening1;

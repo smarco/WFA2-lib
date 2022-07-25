@@ -60,7 +60,7 @@ void wavefront_components_dimensions_edit(
 }
 void wavefront_components_dimensions_linear(
     wavefront_components_t* const wf_components,
-    wavefronts_penalties_t* const penalties,
+    wavefront_penalties_t* const penalties,
     const int max_pattern_length,
     const int max_text_length,
     int* const max_score_scope,
@@ -79,7 +79,7 @@ void wavefront_components_dimensions_linear(
 }
 void wavefront_components_dimensions_affine(
     wavefront_components_t* const wf_components,
-    wavefronts_penalties_t* const penalties,
+    wavefront_penalties_t* const penalties,
     const int max_pattern_length,
     const int max_text_length,
     int* const max_score_scope,
@@ -99,7 +99,7 @@ void wavefront_components_dimensions_affine(
 }
 void wavefront_components_dimensions_affine2p(
     wavefront_components_t* const wf_components,
-    wavefronts_penalties_t* const penalties,
+    wavefront_penalties_t* const penalties,
     const int max_pattern_length,
     const int max_text_length,
     int* const max_score_scope,
@@ -123,7 +123,7 @@ void wavefront_components_dimensions_affine2p(
 }
 void wavefront_components_dimensions(
     wavefront_components_t* const wf_components,
-    wavefronts_penalties_t* const penalties,
+    wavefront_penalties_t* const penalties,
     const int max_pattern_length,
     const int max_text_length,
     int* const max_score_scope,
@@ -195,7 +195,7 @@ void wavefront_components_allocate(
     wavefront_components_t* const wf_components,
     const int max_pattern_length,
     const int max_text_length,
-    wavefronts_penalties_t* const penalties,
+    wavefront_penalties_t* const penalties,
     const bool memory_modular,
     const bool bt_piggyback,
     mm_allocator_t* const mm_allocator) {
@@ -279,7 +279,7 @@ void wavefront_components_resize(
     wavefront_components_t* const wf_components,
     const int max_pattern_length,
     const int max_text_length,
-    wavefronts_penalties_t* const penalties) {
+    wavefront_penalties_t* const penalties) {
   // Compute dimensions
   int num_wavefronts = 0;
   wavefront_components_dimensions(

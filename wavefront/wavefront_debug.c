@@ -144,7 +144,7 @@ void wavefront_report_lite(
   fprintf(stream,",");
   wavefront_aligner_print_scope(stream,wf_aligner);
   fprintf(stream,",");
-  wavefronts_penalties_print(stream,&wf_aligner->penalties);
+  wavefront_penalties_print(stream,&wf_aligner->penalties);
   fprintf(stream,"]\t");
   cigar_print(stream,wf_aligner->cigar,true);
   if (wf_aligner->match_funct != NULL) {
@@ -179,7 +179,7 @@ void wavefront_report_verbose_begin(
       wf_aligner->system.max_alignment_score);
   // Penalties
   fprintf(stream," Penalties=");
-  wavefronts_penalties_print(stream,&wf_aligner->penalties);
+  wavefront_penalties_print(stream,&wf_aligner->penalties);
   // Heuristic
   fprintf(stream," Heuristic=");
   wavefront_heuristic_print(stream,&wf_aligner->heuristic);

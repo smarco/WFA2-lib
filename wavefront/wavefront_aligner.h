@@ -104,7 +104,7 @@ typedef struct _wavefront_aligner_t {
   // Alignment Attributes
   alignment_scope_t alignment_scope;          // Alignment scope (score only or full-CIGAR)
   alignment_form_t alignment_form;            // Alignment form (end-to-end/ends-free)
-  wavefronts_penalties_t penalties;           // Alignment penalties
+  wavefront_penalties_t penalties;            // Alignment penalties
   wavefront_heuristic_t heuristic;            // Heuristic's parameters
   wavefront_memory_t memory_mode;             // Wavefront memory strategy (modular wavefronts and piggyback)
   // Wavefront components
