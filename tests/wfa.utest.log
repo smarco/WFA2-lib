@@ -1,0 +1,1980 @@
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark       122.40 ms (    1   call, 122.40 ms/call {min122.40ms,Max122.40ms})
+  => Time.Alignment     111.25 ms ( 90.89 %) (  305  calls, 364.76 us/call {min301ns,Max25.45ms})
+[Accuracy]
+ => Alignments.Correct      305.00 alg         (100.00 %) (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+ => Score.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => Score.Total           305.00 score uds.             (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+     => Score.Diff            0.00 score uds.  (  0.00 %) (samples=0,--n/a--)}
+ => CIGAR.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => CIGAR.Matches         159.18 Kbases      ( 90.27 %) (samples=159K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Mismatches        0.00 bases       (  0.00 %) (samples=0,--n/a--)}
+   => CIGAR.Insertions       19.08 Kbases      ( 10.82 %) (samples=19K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Deletions        17.16 Kbases      (  9.73 %) (samples=17K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.indel.alg -a indel-wfa --check=correct"
+	User time (seconds): 0.10
+	System time (seconds): 0.01
+	Percent of CPU this job got: 100%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.12
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 27368
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 6276
+	Voluntary context switches: 1
+	Involuntary context switches: 0
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 256
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark        84.16 ms (    1   call,  84.16 ms/call {min84.16ms,Max84.16ms})
+  => Time.Alignment      75.71 ms ( 89.96 %) (  305  calls, 248.24 us/call {min214ns,Max10.14ms})
+[Accuracy]
+ => Alignments.Correct      305.00 alg         (100.00 %) (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+ => Score.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => Score.Total           305.00 score uds.             (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+     => Score.Diff            0.00 score uds.  (  0.00 %) (samples=0,--n/a--)}
+ => CIGAR.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => CIGAR.Matches         158.32 Kbases      ( 89.78 %) (samples=158K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Mismatches        9.63 Kbases      (  5.46 %) (samples=9K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Insertions       10.30 Kbases      (  5.84 %) (samples=10K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Deletions         8.38 Kbases      (  4.75 %) (samples=8K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.edit.alg -a edit-wfa --check=correct"
+	User time (seconds): 0.07
+	System time (seconds): 0.01
+	Percent of CPU this job got: 98%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.08
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 26972
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 6266
+	Voluntary context switches: 1
+	Involuntary context switches: 0
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 208
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark       889.40 ms (    1   call, 889.40 ms/call {min889.40ms,Max889.40ms})
+  => Time.Alignment     881.19 ms ( 99.08 %) (  305  calls,   2.89 ms/call {min217ns,Max152.02ms})
+[Accuracy]
+ => Alignments.Correct      305.00 alg         (100.00 %) (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+ => Score.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => Score.Total           305.00 score uds.             (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+     => Score.Diff            0.00 score uds.  (  0.00 %) (samples=0,--n/a--)}
+ => CIGAR.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => CIGAR.Matches         154.21 Kbases      ( 87.45 %) (samples=154K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Mismatches       15.33 Kbases      (  8.69 %) (samples=15K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Insertions        8.72 Kbases      (  4.95 %) (samples=8K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Deletions         6.80 Kbases      (  3.86 %) (samples=6K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.affine.alg -a gap-affine-wfa --check=correct"
+	User time (seconds): 0.77
+	System time (seconds): 0.11
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.89
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 281368
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 69851
+	Voluntary context switches: 1
+	Involuntary context switches: 6
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 200
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark         5.02 s  (    1   call,   5.02  s/call {min5.02s,Max5.02s})
+  => Time.Alignment       5.01 s  ( 99.82 %) (  305  calls,  16.41 ms/call {min219ns,Max953.11ms})
+[Accuracy]
+ => Alignments.Correct      305.00 alg         (100.00 %) (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+ => Score.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => Score.Total           305.00 score uds.             (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+     => Score.Diff            0.00 score uds.  (  0.00 %) (samples=0,--n/a--)}
+ => CIGAR.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => CIGAR.Matches         154.20 Kbases      ( 87.45 %) (samples=154K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Mismatches       15.33 Kbases      (  8.69 %) (samples=15K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Insertions        8.72 Kbases      (  4.95 %) (samples=8K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Deletions         6.80 Kbases      (  3.86 %) (samples=6K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.affine2p.alg -a gap-affine2p-wfa --check=correct"
+	User time (seconds): 4.47
+	System time (seconds): 0.60
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:05.07
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 1783316
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 445278
+	Voluntary context switches: 1
+	Involuntary context switches: 31
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 192
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark       477.44 ms (    1   call, 477.44 ms/call {min477.44ms,Max477.44ms})
+  => Time.Alignment     468.77 ms ( 98.18 %) (  305  calls,   1.54 ms/call {min221ns,Max69.00ms})
+[Accuracy]
+ => Alignments.Correct      305.00 alg         (100.00 %) (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+ => Score.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => Score.Total           305.00 score uds.             (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+     => Score.Diff            0.00 score uds.  (  0.00 %) (samples=0,--n/a--)}
+ => CIGAR.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => CIGAR.Matches         149.12 Kbases      ( 84.57 %) (samples=149K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Mismatches       21.77 Kbases      ( 12.35 %) (samples=21K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Insertions        7.37 Kbases      (  4.18 %) (samples=7K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Deletions         5.44 Kbases      (  3.09 %) (samples=5K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.affine.p0.alg -a gap-affine-wfa --check=correct --affine-penalties=0,1,2,1"
+	User time (seconds): 0.42
+	System time (seconds): 0.05
+	Percent of CPU this job got: 98%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.48
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 130112
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 31990
+	Voluntary context switches: 1
+	Involuntary context switches: 9
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 192
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark       559.57 ms (    1   call, 559.57 ms/call {min559.57ms,Max559.57ms})
+  => Time.Alignment     550.38 ms ( 98.36 %) (  305  calls,   1.80 ms/call {min221ns,Max94.70ms})
+[Accuracy]
+ => Alignments.Correct      305.00 alg         (100.00 %) (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+ => Score.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => Score.Total           305.00 score uds.             (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+     => Score.Diff            0.00 score uds.  (  0.00 %) (samples=0,--n/a--)}
+ => CIGAR.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => CIGAR.Matches         155.91 Kbases      ( 88.42 %) (samples=155K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Mismatches       13.53 Kbases      (  7.67 %) (samples=13K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Insertions        8.82 Kbases      (  5.00 %) (samples=8K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Deletions         6.90 Kbases      (  3.91 %) (samples=6K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.affine.p1.alg -a gap-affine-wfa --check=correct --affine-penalties=0,3,1,4"
+	User time (seconds): 0.50
+	System time (seconds): 0.06
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.56
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 158428
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 39085
+	Voluntary context switches: 1
+	Involuntary context switches: 2
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 192
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark         1.28 s  (    1   call,   1.28  s/call {min1.28s,Max1.28s})
+  => Time.Alignment       1.27 s  ( 99.27 %) (  305  calls,   4.18 ms/call {min215ns,Max199.51ms})
+[Accuracy]
+ => Alignments.Correct      305.00 alg         (100.00 %) (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+ => Score.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => Score.Total           305.00 score uds.             (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+     => Score.Diff            0.00 score uds.  (  0.00 %) (samples=0,--n/a--)}
+ => CIGAR.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => CIGAR.Matches         158.52 Kbases      ( 89.90 %) (samples=158K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Mismatches        8.85 Kbases      (  5.02 %) (samples=8K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Insertions       10.89 Kbases      (  6.18 %) (samples=10K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Deletions         8.97 Kbases      (  5.09 %) (samples=8K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.affine.p2.alg -a gap-affine-wfa --check=correct --affine-penalties=0,5,3,2"
+	User time (seconds): 1.16
+	System time (seconds): 0.13
+	Percent of CPU this job got: 100%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.29
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 367204
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 91254
+	Voluntary context switches: 1
+	Involuntary context switches: 3
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 208
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark         1.72 s  (    1   call,   1.72  s/call {min1.72s,Max1.72s})
+  => Time.Alignment       1.71 s  ( 99.45 %) (  305  calls,   5.62 ms/call {min231ns,Max301.96ms})
+[Accuracy]
+ => Alignments.Correct      305.00 alg         (100.00 %) (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+ => Score.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => Score.Total           305.00 score uds.             (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+     => Score.Diff            0.00 score uds.  (  0.00 %) (samples=0,--n/a--)}
+ => CIGAR.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => CIGAR.Matches         159.13 Kbases      ( 90.25 %) (samples=159K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Mismatches        7.94 Kbases      (  4.50 %) (samples=7K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Insertions       11.19 Kbases      (  6.34 %) (samples=11K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Deletions         9.26 Kbases      (  5.25 %) (samples=9K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.affine.p3.alg -a gap-affine-wfa --check=correct --affine-penalties=-5,1,2,1"
+	User time (seconds): 1.54
+	System time (seconds): 0.20
+	Percent of CPU this job got: 100%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.74
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 566248
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 141034
+	Voluntary context switches: 1
+	Involuntary context switches: 6
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 208
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark       780.57 ms (    1   call, 780.57 ms/call {min780.57ms,Max780.57ms})
+  => Time.Alignment     771.49 ms ( 98.84 %) (  305  calls,   2.53 ms/call {min222ns,Max128.24ms})
+[Accuracy]
+ => Alignments.Correct      305.00 alg         (100.00 %) (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+ => Score.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => Score.Total           305.00 score uds.             (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+     => Score.Diff            0.00 score uds.  (  0.00 %) (samples=0,--n/a--)}
+ => CIGAR.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => CIGAR.Matches         157.73 Kbases      ( 89.45 %) (samples=157K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Mismatches       10.79 Kbases      (  6.12 %) (samples=10K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Insertions        9.74 Kbases      (  5.52 %) (samples=9K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Deletions         7.82 Kbases      (  4.43 %) (samples=7K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.affine.p4.alg -a gap-affine-wfa --check=correct --affine-penalties=-2,3,1,4"
+	User time (seconds): 0.70
+	System time (seconds): 0.08
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.79
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 218348
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 54046
+	Voluntary context switches: 1
+	Involuntary context switches: 3
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 208
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark         2.42 s  (    1   call,   2.42  s/call {min2.42s,Max2.42s})
+  => Time.Alignment       2.41 s  ( 99.63 %) (  305  calls,   7.89 ms/call {min234ns,Max432.94ms})
+[Accuracy]
+ => Alignments.Correct      305.00 alg         (100.00 %) (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+ => Score.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => Score.Total           305.00 score uds.             (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+     => Score.Diff            0.00 score uds.  (  0.00 %) (samples=0,--n/a--)}
+ => CIGAR.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => CIGAR.Matches         159.15 Kbases      ( 90.25 %) (samples=159K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Mismatches        7.66 Kbases      (  4.35 %) (samples=7K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Insertions       11.45 Kbases      (  6.49 %) (samples=11K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Deletions         9.53 Kbases      (  5.40 %) (samples=9K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.affine.p5.alg -a gap-affine-wfa --check=correct --affine-penalties=-3,5,3,2"
+	User time (seconds): 2.23
+	System time (seconds): 0.21
+	Percent of CPU this job got: 100%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:02.44
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 827460
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 206351
+	Voluntary context switches: 1
+	Involuntary context switches: 12
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 200
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark       126.59 ms (    1   call, 126.59 ms/call {min126.59ms,Max126.59ms})
+  => Time.Alignment     117.41 ms ( 92.75 %) (  305  calls, 384.95 us/call {min219ns,Max44.08ms})
+[Accuracy]
+ => Alignments.Correct      305.00 alg         (100.00 %) (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+ => Score.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => Score.Total           305.00 score uds.             (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+     => Score.Diff            0.00 score uds.  (  0.00 %) (samples=0,--n/a--)}
+ => CIGAR.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => CIGAR.Matches         154.21 Kbases      ( 87.45 %) (samples=154K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Mismatches       15.33 Kbases      (  8.69 %) (samples=15K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Insertions        8.72 Kbases      (  4.95 %) (samples=8K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Deletions         6.80 Kbases      (  3.86 %) (samples=6K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.affine.wfapt0.alg -a gap-affine-wfa --check=correct --wfa-heuristic=wfa-adaptive --wfa-heuristic-parameters=10,50,1"
+	User time (seconds): 0.09
+	System time (seconds): 0.03
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.13
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 61060
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 14714
+	Voluntary context switches: 1
+	Involuntary context switches: 1
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 200
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark       752.04 ms (    1   call, 752.04 ms/call {min752.04ms,Max752.04ms})
+  => Time.Alignment     742.45 ms ( 98.73 %) (  305  calls,   2.43 ms/call {min242ns,Max117.83ms})
+[Accuracy]
+ => Alignments.Correct      305.00 alg         (100.00 %) (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+ => Score.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => Score.Total           305.00 score uds.             (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+     => Score.Diff            0.00 score uds.  (  0.00 %) (samples=0,--n/a--)}
+ => CIGAR.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => CIGAR.Matches         154.21 Kbases      ( 87.45 %) (samples=154K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Mismatches       15.33 Kbases      (  8.69 %) (samples=15K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Insertions        8.72 Kbases      (  4.95 %) (samples=8K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Deletions         6.80 Kbases      (  3.86 %) (samples=6K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.affine.wfapt1.alg -a gap-affine-wfa --check=correct --wfa-heuristic=wfa-adaptive --wfa-heuristic-parameters=10,50,10"
+	User time (seconds): 0.67
+	System time (seconds): 0.08
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.76
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 207436
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 51351
+	Voluntary context switches: 1
+	Involuntary context switches: 8
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 192
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark        72.10 ms (    1   call,  72.10 ms/call {min72.10ms,Max72.10ms})
+  => Time.Alignment      71.73 ms ( 99.49 %) (  305  calls, 235.19 us/call {min212ns,Max7.03ms})
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.score.indel.alg -a indel-wfa --wfa-score-only"
+	User time (seconds): 0.07
+	System time (seconds): 0.00
+	Percent of CPU this job got: 98%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.07
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 2824
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 172
+	Voluntary context switches: 1
+	Involuntary context switches: 0
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark       108.71 ms (    1   call, 108.71 ms/call {min108.71ms,Max108.71ms})
+  => Time.Alignment     107.76 ms ( 99.12 %) (  305  calls, 353.30 us/call {min193ns,Max33.65ms})
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.score.edit.alg -a edit-wfa --wfa-score-only"
+	User time (seconds): 0.10
+	System time (seconds): 0.00
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.10
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 2748
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 160
+	Voluntary context switches: 1
+	Involuntary context switches: 1
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark       696.89 ms (    1   call, 696.89 ms/call {min696.89ms,Max696.89ms})
+  => Time.Alignment     696.39 ms ( 99.93 %) (  305  calls,   2.28 ms/call {min204ns,Max72.51ms})
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.score.affine.alg -a gap-affine-wfa --wfa-score-only"
+	User time (seconds): 0.69
+	System time (seconds): 0.00
+	Percent of CPU this job got: 100%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.69
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 4672
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 624
+	Voluntary context switches: 1
+	Involuntary context switches: 4
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark         4.01 s  (    1   call,   4.01  s/call {min4.01s,Max4.01s})
+  => Time.Alignment       4.01 s  ( 99.99 %) (  305  calls,  13.15 ms/call {min232ns,Max401.44ms})
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.score.affine2p.alg -a gap-affine2p-wfa --wfa-score-only"
+	User time (seconds): 4.00
+	System time (seconds): 0.01
+	Percent of CPU this job got: 100%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:04.01
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 28024
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 6474
+	Voluntary context switches: 1
+	Involuntary context switches: 21
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark       306.86 ms (    1   call, 306.86 ms/call {min306.86ms,Max306.86ms})
+  => Time.Alignment     306.47 ms ( 99.87 %) (  305  calls,   1.00 ms/call {min224ns,Max32.42ms})
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.score.affine.p0.alg -a gap-affine-wfa --wfa-score-only --affine-penalties=0,1,2,1"
+	User time (seconds): 0.30
+	System time (seconds): 0.00
+	Percent of CPU this job got: 100%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.30
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 3832
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 404
+	Voluntary context switches: 1
+	Involuntary context switches: 0
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 16
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark       378.32 ms (    1   call, 378.32 ms/call {min378.32ms,Max378.32ms})
+  => Time.Alignment     377.92 ms ( 99.89 %) (  305  calls,   1.24 ms/call {min209ns,Max38.43ms})
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.score.affine.p1.alg -a gap-affine-wfa --wfa-score-only --affine-penalties=0,3,1,4"
+	User time (seconds): 0.37
+	System time (seconds): 0.00
+	Percent of CPU this job got: 100%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.37
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 3220
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 301
+	Voluntary context switches: 1
+	Involuntary context switches: 1
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark       996.62 ms (    1   call, 996.62 ms/call {min996.62ms,Max996.62ms})
+  => Time.Alignment     996.12 ms ( 99.95 %) (  305  calls,   3.27 ms/call {min203ns,Max99.58ms})
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.score.affine.p2.alg -a gap-affine-wfa --wfa-score-only --affine-penalties=0,5,3,2"
+	User time (seconds): 0.99
+	System time (seconds): 0.00
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.99
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 4936
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 701
+	Voluntary context switches: 1
+	Involuntary context switches: 3
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark         1.18 s  (    1   call,   1.18  s/call {min1.18s,Max1.18s})
+  => Time.Alignment       1.18 s  ( 99.95 %) (  305  calls,   3.87 ms/call {min208ns,Max113.26ms})
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.score.affine.p3.alg -a gap-affine-wfa --wfa-score-only --affine-penalties=-5,1,2,1"
+	User time (seconds): 1.18
+	System time (seconds): 0.00
+	Percent of CPU this job got: 100%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.18
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 4796
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 664
+	Voluntary context switches: 1
+	Involuntary context switches: 6
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark       505.75 ms (    1   call, 505.75 ms/call {min505.75ms,Max505.75ms})
+  => Time.Alignment     504.68 ms ( 99.79 %) (  305  calls,   1.65 ms/call {min206ns,Max49.99ms})
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.score.affine.p4.alg -a gap-affine-wfa --wfa-score-only --affine-penalties=-2,3,1,4"
+	User time (seconds): 0.50
+	System time (seconds): 0.00
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.50
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 3800
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 415
+	Voluntary context switches: 1
+	Involuntary context switches: 5
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark         1.71 s  (    1   call,   1.71  s/call {min1.71s,Max1.71s})
+  => Time.Alignment       1.71 s  ( 99.97 %) (  305  calls,   5.60 ms/call {min205ns,Max163.75ms})
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.score.affine.p5.alg -a gap-affine-wfa --wfa-score-only --affine-penalties=-3,5,3,2"
+	User time (seconds): 1.71
+	System time (seconds): 0.00
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.71
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 6932
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 1197
+	Voluntary context switches: 2
+	Involuntary context switches: 8
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark        50.20 ms (    1   call,  50.20 ms/call {min50.20ms,Max50.20ms})
+  => Time.Alignment      49.68 ms ( 98.96 %) (  305  calls, 162.88 us/call {min216ns,Max3.70ms})
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.score.affine.wfapt0.alg -a gap-affine-wfa --wfa-score-only --wfa-heuristic=wfa-adaptive --wfa-heuristic-parameters=10,50,1"
+	User time (seconds): 0.04
+	System time (seconds): 0.00
+	Percent of CPU this job got: 98%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.05
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 2868
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 149
+	Voluntary context switches: 1
+	Involuntary context switches: 0
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark       562.10 ms (    1   call, 562.10 ms/call {min562.10ms,Max562.10ms})
+  => Time.Alignment     561.37 ms ( 99.87 %) (  305  calls,   1.84 ms/call {min209ns,Max60.15ms})
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.score.affine.wfapt1.alg -a gap-affine-wfa --wfa-score-only --wfa-heuristic=wfa-adaptive --wfa-heuristic-parameters=10,50,10"
+	User time (seconds): 0.55
+	System time (seconds): 0.00
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.56
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 4072
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 472
+	Voluntary context switches: 1
+	Involuntary context switches: 3
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark       112.84 ms (    1   call, 112.84 ms/call {min112.84ms,Max112.84ms})
+  => Time.Alignment     103.38 ms ( 91.62 %) (  305  calls, 338.95 us/call {min240ns,Max11.05ms})
+[Accuracy]
+ => Alignments.Correct      305.00 alg         (100.00 %) (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+ => Score.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => Score.Total           305.00 score uds.             (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+     => Score.Diff            0.00 score uds.  (  0.00 %) (samples=0,--n/a--)}
+ => CIGAR.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => CIGAR.Matches         159.18 Kbases      ( 90.27 %) (samples=159K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Mismatches        0.00 bases       (  0.00 %) (samples=0,--n/a--)}
+   => CIGAR.Insertions       19.08 Kbases      ( 10.82 %) (samples=19K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Deletions        17.16 Kbases      (  9.73 %) (samples=17K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.pb.indel.alg -a indel-wfa --wfa-memory-mode=med --check=correct"
+	User time (seconds): 0.11
+	System time (seconds): 0.00
+	Percent of CPU this job got: 100%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.11
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 4160
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 535
+	Voluntary context switches: 1
+	Involuntary context switches: 2
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 248
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark       122.22 ms (    1   call, 122.22 ms/call {min122.22ms,Max122.22ms})
+  => Time.Alignment     113.81 ms ( 93.12 %) (  305  calls, 373.16 us/call {min243ns,Max13.87ms})
+[Accuracy]
+ => Alignments.Correct      305.00 alg         (100.00 %) (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+ => Score.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => Score.Total           305.00 score uds.             (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+     => Score.Diff            0.00 score uds.  (  0.00 %) (samples=0,--n/a--)}
+ => CIGAR.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => CIGAR.Matches         158.32 Kbases      ( 89.78 %) (samples=158K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Mismatches        9.63 Kbases      (  5.46 %) (samples=9K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Insertions       10.30 Kbases      (  5.84 %) (samples=10K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Deletions         8.38 Kbases      (  4.75 %) (samples=8K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.pb.edit.alg -a edit-wfa --wfa-memory-mode=med --check=correct"
+	User time (seconds): 0.12
+	System time (seconds): 0.00
+	Percent of CPU this job got: 100%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.12
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 4016
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 483
+	Voluntary context switches: 1
+	Involuntary context switches: 0
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 208
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark         1.92 s  (    1   call,   1.92  s/call {min1.92s,Max1.92s})
+  => Time.Alignment       1.92 s  ( 99.59 %) (  305  calls,   6.28 ms/call {min257ns,Max202.72ms})
+[Accuracy]
+ => Alignments.Correct      305.00 alg         (100.00 %) (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+ => Score.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => Score.Total           305.00 score uds.             (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+     => Score.Diff            0.00 score uds.  (  0.00 %) (samples=0,--n/a--)}
+ => CIGAR.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => CIGAR.Matches         154.21 Kbases      ( 87.45 %) (samples=154K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Mismatches       15.33 Kbases      (  8.69 %) (samples=15K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Insertions        8.72 Kbases      (  4.95 %) (samples=8K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Deletions         6.80 Kbases      (  3.86 %) (samples=6K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.pb.affine.alg -a gap-affine-wfa --wfa-memory-mode=med --check=correct"
+	User time (seconds): 1.90
+	System time (seconds): 0.01
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.92
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 72816
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 17803
+	Voluntary context switches: 1
+	Involuntary context switches: 21
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 192
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark        13.34 s  (    1   call,  13.34  s/call {min13.34s,Max13.34s})
+  => Time.Alignment      13.33 s  ( 99.93 %) (  305  calls,  43.70 ms/call {min272ns,Max1.42s})
+[Accuracy]
+ => Alignments.Correct      305.00 alg         (100.00 %) (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+ => Score.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => Score.Total           305.00 score uds.             (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+     => Score.Diff            0.00 score uds.  (  0.00 %) (samples=0,--n/a--)}
+ => CIGAR.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => CIGAR.Matches         154.20 Kbases      ( 87.45 %) (samples=154K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Mismatches       15.33 Kbases      (  8.69 %) (samples=15K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Insertions        8.72 Kbases      (  4.95 %) (samples=8K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Deletions         6.80 Kbases      (  3.86 %) (samples=6K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.pb.affine2p.alg -a gap-affine2p-wfa --wfa-memory-mode=med --check=correct"
+	User time (seconds): 13.19
+	System time (seconds): 0.15
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:13.35
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 414736
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 104227
+	Voluntary context switches: 1
+	Involuntary context switches: 52
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 200
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark       789.28 ms (    1   call, 789.28 ms/call {min789.28ms,Max789.28ms})
+  => Time.Alignment     779.15 ms ( 98.72 %) (  305  calls,   2.55 ms/call {min265ns,Max84.46ms})
+[Accuracy]
+ => Alignments.Correct      305.00 alg         (100.00 %) (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+ => Score.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => Score.Total           305.00 score uds.             (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+     => Score.Diff            0.00 score uds.  (  0.00 %) (samples=0,--n/a--)}
+ => CIGAR.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => CIGAR.Matches         149.12 Kbases      ( 84.57 %) (samples=149K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Mismatches       21.77 Kbases      ( 12.35 %) (samples=21K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Insertions        7.37 Kbases      (  4.18 %) (samples=7K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Deletions         5.44 Kbases      (  3.09 %) (samples=5K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.pb.affine.p0.alg -a gap-affine-wfa --wfa-memory-mode=med --check=correct --affine-penalties=0,1,2,1"
+	User time (seconds): 0.76
+	System time (seconds): 0.02
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.79
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 30840
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 7261
+	Voluntary context switches: 3
+	Involuntary context switches: 3
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 184
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark       740.59 ms (    1   call, 740.59 ms/call {min740.59ms,Max740.59ms})
+  => Time.Alignment     732.71 ms ( 98.94 %) (  305  calls,   2.40 ms/call {min254ns,Max79.95ms})
+[Accuracy]
+ => Alignments.Correct      305.00 alg         (100.00 %) (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+ => Score.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => Score.Total           305.00 score uds.             (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+     => Score.Diff            0.00 score uds.  (  0.00 %) (samples=0,--n/a--)}
+ => CIGAR.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => CIGAR.Matches         155.91 Kbases      ( 88.42 %) (samples=155K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Mismatches       13.53 Kbases      (  7.67 %) (samples=13K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Insertions        8.82 Kbases      (  5.00 %) (samples=8K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Deletions         6.90 Kbases      (  3.91 %) (samples=6K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.pb.affine.p1.alg -a gap-affine-wfa --wfa-memory-mode=med --check=correct --affine-penalties=0,3,1,4"
+	User time (seconds): 0.73
+	System time (seconds): 0.00
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.74
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 32132
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 7543
+	Voluntary context switches: 1
+	Involuntary context switches: 4
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 192
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark         2.18 s  (    1   call,   2.18  s/call {min2.18s,Max2.18s})
+  => Time.Alignment       2.17 s  ( 99.63 %) (  305  calls,   7.11 ms/call {min248ns,Max233.83ms})
+[Accuracy]
+ => Alignments.Correct      305.00 alg         (100.00 %) (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+ => Score.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => Score.Total           305.00 score uds.             (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+     => Score.Diff            0.00 score uds.  (  0.00 %) (samples=0,--n/a--)}
+ => CIGAR.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => CIGAR.Matches         158.52 Kbases      ( 89.90 %) (samples=158K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Mismatches        8.85 Kbases      (  5.02 %) (samples=8K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Insertions       10.89 Kbases      (  6.18 %) (samples=10K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Deletions         8.97 Kbases      (  5.09 %) (samples=8K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.pb.affine.p2.alg -a gap-affine-wfa --wfa-memory-mode=med --check=correct --affine-penalties=0,5,3,2"
+	User time (seconds): 2.13
+	System time (seconds): 0.04
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:02.18
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 91324
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 22466
+	Voluntary context switches: 1
+	Involuntary context switches: 5
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 200
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark         2.53 s  (    1   call,   2.53  s/call {min2.53s,Max2.53s})
+  => Time.Alignment       2.53 s  ( 99.68 %) (  305  calls,   8.28 ms/call {min280ns,Max252.99ms})
+[Accuracy]
+ => Alignments.Correct      305.00 alg         (100.00 %) (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+ => Score.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => Score.Total           305.00 score uds.             (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+     => Score.Diff            0.00 score uds.  (  0.00 %) (samples=0,--n/a--)}
+ => CIGAR.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => CIGAR.Matches         159.13 Kbases      ( 90.25 %) (samples=159K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Mismatches        7.94 Kbases      (  4.50 %) (samples=7K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Insertions       11.19 Kbases      (  6.34 %) (samples=11K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Deletions         9.26 Kbases      (  5.25 %) (samples=9K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.pb.affine.p3.alg -a gap-affine-wfa --wfa-memory-mode=med --check=correct --affine-penalties=-5,1,2,1"
+	User time (seconds): 2.50
+	System time (seconds): 0.02
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:02.53
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 60948
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 14856
+	Voluntary context switches: 2
+	Involuntary context switches: 12
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 208
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark         1.40 s  (    1   call,   1.40  s/call {min1.40s,Max1.40s})
+  => Time.Alignment       1.39 s  ( 99.40 %) (  305  calls,   4.57 ms/call {min259ns,Max143.76ms})
+[Accuracy]
+ => Alignments.Correct      305.00 alg         (100.00 %) (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+ => Score.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => Score.Total           305.00 score uds.             (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+     => Score.Diff            0.00 score uds.  (  0.00 %) (samples=0,--n/a--)}
+ => CIGAR.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => CIGAR.Matches         157.73 Kbases      ( 89.45 %) (samples=157K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Mismatches       10.79 Kbases      (  6.12 %) (samples=10K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Insertions        9.74 Kbases      (  5.52 %) (samples=9K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Deletions         7.82 Kbases      (  4.43 %) (samples=7K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.pb.affine.p4.alg -a gap-affine-wfa --wfa-memory-mode=med --check=correct --affine-penalties=-2,3,1,4"
+	User time (seconds): 1.38
+	System time (seconds): 0.01
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.40
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 44068
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 10561
+	Voluntary context switches: 1
+	Involuntary context switches: 23
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 200
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark         3.84 s  (    1   call,   3.84  s/call {min3.84s,Max3.84s})
+  => Time.Alignment       3.83 s  ( 99.78 %) (  305  calls,  12.57 ms/call {min264ns,Max394.30ms})
+[Accuracy]
+ => Alignments.Correct      305.00 alg         (100.00 %) (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+ => Score.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => Score.Total           305.00 score uds.             (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+     => Score.Diff            0.00 score uds.  (  0.00 %) (samples=0,--n/a--)}
+ => CIGAR.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => CIGAR.Matches         159.15 Kbases      ( 90.25 %) (samples=159K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Mismatches        7.66 Kbases      (  4.35 %) (samples=7K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Insertions       11.45 Kbases      (  6.49 %) (samples=11K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Deletions         9.53 Kbases      (  5.40 %) (samples=9K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.pb.affine.p5.alg -a gap-affine-wfa --wfa-memory-mode=med --check=correct --affine-penalties=-3,5,3,2"
+	User time (seconds): 3.81
+	System time (seconds): 0.03
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:03.84
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 89660
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 22159
+	Voluntary context switches: 1
+	Involuntary context switches: 7
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 200
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark       133.85 ms (    1   call, 133.85 ms/call {min133.85ms,Max133.85ms})
+  => Time.Alignment     124.98 ms ( 93.37 %) (  305  calls, 409.76 us/call {min258ns,Max16.05ms})
+[Accuracy]
+ => Alignments.Correct      305.00 alg         (100.00 %) (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+ => Score.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => Score.Total           305.00 score uds.             (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+     => Score.Diff            0.00 score uds.  (  0.00 %) (samples=0,--n/a--)}
+ => CIGAR.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => CIGAR.Matches         154.21 Kbases      ( 87.45 %) (samples=154K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Mismatches       15.33 Kbases      (  8.69 %) (samples=15K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Insertions        8.72 Kbases      (  4.95 %) (samples=8K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Deletions         6.80 Kbases      (  3.86 %) (samples=6K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.pb.affine.wfapt0.alg -a gap-affine-wfa --wfa-memory-mode=med --check=correct --wfa-heuristic=wfa-adaptive --wfa-heuristic-parameters=10,50,1"
+	User time (seconds): 0.13
+	System time (seconds): 0.00
+	Percent of CPU this job got: 96%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.13
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 3880
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 435
+	Voluntary context switches: 1
+	Involuntary context switches: 7
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 192
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark         1.42 s  (    1   call,   1.42  s/call {min1.42s,Max1.42s})
+  => Time.Alignment       1.42 s  ( 99.43 %) (  305  calls,   4.64 ms/call {min255ns,Max148.35ms})
+[Accuracy]
+ => Alignments.Correct      305.00 alg         (100.00 %) (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+ => Score.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => Score.Total           305.00 score uds.             (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+     => Score.Diff            0.00 score uds.  (  0.00 %) (samples=0,--n/a--)}
+ => CIGAR.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => CIGAR.Matches         154.21 Kbases      ( 87.45 %) (samples=154K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Mismatches       15.33 Kbases      (  8.69 %) (samples=15K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Insertions        8.72 Kbases      (  4.95 %) (samples=8K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Deletions         6.80 Kbases      (  3.86 %) (samples=6K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.pb.affine.wfapt1.alg -a gap-affine-wfa --wfa-memory-mode=med --check=correct --wfa-heuristic=wfa-adaptive --wfa-heuristic-parameters=10,50,10"
+	User time (seconds): 1.41
+	System time (seconds): 0.01
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.42
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 48948
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 11777
+	Voluntary context switches: 1
+	Involuntary context switches: 4
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 192
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark       143.27 ms (    1   call, 143.27 ms/call {min143.27ms,Max143.27ms})
+  => Time.Alignment     133.99 ms ( 93.52 %) (  305  calls, 439.30 us/call {min710ns,Max24.38ms})
+[Accuracy]
+ => Alignments.Correct      305.00 alg         (100.00 %) (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+ => Score.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => Score.Total           305.00 score uds.             (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+     => Score.Diff            0.00 score uds.  (  0.00 %) (samples=0,--n/a--)}
+ => CIGAR.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => CIGAR.Matches         159.18 Kbases      ( 90.27 %) (samples=159K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Mismatches        0.00 bases       (  0.00 %) (samples=0,--n/a--)}
+   => CIGAR.Insertions       19.08 Kbases      ( 10.82 %) (samples=19K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Deletions        17.16 Kbases      (  9.73 %) (samples=17K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.biwfa.indel.alg -a indel-wfa --wfa-memory-mode=ultralow --check=correct"
+	User time (seconds): 0.13
+	System time (seconds): 0.00
+	Percent of CPU this job got: 98%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.14
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 3548
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 330
+	Voluntary context switches: 1
+	Involuntary context switches: 6
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 248
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark        98.48 ms (    1   call,  98.48 ms/call {min98.48ms,Max98.48ms})
+  => Time.Alignment      90.28 ms ( 91.67 %) (  305  calls, 296.00 us/call {min668ns,Max8.77ms})
+[Accuracy]
+ => Alignments.Correct      305.00 alg         (100.00 %) (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+ => Score.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => Score.Total           305.00 score uds.             (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+     => Score.Diff            0.00 score uds.  (  0.00 %) (samples=0,--n/a--)}
+ => CIGAR.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => CIGAR.Matches         158.32 Kbases      ( 89.78 %) (samples=158K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Mismatches        9.64 Kbases      (  5.47 %) (samples=9K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Insertions       10.30 Kbases      (  5.84 %) (samples=10K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Deletions         8.38 Kbases      (  4.75 %) (samples=8K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.biwfa.edit.alg -a edit-wfa --wfa-memory-mode=ultralow --check=correct"
+	User time (seconds): 0.09
+	System time (seconds): 0.00
+	Percent of CPU this job got: 98%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.09
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 3348
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 328
+	Voluntary context switches: 1
+	Involuntary context switches: 2
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 208
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark         1.00 s  (    1   call,   1.00  s/call {min1.00s,Max1.00s})
+  => Time.Alignment     995.44 ms ( 99.19 %) (  305  calls,   3.26 ms/call {min772ns,Max94.22ms})
+[Accuracy]
+ => Alignments.Correct      305.00 alg         (100.00 %) (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+ => Score.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => Score.Total           305.00 score uds.             (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+     => Score.Diff            0.00 score uds.  (  0.00 %) (samples=0,--n/a--)}
+ => CIGAR.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => CIGAR.Matches         154.14 Kbases      ( 87.42 %) (samples=154K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Mismatches       15.42 Kbases      (  8.74 %) (samples=15K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Insertions        8.70 Kbases      (  4.93 %) (samples=8K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Deletions         6.77 Kbases      (  3.84 %) (samples=6K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.biwfa.affine.alg -a gap-affine-wfa --wfa-memory-mode=ultralow --check=correct"
+	User time (seconds): 1.00
+	System time (seconds): 0.00
+	Percent of CPU this job got: 100%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.00
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 5212
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 749
+	Voluntary context switches: 1
+	Involuntary context switches: 4
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 192
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark         7.66 s  (    1   call,   7.66  s/call {min7.66s,Max7.66s})
+  => Time.Alignment       7.65 s  ( 99.87 %) (  305  calls,  25.08 ms/call {min726ns,Max714.58ms})
+[Accuracy]
+ => Alignments.Correct      305.00 alg         (100.00 %) (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+ => Score.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => Score.Total           305.00 score uds.             (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+     => Score.Diff            0.00 score uds.  (  0.00 %) (samples=0,--n/a--)}
+ => CIGAR.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => CIGAR.Matches         154.14 Kbases      ( 87.42 %) (samples=154K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Mismatches       15.42 Kbases      (  8.74 %) (samples=15K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Insertions        8.70 Kbases      (  4.93 %) (samples=8K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Deletions         6.77 Kbases      (  3.84 %) (samples=6K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.biwfa.affine2p.alg -a gap-affine2p-wfa --wfa-memory-mode=ultralow --check=correct"
+	User time (seconds): 7.63
+	System time (seconds): 0.02
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:07.66
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 37140
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 8769
+	Voluntary context switches: 1
+	Involuntary context switches: 34
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 192
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark       406.85 ms (    1   call, 406.85 ms/call {min406.85ms,Max406.85ms})
+  => Time.Alignment     399.12 ms ( 98.10 %) (  305  calls,   1.31 ms/call {min743ns,Max39.39ms})
+[Accuracy]
+ => Alignments.Correct      305.00 alg         (100.00 %) (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+ => Score.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => Score.Total           305.00 score uds.             (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+     => Score.Diff            0.00 score uds.  (  0.00 %) (samples=0,--n/a--)}
+ => CIGAR.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => CIGAR.Matches         149.08 Kbases      ( 84.55 %) (samples=149K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Mismatches       21.82 Kbases      ( 12.37 %) (samples=21K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Insertions        7.36 Kbases      (  4.17 %) (samples=7K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Deletions         5.43 Kbases      (  3.08 %) (samples=5K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.biwfa.affine.p0.alg -a gap-affine-wfa --wfa-memory-mode=ultralow --check=correct --affine-penalties=0,1,2,1"
+	User time (seconds): 0.40
+	System time (seconds): 0.00
+	Percent of CPU this job got: 100%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.40
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 4812
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 715
+	Voluntary context switches: 1
+	Involuntary context switches: 2
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 192
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark       579.41 ms (    1   call, 579.41 ms/call {min579.41ms,Max579.41ms})
+  => Time.Alignment     571.11 ms ( 98.57 %) (  305  calls,   1.87 ms/call {min864ns,Max59.33ms})
+[Accuracy]
+ => Alignments.Correct      305.00 alg         (100.00 %) (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+ => Score.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => Score.Total           305.00 score uds.             (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+     => Score.Diff            0.00 score uds.  (  0.00 %) (samples=0,--n/a--)}
+ => CIGAR.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => CIGAR.Matches         155.88 Kbases      ( 88.40 %) (samples=155K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Mismatches       13.57 Kbases      (  7.69 %) (samples=13K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Insertions        8.81 Kbases      (  4.99 %) (samples=8K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Deletions         6.88 Kbases      (  3.90 %) (samples=6K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.biwfa.affine.p1.alg -a gap-affine-wfa --wfa-memory-mode=ultralow --check=correct --affine-penalties=0,3,1,4"
+	User time (seconds): 0.58
+	System time (seconds): 0.00
+	Percent of CPU this job got: 100%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.58
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 4800
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 684
+	Voluntary context switches: 1
+	Involuntary context switches: 0
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 192
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark         1.40 s  (    1   call,   1.40  s/call {min1.40s,Max1.40s})
+  => Time.Alignment       1.38 s  ( 99.17 %) (  305  calls,   4.54 ms/call {min696ns,Max129.44ms})
+[Accuracy]
+ => Alignments.Correct      305.00 alg         (100.00 %) (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+ => Score.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => Score.Total           305.00 score uds.             (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+     => Score.Diff            0.00 score uds.  (  0.00 %) (samples=0,--n/a--)}
+ => CIGAR.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => CIGAR.Matches         158.53 Kbases      ( 89.91 %) (samples=158K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Mismatches        8.81 Kbases      (  5.00 %) (samples=8K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Insertions       10.91 Kbases      (  6.19 %) (samples=10K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Deletions         8.99 Kbases      (  5.10 %) (samples=8K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.biwfa.affine.p2.alg -a gap-affine-wfa --wfa-memory-mode=ultralow --check=correct --affine-penalties=0,5,3,2"
+	User time (seconds): 1.37
+	System time (seconds): 0.01
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.39
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 5892
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 986
+	Voluntary context switches: 1
+	Involuntary context switches: 13
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 200
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark         1.76 s  (    1   call,   1.76  s/call {min1.76s,Max1.76s})
+  => Time.Alignment       1.75 s  ( 99.51 %) (  305  calls,   5.73 ms/call {min802ns,Max156.88ms})
+[Accuracy]
+ => Alignments.Correct      305.00 alg         (100.00 %) (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+ => Score.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => Score.Total           305.00 score uds.             (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+     => Score.Diff            0.00 score uds.  (  0.00 %) (samples=0,--n/a--)}
+ => CIGAR.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => CIGAR.Matches         159.13 Kbases      ( 90.24 %) (samples=159K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Mismatches        7.95 Kbases      (  4.51 %) (samples=7K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Insertions       11.18 Kbases      (  6.34 %) (samples=11K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Deletions         9.26 Kbases      (  5.25 %) (samples=9K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.biwfa.affine.p3.alg -a gap-affine-wfa --wfa-memory-mode=ultralow --check=correct --affine-penalties=-5,1,2,1"
+	User time (seconds): 1.75
+	System time (seconds): 0.00
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.75
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 6424
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 1097
+	Voluntary context switches: 1
+	Involuntary context switches: 10
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 208
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark       898.58 ms (    1   call, 898.58 ms/call {min898.58ms,Max898.58ms})
+  => Time.Alignment     890.32 ms ( 99.08 %) (  305  calls,   2.92 ms/call {min722ns,Max82.91ms})
+[Accuracy]
+ => Alignments.Correct      305.00 alg         (100.00 %) (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+ => Score.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => Score.Total           305.00 score uds.             (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+     => Score.Diff            0.00 score uds.  (  0.00 %) (samples=0,--n/a--)}
+ => CIGAR.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => CIGAR.Matches         157.73 Kbases      ( 89.45 %) (samples=157K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Mismatches       10.79 Kbases      (  6.12 %) (samples=10K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Insertions        9.74 Kbases      (  5.52 %) (samples=9K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Deletions         7.81 Kbases      (  4.43 %) (samples=7K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.biwfa.affine.p4.alg -a gap-affine-wfa --wfa-memory-mode=ultralow --check=correct --affine-penalties=-2,3,1,4"
+	User time (seconds): 0.89
+	System time (seconds): 0.00
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.90
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 4156
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 532
+	Voluntary context switches: 1
+	Involuntary context switches: 5
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 200
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark         3.27 s  (    1   call,   3.27  s/call {min3.27s,Max3.27s})
+  => Time.Alignment       3.26 s  ( 99.70 %) (  305  calls,  10.69 ms/call {min773ns,Max326.82ms})
+[Accuracy]
+ => Alignments.Correct      305.00 alg         (100.00 %) (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+ => Score.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => Score.Total           305.00 score uds.             (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+     => Score.Diff            0.00 score uds.  (  0.00 %) (samples=0,--n/a--)}
+ => CIGAR.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => CIGAR.Matches         159.15 Kbases      ( 90.25 %) (samples=159K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Mismatches        7.66 Kbases      (  4.34 %) (samples=7K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Insertions       11.45 Kbases      (  6.49 %) (samples=11K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Deletions         9.53 Kbases      (  5.40 %) (samples=9K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.biwfa.affine.p5.alg -a gap-affine-wfa --wfa-memory-mode=ultralow --check=correct --affine-penalties=-3,5,3,2"
+	User time (seconds): 3.26
+	System time (seconds): 0.00
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:03.27
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 7196
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 1262
+	Voluntary context switches: 1
+	Involuntary context switches: 20
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 200
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark       325.71 ms (    1   call, 325.71 ms/call {min325.71ms,Max325.71ms})
+  => Time.Alignment     316.46 ms ( 97.16 %) (  305  calls,   1.04 ms/call {min791ns,Max24.82ms})
+[Accuracy]
+ => Alignments.Correct      305.00 alg         (100.00 %) (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+ => Score.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => Score.Total           305.00 score uds.             (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+     => Score.Diff            0.00 score uds.  (  0.00 %) (samples=0,--n/a--)}
+ => CIGAR.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => CIGAR.Matches         154.14 Kbases      ( 87.42 %) (samples=154K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Mismatches       15.42 Kbases      (  8.74 %) (samples=15K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Insertions        8.70 Kbases      (  4.93 %) (samples=8K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Deletions         6.77 Kbases      (  3.84 %) (samples=6K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.biwfa.affine.wfapt0.alg -a gap-affine-wfa --wfa-memory-mode=ultralow --check=correct --wfa-heuristic=wfa-adaptive --wfa-heuristic-parameters=10,50,1"
+	User time (seconds): 0.32
+	System time (seconds): 0.00
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.32
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 3496
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 363
+	Voluntary context switches: 1
+	Involuntary context switches: 3
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 192
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark       870.44 ms (    1   call, 870.44 ms/call {min870.44ms,Max870.44ms})
+  => Time.Alignment     860.78 ms ( 98.89 %) (  305  calls,   2.82 ms/call {min731ns,Max83.82ms})
+[Accuracy]
+ => Alignments.Correct      305.00 alg         (100.00 %) (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+ => Score.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => Score.Total           305.00 score uds.             (samples=305{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+     => Score.Diff            0.00 score uds.  (  0.00 %) (samples=0,--n/a--)}
+ => CIGAR.Correct             0.00 alg         (  0.00 %) (samples=0,--n/a--)}
+   => CIGAR.Matches         154.14 Kbases      ( 87.42 %) (samples=154K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Mismatches       15.42 Kbases      (  8.74 %) (samples=15K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Insertions        8.70 Kbases      (  4.93 %) (samples=8K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+   => CIGAR.Deletions         6.77 Kbases      (  3.84 %) (samples=6K{mean1.00,min1.00,Max1.00,Var0.00,StdDev0.00)}
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.biwfa.affine.wfapt1.alg -a gap-affine-wfa --wfa-memory-mode=ultralow --check=correct --wfa-heuristic=wfa-adaptive --wfa-heuristic-parameters=10,50,10"
+	User time (seconds): 0.87
+	System time (seconds): 0.00
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.87
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 4516
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 626
+	Voluntary context switches: 3
+	Involuntary context switches: 3
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 200
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark        60.36 ms (    1   call,  60.36 ms/call {min60.36ms,Max60.36ms})
+  => Time.Alignment      59.83 ms ( 99.11 %) (  305  calls, 196.15 us/call {min508ns,Max6.95ms})
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.biwfa.score.indel.alg -a indel-wfa --wfa-memory-mode=ultralow --wfa-score-only"
+	User time (seconds): 0.06
+	System time (seconds): 0.00
+	Percent of CPU this job got: 100%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.06
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 3100
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 210
+	Voluntary context switches: 1
+	Involuntary context switches: 1
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark        43.67 ms (    1   call,  43.67 ms/call {min43.67ms,Max43.67ms})
+  => Time.Alignment      43.27 ms ( 99.08 %) (  305  calls, 141.86 us/call {min504ns,Max4.19ms})
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.biwfa.score.edit.alg -a edit-wfa --wfa-memory-mode=ultralow --wfa-score-only"
+	User time (seconds): 0.04
+	System time (seconds): 0.00
+	Percent of CPU this job got: 100%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.04
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 3020
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 209
+	Voluntary context switches: 1
+	Involuntary context switches: 0
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark       481.59 ms (    1   call, 481.59 ms/call {min481.59ms,Max481.59ms})
+  => Time.Alignment     481.04 ms ( 99.88 %) (  305  calls,   1.58 ms/call {min509ns,Max48.11ms})
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.biwfa.score.affine.alg -a gap-affine-wfa --wfa-memory-mode=ultralow --wfa-score-only"
+	User time (seconds): 0.48
+	System time (seconds): 0.00
+	Percent of CPU this job got: 100%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.48
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 4284
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 580
+	Voluntary context switches: 1
+	Involuntary context switches: 2
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark         3.67 s  (    1   call,   3.67  s/call {min3.67s,Max3.67s})
+  => Time.Alignment       3.67 s  ( 99.98 %) (  305  calls,  12.03 ms/call {min561ns,Max402.33ms})
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.biwfa.score.affine2p.alg -a gap-affine2p-wfa --wfa-memory-mode=ultralow --wfa-score-only"
+	User time (seconds): 3.63
+	System time (seconds): 0.04
+	Percent of CPU this job got: 100%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:03.67
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 35172
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 8267
+	Voluntary context switches: 1
+	Involuntary context switches: 9
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark       221.70 ms (    1   call, 221.70 ms/call {min221.70ms,Max221.70ms})
+  => Time.Alignment     221.20 ms ( 99.77 %) (  305  calls, 725.23 us/call {min529ns,Max26.97ms})
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.biwfa.score.affine.p0.alg -a gap-affine-wfa --wfa-memory-mode=ultralow --wfa-score-only --affine-penalties=0,1,2,1"
+	User time (seconds): 0.21
+	System time (seconds): 0.00
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.22
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 3480
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 394
+	Voluntary context switches: 0
+	Involuntary context switches: 2
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark       272.20 ms (    1   call, 272.20 ms/call {min272.20ms,Max272.20ms})
+  => Time.Alignment     271.57 ms ( 99.77 %) (  305  calls, 890.38 us/call {min751ns,Max34.09ms})
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.biwfa.score.affine.p1.alg -a gap-affine-wfa --wfa-memory-mode=ultralow --wfa-score-only --affine-penalties=0,3,1,4"
+	User time (seconds): 0.26
+	System time (seconds): 0.00
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.27
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 3628
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 369
+	Voluntary context switches: 1
+	Involuntary context switches: 3
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark       691.97 ms (    1   call, 691.97 ms/call {min691.97ms,Max691.97ms})
+  => Time.Alignment     691.09 ms ( 99.87 %) (  305  calls,   2.27 ms/call {min500ns,Max74.64ms})
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.biwfa.score.affine.p2.alg -a gap-affine-wfa --wfa-memory-mode=ultralow --wfa-score-only --affine-penalties=0,5,3,2"
+	User time (seconds): 0.69
+	System time (seconds): 0.00
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.69
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 4936
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 678
+	Voluntary context switches: 2
+	Involuntary context switches: 1
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark         1.02 s  (    1   call,   1.02  s/call {min1.02s,Max1.02s})
+  => Time.Alignment       1.02 s  ( 99.89 %) (  305  calls,   3.33 ms/call {min572ns,Max98.24ms})
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.biwfa.score.affine.p3.alg -a gap-affine-wfa --wfa-memory-mode=ultralow --wfa-score-only --affine-penalties=-5,1,2,1"
+	User time (seconds): 1.01
+	System time (seconds): 0.00
+	Percent of CPU this job got: 100%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.01
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 5416
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 839
+	Voluntary context switches: 1
+	Involuntary context switches: 7
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark       365.74 ms (    1   call, 365.74 ms/call {min365.74ms,Max365.74ms})
+  => Time.Alignment     365.26 ms ( 99.87 %) (  305  calls,   1.20 ms/call {min509ns,Max37.21ms})
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.biwfa.score.affine.p4.alg -a gap-affine-wfa --wfa-memory-mode=ultralow --wfa-score-only --affine-penalties=-2,3,1,4"
+	User time (seconds): 0.36
+	System time (seconds): 0.00
+	Percent of CPU this job got: 100%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.36
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 3500
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 397
+	Voluntary context switches: 1
+	Involuntary context switches: 3
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark         1.16 s  (    1   call,   1.16  s/call {min1.16s,Max1.16s})
+  => Time.Alignment       1.16 s  ( 99.93 %) (  305  calls,   3.80 ms/call {min609ns,Max107.74ms})
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.biwfa.score.affine.p5.alg -a gap-affine-wfa --wfa-memory-mode=ultralow --wfa-score-only --affine-penalties=-3,5,3,2"
+	User time (seconds): 1.15
+	System time (seconds): 0.00
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.15
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 6128
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 1032
+	Voluntary context switches: 1
+	Involuntary context switches: 6
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark        59.08 ms (    1   call,  59.08 ms/call {min59.08ms,Max59.08ms})
+  => Time.Alignment      57.11 ms ( 96.66 %) (  305  calls, 187.23 us/call {min512ns,Max3.57ms})
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.biwfa.score.affine.wfapt0.alg -a gap-affine-wfa --wfa-memory-mode=ultralow --wfa-score-only --wfa-heuristic=wfa-adaptive --wfa-heuristic-parameters=10,50,1"
+	User time (seconds): 0.05
+	System time (seconds): 0.00
+	Percent of CPU this job got: 95%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.06
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 2848
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 199
+	Voluntary context switches: 1
+	Involuntary context switches: 2
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[Benchmark]
+=> Total.reads            305
+=> Time.Benchmark       366.35 ms (    1   call, 366.35 ms/call {min366.35ms,Max366.35ms})
+  => Time.Alignment     365.69 ms ( 99.82 %) (  305  calls,   1.20 ms/call {min541ns,Max37.66ms})
+	Command being timed: "./bin/align_benchmark -i ./tests/wfa.utest.seq -o ./tests/test.biwfa.score.affine.wfapt1.alg -a gap-affine-wfa --wfa-memory-mode=ultralow --wfa-score-only --wfa-heuristic=wfa-adaptive --wfa-heuristic-parameters=10,50,10"
+	User time (seconds): 0.36
+	System time (seconds): 0.00
+	Percent of CPU this job got: 100%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.36
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 3868
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 462
+	Voluntary context switches: 1
+	Involuntary context switches: 2
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
