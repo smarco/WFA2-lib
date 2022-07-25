@@ -87,6 +87,23 @@ int wavefront_bialign_gap_opening_adjustment(
       return 0;
   }
 }
+int wavefront_bialign_max_edge_cost(
+    wavefront_aligner_t* const wf_aligner,
+    const distance_metric_t distance_metric) {
+  int max_edge_cost = wf_aligner->penalties.mismatch;
+  switch (distance_metric) {
+    case gap_affine_2p:
+      max_edge_cost = MAX(max_edge_cost, wf_aligner->penalties.gap_opening1 + wf_aligner->penalties.gap_extension1);
+      max_edge_cost = MAX(max_edge_cost, wf_aligner->penalties.gap_opening2 + wf_aligner->penalties.gap_extension2);
+      return max_edge_cost;
+    case gap_affine:
+      return MAX(max_edge_cost, wf_aligner->penalties.gap_opening1 + wf_aligner->penalties.gap_extension1);
+    case gap_linear:
+      return MAX(max_edge_cost, wf_aligner->penalties.gap_opening1);
+    default:
+      return 0;
+  }
+}
 /*
  * Bidirectional check breakpoints
  */
@@ -412,11 +429,12 @@ int wavefront_bialign_find_breakpoint(
   // Advance until overlap is found
   const int max_score_scope = wf_aligner_forward->wf_components.max_score_scope;
   const int gap_opening = wavefront_bialign_gap_opening_adjustment(wf_aligner_forward,distance_metric);
+  const int max_edge_cost = wavefront_bialign_max_edge_cost(wf_aligner_forward, distance_metric);
   while (true) {
     if (last_wf_forward) {
       // Check overlapping wavefronts
       const int min_score_reverse = (score_reverse > max_score_scope-1) ? score_reverse - (max_score_scope-1) : 0;
-      if (score_forward + min_score_reverse - gap_opening >= breakpoint->score) break; // Done!
+      if (score_forward + min_score_reverse - gap_opening - max_edge_cost >= breakpoint->score) break; // Done!
       wavefront_bialign_overlap(wf_aligner_forward,wf_aligner_reverse,score_forward,score_reverse,true,breakpoint);
       // Compute-next and extend reverse-wavefront
       ++score_reverse;
@@ -426,7 +444,7 @@ int wavefront_bialign_find_breakpoint(
     }
     // Check overlapping wavefronts
     const int min_score_forward = (score_forward > max_score_scope-1) ? score_forward - (max_score_scope-1) : 0;
-    if (min_score_forward + score_reverse - gap_opening >= breakpoint->score) break; // Done!
+    if (min_score_forward + score_reverse - gap_opening - max_edge_cost >= breakpoint->score) break; // Done!
     wavefront_bialign_overlap(wf_aligner_reverse,wf_aligner_forward,score_reverse,score_forward,false,breakpoint);
     // Compute-next and extend forward-wavefront
     ++score_forward;
