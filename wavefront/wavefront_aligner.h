@@ -80,8 +80,11 @@ typedef struct {
  * Alignment type
  */
 typedef enum {
-  wavefront_align_regular,
-  wavefront_align_biwfa,
+  wf_align_regular = 0,
+  wf_align_biwfa = 1,
+  wf_align_biwfa_breakpoint_forward = 2,
+  wf_align_biwfa_breakpoint_reverse = 3,
+  wf_align_biwfa_subsidiary = 4
 } wavefront_align_mode_t;
 
 /*
@@ -121,8 +124,7 @@ typedef struct _wavefront_aligner_t {
   mm_allocator_t* mm_allocator;               // MM-Allocator
   wavefront_slab_t* wavefront_slab;           // MM-Wavefront-Slab (Allocates/Reuses the individual wavefronts)
   // Display
-  wavefront_plot_params_t plot_params;        // Wavefront plot parameters
-  wavefront_plot_t wf_plot;                   // Wavefront plot
+  wavefront_plot_t* plot;                     // Wavefront plot
   // System
   alignment_system_t system;                  // System related parameters
 } wavefront_aligner_t;
@@ -136,15 +138,6 @@ void wavefront_aligner_reap(
     wavefront_aligner_t* const wf_aligner);
 void wavefront_aligner_delete(
     wavefront_aligner_t* const wf_aligner);
-
-/*
- * Accessors
- */
-int wavefront_get_classic_score(
-    wavefront_aligner_t* const wf_aligner,
-    const int pattern_length,
-    const int text_length,
-    const int wf_score);
 
 /*
  * Span configuration

@@ -12,7 +12,7 @@ OUTPUT="./tests"
 LOG="./tests/wfa.utest.log"
 
 # Clear
-rm $OUTPUT/*.alg $LOG
+rm $OUTPUT/*.alg $OUTPUT/*.log*
 
 # Run tests
 for opt in "--check=correct","test" \

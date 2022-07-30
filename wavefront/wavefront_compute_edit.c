@@ -291,6 +291,35 @@ void wavefront_compute_edit_dispatcher(
     }
   }
 }
+void wavefront_compute_edit_dispatcher_omp(
+    wavefront_aligner_t* const wf_aligner,
+    wavefront_t* const wf_prev,
+    wavefront_t* const wf_curr,
+    const int lo,
+    const int hi,
+    const int score) {
+  // Parameters
+  const int num_threads = wavefront_compute_num_threads(wf_aligner,lo,hi);
+  // Multithreading dispatcher
+  if (num_threads == 1) {
+    // Compute next wavefront
+    wavefront_compute_edit_dispatcher(
+        wf_aligner,score,wf_prev,wf_curr,lo,hi);
+  } else {
+#ifdef WFA_PARALLEL
+    // Compute next wavefront in parallel
+    #pragma omp parallel num_threads(num_threads)
+    {
+      int t_lo, t_hi;
+      const int thread_id = omp_get_thread_num();
+      const int thread_num = omp_get_num_threads();
+      wavefront_compute_thread_limits(thread_id,thread_num,lo,hi,&t_lo,&t_hi);
+      wavefront_compute_edit_dispatcher(
+          wf_aligner,score,wf_prev,wf_curr,t_lo,t_hi);
+    }
+#endif
+  }
+}
 void wavefront_compute_edit(
     wavefront_aligner_t* const wf_aligner,
     const int score) {
@@ -321,25 +350,8 @@ void wavefront_compute_edit(
   wf_components->mwavefronts[score_curr] = wf_curr;
   wf_components->mwavefronts[score_curr]->lo = lo;
   wf_components->mwavefronts[score_curr]->hi = hi;
-  // Multithreading dispatcher
-  const int num_threads = wavefront_compute_num_threads(wf_aligner,lo,hi);
-  if (num_threads == 1) {
-    // Compute next wavefront
-    wavefront_compute_edit_dispatcher(
-        wf_aligner,score,wf_prev,wf_curr,lo,hi);
-  } else {
-#ifdef WFA_PARALLEL
-    // Compute next wavefront in parallel
-    #pragma omp parallel num_threads(num_threads)
-    {
-      int t_lo, t_hi;
-      wavefront_compute_thread_limits(
-          omp_get_thread_num(),omp_get_num_threads(),lo,hi,&t_lo,&t_hi);
-      wavefront_compute_edit_dispatcher(
-          wf_aligner,score,wf_prev,wf_curr,t_lo,t_hi);
-    }
-#endif
-  }
+  // Compute Wavefront
+  wavefront_compute_edit_dispatcher_omp(wf_aligner,wf_prev,wf_curr,lo,hi,score);
   // Offload backtrace (if necessary)
   if (wf_components->bt_piggyback && score % PCIGAR_MAX_LENGTH == 0) {
     wavefront_backtrace_offload_blocks_linear(

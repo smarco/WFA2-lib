@@ -15,6 +15,7 @@ import warnings
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
+import matplotlib.ticker as mticker
 import seaborn as sns
 
 ################################################################################
@@ -64,73 +65,85 @@ def wfa_parse_file(filename):
 ################################################################################
 # WFA-Heatmap plotting
 ################################################################################
-def wfa_plot_ticks(ax,data,plen,tlen):
+def wfa_plot_ticks(ax,data,detailed):
+  # Compute dimensions
   ylen = data.shape[0]
   xlen = data.shape[1]
-  # X-ticks
-  x_ticks = [i for i in range(0,xlen-1,xlen//5)]
-  if x_ticks[-1]+5 < xlen-1: x_ticks.append(xlen-1)  
-  else: x_ticks[-1] = xlen-1
-  x_ratio = tlen/xlen
-  x_ticks_labels = [int(i*x_ratio) for i in x_ticks]
-  x_ticks_labels[-1] = tlen-1
-  # Y-ticks
-  y_ticks = [i for i in range(0,ylen-1,ylen//5)]
-  if y_ticks[-1]+5 < ylen-1: y_ticks.append(ylen-1)  
-  else: y_ticks[-1] = ylen-1
-  y_ratio = plen/ylen
-  y_ticks_labels = [int(i*y_ratio) for i in y_ticks]
-  y_ticks_labels[-1] = plen-1
-  # Set ticks
-  ax.set_yticks(y_ticks)
-  ax.set_yticklabels(y_ticks_labels,fontsize=5)
-  ax.set_xticks(x_ticks)
-  ax.set_xticklabels(x_ticks_labels,fontsize=5)
+  # Detailed mode
+  if detailed:
+    # Parameters
+    pattern = wfa_info["Pattern"]
+    text = wfa_info["Text"]
+    # Hacky font size estimation
+    label_size = 80.0/float(max(xlen,ylen))
+    
+    # Set Y-axis (major)
+    y_ticks_loc = np.arange(-0.5,ylen,1)
+    ax.yaxis.set_minor_locator(mticker.FixedLocator(y_ticks_loc))
+    ax.set_yticks(y_ticks_loc)
+    ax.set_yticklabels([])
+    # Set Y-axis (minor)
+    ax.set_yticks(np.arange(0,ylen,1),minor=True)
+    ax.set_yticklabels([y for y in pattern],fontsize=label_size,fontweight='bold',minor=True)
+    
+    # Set X-axis (major)
+    x_ticks_loc = np.arange(-0.5,xlen,1)
+    ax.xaxis.set_minor_locator(mticker.FixedLocator(x_ticks_loc))
+    ax.set_xticks(x_ticks_loc)
+    ax.set_xticklabels([])
+    # Set X-axis (minor)
+    ax.set_xticks(np.arange(0,xlen,1),minor=True)
+    ax.set_xticklabels([x for x in text],fontsize=label_size,fontweight='bold',minor=True)
+    # Set X on top
+    ax.xaxis.tick_top()
+    
+    # Hide minor dashes
+    ax.tick_params(axis='both',which='minor',length=0) 
+    # Gridlines (based on major)
+    ax.grid(which='major',color="black",linestyle='-',linewidth=0.25)
+  else:
+    ax.tick_params(axis='both',which='major',labelsize=6)
+    ax.grid(which='major',color="black",linestyle='-',linewidth=0.25)
 
-def wfa_plot_wavefront(title,ax,data,plen,tlen,
-                       xlabel=False,ylabel=True): 
+def wfa_plot_wavefront(wfa_info,title,ax,data,detailed,
+                       xlabel=False,ylabel=True):
+  # Compute dimensions
+  ylen = data.shape[0]
+  xlen = data.shape[1]
   # Title
   ax.set_title(title,fontsize=10) 
-  # Set ticks
-  wfa_plot_ticks(ax,data,plen,tlen)
+  # Set ticks & grid
+  wfa_plot_ticks(ax,data,detailed)
   # Set labels
   if xlabel: ax.set_xlabel('Text',fontsize=8)
   if ylabel: ax.set_ylabel('Pattern',fontsize=8)
-  # Create white grid
-  ax.grid(which="major",color="black",linestyle='-',linewidth=0.1)
   # Create colorbar
   cmap = copy.copy(plt.cm.jet)
   cmap.set_bad('whitesmoke')
   # Heatmap
   im = ax.imshow(data,cmap=cmap)
+  # Detailed mode (Loop over data and create text annotations)
+  if detailed:
+    fontsize = 80.0/float(max(xlen,ylen))
+    for i in range(len(data)):
+      for j in range(len(data[i])):
+        if data[i,j]>=0:
+          ax.text(j,i,int(data[i,j]),ha="center",va="center",color='w',fontsize=fontsize,fontweight='bold')
+  # Return
   return im
 
-def wfa_plot_behaviour(title,ax,data,plen,tlen,
-                       xlabel=False,ylabel=False): 
-  # Title
-  ax.set_title(title,fontsize=10) 
-  # Set ticks
-  wfa_plot_ticks(ax,data,plen,tlen)
-  # Set labels
-  if xlabel: ax.set_xlabel('Text',fontsize=8)
-  if ylabel: ax.set_ylabel('Pattern',fontsize=8)
-  # Create white grid
-  ax.grid(which="major",color="black",linestyle='-',linewidth=0.1)
-  # Create colorbar
-  cmap_ext = colors.ListedColormap(['dodgerblue','darkred'])
-  cmap_ext_bounds = [10,20]
-  cmap_ext_norm = colors.BoundaryNorm(cmap_ext_bounds,cmap_ext.N)
-  cmap_ext.set_bad('whitesmoke')
-  # Heatmap
-  im = ax.imshow(data,cmap=cmap_ext)
-  return im
-
-def wfa_cigar(ax,wfa_info,plen,tlen,xlen,ylen):
-  # Scale & plot
-  def wfa_cigar_scale__plot(cigar,x_ratio,y_ratio,marker,color,label):
-    x = np.floor(cigar[:,0].astype('float64') * x_ratio)
-    y = np.floor(cigar[:,1].astype('float64') * y_ratio)
-    ax.scatter([x],[y],marker=marker,color=color,s=0.1,linewidths=0,label=label)
+def wfa_plot_cigar(ax,wfa_info):
+  # Parameters
+  plen = int(wfa_info["PatternLength"])
+  tlen = int(wfa_info["TextLength"])
+  ylen = wfa_info["M"].shape[0]
+  xlen = wfa_info["M"].shape[1]
+  marker_size = 80.0/float(max(xlen,ylen))
+  # Plot CIGAR series
+  def wfa_plot_cigar_scaled(cigar,x_ratio,y_ratio,marker,color,label):
+    x = np.floor(cigar[:,0].astype('float64') * x_ratio).astype('int') if x_ratio < 1.0 else cigar[:,0]
+    y = np.floor(cigar[:,1].astype('float64') * y_ratio).astype('int') if y_ratio < 1.0 else cigar[:,1]
+    ax.scatter([x],[y],marker=marker,color=color,s=marker_size,linewidths=0,label=label)
   # Compute dims
   x_ratio = xlen/tlen  
   y_ratio = ylen/plen
@@ -140,13 +153,34 @@ def wfa_cigar(ax,wfa_info,plen,tlen,xlen,ylen):
   cigar_i = wfa_info["CIGAR-I"]
   cigar_d = wfa_info["CIGAR-D"]
   # Plot CIGAR
-  if (cigar_m is not None): wfa_cigar_scale__plot(cigar_m,x_ratio,y_ratio,',','limegreen','match')
-  if (cigar_x is not None): wfa_cigar_scale__plot(cigar_x,x_ratio,y_ratio,'o','red','misms')
-  if (cigar_i is not None): wfa_cigar_scale__plot(cigar_i,x_ratio,y_ratio,'>','orange','ins')
-  if (cigar_d is not None): wfa_cigar_scale__plot(cigar_d,x_ratio,y_ratio,'v','blue','del')
-  ax.legend(loc="upper right",prop={'size': 5},markerscale=5)
+  if (cigar_m is not None): wfa_plot_cigar_scaled(cigar_m,x_ratio,y_ratio,',','limegreen','match')
+  if (cigar_x is not None): wfa_plot_cigar_scaled(cigar_x,x_ratio,y_ratio,'o','red','misms')
+  if (cigar_i is not None): wfa_plot_cigar_scaled(cigar_i,x_ratio,y_ratio,'>','orange','ins')
+  if (cigar_d is not None): wfa_plot_cigar_scaled(cigar_d,x_ratio,y_ratio,'v','blue','del')
+  ax.legend(loc="upper right",prop={'size': 3}) 
+
+def wfa_plot_xtra(wfa_info,title,ax,data,detailed, 
+                       xlabel=False,ylabel=False): 
+  # Title
+  ax.set_title(title,fontsize=10) 
+  # Set ticks & grid
+  wfa_plot_ticks(ax,data,detailed)
+  # Set labels
+  if xlabel: ax.set_xlabel('Text',fontsize=8)
+  if ylabel: ax.set_ylabel('Pattern',fontsize=8)
+  # Create colorbar
+  cmap_ext = colors.ListedColormap(['dodgerblue','darkred'])
+  cmap_ext_bounds = [10,20]
+  cmap_ext_norm = colors.BoundaryNorm(cmap_ext_bounds,cmap_ext.N)
+  cmap_ext.set_bad('whitesmoke')
+  # Heatmap
+  im = ax.imshow(data,cmap=cmap_ext)
+  # Plot CIGAR
+  if 'A' in wfa_info["WFAMode"]: wfa_plot_cigar(ax,wfa_info)
+  # Return
+  return im
  
-def wfa_plot(filename,wfa_info,dpi,mode):
+def wfa_plot(filename,wfa_info,dpi,mode,detailed):
   # Log
   print('[Plotting]',end='',flush=True)
   # Parameters
@@ -159,31 +193,27 @@ def wfa_plot(filename,wfa_info,dpi,mode):
   extended = (mode=="extended"); 
   if compact: 
     fig, ax1 = plt.subplots(nrows=1,ncols=1,dpi=dpi,sharex=True)
-    im1 = wfa_plot_wavefront('M-Wavefront',ax1,wfa_info["M"],plen,tlen,xlabel=True,ylabel=True)
-    #if 'A' in wfa_info["WFAMode"]: wfa_cigar(ax1,wfa_info,plen,tlen,xlen,ylen)
+    im1 = wfa_plot_wavefront(wfa_info,'M-Wavefront',ax1,wfa_info["M"],detailed,xlabel=True,ylabel=True)
   elif extended or wfa_info["Distance"]=="Edit":
     fig, (ax1,ax3) = plt.subplots(nrows=2,ncols=1,dpi=dpi,sharex=True)
-    im1 = wfa_plot_wavefront('M-Wavefront',ax1,wfa_info["M"],plen,tlen,ylabel=True)
-    im3 = wfa_plot_behaviour('Extend & CIGAR',ax3,wfa_info["Extend"],plen,tlen,xlabel=True,ylabel=True)
-    if 'A' in wfa_info["WFAMode"]: wfa_cigar(ax3,wfa_info,plen,tlen,xlen,ylen)
+    im1 = wfa_plot_wavefront(wfa_info,'M-Wavefront',ax1,wfa_info["M"],detailed,ylabel=True)
+    im3 = wfa_plot_xtra(wfa_info,'CIGAR',ax3,wfa_info["Extend"],detailed,xlabel=True,ylabel=True)
   elif wfa_info["Distance"]=="GapLineal" or wfa_info["Distance"]=="GapAffine":
     fig, ((ax1,ax2),(ax3,ax4)) = plt.subplots(nrows=2,ncols=2,dpi=dpi,sharex=True)
-    im1 = wfa_plot_wavefront('M-Wavefront',ax1,wfa_info["M"],plen,tlen,ylabel=True)
-    im2 = wfa_plot_wavefront('I1-Wavefront',ax2,wfa_info["I1"],plen,tlen)
-    im4 = wfa_plot_wavefront('D1-Wavefront',ax4,wfa_info["D1"],plen,tlen,xlabel=True)
-    im3 = wfa_plot_behaviour('Extend & CIGAR',ax3,wfa_info["Extend"],plen,tlen,xlabel=True,ylabel=True)
-    if 'A' in wfa_info["WFAMode"]: wfa_cigar(ax3,wfa_info,plen,tlen,xlen,ylen)
+    im1 = wfa_plot_wavefront(wfa_info,'M-Wavefront',ax1,wfa_info["M"],detailed,ylabel=True)
+    im2 = wfa_plot_wavefront(wfa_info,'I1-Wavefront',ax2,wfa_info["I1"],detailed)
+    im4 = wfa_plot_wavefront(wfa_info,'D1-Wavefront',ax4,wfa_info["D1"],detailed,xlabel=True)
+    im3 = wfa_plot_xtra(wfa_info,'CIGAR',ax3,wfa_info["Extend"],detailed,xlabel=True,ylabel=True)
   elif wfa_info["Distance"]=="GapAffine2p":    
     fig, ((ax1,ax2,ax5),(ax3,ax4,ax6)) = plt.subplots(nrows=2,ncols=3,dpi=dpi,sharex=True)
-    im1 = wfa_plot_wavefront('M-Wavefront',ax1,wfa_info["M"],plen,tlen,ylabel=True)
-    im2 = wfa_plot_wavefront('I1-Wavefront',ax2,wfa_info["I1"],plen,tlen)
-    im4 = wfa_plot_wavefront('D1-Wavefront',ax4,wfa_info["D1"],plen,tlen,xlabel=True)
-    im5 = wfa_plot_wavefront('I2-Wavefront',ax5,wfa_info["I2"],plen,tlen)
-    im6 = wfa_plot_wavefront('D2-Wavefront',ax6,wfa_info["D2"],plen,tlen,xlabel=True)
-    im3 = wfa_plot_behaviour('Extend & CIGAR',ax3,wfa_info["Extend"],plen,tlen,xlabel=True,ylabel=True)
-    if 'A' in wfa_info["WFAMode"]: wfa_cigar(ax3,wfa_info,plen,tlen,xlen,ylen)
+    im1 = wfa_plot_wavefront(wfa_info,'M-Wavefront',ax1,wfa_info["M"],detailed,ylabel=True)
+    im2 = wfa_plot_wavefront(wfa_info,'I1-Wavefront',ax2,wfa_info["I1"],detailed)
+    im4 = wfa_plot_wavefront(wfa_info,'D1-Wavefront',ax4,wfa_info["D1"],detailed,xlabel=True)
+    im5 = wfa_plot_wavefront(wfa_info,'I2-Wavefront',ax5,wfa_info["I2"],detailed)
+    im6 = wfa_plot_wavefront(wfa_info,'D2-Wavefront',ax6,wfa_info["D2"],detailed,xlabel=True)
+    im3 = wfa_plot_xtra(wfa_info,'CIGAR',ax3,wfa_info["Extend"],detailed,xlabel=True,ylabel=True)
   # Color bar
-  if compact: 
+  if compact:
     p0 = ax1.get_position().get_points().flatten()
     p1 = p0
   elif extended or wfa_info["Distance"]=="Edit":
@@ -196,24 +226,25 @@ def wfa_plot(filename,wfa_info,dpi,mode):
     p0 = ax3.get_position().get_points().flatten()
     p1 = ax6.get_position().get_points().flatten()
   ax_cbar = fig.add_axes([p0[0],0,p1[2]-p0[0],0.025])
-  ax_cbar.tick_params(labelsize=5) 
+  ax_cbar.tick_params(labelsize=6) 
   plt.colorbar(im1,cax=ax_cbar,orientation='horizontal')
   # Title
-  file = os.path.basename(filename).replace('.wfa','')
-  title = "WFA-Plot(%s) \n %s[%s]" % (file,wfa_info["Penalties"],wfa_info["WFAMode"])
-  fig.suptitle(title,fontsize=12)
+  file = os.path.basename(filename).replace('.plot','')
+  title = "WFA-Plot(%s) %s[%s]" % (file,wfa_info["Penalties"],wfa_info["WFAMode"])
+  fig.suptitle(title,fontsize=10)
   plt.subplots_adjust(top=0.85)
   # Plot
-  plt.savefig(filename.replace('.wfa','.png'),bbox_inches='tight')
+  plt.savefig(filename.replace('.plot','.png'),bbox_inches='tight')
 
 ################################################################################
 # Main
 ################################################################################
 # Configure arguments
 parser = argparse.ArgumentParser()
-parser.add_argument('-i','--input',action='store',help='Input file')
+parser.add_argument('-i','--input',action='store',help='Input file (*.plot)')
 parser.add_argument('--dpi',type=int,action='store',default=1000,help='Plot resolution (default=1000)') # More than 2000 is hard to handle
 parser.add_argument('--mode',action='store',default='compact',help='Plot mode in {compact,extended,full}')
+parser.add_argument('-d','--detailed',action='store_true',default=False,help='Plot score values and sequences')
 parser.add_argument('-H',action='store_true',dest="human_readable",default=False)
 
 # Parse arguments
@@ -223,8 +254,8 @@ args = parser.parse_args()
 if args.input:
   input_files = [args.input]
 else:
-  input_files = glob.glob("*.wfa")
-  print('[WFA2png] Searching all *.wfa ( Found %d file%c)' % (len(input_files),'s' if len(input_files)>1 else ' '))
+  input_files = glob.glob("*.plot")
+  print('[WFA2png] Searching all *.plot ( Found %d file%c)' % (len(input_files),'s' if len(input_files)>1 else ' '))
   
 # Plot each WFA file
 print('[WFA2png] Plotting at %d dpi' % (args.dpi))
@@ -232,7 +263,7 @@ idx = 0
 for filename in input_files:
   print('[WFA2png] [#%d] Generating \'%s\' ' % (idx,filename),end='',flush=True)
   wfa_info = wfa_parse_file(filename)
-  wfa_plot(filename,wfa_info,args.dpi,args.mode)
+  wfa_plot(filename,wfa_info,args.dpi,args.mode,args.detailed)
   print('[Done!]',)
   idx += 1
 

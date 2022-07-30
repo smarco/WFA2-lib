@@ -457,7 +457,7 @@ void parse_arguments(
       parameters.check_bandwidth = atoi(optarg);
       break;
     case 3003: // --plot
-      parameters.plot = (optarg==NULL) ? 1000 : atoi(optarg);
+      parameters.plot = (optarg==NULL) ? 1 : atoi(optarg);
       break;
     /*
      * System

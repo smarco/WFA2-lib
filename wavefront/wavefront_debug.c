@@ -32,6 +32,7 @@
 #include "utils/commons.h"
 #include "wavefront_debug.h"
 #include "wavefront_align.h"
+#include "wavefront_compute.h"
 
 /*
  * Checks
@@ -131,7 +132,7 @@ void wavefront_report_lite(
   // Banner
   fprintf(stream,"[WFA::Debug]");
   // Sequences
-  const int score = wavefront_get_classic_score(
+  const int score = wavefront_compute_classic_score(
       wf_aligner,wf_aligner->pattern_length,
       wf_aligner->text_length,wf_aligner->cigar->score);
   fprintf(stream,"\t%d",score);
@@ -203,7 +204,7 @@ void wavefront_report_verbose_end(
       wf_aligner->wf_components.num_wavefronts,
       wf_aligner->wf_components.historic_min_lo,
       wf_aligner->wf_components.historic_max_hi);
-  const int score = wavefront_get_classic_score(
+  const int score = wavefront_compute_classic_score(
       wf_aligner,wf_aligner->pattern_length,
       wf_aligner->text_length,wf_aligner->cigar->score);
   fprintf(stream," WFA.score=%d",score);

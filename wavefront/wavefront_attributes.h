@@ -148,7 +148,7 @@ typedef struct {
   // External MM (instead of allocating one inside)
   mm_allocator_t* mm_allocator;            // MM-Allocator
   // Display
-  wavefront_plot_params_t plot_params;     // Wavefront plot
+  wavefront_plot_attr_t plot;              // Plot wavefront
   // System
   alignment_system_t system;               // System related parameters
 } wavefront_aligner_attr_t;

@@ -48,9 +48,7 @@ void wavefront_unialign_resize(
 /*
  * Initialize alignment
  */
-void wavefront_unialign_initialize_end2end(
-    wavefront_aligner_t* const wf_aligner);
-void wavefront_unialign_initialize_endsfree(
+void wavefront_unialign_initialize_wavefronts(
     wavefront_aligner_t* const wf_aligner,
     const int pattern_length,
     const int text_length);

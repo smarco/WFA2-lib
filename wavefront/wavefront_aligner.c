@@ -160,7 +160,7 @@ void wavefront_aligner_init_alignment(
     const bool bt_piggyback,
     const bool bi_alignment) {
   // Mode
-  wf_aligner->align_mode = (bi_alignment) ? wavefront_align_biwfa : wavefront_align_regular;
+  wf_aligner->align_mode = (bi_alignment) ? wf_align_biwfa : wf_align_regular;
   wf_aligner->align_mode_tag = NULL;
   // Score & form
   wf_aligner->alignment_scope = attributes->alignment_scope;
@@ -188,10 +188,15 @@ wavefront_aligner_t* wavefront_aligner_new(
   // Handler
   wavefront_aligner_t* const wf_aligner = wavefront_aligner_init_mm(
       attributes->mm_allocator,memory_modular,bt_piggyback,bi_alignment);
+  // Plot
+  if (attributes->plot.enabled) {
+    wf_aligner->plot = wavefront_plot_new(attributes->distance_metric,
+        PATTERN_LENGTH_INIT,TEXT_LENGTH_INIT,&attributes->plot);
+  }
   // Alignment
   wavefront_aligner_init_alignment(wf_aligner,attributes,memory_modular,bt_piggyback,bi_alignment);
   if (bi_alignment) {
-    wf_aligner->bialigner = wavefront_bialigner_new(attributes);
+    wf_aligner->bialigner = wavefront_bialigner_new(attributes,wf_aligner->plot);
   } else {
     wf_aligner->bialigner = NULL;
     // Wavefront components
@@ -205,14 +210,6 @@ wavefront_aligner_t* wavefront_aligner_new(
   // CIGAR
   const int cigar_length = (score_only) ? 10 : 2*(PATTERN_LENGTH_INIT+TEXT_LENGTH_INIT);
   wf_aligner->cigar = cigar_new(cigar_length,wf_aligner->mm_allocator);
-  // Display
-  wf_aligner->plot_params = attributes->plot_params;
-  if (attributes->plot_params.plot_enabled) {
-    wavefront_plot_allocate(&wf_aligner->wf_plot,
-        wf_aligner->penalties.distance_metric,
-        PATTERN_LENGTH_INIT,TEXT_LENGTH_INIT,
-        &wf_aligner->plot_params);
-  }
   // System
   wf_aligner->system = attributes->system;
   // Return
@@ -255,31 +252,15 @@ void wavefront_aligner_delete(
   }
   // CIGAR
   cigar_free(wf_aligner->cigar);
-  // Display
-  if (wf_aligner->plot_params.plot_enabled) {
-    wavefront_plot_free(&wf_aligner->wf_plot);
+  // Plot
+  if (wf_aligner->plot != NULL && wf_aligner->align_mode <= 1) {
+    wavefront_plot_delete(wf_aligner->plot);
   }
   // MM
   mm_allocator_free(mm_allocator,wf_aligner);
   if (mm_allocator_own) {
     mm_allocator_delete(wf_aligner->mm_allocator);
   }
-}
-/*
- * Accessors
- */
-int wavefront_get_classic_score(
-    wavefront_aligner_t* const wf_aligner,
-    const int pattern_length,
-    const int text_length,
-    const int wf_score) {
-  // Parameters
-  const int swg_match = -(wf_aligner->penalties.match);
-  const distance_metric_t distance_metric = wf_aligner->penalties.distance_metric;
-  // Adapt score
-  if (distance_metric <= edit) return wf_score;
-  if (swg_match == 0) return -wf_score;
-  return WF_SCORE_TO_SW_SCORE(swg_match,pattern_length,text_length,wf_score);
 }
 /*
  * Span configuration
@@ -413,10 +394,18 @@ void wavefront_aligner_print_type(
     wavefront_aligner_t* const wf_aligner) {
   if (wf_aligner->align_mode_tag == NULL) {
     switch (wf_aligner->align_mode) {
-      case wavefront_align_biwfa:
+      case wf_align_biwfa:
         fprintf(stream,"BiWFA");
         break;
-      case wavefront_align_regular:
+      case wf_align_biwfa_breakpoint_forward:
+        fprintf(stream,"BiWFA::Forward");
+        break;
+      case wf_align_biwfa_breakpoint_reverse:
+        fprintf(stream,"BiWFA::Reverse");
+        break;
+      case wf_align_biwfa_subsidiary:
+        fprintf(stream,"BiWFA::SubWFA");
+        break;
       default:
         fprintf(stream,"WFA");
         break;

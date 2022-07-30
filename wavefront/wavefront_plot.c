@@ -26,152 +26,201 @@
  *
  * PROJECT: Wavefront Alignment Algorithms
  * AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
- * DESCRIPTION: WaveFront-Alignment module for plot
+ * DESCRIPTION: Wavefront alignment module for plot
  */
 
 #include "wavefront_plot.h"
 #include "wavefront_aligner.h"
 
 /*
- * Setup
+ * Heatmaps
  */
-void wavefront_plot_allocate(
+void wavefront_plot_heatmaps_allocate(
     wavefront_plot_t* const wf_plot,
-    const distance_metric_t distance_metric,
     const int pattern_length,
-    const int text_length,
-    wavefront_plot_params_t* const plot_params) {
+    const int text_length) {
+  wavefront_plot_attr_t* const attributes = &wf_plot->attributes;
   // Compute dimensions
-  const int min_v = (plot_params->min_v == -1) ? 0 : plot_params->min_v;
-  const int max_v = (plot_params->max_v == -1) ? pattern_length-1 : plot_params->max_v;
-  const int min_h = (plot_params->min_h == -1) ? 0 : plot_params->min_h;
-  const int max_h = (plot_params->max_h == -1) ? text_length-1 : plot_params->max_h;
-  // Wavefront Components
-  wf_plot->m_heatmap = heatmap_new(heatmap_min,
-      min_v,max_v,min_h,max_h,plot_params->resolution_points);
-  if (distance_metric == gap_affine) {
-    wf_plot->i1_heatmap = heatmap_new(heatmap_min,
-        min_v,max_v,min_h,max_h,plot_params->resolution_points);
-    wf_plot->d1_heatmap = heatmap_new(heatmap_min,
-        min_v,max_v,min_h,max_h,plot_params->resolution_points);
-  } else {
-    wf_plot->i1_heatmap = NULL;
-    wf_plot->d1_heatmap = NULL;
-  }
-  if (distance_metric == gap_affine_2p) {
-    wf_plot->i2_heatmap = heatmap_new(heatmap_min,
-        min_v,max_v,min_h,max_h,plot_params->resolution_points);
-    wf_plot->d2_heatmap = heatmap_new(heatmap_min,
-        min_v,max_v,min_h,max_h,plot_params->resolution_points);
-  } else {
-    wf_plot->i2_heatmap = NULL;
-    wf_plot->d2_heatmap = NULL;
-  }
+  const int resolution_points = attributes->resolution_points;
+  const int min_v = (wf_plot->min_v == -1) ? 0 : wf_plot->min_v;
+  const int max_v = (wf_plot->max_v == -1) ? pattern_length-1 : wf_plot->max_v;
+  const int min_h = (wf_plot->min_h == -1) ? 0 : wf_plot->min_h;
+  const int max_h = (wf_plot->max_h == -1) ? text_length-1 : wf_plot->max_h;
   // Behavior
   wf_plot->behavior_heatmap = heatmap_new(heatmap_value,
-      min_v,max_v,min_h,max_h,plot_params->resolution_points);
+      min_v,max_v,min_h,max_h,resolution_points);
+  // Wavefront Components
+  wf_plot->m_heatmap = heatmap_new(heatmap_min,
+      min_v,max_v,min_h,max_h,resolution_points);
+  wf_plot->i1_heatmap = NULL;
+  wf_plot->d1_heatmap = NULL;
+  wf_plot->i2_heatmap = NULL;
+  wf_plot->d2_heatmap = NULL;
+  if (wf_plot->distance_metric < gap_affine) return;
+  // Gap-affine
+  wf_plot->i1_heatmap = heatmap_new(heatmap_min,
+      min_v,max_v,min_h,max_h,resolution_points);
+  wf_plot->d1_heatmap = heatmap_new(heatmap_min,
+      min_v,max_v,min_h,max_h,resolution_points);
+  if (wf_plot->distance_metric == gap_affine) return;
+  // Gap-affine-2p
+  wf_plot->i2_heatmap = heatmap_new(heatmap_min,
+      min_v,max_v,min_h,max_h,resolution_points);
+  wf_plot->d2_heatmap = heatmap_new(heatmap_min,
+      min_v,max_v,min_h,max_h,resolution_points);
 }
-void wavefront_plot_free(
+void wavefront_plot_heatmaps_free(
     wavefront_plot_t* const wf_plot) {
+  heatmap_delete(wf_plot->behavior_heatmap);
   heatmap_delete(wf_plot->m_heatmap);
   if (wf_plot->i1_heatmap) heatmap_delete(wf_plot->i1_heatmap);
   if (wf_plot->d1_heatmap) heatmap_delete(wf_plot->d1_heatmap);
   if (wf_plot->i2_heatmap) heatmap_delete(wf_plot->i2_heatmap);
   if (wf_plot->d2_heatmap) heatmap_delete(wf_plot->d2_heatmap);
-  heatmap_delete(wf_plot->behavior_heatmap);
+}
+/*
+ * Setup
+ */
+wavefront_plot_t* wavefront_plot_new(
+    const distance_metric_t distance_metric,
+    const int pattern_length,
+    const int text_length,
+    wavefront_plot_attr_t* const attributes) {
+  // Handler
+  wavefront_plot_t* const wf_plot = (wavefront_plot_t*)malloc(sizeof(wavefront_plot_t));
+  // Parameters
+  wf_plot->attributes = *attributes;
+  wf_plot->distance_metric = distance_metric;
+  wf_plot->min_v = -1;
+  wf_plot->max_v = -1;
+  wf_plot->min_h = -1;
+  wf_plot->max_h = -1;
+  // Allocate and configure
+  wavefront_plot_heatmaps_allocate(wf_plot,pattern_length,text_length);
+  // Clear offsets
+  wf_plot->offset_h = 0;
+  wf_plot->offset_v = 0;
+  // Return
+  return wf_plot;
+}
+void wavefront_plot_resize(
+    wavefront_plot_t* const wf_plot,
+    const int pattern_length,
+    const int text_length) {
+  // Free heatmaps
+  wavefront_plot_heatmaps_free(wf_plot);
+  // Allocate new heatmaps
+  wavefront_plot_heatmaps_allocate(wf_plot,pattern_length,text_length);
+  // Clear offsets
+  wf_plot->offset_h = 0;
+  wf_plot->offset_v = 0;
+}
+void wavefront_plot_delete(
+    wavefront_plot_t* const wf_plot) {
+  // Heatmaps
+  wavefront_plot_heatmaps_free(wf_plot);
+  // Handler
+  free(wf_plot);
 }
 /*
  * Accessors
  */
 void wavefront_plot_component(
+    wavefront_aligner_t* const wf_aligner,
     wavefront_t* const wavefront,
-    const char* const pattern,
     const int pattern_length,
-    const char* const text,
     const int text_length,
     const int score,
     heatmap_t* const wf_heatmap,
-    heatmap_t* const extend_heatmap) {
-  if (wavefront != NULL) {
-    int k;
-    for (k=wavefront->lo;k<=wavefront->hi;++k) {
-      const wf_offset_t offset = wavefront->offsets[k];
-      if (offset >= 0) {
-        // Compute coordinates
-        int v = WAVEFRONT_V(k,offset);
-        int h = WAVEFRONT_H(k,offset);
-        if (v>=pattern_length || h>=text_length) continue;
-        heatmap_set(wf_heatmap,v,h,score);
-        // Simulate extension
-        if (extend_heatmap != NULL) {
-          while (v<pattern_length && h<text_length && pattern[v++]==text[h++]) {
-            heatmap_set(wf_heatmap,v,h,score);
-            heatmap_set(extend_heatmap,v,h,10);
-          }
+    const bool extend) {
+  // Check wavefront
+  if (wavefront == NULL) return;
+  // Parameters
+  wavefront_plot_t* const plot = wf_aligner->plot;
+  const bool reverse = (wf_aligner->align_mode == wf_align_biwfa_breakpoint_reverse);
+  // Traverse all offsets
+  int k;
+  for (k=wavefront->lo;k<=wavefront->hi;++k) {
+    const wf_offset_t offset = wavefront->offsets[k];
+    if (offset < 0) continue;
+    // Compute local coordinates
+    int v = WAVEFRONT_V(k,offset);
+    int h = WAVEFRONT_H(k,offset);
+    // Check boundaries
+    if (v < 0 || v >= pattern_length) continue;
+    if (h < 0 || h >= text_length) continue;
+    // Compute global coordinates
+    if (reverse) {
+      v = pattern_length - 1 - v;
+      h = text_length - 1 - h;
+    }
+    v += plot->offset_v;
+    h += plot->offset_h;
+    // Plot
+    heatmap_set(wf_heatmap,v,h,score);
+    // Simulate extension
+    if (extend) {
+      char* const pattern = wf_aligner->pattern;
+      char* const text = wf_aligner->text;
+      int v_local = WAVEFRONT_V(k,offset);
+      int h_local = WAVEFRONT_H(k,offset);
+      while (v_local<pattern_length && h_local<text_length &&
+             pattern[v_local]==text[h_local]) {
+        if (reverse) {
+          v--; h--;
+        } else {
+          v++; h++;
         }
+        v_local++; h_local++;
+        heatmap_set(wf_heatmap,v,h,score);
       }
     }
   }
 }
 void wavefront_plot(
     wavefront_aligner_t* const wf_aligner,
-    const char* const pattern,
-    const char* const text,
-    const int score) {
+    const int score,
+    const int align_level) {
+  // if (wf_aligner->align_mode == wf_align_biwfa_breakpoint_XXX) return;
+  // Check plotting enabled wrt align-level
+  if (wf_aligner->align_mode == wf_align_biwfa_breakpoint_forward ||
+      wf_aligner->align_mode == wf_align_biwfa_breakpoint_reverse) {
+    if (align_level != wf_aligner->plot->attributes.align_level) return;
+  }
+  if (wf_aligner->align_mode == wf_align_biwfa_subsidiary &&
+      wf_aligner->plot->attributes.align_level != -1) return;
   // Parameters
   const int pattern_length = wf_aligner->pattern_length;
   const int text_length = wf_aligner->text_length;
   const distance_metric_t distance_metric = wf_aligner->penalties.distance_metric;
   wavefront_components_t* const wf_components = &wf_aligner->wf_components;
-  const int s = (wf_components->memory_modular) ? score%wf_components->max_score_scope : score;
+  const int score_mod = (wf_components->memory_modular) ? score%wf_components->max_score_scope : score;
   // Plot wavefront components
-  wavefront_plot_component(
-      wf_components->mwavefronts[s],
-      pattern,pattern_length,text,text_length,
-      score,wf_aligner->wf_plot.m_heatmap,
-      wf_aligner->wf_plot.behavior_heatmap);
-  if (distance_metric == gap_affine) {
-    wavefront_plot_component(
-        wf_components->i1wavefronts[s],
-        pattern,pattern_length,text,text_length,
-        score,wf_aligner->wf_plot.i1_heatmap,NULL);
-    wavefront_plot_component(
-        wf_components->d1wavefronts[s],
-        pattern,pattern_length,text,text_length,
-        score,wf_aligner->wf_plot.d1_heatmap,NULL);
-  }
-  if (distance_metric == gap_affine_2p) {
-    wavefront_plot_component(
-        wf_components->i2wavefronts[s],
-        pattern,pattern_length,text,text_length,
-        score,wf_aligner->wf_plot.i2_heatmap,NULL);
-    wavefront_plot_component(
-        wf_components->d2wavefronts[s],
-        pattern,pattern_length,text,text_length,
-        score,wf_aligner->wf_plot.d2_heatmap,NULL);
-  }
+  wavefront_plot_component(wf_aligner,
+      wf_components->mwavefronts[score_mod],
+      pattern_length,text_length,
+      score,wf_aligner->plot->m_heatmap,true);
+  if (distance_metric < gap_affine) return;
+  // Gap-affine
+  wavefront_plot_component(wf_aligner,
+      wf_components->i1wavefronts[score_mod],
+      pattern_length,text_length,
+      score,wf_aligner->plot->i1_heatmap,false);
+  wavefront_plot_component(wf_aligner,
+      wf_components->d1wavefronts[score_mod],
+      pattern_length,text_length,
+      score,wf_aligner->plot->d1_heatmap,false);
+  if (distance_metric == gap_affine) return;
+  // Gap-affine-2p
+  wavefront_plot_component(wf_aligner,
+      wf_components->i2wavefronts[score_mod],
+      pattern_length,text_length,
+      score,wf_aligner->plot->i2_heatmap,false);
+  wavefront_plot_component(wf_aligner,
+      wf_components->d2wavefronts[score_mod],
+      pattern_length,text_length,
+      score,wf_aligner->plot->d2_heatmap,false);
 }
-//void wavefront_plot_cutoff(
-//    wavefront_aligner_t* const wf_aligner,
-//    const int score,
-//    const int lo_base,
-//    const int lo_reduced,
-//    const int hi_base,
-//    const int hi_reduced) {
-//  wavefront_components_t* const wf_components = &wf_aligner->wf_components;
-//  const int s = (wf_components->memory_modular) ? score%wf_components->max_score_scope : score;
-//  wavefront_t* const wavefront = wf_components->mwavefronts[s];
-//  heatmap_t* const heatmap = wf_aligner->wf_plot.behavior_heatmap;
-//  int k;
-//  for (k=lo_base;k<lo_reduced;++k) {
-//    const wf_offset_t offset = wavefront->offsets[k];
-//    if (offset >= 0) heatmap_set(heatmap,WAVEFRONT_V(k,offset),WAVEFRONT_H(k,offset),20);
-//  }
-//  for (k=hi_reduced+1;k<=hi_base;++k) {
-//    const wf_offset_t offset = wavefront->offsets[k];
-//    if (offset >= 0) heatmap_set(heatmap,WAVEFRONT_V(k,offset),WAVEFRONT_H(k,offset),20);
-//  }
-//}
 /*
  * Display
  */
@@ -201,10 +250,19 @@ void wavefront_plot_print(
     wavefront_aligner_t* const wf_aligner) {
   // Parameters
   const distance_metric_t distance_metric = wf_aligner->penalties.distance_metric;
-  wavefront_plot_t* const wf_plot = &wf_aligner->wf_plot;
+  wavefront_plot_t* const wf_plot = wf_aligner->plot;
   // Metadata
-  fprintf(stream,"# PatternLength %d\n",wf_aligner->pattern_length);
-  fprintf(stream,"# TextLength %d\n",wf_aligner->text_length);
+  if (wf_aligner->match_funct != NULL) {
+    fprintf(stream,"# PatternLength 0\n");
+    fprintf(stream,"# TextLength 0\n");
+    fprintf(stream,"# Pattern -\n");
+    fprintf(stream,"# Text -\n");
+  } else {
+    fprintf(stream,"# PatternLength %d\n",wf_aligner->pattern_length);
+    fprintf(stream,"# Pattern %.*s\n",wf_aligner->pattern_length,wf_aligner->pattern);
+    fprintf(stream,"# TextLength %d\n",wf_aligner->text_length);
+    fprintf(stream,"# Text %.*s\n",wf_aligner->text_length,wf_aligner->text);
+  }
   fprintf(stream,"# Penalties ");
   wavefront_penalties_print(stream,&wf_aligner->penalties);
   fprintf(stream,"\n");

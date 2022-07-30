@@ -39,6 +39,7 @@ void wavefront_penalties_set_indel(
   // Set distance model
   wf_penalties->distance_metric = indel;
   // Set penalties
+  wf_penalties->match = 0;
   wf_penalties->mismatch = -1;
   wf_penalties->gap_opening1 = 1;
   wf_penalties->gap_extension1 = -1;
@@ -50,6 +51,7 @@ void wavefront_penalties_set_edit(
   // Set distance model
   wf_penalties->distance_metric = edit;
   // Set penalties
+  wf_penalties->match = 0;
   wf_penalties->mismatch = 1;
   wf_penalties->gap_opening1 = 1;
   wf_penalties->gap_extension1 = -1;

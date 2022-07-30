@@ -37,7 +37,8 @@
  * Setup
  */
 wavefront_bialigner_t* wavefront_bialigner_new(
-    wavefront_aligner_attr_t* const attributes) {
+    wavefront_aligner_attr_t* const attributes,
+    wavefront_plot_t* const plot) {
   // Allocate
   wavefront_bialigner_t* const wf_bialigner = malloc(sizeof(wavefront_bialigner_t));
   // Configure subsidiary aligners
@@ -57,13 +58,16 @@ wavefront_bialigner_t* wavefront_bialigner_new(
   subsidiary_attr.system = attributes->system;
   // Allocate forward/reverse aligners
   wf_bialigner->alg_forward = wavefront_aligner_new(&subsidiary_attr);
-  wf_bialigner->alg_forward->align_mode_tag = "BiWFA::Breakpoint_f";
+  wf_bialigner->alg_forward->align_mode = wf_align_biwfa_breakpoint_forward;
+  wf_bialigner->alg_forward->plot = plot;
   wf_bialigner->alg_reverse = wavefront_aligner_new(&subsidiary_attr);
-  wf_bialigner->alg_reverse->align_mode_tag = "BiWFA::Breakpoint_r";
+  wf_bialigner->alg_reverse->align_mode = wf_align_biwfa_breakpoint_reverse;
+  wf_bialigner->alg_reverse->plot = plot;
   // Allocate subsidiary aligner
   subsidiary_attr.alignment_scope = compute_alignment;
   wf_bialigner->alg_subsidiary = wavefront_aligner_new(&subsidiary_attr);
-  wf_bialigner->alg_subsidiary->align_mode_tag = "BiWFA::SubWFA";
+  wf_bialigner->alg_subsidiary->align_mode = wf_align_biwfa_subsidiary;
+  wf_bialigner->alg_subsidiary->plot = plot;
   // Return
   return wf_bialigner;
 }

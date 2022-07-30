@@ -109,7 +109,7 @@ void align_pairwise_test() {
   attributes.alignment_form.pattern_end_free = pattern_end_free;
   attributes.alignment_form.text_begin_free = text_begin_free;
   attributes.alignment_form.text_end_free = text_end_free;
-  attributes.plot_params.plot_enabled = false;
+  attributes.plot.enabled = false;
   wavefront_aligner_t* const wf_aligner = wavefront_aligner_new(&attributes);
   // Align
   wavefront_align(wf_aligner,
@@ -122,7 +122,7 @@ void align_pairwise_test() {
   fprintf(stderr,"SCORE: %d \n",cigar_score_gap_affine(
       wf_aligner->cigar,&affine_penalties));
   // Plot
-  if (attributes.plot_params.plot_enabled) {
+  if (attributes.plot.enabled) {
     FILE* const wf_plot = fopen("test.wfa","w");
     wavefront_plot_print(wf_plot,wf_aligner);
     fclose(wf_plot);
@@ -207,8 +207,8 @@ wavefront_aligner_t* align_input_configure_wavefront(
     attributes.match_funct = parameters.wfa_match_funct;
     attributes.match_funct_arguments = parameters.wfa_match_funct_arguments;
   }
-  attributes.plot_params.plot_enabled = (parameters.plot > 0);
-  attributes.plot_params.resolution_points = parameters.plot;
+  attributes.plot.enabled = (parameters.plot != 0);
+  attributes.plot.align_level = (parameters.plot < 0) ? -1 : parameters.plot - 1;
   attributes.system.verbose = parameters.verbose;
   attributes.system.max_memory_abort = parameters.wfa_max_memory;
   attributes.system.max_num_threads = parameters.wfa_max_threads;
@@ -350,9 +350,9 @@ void align_benchmark_plot_wf(
   // Setup filename
   char filename[500];
   if (parameters.output_filename != NULL) {
-    sprintf(filename,"%s.%03d.wfa",parameters.output_filename,seq_id);
+    sprintf(filename,"%s.%03d.plot",parameters.output_filename,seq_id);
   } else {
-    sprintf(filename,"%s.%03d.wfa",parameters.input_filename,seq_id);
+    sprintf(filename,"%s.%03d.plot",parameters.input_filename,seq_id);
   }
   // Open file
   FILE* const wf_plot = fopen(filename,"w");
@@ -459,7 +459,7 @@ void align_benchmark_sequential() {
     // mm_allocator_print(stderr,align_input.wf_aligner->bialigner->alg_reverse->mm_allocator,false);
     // mm_allocator_print(stderr,align_input.wf_aligner->bialigner->alg_subsidiary->mm_allocator,false);
     // Plot
-    if (parameters.plot > 0) align_benchmark_plot_wf(&align_input,seqs_processed);
+    if (parameters.plot != 0) align_benchmark_plot_wf(&align_input,seqs_processed);
   }
   // Print benchmark results
   timer_stop(&parameters.timer_global);

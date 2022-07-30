@@ -37,6 +37,7 @@
 #include "wavefront_slab.h"
 
 #include "wavefront_components.h"
+#include "wavefront_compute.h"
 #include "wavefront_compute_affine.h"
 #include "wavefront_compute_affine2p.h"
 #include "wavefront_compute_edit.h"
@@ -114,160 +115,64 @@ void wavefront_unialign_resize(
   }
   // Slab
   wavefront_slab_clear(wf_aligner->wavefront_slab);
-  // Display
-  if (wf_aligner->plot_params.plot_enabled) {
-    wavefront_plot_free(&wf_aligner->wf_plot);
-    wavefront_plot_allocate(&wf_aligner->wf_plot,
-        wf_aligner->penalties.distance_metric,
-        pattern_length,text_length,
-        &wf_aligner->plot_params);
-  }
   // System
   wavefront_unialigner_system_clear(wf_aligner);
 }
 /*
  * Initialize alignment
  */
-void wavefront_unialign_initialize_end2end(
-    wavefront_aligner_t* const wf_aligner) {
+void wavefront_unialign_initialize_wavefront_m(
+    wavefront_aligner_t* const wf_aligner,
+    const int pattern_length,
+    const int text_length) {
   // Parameters
   wavefront_slab_t* const wavefront_slab = wf_aligner->wavefront_slab;
   wavefront_components_t* const wf_components = &wf_aligner->wf_components;
   const distance_metric_t distance_metric = wf_aligner->penalties.distance_metric;
-  const int max_score_scope = wf_components->max_score_scope;
-  const int effective_lo = -(max_score_scope+1);
-  const int effective_hi = (max_score_scope+1);
-  // Init wavefronts
-  switch (wf_aligner->component_begin) {
-    case affine2p_matrix_M:
-      wf_components->mwavefronts[0] = wavefront_slab_allocate(wavefront_slab,effective_lo,effective_hi);
-      wf_components->mwavefronts[0]->offsets[0] = 0;
-      wf_components->mwavefronts[0]->lo = 0;
-      wf_components->mwavefronts[0]->hi = 0;
-      if (wf_components->bt_piggyback) { // Store initial BT-piggypack element
-        wf_components->mwavefronts[0]->bt_pcigar[0] = 0;
-        wf_components->mwavefronts[0]->bt_prev[0] =
-            wf_backtrace_buffer_init_block(wf_components->bt_buffer,0,0);
-      }
-      // Nullify unused WFs
-      if (distance_metric <= gap_linear) return;
-      wf_components->i1wavefronts[0] = NULL;
-      wf_components->d1wavefronts[0] = NULL;
-      if (distance_metric==gap_affine) return;
-      wf_components->i2wavefronts[0] = NULL;
-      wf_components->d2wavefronts[0] = NULL;
-      break;
-    case affine2p_matrix_I1:
-      wf_components->mwavefronts[0] = NULL;
-      wf_components->i1wavefronts[0] = wavefront_slab_allocate(wavefront_slab,effective_lo,effective_hi);
-      wf_components->i1wavefronts[0]->offsets[0] = 0;
-      wf_components->i1wavefronts[0]->lo = 0;
-      wf_components->i1wavefronts[0]->hi = 0;
-      wf_components->d1wavefronts[0] = NULL;
-      // Nullify unused WFs
-      if (distance_metric==gap_affine) return;
-      wf_components->i2wavefronts[0] = NULL;
-      wf_components->d2wavefronts[0] = NULL;
-      break;
-    case affine2p_matrix_I2:
-      wf_components->mwavefronts[0] = NULL;
-      wf_components->i1wavefronts[0] = NULL;
-      wf_components->d1wavefronts[0] = NULL;
-      wf_components->i2wavefronts[0] = wavefront_slab_allocate(wavefront_slab,effective_lo,effective_hi);
-      wf_components->i2wavefronts[0]->offsets[0] = 0;
-      wf_components->i2wavefronts[0]->lo = 0;
-      wf_components->i2wavefronts[0]->hi = 0;
-      wf_components->d2wavefronts[0] = NULL;
-      break;
-    case affine2p_matrix_D1:
-      wf_components->mwavefronts[0] = NULL;
-      wf_components->i1wavefronts[0] = NULL;
-      wf_components->d1wavefronts[0] = wavefront_slab_allocate(wavefront_slab,effective_lo,effective_hi);
-      wf_components->d1wavefronts[0]->offsets[0] = 0;
-      wf_components->d1wavefronts[0]->lo = 0;
-      wf_components->d1wavefronts[0]->hi = 0;
-      // Nullify unused WFs
-      if (distance_metric==gap_affine) return;
-      wf_components->i2wavefronts[0] = NULL;
-      wf_components->d2wavefronts[0] = NULL;
-      break;
-    case affine2p_matrix_D2:
-      wf_components->mwavefronts[0] = NULL;
-      wf_components->i1wavefronts[0] = NULL;
-      wf_components->d1wavefronts[0] = NULL;
-      wf_components->i2wavefronts[0] = NULL;
-      wf_components->d2wavefronts[0] = wavefront_slab_allocate(wavefront_slab,effective_lo,effective_hi);
-      wf_components->d2wavefronts[0]->offsets[0] = 0;
-      wf_components->d2wavefronts[0]->lo = 0;
-      wf_components->d2wavefronts[0]->hi = 0;
-      break;
-    default:
-      break;
-  }
-}
-void wavefront_unialign_endsfree_check(
-    wavefront_aligner_t* const wf_aligner,
-    const int pattern_length,
-    const int text_length) {
+  wavefront_penalties_t* const penalties = &wf_aligner->penalties;
   alignment_form_t* const form = &wf_aligner->alignment_form;
-  if (form->pattern_begin_free > pattern_length ||
-      form->pattern_end_free > pattern_length ||
-      form->text_begin_free > text_length ||
-      form->text_end_free > text_length) {
-    fprintf(stderr,"[WFA] Ends-free parameters must be not larger than the sequences "
-        "(P0=%d,Pf=%d,T0=%d,Tf=%d). Must be (P0<=|P|,Pf<=|P|,T0<=|T|,Tf<=|T|) where (|P|,|T|)=(%d,%d)\n",
-        form->pattern_begin_free,form->pattern_end_free,
-        form->text_begin_free,form->text_end_free,
-        pattern_length,text_length);
-    exit(1);
-  }
-}
-void wavefront_unialign_initialize_endsfree(
-    wavefront_aligner_t* const wf_aligner,
-    const int pattern_length,
-    const int text_length) {
-  // Check
-  wavefront_unialign_endsfree_check(wf_aligner,pattern_length,text_length);
-  // Parameters
-  wavefront_components_t* const wf_components = &wf_aligner->wf_components;
-  const distance_metric_t distance_metric = wf_aligner->penalties.distance_metric;
-  const int text_begin_free = wf_aligner->alignment_form.text_begin_free;
-  const int pattern_begin_free = wf_aligner->alignment_form.pattern_begin_free;
-  const int max_score_scope = wf_components->max_score_scope;
-  // Init wavefront zero
-  const int effective_lo = -pattern_begin_free - (max_score_scope+1);
-  const int effective_hi = text_begin_free + (max_score_scope+1);
-  wf_components->mwavefronts[0] = wavefront_slab_allocate(
-      wf_aligner->wavefront_slab,effective_lo,effective_hi);
+  // Consider ends-free
+  const int hi = (penalties->match==0) ? form->text_begin_free : 0;
+  const int lo = (penalties->match==0) ? -form->pattern_begin_free : 0;
+  // Compute dimensions
+  int effective_lo, effective_hi;
+  wavefront_compute_limits_output(wf_aligner,lo,hi,&effective_lo,&effective_hi);
+  // Initialize end2end (wavefront zero)
+  wf_components->mwavefronts[0] = wavefront_slab_allocate(wavefront_slab,effective_lo,effective_hi);
   wf_components->mwavefronts[0]->offsets[0] = 0;
-  wf_components->mwavefronts[0]->lo = -pattern_begin_free;
-  wf_components->mwavefronts[0]->hi = text_begin_free;
+  wf_components->mwavefronts[0]->lo = lo;
+  wf_components->mwavefronts[0]->hi = hi;
   // Store initial BT-piggypack element
   if (wf_components->bt_piggyback) {
     const bt_block_idx_t block_idx = wf_backtrace_buffer_init_block(wf_components->bt_buffer,0,0);
     wf_components->mwavefronts[0]->bt_pcigar[0] = 0;
     wf_components->mwavefronts[0]->bt_prev[0] = block_idx;
   }
-  // Init text begin-free
-  int h;
-  for (h=1;h<=text_begin_free;++h) {
-    const int k = DPMATRIX_DIAGONAL(h,0);
-    wf_components->mwavefronts[0]->offsets[k] = DPMATRIX_OFFSET(h,0);
-    if (wf_components->bt_piggyback) {
-      const bt_block_idx_t block_idx = wf_backtrace_buffer_init_block(wf_components->bt_buffer,0,h);
-      wf_components->mwavefronts[0]->bt_pcigar[k] = 0;
-      wf_components->mwavefronts[0]->bt_prev[k] = block_idx;
+  // Initialize ends-free
+  if (form->span == alignment_endsfree && penalties->match == 0) {
+    // Text begin-free
+    const int text_begin_free = form->text_begin_free;
+    int h;
+    for (h=1;h<=text_begin_free;++h) {
+      const int k = DPMATRIX_DIAGONAL(h,0);
+      wf_components->mwavefronts[0]->offsets[k] = DPMATRIX_OFFSET(h,0);
+      if (wf_components->bt_piggyback) {
+        const bt_block_idx_t block_idx = wf_backtrace_buffer_init_block(wf_components->bt_buffer,0,h);
+        wf_components->mwavefronts[0]->bt_pcigar[k] = 0;
+        wf_components->mwavefronts[0]->bt_prev[k] = block_idx;
+      }
     }
-  }
-  // Init pattern begin-free
-  int v;
-  for (v=1;v<=pattern_begin_free;++v) {
-    const int k = DPMATRIX_DIAGONAL(0,v);
-    wf_components->mwavefronts[0]->offsets[k] = DPMATRIX_OFFSET(0,v);
-    if (wf_components->bt_piggyback) {
-      const bt_block_idx_t block_idx = wf_backtrace_buffer_init_block(wf_components->bt_buffer,v,0);
-      wf_components->mwavefronts[0]->bt_pcigar[k] = 0;
-      wf_components->mwavefronts[0]->bt_prev[k] = block_idx;
+    // Pattern begin-free
+    const int pattern_begin_free = form->pattern_begin_free;
+    int v;
+    for (v=1;v<=pattern_begin_free;++v) {
+      const int k = DPMATRIX_DIAGONAL(0,v);
+      wf_components->mwavefronts[0]->offsets[k] = DPMATRIX_OFFSET(0,v);
+      if (wf_components->bt_piggyback) {
+        const bt_block_idx_t block_idx = wf_backtrace_buffer_init_block(wf_components->bt_buffer,v,0);
+        wf_components->mwavefronts[0]->bt_pcigar[k] = 0;
+        wf_components->mwavefronts[0]->bt_prev[k] = block_idx;
+      }
     }
   }
   // Nullify unused WFs
@@ -277,6 +182,81 @@ void wavefront_unialign_initialize_endsfree(
   if (distance_metric==gap_affine) return;
   wf_components->d2wavefronts[0] = NULL;
   wf_components->i2wavefronts[0] = NULL;
+}
+void wavefront_unialign_initialize_wavefronts(
+    wavefront_aligner_t* const wf_aligner,
+    const int pattern_length,
+    const int text_length) {
+  // Parameters
+  wavefront_slab_t* const wavefront_slab = wf_aligner->wavefront_slab;
+  wavefront_components_t* const wf_components = &wf_aligner->wf_components;
+  const distance_metric_t distance_metric = wf_aligner->penalties.distance_metric;
+  // Init wavefronts
+  if (wf_aligner->component_begin == affine2p_matrix_M) {
+    // Initialize
+    wavefront_unialign_initialize_wavefront_m(wf_aligner,pattern_length,text_length);
+    // Nullify unused WFs
+    if (distance_metric <= gap_linear) return;
+    wf_components->i1wavefronts[0] = NULL;
+    wf_components->d1wavefronts[0] = NULL;
+    if (distance_metric==gap_affine) return;
+    wf_components->i2wavefronts[0] = NULL;
+    wf_components->d2wavefronts[0] = NULL;
+  } else {
+    // Compute dimensions
+    int effective_lo, effective_hi; // Effective lo/hi
+    wavefront_compute_limits_output(wf_aligner,0,0,&effective_lo,&effective_hi);
+    wavefront_t* const wavefront = wavefront_slab_allocate(wavefront_slab,effective_lo,effective_hi);
+    // Initialize
+    switch (wf_aligner->component_begin) {
+      case affine2p_matrix_I1:
+        wf_components->mwavefronts[0] = NULL;
+        wf_components->i1wavefronts[0] = wavefront;
+        wf_components->i1wavefronts[0]->offsets[0] = 0;
+        wf_components->i1wavefronts[0]->lo = 0;
+        wf_components->i1wavefronts[0]->hi = 0;
+        wf_components->d1wavefronts[0] = NULL;
+        // Nullify unused WFs
+        if (distance_metric==gap_affine) return;
+        wf_components->i2wavefronts[0] = NULL;
+        wf_components->d2wavefronts[0] = NULL;
+        break;
+      case affine2p_matrix_I2:
+        wf_components->mwavefronts[0] = NULL;
+        wf_components->i1wavefronts[0] = NULL;
+        wf_components->d1wavefronts[0] = NULL;
+        wf_components->i2wavefronts[0] = wavefront;
+        wf_components->i2wavefronts[0]->offsets[0] = 0;
+        wf_components->i2wavefronts[0]->lo = 0;
+        wf_components->i2wavefronts[0]->hi = 0;
+        wf_components->d2wavefronts[0] = NULL;
+        break;
+      case affine2p_matrix_D1:
+        wf_components->mwavefronts[0] = NULL;
+        wf_components->i1wavefronts[0] = NULL;
+        wf_components->d1wavefronts[0] = wavefront;
+        wf_components->d1wavefronts[0]->offsets[0] = 0;
+        wf_components->d1wavefronts[0]->lo = 0;
+        wf_components->d1wavefronts[0]->hi = 0;
+        // Nullify unused WFs
+        if (distance_metric==gap_affine) return;
+        wf_components->i2wavefronts[0] = NULL;
+        wf_components->d2wavefronts[0] = NULL;
+        break;
+      case affine2p_matrix_D2:
+        wf_components->mwavefronts[0] = NULL;
+        wf_components->i1wavefronts[0] = NULL;
+        wf_components->d1wavefronts[0] = NULL;
+        wf_components->i2wavefronts[0] = NULL;
+        wf_components->d2wavefronts[0] = wavefront;
+        wf_components->d2wavefronts[0]->offsets[0] = 0;
+        wf_components->d2wavefronts[0]->lo = 0;
+        wf_components->d2wavefronts[0]->hi = 0;
+        break;
+      default:
+        break;
+    }
+  }
 }
 void wavefront_unialign_init(
     wavefront_aligner_t* const wf_aligner,
@@ -324,16 +304,9 @@ void wavefront_unialign_init(
   wf_aligner->alignment_end_pos.k = DPMATRIX_DIAGONAL_NULL;
   wf_aligner->component_begin = component_begin;
   wf_aligner->component_end = component_end;
-  if (end2end) {
-    wavefront_unialign_initialize_end2end(wf_aligner);
-  } else {
-    wavefront_unialign_initialize_endsfree(wf_aligner,pattern_length,text_length);
-  }
-  // Plot WF-0
-  const bool plot = wf_aligner->plot_params.plot_enabled;
-  if (plot) {
-    wavefront_plot(wf_aligner,pattern,text,0);
-  }
+  wavefront_unialign_initialize_wavefronts(wf_aligner,pattern_length,text_length);
+  // Plot (WF_0)
+  if (wf_aligner->plot != NULL) wavefront_plot(wf_aligner,0,0);
 }
 /*
  * Limits
@@ -397,7 +370,7 @@ void wavefront_unialign_terminate(
   if (wf_aligner->alignment_scope == compute_score) {
     cigar_clear(wf_aligner->cigar);
     wf_aligner->cigar->score =
-        wavefront_get_classic_score(wf_aligner,pattern_length,text_length,score);
+        wavefront_compute_classic_score(wf_aligner,pattern_length,text_length,score);
   } else {
     // Parameters
     wavefront_components_t* const wf_components = &wf_aligner->wf_components;
@@ -427,7 +400,7 @@ void wavefront_unialign_terminate(
     }
     // Set score & finish
     wf_aligner->cigar->score =
-        wavefront_get_classic_score(wf_aligner,pattern_length,text_length,score);
+        wavefront_compute_classic_score(wf_aligner,pattern_length,text_length,score);
   }
   // Set successful
   wf_aligner->align_status.status = WF_STATUS_SUCCESSFUL;
@@ -460,10 +433,8 @@ int wavefront_unialign(
     (*wf_align_compute)(wf_aligner,score);
     // Probe limits
     if (wavefront_unialign_reached_limits(wf_aligner,score)) return align_status->status;
-    // PROFILE
-    if (wf_aligner->plot_params.plot_enabled) {
-      wavefront_plot(wf_aligner,wf_aligner->pattern,wf_aligner->text,score);
-    }
+    // Plot
+    if (wf_aligner->plot != NULL) wavefront_plot(wf_aligner,score,0);
     // DEBUG
     //wavefront_aligner_print(stderr,wf_aligner,score,score,7,0);
   }

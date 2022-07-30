@@ -45,7 +45,9 @@
  * Checks
  */
 void wavefront_align_checks(
-    wavefront_aligner_t* const wf_aligner) {
+    wavefront_aligner_t* const wf_aligner,
+    const int pattern_length,
+    const int text_length) {
   alignment_form_t* const form = &wf_aligner->alignment_form;
   if (wf_aligner->bialigner != NULL) {
     const bool ends_free =
@@ -65,6 +67,19 @@ void wavefront_align_checks(
   if (is_heuristic_drop && (distance_metric==edit || distance_metric==indel)) {
     fprintf(stderr,"[WFA] Heuristics drops are not compatible with 'edit'/'indel' distance metrics\n");
     exit(1);
+  }
+  if (form->span == alignment_endsfree) {
+    if (form->pattern_begin_free > pattern_length ||
+        form->pattern_end_free > pattern_length ||
+        form->text_begin_free > text_length ||
+        form->text_end_free > text_length) {
+      fprintf(stderr,"[WFA] Ends-free parameters must be not larger than the sequences "
+          "(P0=%d,Pf=%d,T0=%d,Tf=%d). Must be (P0<=|P|,Pf<=|P|,T0<=|T|,Tf<=|T|) where (|P|,|T|)=(%d,%d)\n",
+          form->pattern_begin_free,form->pattern_end_free,
+          form->text_begin_free,form->text_end_free,
+          pattern_length,text_length);
+      exit(1);
+    }
   }
 }
 /*
@@ -142,7 +157,11 @@ int wavefront_align(
     const char* const text,
     const int text_length) {
   // Checks
-  wavefront_align_checks(wf_aligner);
+  wavefront_align_checks(wf_aligner,pattern_length,text_length);
+  // Plot
+  if (wf_aligner->plot != NULL) {
+    wavefront_plot_resize(wf_aligner->plot,pattern_length,text_length);
+  }
   // Dispatcher
   if (wf_aligner->bialigner != NULL) {
     wavefront_align_bidirectional(wf_aligner,pattern,pattern_length,text,text_length);

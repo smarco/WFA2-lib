@@ -63,7 +63,8 @@ typedef struct {
  * Setup
  */
 wavefront_bialigner_t* wavefront_bialigner_new(
-    wavefront_aligner_attr_t* const attributes);
+    wavefront_aligner_attr_t* const attributes,
+    wavefront_plot_t* const plot);
 void wavefront_bialigner_reap(
     wavefront_bialigner_t* const wf_bialigner);
 void wavefront_bialigner_delete(
