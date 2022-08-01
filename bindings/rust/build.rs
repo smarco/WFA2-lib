@@ -13,43 +13,9 @@
 //! Make sure to run `make lib_wfa` in the WFA repository.
 //! The code below will tell cargo to link against `../wfa2/lib/libwfa.a`.
 //!
-//! The bindings will be writted to a special `OUT_DIR` set by cargo, and can be included as:
-//! ```ignore
-//! #[allow(non_upper_case_globals)]
-//! #[allow(non_snake_case)]
-//! #[allow(non_camel_case_types)]
-//! #[allow(unused)]
-//! mod wfa {
-//!     include!(concat!(env!("OUT_DIR"), "/bindings_wfa.rs"));
-//! }
-//! ```
-//!
-//! Use them like this:
-//! ```ignore
-//! fn linear_score(a: &[i8], b: &[i8], sub: i32, indel: i32) -> i32 {
-//!     unsafe {
-//!         let mut attributes = wfa::wavefront_aligner_attr_default;
-//!         attributes.heuristic.strategy = wfa::wf_heuristic_strategy_wf_heuristic_none;
-//!         attributes.distance_metric = wfa::distance_metric_t_gap_linear;
-//!         attributes.alignment_scope = wfa::alignment_scope_t_compute_score;
-//!         attributes.linear_penalties.mismatch = sub;
-//!         attributes.linear_penalties.indel = indel;
-//!
-//!         let wf_aligner = wfa::wavefront_aligner_new(&mut attributes);
-//!         let status = wfa::wavefront_align(
-//!             wf_aligner,
-//!             a.as_ptr(),
-//!             a.len() as i32,
-//!             b.as_ptr(),
-//!             b.len() as i32,
-//!         );
-//!         assert_eq!(status, 0);
-//!         let score = (*wf_aligner).cigar.score;
-//!         wfa::wavefront_aligner_delete(wf_aligner);
-//!         score
-//!     }
-//! }
-//! ```
+//! The bindings will be writted to a special `OUT_DIR` set by cargo. See
+//! `example.rs` for an example of how to include and use the generated
+//! bindings.
 
 extern crate bindgen;
 
