@@ -128,14 +128,16 @@ void wavefront_plot_delete(
 void wavefront_plot_component(
     wavefront_aligner_t* const wf_aligner,
     wavefront_t* const wavefront,
-    const int pattern_length,
-    const int text_length,
     const int score,
     heatmap_t* const wf_heatmap,
     const bool extend) {
   // Check wavefront
   if (wavefront == NULL) return;
   // Parameters
+  const int pattern_length = wf_aligner->pattern_length;
+  const int text_length = wf_aligner->text_length;
+  const char* const pattern = wf_aligner->pattern;
+  const char* const text = wf_aligner->text;
   wavefront_plot_t* const plot = wf_aligner->plot;
   const bool reverse = (wf_aligner->align_mode == wf_align_biwfa_breakpoint_reverse);
   // Traverse all offsets
@@ -144,35 +146,41 @@ void wavefront_plot_component(
     const wf_offset_t offset = wavefront->offsets[k];
     if (offset < 0) continue;
     // Compute local coordinates
-    int v = WAVEFRONT_V(k,offset);
-    int h = WAVEFRONT_H(k,offset);
-    // Check boundaries
-    if (v < 0 || v >= pattern_length) continue;
-    if (h < 0 || h >= text_length) continue;
+    int v_local = WAVEFRONT_V(k,offset);
+    int h_local = WAVEFRONT_H(k,offset);
+    if (v_local < 0 || v_local >= pattern_length) continue;
+    if (h_local < 0 || h_local >= text_length) continue;
     // Compute global coordinates
+    int v_global, h_global;
     if (reverse) {
-      v = pattern_length - 1 - v;
-      h = text_length - 1 - h;
+      v_global = plot->offset_v + (pattern_length - 1 - v_local);
+      h_global = plot->offset_h + (text_length - 1 - h_local);
+    } else {
+      v_global = plot->offset_v + v_local;
+      h_global = plot->offset_h + h_local;
     }
-    v += plot->offset_v;
-    h += plot->offset_h;
     // Plot
-    heatmap_set(wf_heatmap,v,h,score);
+    if (reverse) {
+      if (h_local>0 && v_local>0) heatmap_set(wf_heatmap,v_global+1,h_global+1,score);
+    } else {
+      if (h_local>0 && v_local>0) heatmap_set(wf_heatmap,v_global-1,h_global-1,score);
+    }
     // Simulate extension
     if (extend) {
-      char* const pattern = wf_aligner->pattern;
-      char* const text = wf_aligner->text;
-      int v_local = WAVEFRONT_V(k,offset);
-      int h_local = WAVEFRONT_H(k,offset);
-      while (v_local<pattern_length && h_local<text_length &&
-             pattern[v_local]==text[h_local]) {
+      while (v_local < pattern_length &&
+             h_local < text_length &&
+             pattern[v_local] == text[h_local]) {
         if (reverse) {
-          v--; h--;
+          v_global--; h_global--;
         } else {
-          v++; h++;
+          v_global++; h_global++;
         }
         v_local++; h_local++;
-        heatmap_set(wf_heatmap,v,h,score);
+        if (reverse) {
+          heatmap_set(wf_heatmap,v_global+1,h_global+1,score);
+        } else {
+          heatmap_set(wf_heatmap,v_global-1,h_global-1,score);
+        }
       }
     }
   }
@@ -181,7 +189,7 @@ void wavefront_plot(
     wavefront_aligner_t* const wf_aligner,
     const int score,
     const int align_level) {
-  // if (wf_aligner->align_mode == wf_align_biwfa_breakpoint_XXX) return;
+  //if (wf_aligner->align_mode == wf_align_biwfa_breakpoint_forward) return;
   // Check plotting enabled wrt align-level
   if (wf_aligner->align_mode == wf_align_biwfa_breakpoint_forward ||
       wf_aligner->align_mode == wf_align_biwfa_breakpoint_reverse) {
@@ -190,35 +198,28 @@ void wavefront_plot(
   if (wf_aligner->align_mode == wf_align_biwfa_subsidiary &&
       wf_aligner->plot->attributes.align_level != -1) return;
   // Parameters
-  const int pattern_length = wf_aligner->pattern_length;
-  const int text_length = wf_aligner->text_length;
   const distance_metric_t distance_metric = wf_aligner->penalties.distance_metric;
   wavefront_components_t* const wf_components = &wf_aligner->wf_components;
   const int score_mod = (wf_components->memory_modular) ? score%wf_components->max_score_scope : score;
   // Plot wavefront components
   wavefront_plot_component(wf_aligner,
       wf_components->mwavefronts[score_mod],
-      pattern_length,text_length,
       score,wf_aligner->plot->m_heatmap,true);
   if (distance_metric < gap_affine) return;
   // Gap-affine
   wavefront_plot_component(wf_aligner,
       wf_components->i1wavefronts[score_mod],
-      pattern_length,text_length,
       score,wf_aligner->plot->i1_heatmap,false);
   wavefront_plot_component(wf_aligner,
       wf_components->d1wavefronts[score_mod],
-      pattern_length,text_length,
       score,wf_aligner->plot->d1_heatmap,false);
   if (distance_metric == gap_affine) return;
   // Gap-affine-2p
   wavefront_plot_component(wf_aligner,
       wf_components->i2wavefronts[score_mod],
-      pattern_length,text_length,
       score,wf_aligner->plot->i2_heatmap,false);
   wavefront_plot_component(wf_aligner,
       wf_components->d2wavefronts[score_mod],
-      pattern_length,text_length,
       score,wf_aligner->plot->d2_heatmap,false);
 }
 /*
@@ -230,18 +231,18 @@ void wavefront_plot_print_cigar(
     const char target_operation) {
   int i, h=0, v=0, count=0;
   for (i=cigar->begin_offset;i<cigar->end_offset;++i) {
-    // Print point
-    const char operation = cigar->operations[i];
-    if (operation == target_operation) {
-      if (count++ > 0) fprintf(stream,";");
-      fprintf(stream,"%d,%d",h,v);
-    }
     // Check operation
+    const char operation = cigar->operations[i];
     switch (operation) {
       case 'M': case 'X': ++h; ++v; break;
       case 'I': ++h; break;
       case 'D': ++v; break;
       default: break;
+    }
+    // Print point
+    if (operation == target_operation && h>0 && v>0) {
+      if (count++ > 0) fprintf(stream,";");
+      fprintf(stream,"%d,%d",h-1,v-1);
     }
   }
 }
@@ -267,15 +268,13 @@ void wavefront_plot_print(
   wavefront_penalties_print(stream,&wf_aligner->penalties);
   fprintf(stream,"\n");
   // Alignment mode
-  fprintf(stream,"# WFAMode (");
-  fprintf(stream,"%s",(wf_aligner->alignment_scope==compute_score)?"S":"A");
-  fprintf(stream,"%c",(wf_aligner->wf_components.bt_piggyback)?'L':'F');
-  fprintf(stream,"%c",(wf_aligner->alignment_form.span==alignment_end2end)?'G':'S');
+  fprintf(stream,"# WFAMode ");
+  wavefront_aligner_print_mode(stream,wf_aligner);
   wavefront_heuristic_t* const wf_heuristic = &wf_aligner->heuristic;
   if (wf_heuristic->strategy != wf_heuristic_none) {
     wavefront_heuristic_print(stream,wf_heuristic);
   }
-  fprintf(stream,")\n");
+  fprintf(stream,"\n");
   // Wavefront components
   fprintf(stream,"# Heatmap M\n"); heatmap_print(stream,wf_plot->m_heatmap);
   if (distance_metric == gap_affine) {

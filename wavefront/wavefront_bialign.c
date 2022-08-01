@@ -44,7 +44,8 @@
 /*
  * Config
  */
-#define WF_BIALIGN_FALLBACK_MIN_SCORE 100
+#define WF_BIALIGN_FALLBACK_MIN_SCORE  250
+#define WF_BIALIGN_FALLBACK_MIN_LENGTH 100
 
 /*
  * Debug
@@ -124,6 +125,7 @@ void wavefront_bialign_breakpoint_indel2indel(
       }
       breakpoint->score = score_0 + score_1 - gap_open;
       breakpoint->component = component;
+      // wavefront_bialign_debug(breakpoint,-1); // DEBUG
       // No need to keep searching
       return;
     }
@@ -176,6 +178,7 @@ void wavefront_bialign_breakpoint_m2m(
       }
       breakpoint->score = score_0 + score_1;
       breakpoint->component = affine2p_matrix_M;
+      // wavefront_bialign_debug(breakpoint,-1); // DEBUG
       // No need to keep searching
       return;
     }
@@ -376,7 +379,7 @@ int wavefront_bialign_find_breakpoint(
   }
   // Parameters
   const int max_alignment_score = alg_forward->system.max_alignment_score;
-  const int max_antidiagonal = DPMATRIX_ANTIDIAGONAL(pattern_length,text_length) - 1;
+  const int max_antidiagonal = DPMATRIX_ANTIDIAGONAL(pattern_length,text_length) - 1; // Note: Even removing -1
   void (*wf_align_compute)(wavefront_aligner_t* const,const int) = alg_forward->align_status.wf_align_compute;
   int score_forward = 0, score_reverse = 0, forward_max_ak = 0, reverse_max_ak = 0;
   bool end_reached;
@@ -731,11 +734,13 @@ void wavefront_bialign(
   } else {
     cigar_resize(wf_aligner->cigar,2*(pattern_length+text_length));
     // Bidirectional alignment
+    const bool min_length = MAX(pattern_length,text_length) <= WF_BIALIGN_FALLBACK_MIN_LENGTH;
     wavefront_bialign_alignment(wf_aligner,
         pattern,0,pattern_length,
         text,0,text_length,
         &wf_aligner->alignment_form,
-        affine_matrix_M,affine_matrix_M,INT_MAX,0);
+        affine_matrix_M,affine_matrix_M,
+        min_length ? 0 : INT_MAX,0);
   }
 }
 

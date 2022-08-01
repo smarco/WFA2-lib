@@ -69,6 +69,8 @@ def wfa_plot_ticks(ax,data,detailed):
   # Compute dimensions
   ylen = data.shape[0]
   xlen = data.shape[1]
+  plen = int(wfa_info["PatternLength"])
+  tlen = int(wfa_info["TextLength"])
   # Detailed mode
   if detailed:
     # Parameters
@@ -102,11 +104,30 @@ def wfa_plot_ticks(ax,data,detailed):
     # Gridlines (based on major)
     ax.grid(which='major',color="black",linestyle='-',linewidth=0.25)
   else:
-    ax.tick_params(axis='both',which='major',labelsize=6)
+    # X-ticks
+    x_ticks = [i for i in range(0,xlen-1,xlen//5)]
+    if x_ticks[-1]+5 < xlen-1: x_ticks.append(xlen-1)  
+    else: x_ticks[-1] = xlen-1
+    x_ratio = tlen/xlen
+    x_ticks_labels = [int(i*x_ratio) for i in x_ticks]
+    x_ticks_labels[-1] = tlen-1
+    # Y-ticks
+    y_ticks = [i for i in range(0,ylen-1,ylen//5)]
+    if y_ticks[-1]+5 < ylen-1: y_ticks.append(ylen-1)  
+    else: y_ticks[-1] = ylen-1
+    y_ratio = plen/ylen
+    y_ticks_labels = [int(i*y_ratio) for i in y_ticks]
+    y_ticks_labels[-1] = plen-1
+    # Set ticks
+    ax.set_yticks(y_ticks)
+    ax.set_yticklabels(y_ticks_labels,fontsize=6)
+    ax.set_xticks(x_ticks)
+    ax.set_xticklabels(x_ticks_labels,fontsize=6)
+    # Set grid
     ax.grid(which='major',color="black",linestyle='-',linewidth=0.25)
 
 def wfa_plot_wavefront(wfa_info,title,ax,data,detailed,
-                       xlabel=False,ylabel=True):
+                       xlabel=False,ylabel=False):
   # Compute dimensions
   ylen = data.shape[0]
   xlen = data.shape[1]
@@ -118,6 +139,7 @@ def wfa_plot_wavefront(wfa_info,title,ax,data,detailed,
   if xlabel: ax.set_xlabel('Text',fontsize=8)
   if ylabel: ax.set_ylabel('Pattern',fontsize=8)
   # Create colorbar
+  #cmap = LinearSegmentedColormap.from_list('rg',['tab:green','yellow','tab:red'],N=256)
   cmap = copy.copy(plt.cm.jet)
   cmap.set_bad('whitesmoke')
   # Heatmap
@@ -160,7 +182,7 @@ def wfa_plot_cigar(ax,wfa_info):
   ax.legend(loc="upper right",prop={'size': 3}) 
 
 def wfa_plot_xtra(wfa_info,title,ax,data,detailed, 
-                       xlabel=False,ylabel=False): 
+                  xlabel=False,ylabel=False): 
   # Title
   ax.set_title(title,fontsize=10) 
   # Set ticks & grid
@@ -195,33 +217,34 @@ def wfa_plot(filename,wfa_info,dpi,mode,detailed):
     fig, ax1 = plt.subplots(nrows=1,ncols=1,dpi=dpi,sharex=True)
     im1 = wfa_plot_wavefront(wfa_info,'M-Wavefront',ax1,wfa_info["M"],detailed,xlabel=True,ylabel=True)
   elif extended or wfa_info["Distance"]=="Edit":
-    fig, (ax1,ax3) = plt.subplots(nrows=2,ncols=1,dpi=dpi,sharex=True)
-    im1 = wfa_plot_wavefront(wfa_info,'M-Wavefront',ax1,wfa_info["M"],detailed,ylabel=True)
-    im3 = wfa_plot_xtra(wfa_info,'CIGAR',ax3,wfa_info["Extend"],detailed,xlabel=True,ylabel=True)
+    fig, (ax1,ax2) = plt.subplots(nrows=1,ncols=2,dpi=dpi,sharex=True)
+    im1 = wfa_plot_wavefront(wfa_info,'M-Wavefront',ax1,wfa_info["M"],detailed,xlabel=True,ylabel=True)
+    im3 = wfa_plot_xtra(wfa_info,'CIGAR',ax2,wfa_info["Extend"],detailed,xlabel=True)
   elif wfa_info["Distance"]=="GapLineal" or wfa_info["Distance"]=="GapAffine":
-    fig, ((ax1,ax2),(ax3,ax4)) = plt.subplots(nrows=2,ncols=2,dpi=dpi,sharex=True)
-    im1 = wfa_plot_wavefront(wfa_info,'M-Wavefront',ax1,wfa_info["M"],detailed,ylabel=True)
-    im2 = wfa_plot_wavefront(wfa_info,'I1-Wavefront',ax2,wfa_info["I1"],detailed)
-    im4 = wfa_plot_wavefront(wfa_info,'D1-Wavefront',ax4,wfa_info["D1"],detailed,xlabel=True)
-    im3 = wfa_plot_xtra(wfa_info,'CIGAR',ax3,wfa_info["Extend"],detailed,xlabel=True,ylabel=True)
+    fig, (ax1,ax2,ax3) = plt.subplots(nrows=1,ncols=3,dpi=dpi,sharex=True)
+    im1 = wfa_plot_wavefront(wfa_info,'M-Wavefront',ax1,wfa_info["M"],detailed,xlabel=True,ylabel=True)
+    im2 = wfa_plot_wavefront(wfa_info,'I1-Wavefront',ax2,wfa_info["I1"],detailed,xlabel=True)
+    im3 = wfa_plot_wavefront(wfa_info,'D1-Wavefront',ax3,wfa_info["D1"],detailed,xlabel=True)
   elif wfa_info["Distance"]=="GapAffine2p":    
     fig, ((ax1,ax2,ax5),(ax3,ax4,ax6)) = plt.subplots(nrows=2,ncols=3,dpi=dpi,sharex=True)
-    im1 = wfa_plot_wavefront(wfa_info,'M-Wavefront',ax1,wfa_info["M"],detailed,ylabel=True)
-    im2 = wfa_plot_wavefront(wfa_info,'I1-Wavefront',ax2,wfa_info["I1"],detailed)
+    im1 = wfa_plot_wavefront(wfa_info,'M-Wavefront',ax1,wfa_info["M"],detailed,xlabel=True,ylabel=True)
+    im2 = wfa_plot_wavefront(wfa_info,'I1-Wavefront',ax2,wfa_info["I1"],detailed,xlabel=True)
     im4 = wfa_plot_wavefront(wfa_info,'D1-Wavefront',ax4,wfa_info["D1"],detailed,xlabel=True)
-    im5 = wfa_plot_wavefront(wfa_info,'I2-Wavefront',ax5,wfa_info["I2"],detailed)
-    im6 = wfa_plot_wavefront(wfa_info,'D2-Wavefront',ax6,wfa_info["D2"],detailed,xlabel=True)
-    im3 = wfa_plot_xtra(wfa_info,'CIGAR',ax3,wfa_info["Extend"],detailed,xlabel=True,ylabel=True)
+    im5 = wfa_plot_wavefront(wfa_info,'I2-Wavefront',ax5,wfa_info["I2"],detailed,ylabel=True)
+    im6 = wfa_plot_wavefront(wfa_info,'D2-Wavefront',ax6,wfa_info["D2"],detailed)
+    im3 = wfa_plot_xtra(wfa_info,'CIGAR',ax3,wfa_info["Extend"],detailed)
   # Color bar
   if compact:
     p0 = ax1.get_position().get_points().flatten()
     p1 = p0
+    pass
   elif extended or wfa_info["Distance"]=="Edit":
     p0 = ax1.get_position().get_points().flatten()
-    p1 = p0
+    p1 = ax2.get_position().get_points().flatten()
+    pass
   elif wfa_info["Distance"]=="GapLineal" or wfa_info["Distance"]=="GapAffine":
-    p0 = ax3.get_position().get_points().flatten()
-    p1 = ax4.get_position().get_points().flatten()
+    p0 = ax1.get_position().get_points().flatten()
+    p1 = ax3.get_position().get_points().flatten()
   elif wfa_info["Distance"]=="GapAffine2p":    
     p0 = ax3.get_position().get_points().flatten()
     p1 = ax6.get_position().get_points().flatten()

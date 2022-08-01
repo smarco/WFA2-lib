@@ -192,6 +192,8 @@ wavefront_aligner_t* wavefront_aligner_new(
   if (attributes->plot.enabled) {
     wf_aligner->plot = wavefront_plot_new(attributes->distance_metric,
         PATTERN_LENGTH_INIT,TEXT_LENGTH_INIT,&attributes->plot);
+  } else {
+    wf_aligner->plot = NULL;
   }
   // Alignment
   wavefront_aligner_init_alignment(wf_aligner,attributes,memory_modular,bt_piggyback,bi_alignment);
@@ -428,6 +430,17 @@ void wavefront_aligner_print_scope(
         wf_aligner->alignment_form.pattern_end_free,
         wf_aligner->alignment_form.text_begin_free,
         wf_aligner->alignment_form.text_end_free);
+  }
+}
+void wavefront_aligner_print_mode(
+    FILE* const stream,
+    wavefront_aligner_t* const wf_aligner) {
+  fprintf(stream,"(%s,",(wf_aligner->alignment_scope==compute_score)?"Score":"Alg");
+  switch (wf_aligner->memory_mode) {
+    case wavefront_memory_high: fprintf(stream,"MHigh)"); break;
+    case wavefront_memory_med: fprintf(stream,"MMed)"); break;
+    case wavefront_memory_low: fprintf(stream,"MLow)"); break;
+    case wavefront_memory_ultralow: fprintf(stream,"BiWFA)"); break;
   }
 }
 

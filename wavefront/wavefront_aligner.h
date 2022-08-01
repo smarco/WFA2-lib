@@ -213,5 +213,8 @@ void wavefront_aligner_print_type(
 void wavefront_aligner_print_scope(
     FILE* const stream,
     wavefront_aligner_t* const wf_aligner);
+void wavefront_aligner_print_mode(
+    FILE* const stream,
+    wavefront_aligner_t* const wf_aligner);
 
 #endif /* WAVEFRONT_ALIGNER_H_ */

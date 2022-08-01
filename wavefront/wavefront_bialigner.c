@@ -82,6 +82,7 @@ void wavefront_bialigner_delete(
   wavefront_aligner_delete(wf_bialigner->alg_forward);
   wavefront_aligner_delete(wf_bialigner->alg_reverse);
   wavefront_aligner_delete(wf_bialigner->alg_subsidiary);
+  free(wf_bialigner);
 }
 /*
  * Accessors
