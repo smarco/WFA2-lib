@@ -142,6 +142,11 @@ cout << "Alignment score " << aligner.getAlignmentScore() << endl;
 
 **IMPORTANT.** Once an alignment object is created, **it is strongly recommended to reuse it to compute multiple alignments**. Creating and destroying the alignment object for every alignment computed can have a significant overhead. Reusing the alignment object allows repurposing internal data structures, minimising the cost of memory allocations, and avoiding multiple alignment setups and precomputations.
 
+### <a name="wfa2.programming.rust"></a> 2.3 Rust bindings
+
+Rust bindings can be generated automatically using `bindgen`, see [bindings/rust/build.rs](bindings/rust/build.rs).
+An example of how to use them is [here](./bindings/rust/example.rs).
+
 ## <a name="wfa2.features"></a> 3. WFA2-LIB FEATURES
 
 * **Exact alignment** method that computes the optimal **alignment score** and/or **alignment CIGAR**.
