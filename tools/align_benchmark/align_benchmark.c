@@ -110,6 +110,7 @@ typedef struct {
   double text_end_free;
   // Wavefront parameters
   bool wfa_score_only;
+  int max_score;
   wf_heuristic_strategy wfa_heuristic;
   int wfa_heuristic_p1;
   int wfa_heuristic_p2;
@@ -179,6 +180,7 @@ benchmark_args parameters = {
   .text_end_free = 0.0,
   // Wavefront parameters
   .wfa_score_only = false,
+  .max_score = INT_MAX,
   .wfa_heuristic = wf_heuristic_none,
   .wfa_heuristic_p1 = -1,
   .wfa_heuristic_p2 = -1,
@@ -300,7 +302,8 @@ wavefront_aligner_t* align_input_configure_wavefront(
   if (parameters.wfa_score_only) {
     attributes.alignment_scope = compute_score;
   }
-  // WF-Heuristic
+  attributes.system.max_alignment_score = parameters.max_score;
+    // WF-Heuristic
   switch (parameters.wfa_heuristic) {
     case wf_heuristic_none:
       attributes.heuristic.strategy = wf_heuristic_none;
@@ -742,6 +745,7 @@ void usage() {
       "          --ends-free P0,Pf,T0,Tf                                       \n"
       "        [Wavefront parameters]                                          \n"
       "          --wfa-score-only                                              \n"
+      "          --max-score S                                                 \n"
       "          --wfa-memory-mode 'high'|'med'|'low'|'ultralow'               \n"
       "          --wfa-heuristic STRATEGY                                      \n"
       "          --wfa-heuristic-parameters  P1,P2[,P3]                        \n"
@@ -791,12 +795,13 @@ void parse_arguments(int argc,char** argv) {
     { "ends-free", required_argument, 0, 901 },
     /* Wavefront parameters */
     { "wfa-score-only", no_argument, 0, 1000 },
-    { "wfa-memory-mode", required_argument, 0, 1001 },
-    { "wfa-heuristic", required_argument, 0, 1002 },
-    { "wfa-heuristic-parameters", required_argument, 0, 1003 },
-    { "wfa-custom-match-funct", no_argument, 0, 1004 },
-    { "wfa-max-memory", required_argument, 0, 1005 },
-    { "wfa-max-threads", required_argument, 0, 1006 },
+    { "max-score", required_argument, 0, 1001 },
+    { "wfa-memory-mode", required_argument, 0, 1002 },
+    { "wfa-heuristic", required_argument, 0, 1003 },
+    { "wfa-heuristic-parameters", required_argument, 0, 1004 },
+    { "wfa-custom-match-funct", no_argument, 0, 1005 },
+    { "wfa-max-memory", required_argument, 0, 1006 },
+    { "wfa-max-threads", required_argument, 0, 1007 },
     /* Other alignment parameters */
     { "bandwidth", required_argument, 0, 2000 },
     /* Misc */
@@ -934,7 +939,10 @@ void parse_arguments(int argc,char** argv) {
     case 1000: // --wfa-score-only
       parameters.wfa_score_only = true;
       break;
-    case 1001: // --wfa-memory-mode in {'high','med','low'}
+    case 1001: // --max-score
+        parameters.max_score = atoi(optarg);
+        break;
+    case 1002: // --wfa-memory-mode in {'high','med','low'}
       if (strcmp(optarg,"high")==0) {
         parameters.wfa_memory_mode = wavefront_memory_high;
       } else if (strcmp(optarg,"med")==0) {
@@ -948,7 +956,7 @@ void parse_arguments(int argc,char** argv) {
         exit(1);
       }
       break;
-    case 1002: // --wfa-heuristic in {'none'|'banded-static'|'banded-adaptive'|'wfa-adaptive'|'xdrop'|'zdrop'}
+    case 1003: // --wfa-heuristic in {'none'|'banded-static'|'banded-adaptive'|'wfa-adaptive'|'xdrop'|'zdrop'}
       if (strcmp(optarg,"none")==0) {
         parameters.wfa_heuristic = wf_heuristic_none;
       } else if (strcmp(optarg,"banded-static")==0 || strcmp(optarg,"banded")==0) {
@@ -966,7 +974,7 @@ void parse_arguments(int argc,char** argv) {
         exit(1);
       }
       break;
-    case 1003: { // --wfa-heuristic-parameters  <P1>,<P2>[,<P3>]
+    case 1004: { // --wfa-heuristic-parameters  <P1>,<P2>[,<P3>]
       char* sentinel = strtok(optarg,",");
       const int p1 = atoi(sentinel);
       parameters.wfa_heuristic_p1 = p1;
@@ -980,14 +988,14 @@ void parse_arguments(int argc,char** argv) {
       }
       break;
     }
-    case 1004: // --wfa-custom-match-funct
+    case 1005: // --wfa-custom-match-funct
       parameters.wfa_match_funct = match_function;
       parameters.wfa_match_funct_arguments = &match_function_params;
       break;
-    case 1005: // --wfa-max-memory
+    case 1006: // --wfa-max-memory
       parameters.wfa_max_memory = atol(optarg);
       break;
-    case 1006: // --wfa-max-threads
+    case 1007: // --wfa-max-threads
       parameters.wfa_max_threads = atoi(optarg);
       break;
     /*
