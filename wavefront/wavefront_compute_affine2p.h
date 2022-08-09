@@ -35,7 +35,7 @@
 #include "wavefront_aligner.h"
 
 /*
- * Compute wavefront (gap-affine-2p)
+ * Compute Wavefronts (gap-affine-2p)
  */
 void wavefront_compute_affine2p(
     wavefront_aligner_t* const wf_aligner,

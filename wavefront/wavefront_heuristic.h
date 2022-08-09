@@ -47,15 +47,16 @@ typedef enum {
   wf_heuristic_wfadaptive      = 0x0000000000000004ul,
   wf_heuristic_xdrop           = 0x0000000000000010ul,
   wf_heuristic_zdrop           = 0x0000000000000020ul,
+  wf_heuristic_wfmash          = 0x0000000000000040ul,
 } wf_heuristic_strategy;
 typedef struct {
   // Heuristic
   wf_heuristic_strategy strategy;     // Heuristic strategy
   int steps_between_cutoffs;          // Score-steps between heuristic cut-offs
-  // Banded
+  // Static/Adaptive Banded
   int min_k;                          // Banded: Minimum k to consider in band
   int max_k;                          // Banded: Maximum k to consider in band
-  // Adaptive
+  // WFAdaptive
   int min_wavefront_length;           // Adaptive: Minimum wavefronts length to cut-off
   int max_distance_threshold;         // Adaptive: Maximum distance between offsets allowed
   // Drops
@@ -73,6 +74,27 @@ typedef struct {
  */
 void wavefront_heuristic_set_none(
     wavefront_heuristic_t* const wf_heuristic);
+
+void wavefront_heuristic_set_wfadaptive(
+    wavefront_heuristic_t* const wf_heuristic,
+    const int min_wavefront_length,
+    const int max_distance_threshold,
+    const int steps_between_cutoffs);
+void wavefront_heuristic_set_wfmash(
+    wavefront_heuristic_t* const wf_heuristic,
+    const int min_wavefront_length,
+    const int max_distance_threshold,
+    const int steps_between_cutoffs);
+
+void wavefront_heuristic_set_xdrop(
+    wavefront_heuristic_t* const wf_heuristic,
+    const int xdrop,
+    const int steps_between_cutoffs);
+void wavefront_heuristic_set_zdrop(
+    wavefront_heuristic_t* const wf_heuristic,
+    const int ydrop,
+    const int steps_between_cutoffs);
+
 void wavefront_heuristic_set_banded_static(
     wavefront_heuristic_t* const wf_heuristic,
     const int band_min_k,
@@ -81,19 +103,6 @@ void wavefront_heuristic_set_banded_adaptive(
     wavefront_heuristic_t* const wf_heuristic,
     const int band_min_k,
     const int band_max_k,
-    const int steps_between_cutoffs);
-void wavefront_heuristic_set_wfadaptive(
-    wavefront_heuristic_t* const wf_heuristic,
-    const int min_wavefront_length,
-    const int max_distance_threshold,
-    const int steps_between_cutoffs);
-void wavefront_heuristic_set_xdrop(
-    wavefront_heuristic_t* const wf_heuristic,
-    const int xdrop,
-    const int steps_between_cutoffs);
-void wavefront_heuristic_set_zdrop(
-    wavefront_heuristic_t* const wf_heuristic,
-    const int ydrop,
     const int steps_between_cutoffs);
 
 void wavefront_heuristic_clear(

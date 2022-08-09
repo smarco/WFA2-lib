@@ -39,32 +39,24 @@ void wavefront_heuristic_set_none(
     wavefront_heuristic_t* const wf_heuristic) {
   wf_heuristic->strategy = wf_heuristic_none;
 }
-void wavefront_heuristic_set_banded_static(
-    wavefront_heuristic_t* const wf_heuristic,
-    const int band_min_k,
-    const int band_max_k) {
-  wf_heuristic->strategy = wf_heuristic_banded_static;
-  wf_heuristic->min_k = band_min_k;
-  wf_heuristic->max_k = band_max_k;
-}
-void wavefront_heuristic_set_banded_adaptive(
-    wavefront_heuristic_t* const wf_heuristic,
-    const int band_min_k,
-    const int band_max_k,
-    const int steps_between_cutoffs) {
-  wf_heuristic->strategy = wf_heuristic_banded_adaptive;
-  wf_heuristic->min_k = band_min_k;
-  wf_heuristic->max_k = band_max_k;
-  wf_heuristic->steps_between_cutoffs = steps_between_cutoffs;
-  // Internals
-  wf_heuristic->steps_wait = steps_between_cutoffs;
-}
 void wavefront_heuristic_set_wfadaptive(
     wavefront_heuristic_t* const wf_heuristic,
     const int min_wavefront_length,
     const int max_distance_threshold,
     const int steps_between_cutoffs) {
-  wf_heuristic->strategy = wf_heuristic_wfadaptive;
+  wf_heuristic->strategy |= wf_heuristic_wfadaptive;
+  wf_heuristic->min_wavefront_length = min_wavefront_length;
+  wf_heuristic->max_distance_threshold = max_distance_threshold;
+  wf_heuristic->steps_between_cutoffs = steps_between_cutoffs;
+  // Internals
+  wf_heuristic->steps_wait = steps_between_cutoffs;
+}
+void wavefront_heuristic_set_wfmash(
+    wavefront_heuristic_t* const wf_heuristic,
+    const int min_wavefront_length,
+    const int max_distance_threshold,
+    const int steps_between_cutoffs) {
+  wf_heuristic->strategy |= wf_heuristic_wfmash;
   wf_heuristic->min_wavefront_length = min_wavefront_length;
   wf_heuristic->max_distance_threshold = max_distance_threshold;
   wf_heuristic->steps_between_cutoffs = steps_between_cutoffs;
@@ -75,7 +67,7 @@ void wavefront_heuristic_set_xdrop(
     wavefront_heuristic_t* const wf_heuristic,
     const int xdrop,
     const int steps_between_cutoffs) {
-  wf_heuristic->strategy = wf_heuristic_xdrop;
+  wf_heuristic->strategy |= wf_heuristic_xdrop;
   wf_heuristic->xdrop = xdrop;
   wf_heuristic->steps_between_cutoffs = steps_between_cutoffs;
   // Internals
@@ -88,7 +80,7 @@ void wavefront_heuristic_set_zdrop(
     wavefront_heuristic_t* const wf_heuristic,
     const int zdrop,
     const int steps_between_cutoffs) {
-  wf_heuristic->strategy = wf_heuristic_zdrop;
+  wf_heuristic->strategy |= wf_heuristic_zdrop;
   wf_heuristic->zdrop = zdrop;
   wf_heuristic->steps_between_cutoffs = steps_between_cutoffs;
   // Internals
@@ -96,6 +88,26 @@ void wavefront_heuristic_set_zdrop(
   wf_heuristic->max_sw_score = 0;
   wf_heuristic->max_sw_score_offset = WAVEFRONT_OFFSET_NULL;
   wf_heuristic->max_sw_score_k = DPMATRIX_DIAGONAL_NULL;
+}
+void wavefront_heuristic_set_banded_static(
+    wavefront_heuristic_t* const wf_heuristic,
+    const int band_min_k,
+    const int band_max_k) {
+  wf_heuristic->strategy |= wf_heuristic_banded_static;
+  wf_heuristic->min_k = band_min_k;
+  wf_heuristic->max_k = band_max_k;
+}
+void wavefront_heuristic_set_banded_adaptive(
+    wavefront_heuristic_t* const wf_heuristic,
+    const int band_min_k,
+    const int band_max_k,
+    const int steps_between_cutoffs) {
+  wf_heuristic->strategy |= wf_heuristic_banded_adaptive;
+  wf_heuristic->min_k = band_min_k;
+  wf_heuristic->max_k = band_max_k;
+  wf_heuristic->steps_between_cutoffs = steps_between_cutoffs;
+  // Internals
+  wf_heuristic->steps_wait = steps_between_cutoffs;
 }
 void wavefront_heuristic_clear(
     wavefront_heuristic_t* const wf_heuristic) {
@@ -108,7 +120,7 @@ void wavefront_heuristic_clear(
 /*
  * Utils
  */
-int wf_compute_distance_end2end(
+int wf_distance_end2end(
     const wf_offset_t offset,
     const int k,
     const int pattern_length,
@@ -117,7 +129,19 @@ int wf_compute_distance_end2end(
   const int left_h = text_length - WAVEFRONT_H(k,offset);
   return (offset >= 0) ? MAX(left_v,left_h) : -WAVEFRONT_OFFSET_NULL;
 }
-int wf_compute_distance_endsfree(
+int wf_distance_end2end_weighted(
+    const wf_offset_t offset,
+    const int k,
+    const int pattern_length,
+    const int text_length,
+    const int mfactor) {
+  const int v = WAVEFRONT_V(k,offset);
+  const int h = WAVEFRONT_H(k,offset);
+  const int left_v = ((float)(pattern_length - v)/pattern_length * mfactor);
+  const int left_h = ((float)(text_length - h)/text_length * mfactor);
+  return (offset >= 0) ? MAX(left_v,left_h) : -WAVEFRONT_OFFSET_NULL;
+}
+int wf_distance_endsfree(
     const wf_offset_t offset,
     const int k,
     const int pattern_length,
@@ -132,26 +156,7 @@ int wf_compute_distance_endsfree(
   const int dist_down = MAX(left_v,left_h_endsfree);
   return (offset >= 0) ? MIN(dist_up,dist_down) : -WAVEFRONT_OFFSET_NULL;
 }
-int wf_compute_sw_score(
-    const int wf_score,
-    const wf_offset_t offset,
-    const int k) {
-  const int v = WAVEFRONT_V(k,offset);
-  const int h = WAVEFRONT_H(k,offset);
-  return (offset >= 0) ? MIN(v,h) - wf_score : WAVEFRONT_OFFSET_NULL;
-}
-int wf_compute_sw_score_single_gap(
-    const int gap_extension,
-    const wf_offset_t wf1_offset,
-    const int wf1_k,
-    const wf_offset_t wf2_offset,
-    const int wf2_k) {
-  const int diff_h = WAVEFRONT_H(wf2_k,wf2_offset) - WAVEFRONT_H(wf1_k,wf1_offset);
-  const int diff_v = WAVEFRONT_V(wf2_k,wf2_offset) - WAVEFRONT_V(wf1_k,wf1_offset);
-  const int abs_diff = (diff_h >= diff_v) ? diff_h-diff_v : diff_v-diff_h;
-  return abs_diff * gap_extension;
-}
-void wavefront_heuristic_cutoff_equate(
+void wf_heuristic_equate(
     wavefront_t* const wavefront_dst,
     wavefront_t* const wavefront_src) {
   if (wavefront_dst != NULL) {
@@ -164,63 +169,9 @@ void wavefront_heuristic_cutoff_equate(
   }
 }
 /*
- * Cut-offs Banded
+ * Heuristic Cut-off Wavefront-Adaptive
  */
-void wavefront_cufoff_banded_static(
-    wavefront_aligner_t* const wf_aligner,
-    wavefront_t* const wavefront) {
-  // Parameters
-  wavefront_heuristic_t* const wf_heuristic = &wf_aligner->heuristic;
-  // Check wavefront limits
-  if (wavefront->lo < wf_heuristic->min_k) wavefront->lo = wf_heuristic->min_k;
-  if (wavefront->hi > wf_heuristic->max_k) wavefront->hi = wf_heuristic->max_k;
-}
-void wavefront_cufoff_banded_adaptive(
-    wavefront_aligner_t* const wf_aligner,
-    wavefront_t* const wavefront) {
-  // Parameters
-  const int pattern_length = wf_aligner->pattern_length;
-  const int text_length = wf_aligner->text_length;
-  wavefront_heuristic_t* const wf_heuristic = &wf_aligner->heuristic;
-  // Check steps
-  if (wf_heuristic->steps_wait > 0) return;
-  // Check wavefront length
-  const int lo = wavefront->lo;
-  const int hi = wavefront->hi;
-  const int wf_length = hi - lo + 1;
-  if (wf_length < 4) return; // We cannot do anything here
-  // Adjust the band
-  const wf_offset_t* const offsets = wavefront->offsets;
-  const int max_wf_length = wf_heuristic->max_k - wf_heuristic->min_k + 1;
-  if (wf_length > max_wf_length) {
-    // Sample wavefront
-    const int leeway = (wf_length - max_wf_length) / 2;
-    const int quarter = wf_length / 4;
-    const int dist_p0 = wf_compute_distance_end2end(
-        offsets[lo],lo,pattern_length,text_length);
-    const int dist_p1 = wf_compute_distance_end2end(
-        offsets[lo+quarter],lo+quarter,pattern_length,text_length);
-    const int dist_p2 = wf_compute_distance_end2end(
-        offsets[lo+2*quarter],lo+2*quarter,pattern_length,text_length);
-    const int dist_p3 = wf_compute_distance_end2end(
-        offsets[hi],hi,pattern_length,text_length);
-    // Heuristically decide where to place the band
-    int new_lo = lo;
-    if (dist_p0 > dist_p3) new_lo += leeway;
-    if (dist_p1 > dist_p2) new_lo += leeway;
-    // Set wavefront limits
-    wavefront->lo = new_lo;
-    if (wavefront->lo < lo) wavefront->lo = lo;
-    wavefront->hi = new_lo + max_wf_length - 1;
-    if (wavefront->hi > hi) wavefront->hi = hi;
-  }
-  // Set wait steps (don't repeat this heuristic often)
-  wf_heuristic->steps_wait = wf_heuristic->steps_between_cutoffs;
-}
-/*
- * Cut-off Wavefront Adaptive
- */
-int wavefront_compute_distance_end2end(
+int wf_compute_distance_end2end(
     wavefront_t* const wavefront,
     const int pattern_length,
     const int text_length,
@@ -230,14 +181,33 @@ int wavefront_compute_distance_end2end(
   int k, min_distance = MAX(pattern_length,text_length);
   PRAGMA_LOOP_VECTORIZE
   for (k=wavefront->lo;k<=wavefront->hi;++k) {
-    const int distance = wf_compute_distance_end2end(
+    const int distance = wf_distance_end2end(
         offsets[k],k,pattern_length,text_length);
     distances[k] = distance;
     min_distance = MIN(min_distance,distance);
   }
   return min_distance;
 }
-int wavefront_compute_distance_endsfree(
+int wf_compute_distance_end2end_weighted(
+    wavefront_t* const wavefront,
+    const int pattern_length,
+    const int text_length,
+    wf_offset_t* const distances) {
+  // Parameters
+  const int mfactor = ((float)(pattern_length + text_length) / 2); // Mean sequence length
+  // Compute min-distance
+  const wf_offset_t* const offsets = wavefront->offsets;
+  int k, min_distance = MAX(pattern_length,text_length);
+  PRAGMA_LOOP_VECTORIZE
+  for (k=wavefront->lo;k<=wavefront->hi;++k) {
+    const int distance = wf_distance_end2end_weighted(
+        offsets[k],k,pattern_length,text_length,mfactor);
+    distances[k] = distance;
+    min_distance = MIN(min_distance,distance);
+  }
+  return min_distance;
+}
+int wf_compute_distance_endsfree(
     wavefront_t* const wavefront,
     const int pattern_length,
     const int text_length,
@@ -249,7 +219,7 @@ int wavefront_compute_distance_endsfree(
   int k, min_distance = MAX(pattern_length,text_length);
   PRAGMA_LOOP_VECTORIZE
   for (k=wavefront->lo;k<=wavefront->hi;++k) {
-    const int distance = wf_compute_distance_endsfree(
+    const int distance = wf_distance_endsfree(
         offsets[k],k,pattern_length,text_length,
         pattern_end_free,text_end_free);
     distances[k] = distance;
@@ -257,7 +227,7 @@ int wavefront_compute_distance_endsfree(
   }
   return min_distance;
 }
-void wavefront_cufoff_wfadaptive_reduce(
+void wf_heuristic_wfadaptive_reduce(
     wavefront_t* const wavefront,
     const wf_offset_t* const distances,
     const int min_distance,
@@ -282,9 +252,10 @@ void wavefront_cufoff_wfadaptive_reduce(
   }
   wavefront->hi = hi_reduced;
 }
-void wavefront_cufoff_wfadaptive(
+void wavefront_heuristic_wfadaptive(
     wavefront_aligner_t* const wf_aligner,
-    wavefront_t* const wavefront) {
+    wavefront_t* const wavefront,
+    const bool wfmash_mode) {
   // Parameters
   const int pattern_length = wf_aligner->pattern_length;
   const int text_length = wf_aligner->text_length;
@@ -301,56 +272,60 @@ void wavefront_cufoff_wfadaptive(
   wavefront_components_resize_null__victim(&wf_aligner->wf_components,base_lo-1,base_hi+1);
   wf_offset_t* const distances = wf_aligner->wf_components.wavefront_victim->offsets;
   // Compute distance & cut-off
-//  const int pattern_end_free = wf_aligner->alignment_form.pattern_end_free;
-//  const int text_end_free = wf_aligner->alignment_form.text_end_free;
-//  if ((wf_aligner->alignment_form.span == alignment_end2end) ||
-//      (pattern_end_free==0 && text_end_free==0)) {
-    const int min_distance = wavefront_compute_distance_end2end(
+  int min_distance;
+  if (wfmash_mode) {
+    min_distance = wf_compute_distance_end2end_weighted(
         wavefront,pattern_length,text_length,distances);
-    // Cut-off wavefront
-    const int alignment_k = DPMATRIX_DIAGONAL(text_length,pattern_length);
-    wavefront_cufoff_wfadaptive_reduce(
-        wavefront,distances,min_distance,max_distance_threshold,
-        alignment_k,alignment_k);
-//  }
-//  else {
-//    const int min_distance = wavefront_compute_distance_endsfree(
-//        wavefront,pattern_length,text_length,
-//        pattern_end_free,text_end_free,distances);
-//    // Cut-off wavefront
-//    const int alignment_k = DPMATRIX_DIAGONAL(text_length,pattern_length);
-//    wavefront_cufoff_wfadaptive_reduce(
-//        wavefront,distances,min_distance,max_distance_threshold,
-//        alignment_k-text_end_free,alignment_k+pattern_end_free);
-//  }
+  } else {
+    min_distance = wf_compute_distance_end2end(
+        wavefront,pattern_length,text_length,distances);
+  }
+  // Cut-off wavefront
+  const int alignment_k = DPMATRIX_DIAGONAL(text_length,pattern_length);
+  wf_heuristic_wfadaptive_reduce(
+      wavefront,distances,min_distance,max_distance_threshold,
+      alignment_k,alignment_k);
   // Set wait steps (don't repeat this heuristic often)
   wf_heuristic->steps_wait = wf_heuristic->steps_between_cutoffs;
 }
 /*
- * Drops
+ * Heuristic Cut-off Drops
  */
-void wavefront_compute_sw_scores(
+void wf_heuristic_compute_sw_scores(
+    wavefront_aligner_t* const wf_aligner,
     wavefront_t* const wavefront,
-    const int score,
+    const int wf_score,
     wf_offset_t* const sw_scores,
     wf_offset_t* const max_sw_score,
-    wf_offset_t* const max_sw_score_k) {
+    wf_offset_t* const max_k,
+    wf_offset_t* const max_offset) {
+  // Parameters
+  const int wf_match = wf_aligner->penalties.match;
+  const int swg_match = (wf_match==0) ? 1 : -(wf_aligner->penalties.match);
   // Compute min-distance
   const wf_offset_t* const offsets = wavefront->offsets;
-  int k, score_max = -score, score_max_k = 0;
+  int k, cmax_sw_score = INT_MIN, cmax_k = 0, cmax_offset = 0;
   PRAGMA_LOOP_VECTORIZE
   for (k=wavefront->lo;k<=wavefront->hi;++k) {
-    const int sw_score = wf_compute_sw_score(score,offsets[k],k);
+    const wf_offset_t offset = offsets[k];
+    if (offset < 0) continue;
+    const int v = WAVEFRONT_V(k,offset);
+    const int h = WAVEFRONT_H(k,offset);
+    const int sw_score = (wf_match==0) ?
+        (swg_match*(v+h) - wf_score) :
+        WF_SCORE_TO_SW_SCORE(swg_match,v,h,wf_score);
     sw_scores[k] = sw_score;
-    if (score_max < sw_score) {
-      score_max = sw_score;
-      score_max_k = k;
+    if (cmax_sw_score < sw_score) {
+      cmax_sw_score = sw_score;
+      cmax_k = k;
+      cmax_offset = offset;
     }
   }
-  *max_sw_score = score_max;
-  *max_sw_score_k = score_max_k;
+  *max_sw_score = cmax_sw_score;
+  *max_k = cmax_k;
+  *max_offset = cmax_offset;
 }
-void wavefront_cufoff_xdrop(
+void wavefront_heuristic_xdrop(
     wavefront_aligner_t* const wf_aligner,
     wavefront_t* const wavefront,
     const int score) {
@@ -363,39 +338,62 @@ void wavefront_cufoff_xdrop(
   // Use victim as temporal buffer
   wavefront_components_resize_null__victim(&wf_aligner->wf_components,base_lo-1,base_hi+1);
   wf_offset_t* const sw_scores = wf_aligner->wf_components.wavefront_victim->offsets;
-  // Compute SW scores (classic scores)
-  wf_offset_t current_max_sw_score;
-  wf_offset_t current_max_sw_score_k;
-  wavefront_compute_sw_scores(
-      wavefront,score,sw_scores,
-      &current_max_sw_score,&current_max_sw_score_k);
+  // Compute SW scores
+  wf_offset_t cmax_sw_score, cmax_k, dummy;
+  wf_heuristic_compute_sw_scores(
+      wf_aligner,wavefront,score,sw_scores,
+      &cmax_sw_score,&cmax_k,&dummy);
   // Apply X-Drop
   const int xdrop = wf_heuristic->xdrop;
   const int max_sw_score = wf_heuristic->max_sw_score;
-  const int max_sw_score_k = wf_heuristic->max_sw_score_k;
-  if (max_sw_score_k != DPMATRIX_DIAGONAL_NULL) {
+  const wf_offset_t* const offsets = wavefront->offsets;
+  if (wf_heuristic->max_sw_score_k != DPMATRIX_DIAGONAL_NULL) {
     // Reduce from bottom
-    int k, lo_reduced = wavefront->lo;
+    int k;
     for (k=wavefront->lo;k<=wavefront->hi;++k) {
-      if ((int)sw_scores[k] >= max_sw_score - xdrop) break;
-      ++lo_reduced;
+      if (offsets[k] < 0) continue;
+      //fprintf(stderr,"[XDROP] (max=%d,current=%d) diff=%d leeway=%d\n",
+      //    max_sw_score,(int)sw_scores[k],
+      //    max_sw_score - (int)sw_scores[k],xdrop);
+      if (max_sw_score - (int)sw_scores[k] < xdrop) break;
     }
-    wavefront->lo = lo_reduced;
+    wavefront->lo = k;
     // Reduce from top
-    int hi_reduced = wavefront->hi;
     for (k=wavefront->hi;k>=wavefront->lo;--k) {
-      if ((int)sw_scores[k] >= max_sw_score - xdrop) break;
-      --hi_reduced;
+      if (offsets[k] < 0) continue;
+      //fprintf(stderr,"[XDROP] (max=%d,current=%d) diff=%d leeway=%d\n",
+      //    max_sw_score,(int)sw_scores[k],
+      //    max_sw_score - (int)sw_scores[k],xdrop);
+      if (max_sw_score - (int)sw_scores[k] < xdrop) break;
     }
-    wavefront->hi = hi_reduced;
+    wavefront->hi = k;
+    // Update maximum score observed
+    if (cmax_sw_score > wf_heuristic->max_sw_score) {
+      wf_heuristic->max_sw_score = cmax_sw_score;
+      wf_heuristic->max_sw_score_k = cmax_k;
+    }
+  } else {
+    // Update maximum score observed
+    wf_heuristic->max_sw_score = cmax_sw_score;
+    wf_heuristic->max_sw_score_k = cmax_k;
   }
-  // Update maximum score observed
-  wf_heuristic->max_sw_score = current_max_sw_score;
-  wf_heuristic->max_sw_score_k = current_max_sw_score_k;
   // Set wait steps (don't repeat this heuristic often)
   wf_heuristic->steps_wait = wf_heuristic->steps_between_cutoffs;
 }
-void wavefront_cufoff_zdrop(
+int wf_zdrop_gap_score(
+    const int gap_extension_penalty,
+    const wf_offset_t offset_1,
+    const int k_1,
+    const wf_offset_t offset_2,
+    const int k_2) {
+  int diff_h = WAVEFRONT_H(k_2,offset_2) - WAVEFRONT_H(k_1,offset_1);
+  if (diff_h < 0) diff_h = -diff_h;
+  int diff_v = WAVEFRONT_V(k_2,offset_2) - WAVEFRONT_V(k_1,offset_1);
+  if (diff_v < 0) diff_v = -diff_v;
+  const int gap_length = (diff_h >= diff_v) ? diff_h-diff_v : diff_v-diff_h;
+  return gap_length * gap_extension_penalty;
+}
+void wavefront_heuristic_zdrop(
     wavefront_aligner_t* const wf_aligner,
     wavefront_t* const wavefront,
     const int score) {
@@ -408,64 +406,102 @@ void wavefront_cufoff_zdrop(
   // Use victim as temporal buffer
   wavefront_components_resize_null__victim(&wf_aligner->wf_components,base_lo-1,base_hi+1);
   wf_offset_t* const sw_scores = wf_aligner->wf_components.wavefront_victim->offsets;
-  // Compute SW scores (classic scores)
-  wf_offset_t current_max_sw_score;
-  wf_offset_t current_max_sw_score_k;
-  wavefront_compute_sw_scores(
-      wavefront,score,sw_scores,
-      &current_max_sw_score,&current_max_sw_score_k);
-  // Apply X-Drop
-  const wf_offset_t* const offsets = wavefront->offsets;
-  wavefronts_penalties_t* const penalties = &wf_aligner->penalties;
-  const int gap_extension = (penalties->gap_extension1 > 0) ? penalties->gap_extension1 : 1;
+  // Compute SW scores
+  wf_offset_t cmax_sw_score, cmax_k, cmax_offset;
+  wf_heuristic_compute_sw_scores(
+      wf_aligner,wavefront,score,sw_scores,
+      &cmax_sw_score,&cmax_k,&cmax_offset);
+  // Apply Z-Drop
+  wavefront_penalties_t* const penalties = &wf_aligner->penalties;
+  const int gap_e = (penalties->gap_extension1 > 0) ? penalties->gap_extension1 : 1;
   const int zdrop = wf_heuristic->zdrop;
   const int max_sw_score = wf_heuristic->max_sw_score;
-  const int max_sw_score_k = wf_heuristic->max_sw_score_k;
-  const int max_sw_score_offset = wf_heuristic->max_sw_score_offset;
-  if (max_sw_score_k != DPMATRIX_DIAGONAL_NULL) {
-    // Reduce from bottom
-    int k, lo_reduced = wavefront->lo;
-    for (k=wavefront->lo;k<=wavefront->hi;++k) {
-      if (offsets[k] < 0) {
-        ++lo_reduced;
-        continue;
-      }
-      const int single_gap = wf_compute_sw_score_single_gap(
-          gap_extension,max_sw_score_offset,max_sw_score_k,offsets[k],k);
-      if ((int)sw_scores[k] > max_sw_score - (zdrop + single_gap)) break;
-      ++lo_reduced;
-    }
-    wavefront->lo = lo_reduced;
-    // Reduce from top
-    int hi_reduced = wavefront->hi;
-    for (k=wavefront->hi;k>=wavefront->lo;--k) {
-      if (offsets[k] < 0) {
-        --hi_reduced;
-        continue;
-      }
-      const int single_gap = wf_compute_sw_score_single_gap(
-          gap_extension,max_sw_score_offset,max_sw_score_k,offsets[k],k);
-      if ((int)sw_scores[k] > max_sw_score - (zdrop + single_gap)) break;
-      --hi_reduced;
-    }
-    wavefront->hi = hi_reduced;
+  const int max_k = wf_heuristic->max_sw_score_k;
+  const int max_offset = wf_heuristic->max_sw_score_offset;
+  if (max_k != DPMATRIX_DIAGONAL_NULL) {
     // Update maximum score observed
-    if (current_max_sw_score > wf_heuristic->max_sw_score) {
-      wf_heuristic->max_sw_score = current_max_sw_score;
-      wf_heuristic->max_sw_score_k = current_max_sw_score_k;
-      wf_heuristic->max_sw_score_offset = max_sw_score_offset;
+    if (cmax_sw_score > wf_heuristic->max_sw_score) {
+      wf_heuristic->max_sw_score = cmax_sw_score;
+      wf_heuristic->max_sw_score_k = cmax_k;
+      wf_heuristic->max_sw_score_offset = cmax_offset;
+    } else {
+      // Test Z-drop
+      const int gap_score = wf_zdrop_gap_score(gap_e,max_offset,max_k,cmax_offset,cmax_k);
+      //  fprintf(stderr,"[Z-DROP] (max=%d~(%d,%d),current=%d~(%d,%d)) diff=%d leeway=%d\n",
+      //      max_sw_score,WAVEFRONT_V(max_k,max_offset),WAVEFRONT_H(max_k,max_offset),
+      //      cmax_sw_score,WAVEFRONT_V(cmax_k,cmax_offset),WAVEFRONT_H(cmax_k,cmax_offset),
+      //      max_sw_score - cmax_sw_score,
+      //      zdrop + gap_score);
+      if (max_sw_score - (int)cmax_sw_score > zdrop + gap_score) {
+        wavefront->lo = wavefront->hi + 1;
+        return; // Z-dropped
+      }
     }
   } else {
     // Update maximum score observed
-    wf_heuristic->max_sw_score = current_max_sw_score;
-    wf_heuristic->max_sw_score_k = current_max_sw_score_k;
-    wf_heuristic->max_sw_score_offset = max_sw_score_offset;
+    wf_heuristic->max_sw_score = cmax_sw_score;
+    wf_heuristic->max_sw_score_k = cmax_k;
+    wf_heuristic->max_sw_score_offset = cmax_offset;
   }
   // Set wait steps (don't repeat this heuristic often)
   wf_heuristic->steps_wait = wf_heuristic->steps_between_cutoffs;
 }
 /*
- * Cut-offs dispatcher
+ * Heuristic Cut-off Banded
+ */
+void wavefront_heuristic_banded_static(
+    wavefront_aligner_t* const wf_aligner,
+    wavefront_t* const wavefront) {
+  // Parameters
+  wavefront_heuristic_t* const wf_heuristic = &wf_aligner->heuristic;
+  // Check wavefront limits
+  if (wavefront->lo < wf_heuristic->min_k) wavefront->lo = wf_heuristic->min_k;
+  if (wavefront->hi > wf_heuristic->max_k) wavefront->hi = wf_heuristic->max_k;
+}
+void wavefront_heuristic_banded_adaptive(
+    wavefront_aligner_t* const wf_aligner,
+    wavefront_t* const wavefront) {
+  // Parameters
+  const int pattern_length = wf_aligner->pattern_length;
+  const int text_length = wf_aligner->text_length;
+  wavefront_heuristic_t* const wf_heuristic = &wf_aligner->heuristic;
+  // Check steps
+  if (wf_heuristic->steps_wait > 0) return;
+  // Check wavefront length
+  const int lo = wavefront->lo;
+  const int hi = wavefront->hi;
+  const int wf_length = hi - lo + 1;
+  if (wf_length < 4) return; // We cannot do anything here
+  // Adjust the band
+  const wf_offset_t* const offsets = wavefront->offsets;
+  const int max_wf_length = wf_heuristic->max_k - wf_heuristic->min_k + 1;
+  if (wf_length > max_wf_length) {
+    // Sample wavefront
+    const int leeway = (wf_length - max_wf_length) / 2;
+    const int quarter = wf_length / 4;
+    const int dist_p0 = wf_distance_end2end(
+        offsets[lo],lo,pattern_length,text_length);
+    const int dist_p1 = wf_distance_end2end(
+        offsets[lo+quarter],lo+quarter,pattern_length,text_length);
+    const int dist_p2 = wf_distance_end2end(
+        offsets[lo+2*quarter],lo+2*quarter,pattern_length,text_length);
+    const int dist_p3 = wf_distance_end2end(
+        offsets[hi],hi,pattern_length,text_length);
+    // Heuristically decide where to place the band
+    int new_lo = lo;
+    if (dist_p0 > dist_p3) new_lo += leeway;
+    if (dist_p1 > dist_p2) new_lo += leeway;
+    // Set wavefront limits
+    wavefront->lo = new_lo;
+    if (wavefront->lo < lo) wavefront->lo = lo;
+    wavefront->hi = new_lo + max_wf_length - 1;
+    if (wavefront->hi > hi) wavefront->hi = hi;
+  }
+  // Set wait steps (don't repeat this heuristic often)
+  wf_heuristic->steps_wait = wf_heuristic->steps_between_cutoffs;
+}
+/*
+ * Heuristic Cut-offs dispatcher
  */
 void wavefront_heuristic_cufoff(
     wavefront_aligner_t* const wf_aligner,
@@ -478,25 +514,33 @@ void wavefront_heuristic_cufoff(
   // Fetch m-wavefront
   wavefront_t* const mwavefront = wf_components->mwavefronts[score_mod];
   if (mwavefront == NULL || mwavefront->lo > mwavefront->hi) return;
-  // Cut-off m-wavefront
+  // Decrease wait steps
   --(wf_heuristic->steps_wait);
-  if (wf_heuristic->strategy == wf_heuristic_banded_static) {
-    wavefront_cufoff_banded_static(wf_aligner,mwavefront);
+  // Select heuristic (WF-Adaptive)
+  if (wf_heuristic->strategy & wf_heuristic_wfadaptive) {
+    wavefront_heuristic_wfadaptive(wf_aligner,mwavefront,false);
+  } else if (wf_heuristic->strategy & wf_heuristic_wfmash) {
+    wavefront_heuristic_wfadaptive(wf_aligner,mwavefront,true);
   }
-  if (wf_heuristic->strategy == wf_heuristic_banded_adaptive) {
-    wavefront_cufoff_banded_adaptive(wf_aligner,mwavefront);
+  // Select heuristic (Drops)
+  if (wf_heuristic->strategy & wf_heuristic_xdrop) {
+    wavefront_heuristic_xdrop(wf_aligner,mwavefront,score);
+  } else if (wf_heuristic->strategy & wf_heuristic_zdrop) {
+    wavefront_heuristic_zdrop(wf_aligner,mwavefront,score);
   }
-  if (wf_heuristic->strategy == wf_heuristic_wfadaptive) {
-    wavefront_cufoff_wfadaptive(wf_aligner,mwavefront);
-  }
-  if (wf_heuristic->strategy == wf_heuristic_xdrop) {
-    wavefront_cufoff_xdrop(wf_aligner,mwavefront,score);
-  }
-  if (wf_heuristic->strategy == wf_heuristic_zdrop) {
-    wavefront_cufoff_zdrop(wf_aligner,mwavefront,score);
+  // Select heuristic (Banded)
+  if (wf_heuristic->strategy & wf_heuristic_banded_static) {
+    wavefront_heuristic_banded_static(wf_aligner,mwavefront);
+  } else if (wf_heuristic->strategy & wf_heuristic_banded_adaptive) {
+    wavefront_heuristic_banded_adaptive(wf_aligner,mwavefront);
   }
   // Check wavefront length
   if (mwavefront->lo > mwavefront->hi) mwavefront->null = true;
+  // DEBUG
+  // const int wf_length_base = hi_base-lo_base+1;
+  // const int wf_length_reduced = mwavefront->hi-mwavefront->lo+1;
+  // fprintf(stderr,"[WFA::Heuristic] Heuristic from %d to %d offsets (%2.2f%%)\n",
+  //    wf_length_base,wf_length_reduced,100.0f*(float)wf_length_reduced/(float)wf_length_base);
   // Save min/max WF initialized
   mwavefront->wf_elements_init_min = mwavefront->lo;
   mwavefront->wf_elements_init_max = mwavefront->hi;
@@ -505,20 +549,13 @@ void wavefront_heuristic_cufoff(
   // Cut-off the other wavefronts (same dimensions as M)
   wavefront_t* const i1wavefront = wf_components->i1wavefronts[score_mod];
   wavefront_t* const d1wavefront = wf_components->d1wavefronts[score_mod];
-  wavefront_heuristic_cutoff_equate(i1wavefront,mwavefront);
-  wavefront_heuristic_cutoff_equate(d1wavefront,mwavefront);
+  wf_heuristic_equate(i1wavefront,mwavefront);
+  wf_heuristic_equate(d1wavefront,mwavefront);
   if (distance_metric == gap_affine) return;
   wavefront_t* const i2wavefront = wf_components->i2wavefronts[score_mod];
   wavefront_t* const d2wavefront = wf_components->d2wavefronts[score_mod];
-  wavefront_heuristic_cutoff_equate(i2wavefront,mwavefront);
-  wavefront_heuristic_cutoff_equate(d2wavefront,mwavefront);
-  // DEBUG
-  //  if (wf_aligner->system.verbose) {
-  //    const int wf_length_base = hi_base-lo_base+1;
-  //    const int wf_length_reduced = mwavefront->hi-mwavefront->lo+1;
-  //    fprintf(stderr,"[WFA::Heuristic] Heuristic from %d to %d offsets (%2.2f%%)\n",
-  //        wf_length_base,wf_length_reduced,100.0f*(float)wf_length_reduced/(float)wf_length_base);
-  //  }
+  wf_heuristic_equate(i2wavefront,mwavefront);
+  wf_heuristic_equate(d2wavefront,mwavefront);
 }
 /*
  * Display
@@ -529,27 +566,41 @@ void wavefront_heuristic_print(
   // Select heuristic strategy
   if (wf_heuristic->strategy == wf_heuristic_none) {
     fprintf(stream,"(none)");
-  } else if (wf_heuristic->strategy == wf_heuristic_banded_static) {
-    fprintf(stream,"(banded-static,%d,%d)",
-        wf_heuristic->min_k,
-        wf_heuristic->max_k);
-  } else if (wf_heuristic->strategy == wf_heuristic_banded_adaptive) {
-    fprintf(stream,"(banded-adapt,%d,%d,%d)",
-        wf_heuristic->min_k,
-        wf_heuristic->max_k,
-        wf_heuristic->steps_between_cutoffs);
-  } else if (wf_heuristic->strategy == wf_heuristic_wfadaptive) {
-    fprintf(stream,"(wf-adapt,%d,%d,%d)",
-        wf_heuristic->min_wavefront_length,
-        wf_heuristic->max_distance_threshold,
-        wf_heuristic->steps_between_cutoffs);
-  } else if (wf_heuristic->strategy == wf_heuristic_xdrop) {
-    fprintf(stream,"(xdrop,%d,%d)",
-        wf_heuristic->xdrop,
-        wf_heuristic->steps_between_cutoffs);
-  } else if (wf_heuristic->strategy == wf_heuristic_zdrop) {
-    fprintf(stream,"(zdrop,%d,%d)",
-        wf_heuristic->zdrop,
-        wf_heuristic->steps_between_cutoffs);
+  } else {
+    // WF-Adaptive
+    if (wf_heuristic->strategy & wf_heuristic_wfadaptive) {
+      fprintf(stream,"(wfadapt,%d,%d,%d)",
+          wf_heuristic->min_wavefront_length,
+          wf_heuristic->max_distance_threshold,
+          wf_heuristic->steps_between_cutoffs);
+    } else if (wf_heuristic->strategy & wf_heuristic_wfmash) {
+      fprintf(stream,"(wfmash,%d,%d,%d)",
+          wf_heuristic->min_wavefront_length,
+          wf_heuristic->max_distance_threshold,
+          wf_heuristic->steps_between_cutoffs);
+    }
+    // Drops
+    if (wf_heuristic->strategy & wf_heuristic_xdrop) {
+      fprintf(stream,"(xdrop,%d,%d)",
+          wf_heuristic->xdrop,
+          wf_heuristic->steps_between_cutoffs);
+    }
+    if (wf_heuristic->strategy & wf_heuristic_zdrop) {
+      fprintf(stream,"(zdrop,%d,%d)",
+          wf_heuristic->zdrop,
+          wf_heuristic->steps_between_cutoffs);
+    }
+    // Banded
+    if (wf_heuristic->strategy & wf_heuristic_banded_static) {
+      fprintf(stream,"(banded-static,%d,%d)",
+          wf_heuristic->min_k,
+          wf_heuristic->max_k);
+    }
+    if (wf_heuristic->strategy & wf_heuristic_banded_adaptive) {
+      fprintf(stream,"(banded-adapt,%d,%d,%d)",
+          wf_heuristic->min_k,
+          wf_heuristic->max_k,
+          wf_heuristic->steps_between_cutoffs);
+    }
   }
 }

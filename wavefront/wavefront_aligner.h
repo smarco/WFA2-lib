@@ -44,20 +44,22 @@
 #include "wavefront_penalties.h"
 #include "wavefront_attributes.h"
 #include "wavefront_components.h"
-#include "wavefront_align.h"
-#include "wavefront_bialign.h"
+#include "wavefront_bialigner.h"
 
 /*
  * Error codes & messages
  */
+// Success
 #define WF_STATUS_SUCCESSFUL               0
-#define WF_STATUS_IN_PROGRESS              1
-#define WF_STATUS_END_REACHED              2 /* Internal */
+// Errors
 #define WF_STATUS_UNFEASIBLE              -1
 #define WF_STATUS_MAX_SCORE_REACHED       -2
 #define WF_STATUS_OOM                     -3
+// Internal
+#define WF_STATUS_END_REACHED              1
+// Error messages
 extern char* wf_error_msg[5];
-char* wavefront_align_strerror(const int wf_error_code);
+char* wavefront_align_strerror(const int error_code);
 
 /*
  * Alignment status
@@ -75,10 +77,23 @@ typedef struct {
 } wavefront_align_status_t;
 
 /*
+ * Alignment type
+ */
+typedef enum {
+  wf_align_regular = 0,
+  wf_align_biwfa = 1,
+  wf_align_biwfa_breakpoint_forward = 2,
+  wf_align_biwfa_breakpoint_reverse = 3,
+  wf_align_biwfa_subsidiary = 4
+} wavefront_align_mode_t;
+
+/*
  * Wavefront Aligner
  */
 typedef struct _wavefront_aligner_t {
-  // Status
+  // Mode and status
+  wavefront_align_mode_t align_mode;          // WFA alignment mode
+  char* align_mode_tag;                       // WFA mode tag
   wavefront_align_status_t align_status;      // Current alignment status
   // Sequences
   strings_padded_t* sequences;                // Padded sequences
@@ -86,41 +101,30 @@ typedef struct _wavefront_aligner_t {
   int pattern_length;                         // Pattern length
   char* text;                                 // Text sequence (padded)
   int text_length;                            // Text length
-  // Sequences (reversed)
-  strings_padded_t* sequences_rev;            // Padded sequences reversed
-  char* pattern_rev;                          // Pattern sequence (padded & reversed)
-  int pattern_length_rev;                     // Pattern length reversed
-  char* text_rev;                             // Text sequence (padded & reversed)
-  int text_length_rev;                        // Text length reversed
-  // Alignment Attributes
-  alignment_scope_t alignment_scope;          // Alignment scope (score only or full-CIGAR)
-  alignment_form_t alignment_form;            // Alignment form (end-to-end/ends-free)
-  wavefronts_penalties_t penalties;           // Alignment penalties
-  wavefront_heuristic_t heuristic;            // Heuristic's parameters
-  wavefront_memory_t memory_mode;             // Wavefront memory strategy (modular wavefronts and piggyback)
   // Custom function to compare sequences
   alignment_match_funct_t match_funct;        // Custom matching function (match(v,h,args))
   void* match_funct_arguments;                // Generic arguments passed to matching function (args)
+  // Alignment Attributes
+  alignment_scope_t alignment_scope;          // Alignment scope (score only or full-CIGAR)
+  alignment_form_t alignment_form;            // Alignment form (end-to-end/ends-free)
+  wavefront_penalties_t penalties;            // Alignment penalties
+  wavefront_heuristic_t heuristic;            // Heuristic's parameters
+  wavefront_memory_t memory_mode;             // Wavefront memory strategy (modular wavefronts and piggyback)
   // Wavefront components
   wavefront_components_t wf_components;       // Wavefront components
   affine2p_matrix_type component_begin;       // Alignment begin component
   affine2p_matrix_type component_end;         // Alignment end component
   wavefront_pos_t alignment_end_pos;          // Alignment end position
   // Bidirectional Alignment
-  bool bidirectional_alignment;               // Enable bidirectional WFA alignment
-  wavefront_aligner_t* aligner_forward;       // Forward aligner
-  wavefront_aligner_t* aligner_reverse;       // Reverse aligner
-  wf_bialign_breakpoint_t bialign_breakpoint; // Breakpoint of two wavefronts (bialigner)
-  cigar_t bialign_cigar;                      // Global BiWFA Alignment CIGAR
+  wavefront_bialigner_t* bialigner;           // BiWFA aligner
   // CIGAR
-  cigar_t cigar;                              // Alignment CIGAR
+  cigar_t* cigar;                             // Alignment CIGAR
   // MM
   bool mm_allocator_own;                      // Ownership of MM-Allocator
   mm_allocator_t* mm_allocator;               // MM-Allocator
   wavefront_slab_t* wavefront_slab;           // MM-Wavefront-Slab (Allocates/Reuses the individual wavefronts)
   // Display
-  wavefront_plot_params_t plot_params;        // Wavefront plot parameters
-  wavefront_plot_t wf_plot;                   // Wavefront plot
+  wavefront_plot_t* plot;                     // Wavefront plot
   // System
   alignment_system_t system;                  // System related parameters
 } wavefront_aligner_t;
@@ -130,13 +134,6 @@ typedef struct _wavefront_aligner_t {
  */
 wavefront_aligner_t* wavefront_aligner_new(
     wavefront_aligner_attr_t* attributes);
-void wavefront_aligner_resize(
-    wavefront_aligner_t* const wf_aligner,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
-    const bool reverse_sequences);
 void wavefront_aligner_reap(
     wavefront_aligner_t* const wf_aligner);
 void wavefront_aligner_delete(
@@ -159,16 +156,12 @@ void wavefront_aligner_set_alignment_free_ends(
  */
 void wavefront_aligner_set_heuristic_none(
     wavefront_aligner_t* const wf_aligner);
-void wavefront_aligner_set_heuristic_banded_static(
-    wavefront_aligner_t* const wf_aligner,
-    const int band_min_k,
-    const int band_max_k);
-void wavefront_aligner_set_heuristic_banded_adaptive(
-    wavefront_aligner_t* const wf_aligner,
-    const int band_min_k,
-    const int band_max_k,
-    const int score_steps);
 void wavefront_aligner_set_heuristic_wfadaptive(
+    wavefront_aligner_t* const wf_aligner,
+    const int min_wavefront_length,
+    const int max_distance_threshold,
+    const int score_steps);
+void wavefront_aligner_set_heuristic_wfmash(
     wavefront_aligner_t* const wf_aligner,
     const int min_wavefront_length,
     const int max_distance_threshold,
@@ -180,6 +173,15 @@ void wavefront_aligner_set_heuristic_xdrop(
 void wavefront_aligner_set_heuristic_zdrop(
     wavefront_aligner_t* const wf_aligner,
     const int ydrop,
+    const int score_steps);
+void wavefront_aligner_set_heuristic_banded_static(
+    wavefront_aligner_t* const wf_aligner,
+    const int band_min_k,
+    const int band_max_k);
+void wavefront_aligner_set_heuristic_banded_adaptive(
+    wavefront_aligner_t* const wf_aligner,
+    const int band_min_k,
+    const int band_max_k,
     const int score_steps);
 
 /*
@@ -210,9 +212,14 @@ uint64_t wavefront_aligner_get_size(
 /*
  * Display
  */
-void wavefront_aligner_print_status(
+void wavefront_aligner_print_type(
     FILE* const stream,
-    wavefront_aligner_t* const wf_aligner,
-    const int current_score);
+    wavefront_aligner_t* const wf_aligner);
+void wavefront_aligner_print_scope(
+    FILE* const stream,
+    wavefront_aligner_t* const wf_aligner);
+void wavefront_aligner_print_mode(
+    FILE* const stream,
+    wavefront_aligner_t* const wf_aligner);
 
 #endif /* WAVEFRONT_ALIGNER_H_ */

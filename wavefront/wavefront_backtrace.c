@@ -60,7 +60,7 @@ typedef enum {
 /*
  * Backtrace Trace Patch Match/Mismsmatch
  */
-int64_t wavefronts_backtrace_misms(
+int64_t wavefront_backtrace_misms(
     wavefront_aligner_t* const wf_aligner,
     const int score,
     const int k) {
@@ -74,7 +74,7 @@ int64_t wavefronts_backtrace_misms(
     return WAVEFRONT_OFFSET_NULL;
   }
 }
-void wavefronts_backtrace_matches(
+void wavefront_backtrace_matches(
     wavefront_aligner_t* const wf_aligner,
     const int k,
     wf_offset_t offset,
@@ -101,7 +101,7 @@ void wavefronts_backtrace_matches(
 /*
  * Backtrace Trace Patch Deletion
  */
-int64_t wavefronts_backtrace_del1_open(
+int64_t wavefront_backtrace_del1_open(
     wavefront_aligner_t* const wf_aligner,
     const int score,
     const int k) {
@@ -115,7 +115,7 @@ int64_t wavefronts_backtrace_del1_open(
     return WAVEFRONT_OFFSET_NULL;
   }
 }
-int64_t wavefronts_backtrace_del2_open(
+int64_t wavefront_backtrace_del2_open(
     wavefront_aligner_t* const wf_aligner,
     const int score,
     const int k) {
@@ -129,7 +129,7 @@ int64_t wavefronts_backtrace_del2_open(
     return WAVEFRONT_OFFSET_NULL;
   }
 }
-int64_t wavefronts_backtrace_del1_ext(
+int64_t wavefront_backtrace_del1_ext(
     wavefront_aligner_t* const wf_aligner,
     const int score,
     const int k) {
@@ -143,7 +143,7 @@ int64_t wavefronts_backtrace_del1_ext(
     return WAVEFRONT_OFFSET_NULL;
   }
 }
-int64_t wavefronts_backtrace_del2_ext(
+int64_t wavefront_backtrace_del2_ext(
     wavefront_aligner_t* const wf_aligner,
     const int score,
     const int k) {
@@ -160,7 +160,7 @@ int64_t wavefronts_backtrace_del2_ext(
 /*
  * Backtrace Trace Patch Insertion
  */
-int64_t wavefronts_backtrace_ins1_open(
+int64_t wavefront_backtrace_ins1_open(
     wavefront_aligner_t* const wf_aligner,
     const int score,
     const int k) {
@@ -174,7 +174,7 @@ int64_t wavefronts_backtrace_ins1_open(
     return WAVEFRONT_OFFSET_NULL;
   }
 }
-int64_t wavefronts_backtrace_ins2_open(
+int64_t wavefront_backtrace_ins2_open(
     wavefront_aligner_t* const wf_aligner,
     const int score,
     const int k) {
@@ -188,7 +188,7 @@ int64_t wavefronts_backtrace_ins2_open(
     return WAVEFRONT_OFFSET_NULL;
   }
 }
-int64_t wavefronts_backtrace_ins1_ext(
+int64_t wavefront_backtrace_ins1_ext(
     wavefront_aligner_t* const wf_aligner,
     const int score,
     const int k) {
@@ -202,7 +202,7 @@ int64_t wavefronts_backtrace_ins1_ext(
     return WAVEFRONT_OFFSET_NULL;
   }
 }
-int64_t wavefronts_backtrace_ins2_ext(
+int64_t wavefront_backtrace_ins2_ext(
     wavefront_aligner_t* const wf_aligner,
     const int score,
     const int k) {
@@ -227,10 +227,10 @@ void wavefront_backtrace_linear(
   // Parameters
   const int pattern_length = wf_aligner->pattern_length;
   const int text_length = wf_aligner->text_length;
-  const distance_metric_t distance_metric = wf_aligner->penalties.distance_metric;
-  const wavefronts_penalties_t* const wavefront_penalties = &(wf_aligner->penalties);
+  const wavefront_penalties_t* const penalties = &wf_aligner->penalties;
+  const distance_metric_t distance_metric = penalties->distance_metric;
   // Prepare cigar
-  cigar_t* const cigar = &wf_aligner->cigar;
+  cigar_t* const cigar = wf_aligner->cigar;
   cigar->end_offset = cigar->max_operations - 1;
   cigar->begin_offset = cigar->max_operations - 2;
   cigar->operations[cigar->end_offset] = '\0';
@@ -252,19 +252,21 @@ void wavefront_backtrace_linear(
   // Trace the alignment back
   while (v > 0 && h > 0 && score > 0) {
     // Compute scores
-    const int mismatch = score - wavefront_penalties->mismatch;
-    const int gap_open1 = score - wavefront_penalties->gap_opening1;
+    const int mismatch = score - penalties->mismatch;
+    const int gap_open1 = score - penalties->gap_opening1;
     // Compute source offsets
     const int64_t misms = (distance_metric != indel) ?
-        wavefronts_backtrace_misms(wf_aligner,mismatch,k) :
+        wavefront_backtrace_misms(wf_aligner,mismatch,k) :
         WAVEFRONT_OFFSET_NULL;
-    const int64_t ins = wavefronts_backtrace_ins1_open(wf_aligner,gap_open1,k);
-    const int64_t del = wavefronts_backtrace_del1_open(wf_aligner,gap_open1,k);
+    const int64_t ins = wavefront_backtrace_ins1_open(wf_aligner,gap_open1,k);
+    const int64_t del = wavefront_backtrace_del1_open(wf_aligner,gap_open1,k);
     const int64_t max_all = MAX(misms,MAX(ins,del));
+    // Check source score
+    if (max_all < 0) break; // No source
     // Traceback Matches
     const int max_offset = BACKTRACE_PIGGYBACK_GET_OFFSET(max_all);
     const int num_matches = offset - max_offset;
-    wavefronts_backtrace_matches(wf_aligner,k,offset,num_matches,cigar);
+    wavefront_backtrace_matches(wf_aligner,k,offset,num_matches,cigar);
     offset = max_offset;
     // Update coordinates
     v = WAVEFRONT_V(k,offset);
@@ -298,10 +300,10 @@ void wavefront_backtrace_linear(
     h = WAVEFRONT_H(k,offset);
   }
   // Account for last operations
-  if (v > 0 && h > 0) { // score == 0
+  if (v > 0 && h > 0) {
     // Account for beginning series of matches
     const int num_matches = MIN(v,h);
-    wavefronts_backtrace_matches(wf_aligner,k,offset,num_matches,cigar);
+    wavefront_backtrace_matches(wf_aligner,k,offset,num_matches,cigar);
     v -= num_matches;
     h -= num_matches;
   }
@@ -322,10 +324,10 @@ void wavefront_backtrace_affine(
   // Parameters
   const int pattern_length = wf_aligner->pattern_length;
   const int text_length = wf_aligner->text_length;
-  const distance_metric_t distance_metric = wf_aligner->penalties.distance_metric;
-  const wavefronts_penalties_t* const wavefront_penalties = &(wf_aligner->penalties);
+  const wavefront_penalties_t* const penalties = &wf_aligner->penalties;
+  const distance_metric_t distance_metric = penalties->distance_metric;
   // Prepare cigar
-  cigar_t* const cigar = &wf_aligner->cigar;
+  cigar_t* const cigar = wf_aligner->cigar;
   cigar->end_offset = cigar->max_operations - 1;
   cigar->begin_offset = cigar->max_operations - 2;
   cigar->operations[cigar->end_offset] = '\0';
@@ -350,30 +352,31 @@ void wavefront_backtrace_affine(
   // Trace the alignment back
   while (v > 0 && h > 0 && score > 0) {
     // Compute scores
-    const int mismatch = score - wavefront_penalties->mismatch;
-    const int gap_open1 = score - wavefront_penalties->gap_opening1 - wavefront_penalties->gap_extension1;
-    const int gap_open2 = score - wavefront_penalties->gap_opening2 - wavefront_penalties->gap_extension2;
-    const int gap_extend1 = score - wavefront_penalties->gap_extension1;
-    const int gap_extend2 = score - wavefront_penalties->gap_extension2;
+    const int mismatch = score - penalties->mismatch;
+    const int gap_open1 = score - penalties->gap_opening1 - penalties->gap_extension1;
+    const int gap_open2 = score - penalties->gap_opening2 - penalties->gap_extension2;
+    const int gap_extend1 = score - penalties->gap_extension1;
+    const int gap_extend2 = score - penalties->gap_extension2;
     // Compute source offsets
     int64_t max_all;
     switch (matrix_type) {
       case affine2p_matrix_M: {
-        const int64_t misms = wavefronts_backtrace_misms(wf_aligner,mismatch,k);
-        const int64_t ins1_open = wavefronts_backtrace_ins1_open(wf_aligner,gap_open1,k);
-        const int64_t ins1_ext  = wavefronts_backtrace_ins1_ext(wf_aligner,gap_extend1,k);
+        const int64_t misms = wavefront_backtrace_misms(wf_aligner,mismatch,k);
+        const int64_t ins1_open = wavefront_backtrace_ins1_open(wf_aligner,gap_open1,k);
+        const int64_t ins1_ext  = wavefront_backtrace_ins1_ext(wf_aligner,gap_extend1,k);
         const int64_t max_ins1 = MAX(ins1_open,ins1_ext);
-        const int64_t del1_open = wavefronts_backtrace_del1_open(wf_aligner,gap_open1,k);
-        const int64_t del1_ext  = wavefronts_backtrace_del1_ext(wf_aligner,gap_extend1,k);
+        const int64_t del1_open = wavefront_backtrace_del1_open(wf_aligner,gap_open1,k);
+        const int64_t del1_ext  = wavefront_backtrace_del1_ext(wf_aligner,gap_extend1,k);
         const int64_t max_del1 = MAX(del1_open,del1_ext);
         if (distance_metric == gap_affine) {
-          max_all = MAX(misms,MAX(max_ins1,max_del1)); break;
+          max_all = MAX(misms,MAX(max_ins1,max_del1));
+          break;
         }
-        const int64_t ins2_open = wavefronts_backtrace_ins2_open(wf_aligner,gap_open2,k);
-        const int64_t ins2_ext  = wavefronts_backtrace_ins2_ext(wf_aligner,gap_extend2,k);
+        const int64_t ins2_open = wavefront_backtrace_ins2_open(wf_aligner,gap_open2,k);
+        const int64_t ins2_ext  = wavefront_backtrace_ins2_ext(wf_aligner,gap_extend2,k);
         const int64_t max_ins2 = MAX(ins2_open,ins2_ext);
-        const int64_t del2_open = wavefronts_backtrace_del2_open(wf_aligner,gap_open2,k);
-        const int64_t del2_ext  = wavefronts_backtrace_del2_ext(wf_aligner,gap_extend2,k);
+        const int64_t del2_open = wavefront_backtrace_del2_open(wf_aligner,gap_open2,k);
+        const int64_t del2_ext  = wavefront_backtrace_del2_ext(wf_aligner,gap_extend2,k);
         const int64_t max_del2 = MAX(del2_open,del2_ext);
         const int64_t max_ins = MAX(max_ins1,max_ins2);
         const int64_t max_del = MAX(max_del1,max_del2);
@@ -381,26 +384,26 @@ void wavefront_backtrace_affine(
         break;
       }
       case affine2p_matrix_I1: {
-        const int64_t ins1_open = wavefronts_backtrace_ins1_open(wf_aligner,gap_open1,k);
-        const int64_t ins1_ext  = wavefronts_backtrace_ins1_ext(wf_aligner,gap_extend1,k);
+        const int64_t ins1_open = wavefront_backtrace_ins1_open(wf_aligner,gap_open1,k);
+        const int64_t ins1_ext  = wavefront_backtrace_ins1_ext(wf_aligner,gap_extend1,k);
         max_all = MAX(ins1_open,ins1_ext);
         break;
       }
       case affine2p_matrix_I2: {
-        const int64_t ins2_open = wavefronts_backtrace_ins2_open(wf_aligner,gap_open2,k);
-        const int64_t ins2_ext  = wavefronts_backtrace_ins2_ext(wf_aligner,gap_extend2,k);
+        const int64_t ins2_open = wavefront_backtrace_ins2_open(wf_aligner,gap_open2,k);
+        const int64_t ins2_ext  = wavefront_backtrace_ins2_ext(wf_aligner,gap_extend2,k);
         max_all = MAX(ins2_open,ins2_ext);
         break;
       }
       case affine2p_matrix_D1: {
-        const int64_t del1_open = wavefronts_backtrace_del1_open(wf_aligner,gap_open1,k);
-        const int64_t del1_ext  = wavefronts_backtrace_del1_ext(wf_aligner,gap_extend1,k);
+        const int64_t del1_open = wavefront_backtrace_del1_open(wf_aligner,gap_open1,k);
+        const int64_t del1_ext  = wavefront_backtrace_del1_ext(wf_aligner,gap_extend1,k);
         max_all = MAX(del1_open,del1_ext);
         break;
       }
       case affine2p_matrix_D2: {
-        const int64_t del2_open = wavefronts_backtrace_del2_open(wf_aligner,gap_open2,k);
-        const int64_t del2_ext  = wavefronts_backtrace_del2_ext(wf_aligner,gap_extend2,k);
+        const int64_t del2_open = wavefront_backtrace_del2_open(wf_aligner,gap_open2,k);
+        const int64_t del2_ext  = wavefront_backtrace_del2_ext(wf_aligner,gap_extend2,k);
         max_all = MAX(del2_open,del2_ext);
         break;
       }
@@ -409,11 +412,13 @@ void wavefront_backtrace_affine(
         exit(1);
         break;
     }
+    // Check source score
+    if (max_all < 0) break; // No source
     // Traceback Matches
     if (matrix_type == affine2p_matrix_M) {
       const int max_offset = BACKTRACE_PIGGYBACK_GET_OFFSET(max_all);
       const int num_matches = offset - max_offset;
-      wavefronts_backtrace_matches(wf_aligner,k,offset,num_matches,cigar);
+      wavefront_backtrace_matches(wf_aligner,k,offset,num_matches,cigar);
       offset = max_offset;
       // Update coordinates
       v = WAVEFRONT_V(k,offset);
@@ -494,10 +499,10 @@ void wavefront_backtrace_affine(
   }
   // Account for last operations
   if (matrix_type == affine2p_matrix_M) {
-    if (v > 0 && h > 0) { // score == 0
+    if (v > 0 && h > 0) {
       // Account for beginning series of matches
       const int num_matches = MIN(v,h);
-      wavefronts_backtrace_matches(wf_aligner,k,offset,num_matches,cigar);
+      wavefront_backtrace_matches(wf_aligner,k,offset,num_matches,cigar);
       v -= num_matches;
       h -= num_matches;
     }
@@ -506,7 +511,7 @@ void wavefront_backtrace_affine(
     while (h > 0) {cigar->operations[(cigar->begin_offset)--] = 'I'; --h;};
   } else {
     // DEBUG
-    if (v != 0 || h != 0 || score != 0) {
+    if (v != 0 || h != 0 || (score != 0 && penalties->match == 0)) {
       fprintf(stderr,"[WFA::Backtrace] I?/D?-Beginning backtrace error\n");
       fprintf(stderr,">%.*s\n",pattern_length,wf_aligner->pattern);
       fprintf(stderr,"<%.*s\n",text_length,wf_aligner->text);
@@ -549,13 +554,13 @@ void wavefront_backtrace_pcigar(
         wf_aligner->text,wf_aligner->text_length,
         wf_aligner->match_funct,
         wf_aligner->match_funct_arguments,
-        begin_v,begin_h,end_v,end_h,&wf_aligner->cigar);
+        begin_v,begin_h,end_v,end_h,wf_aligner->cigar);
   } else {
     wf_backtrace_buffer_unpack_cigar_affine(bt_buffer,
         wf_aligner->pattern,wf_aligner->pattern_length,
         wf_aligner->text,wf_aligner->text_length,
         wf_aligner->match_funct,
         wf_aligner->match_funct_arguments,
-        begin_v,begin_h,end_v,end_h,&wf_aligner->cigar);
+        begin_v,begin_h,end_v,end_h,wf_aligner->cigar);
   }
 }

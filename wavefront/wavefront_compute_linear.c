@@ -124,8 +124,42 @@ void wavefront_compute_linear_idm_piggyback(
   }
 }
 /*
- * Compute next wavefront
+ * Compute Wavefronts (gap-linear)
  */
+void wavefront_compute_linear_dispatcher(
+    wavefront_aligner_t* const wf_aligner,
+    wavefront_set_t* const wavefront_set,
+    const int lo,
+    const int hi) {
+  // Parameters
+  const bool bt_piggyback = wf_aligner->wf_components.bt_piggyback;
+  const int num_threads = wavefront_compute_num_threads(wf_aligner,lo,hi);
+  // Multithreading dispatcher
+  if (num_threads == 1) {
+    // Compute next wavefront
+    if (bt_piggyback) {
+      wavefront_compute_linear_idm_piggyback(wf_aligner,wavefront_set,lo,hi);
+    } else {
+      wavefront_compute_linear_idm(wf_aligner,wavefront_set,lo,hi);
+    }
+  } else {
+#ifdef WFA_PARALLEL
+    // Compute next wavefront in parallel
+    #pragma omp parallel num_threads(num_threads)
+    {
+      int t_lo, t_hi;
+      const int thread_id = omp_get_thread_num();
+      const int thread_num = omp_get_num_threads();
+      wavefront_compute_thread_limits(thread_id,thread_num,lo,hi,&t_lo,&t_hi);
+      if (bt_piggyback) {
+        wavefront_compute_linear_idm_piggyback(wf_aligner,wavefront_set,t_lo,t_hi);
+      } else {
+        wavefront_compute_linear_idm(wf_aligner,wavefront_set,t_lo,t_hi);
+      }
+    }
+#endif
+  }
+}
 void wavefront_compute_linear(
     wavefront_aligner_t* const wf_aligner,
     const int score) {
@@ -140,46 +174,21 @@ void wavefront_compute_linear(
     return;
   }
   wf_aligner->align_status.num_null_steps = 0;
-  // Parameters
-  const bool bt_piggyback = wf_aligner->wf_components.bt_piggyback;
-  int hi, lo;
   // Set limits
-  wavefront_compute_limits(wf_aligner,&wavefront_set,&lo,&hi);
+  int hi, lo;
+  wavefront_compute_limits_input(wf_aligner,&wavefront_set,&lo,&hi);
   // Allocate wavefronts
   wavefront_compute_allocate_output(wf_aligner,&wavefront_set,score,lo,hi);
   // Init wavefront ends
   wavefront_compute_init_ends(wf_aligner,&wavefront_set,lo,hi);
-  // Multithreading dispatcher
-  const int num_threads = wavefront_compute_num_threads(wf_aligner,lo,hi);
-  if (num_threads == 1) {
-    // Compute next wavefront
-    if (bt_piggyback) {
-      wavefront_compute_linear_idm_piggyback(wf_aligner,&wavefront_set,lo,hi);
-    } else {
-      wavefront_compute_linear_idm(wf_aligner,&wavefront_set,lo,hi);
-    }
-  } else {
-#ifdef WFA_PARALLEL
-    // Compute next wavefront in parallel
-    #pragma omp parallel num_threads(num_threads)
-    {
-      int t_lo, t_hi;
-      wavefront_compute_thread_limits(
-          omp_get_thread_num(),omp_get_num_threads(),lo,hi,&t_lo,&t_hi);
-      if (bt_piggyback) {
-        wavefront_compute_linear_idm_piggyback(wf_aligner,&wavefront_set,t_lo,t_hi);
-      } else {
-        wavefront_compute_linear_idm(wf_aligner,&wavefront_set,t_lo,t_hi);
-      }
-    }
-#endif
-  }
+  // Compute Wavefronts
+  wavefront_compute_linear_dispatcher(wf_aligner,&wavefront_set,lo,hi);
   // Offload backtrace (if necessary)
-  if (bt_piggyback) {
+  if (wf_aligner->wf_components.bt_piggyback) {
     wavefront_backtrace_offload_linear(wf_aligner,&wavefront_set,lo,hi);
   }
-  // Trim wavefront ends
-  wavefront_compute_trim_ends_set(wf_aligner,&wavefront_set);
+  // Process wavefront ends
+  wavefront_compute_process_ends(wf_aligner,&wavefront_set,score);
 }
 
 

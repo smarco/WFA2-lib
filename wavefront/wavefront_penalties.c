@@ -34,33 +34,35 @@
 /*
  * Penalties adjustment
  */
-void wavefronts_penalties_set_indel(
-    wavefronts_penalties_t* const wavefronts_penalties) {
+void wavefront_penalties_set_indel(
+    wavefront_penalties_t* const wf_penalties) {
   // Set distance model
-  wavefronts_penalties->distance_metric = indel;
+  wf_penalties->distance_metric = indel;
   // Set penalties
-  wavefronts_penalties->mismatch = -1;
-  wavefronts_penalties->gap_opening1 = 1;
-  wavefronts_penalties->gap_extension1 = -1;
-  wavefronts_penalties->gap_opening2 = -1;
-  wavefronts_penalties->gap_extension2 = -1;
+  wf_penalties->match = 0;
+  wf_penalties->mismatch = -1;
+  wf_penalties->gap_opening1 = 1;
+  wf_penalties->gap_extension1 = -1;
+  wf_penalties->gap_opening2 = -1;
+  wf_penalties->gap_extension2 = -1;
 }
-void wavefronts_penalties_set_edit(
-    wavefronts_penalties_t* const wavefronts_penalties) {
+void wavefront_penalties_set_edit(
+    wavefront_penalties_t* const wf_penalties) {
   // Set distance model
-  wavefronts_penalties->distance_metric = edit;
+  wf_penalties->distance_metric = edit;
   // Set penalties
-  wavefronts_penalties->mismatch = 1;
-  wavefronts_penalties->gap_opening1 = 1;
-  wavefronts_penalties->gap_extension1 = -1;
-  wavefronts_penalties->gap_opening2 = -1;
-  wavefronts_penalties->gap_extension2 = -1;
+  wf_penalties->match = 0;
+  wf_penalties->mismatch = 1;
+  wf_penalties->gap_opening1 = 1;
+  wf_penalties->gap_extension1 = -1;
+  wf_penalties->gap_opening2 = -1;
+  wf_penalties->gap_extension2 = -1;
 }
-void wavefronts_penalties_set_linear(
-    wavefronts_penalties_t* const wavefronts_penalties,
+void wavefront_penalties_set_linear(
+    wavefront_penalties_t* const wf_penalties,
     linear_penalties_t* const linear_penalties) {
   // Set distance model
-  wavefronts_penalties->distance_metric = gap_linear;
+  wf_penalties->distance_metric = gap_linear;
   // Check base penalties
   if (linear_penalties->match > 0) {
     fprintf(stderr,"[WFA::Penalties] Match score must be negative or zero (M=%d)\n",linear_penalties->match);
@@ -72,24 +74,24 @@ void wavefronts_penalties_set_linear(
   }
   // Set penalties (if needed, adjust using Eizenga's formula)
   if (linear_penalties->match < 0) {
-    wavefronts_penalties->match = linear_penalties->match;
-    wavefronts_penalties->mismatch = 2*linear_penalties->mismatch - 2*linear_penalties->match;
-    wavefronts_penalties->gap_opening1 = 2*linear_penalties->indel - linear_penalties->match;
+    wf_penalties->match = linear_penalties->match;
+    wf_penalties->mismatch = 2*linear_penalties->mismatch - 2*linear_penalties->match;
+    wf_penalties->gap_opening1 = 2*linear_penalties->indel - linear_penalties->match;
   } else {
-    wavefronts_penalties->match = 0;
-    wavefronts_penalties->mismatch = linear_penalties->mismatch;
-    wavefronts_penalties->gap_opening1 = linear_penalties->indel;
+    wf_penalties->match = 0;
+    wf_penalties->mismatch = linear_penalties->mismatch;
+    wf_penalties->gap_opening1 = linear_penalties->indel;
   }
   // Set unused
-  wavefronts_penalties->gap_extension1 = -1;
-  wavefronts_penalties->gap_opening2 = -1;
-  wavefronts_penalties->gap_extension2 = -1;
+  wf_penalties->gap_extension1 = -1;
+  wf_penalties->gap_opening2 = -1;
+  wf_penalties->gap_extension2 = -1;
 }
-void wavefronts_penalties_set_affine(
-    wavefronts_penalties_t* const wavefronts_penalties,
+void wavefront_penalties_set_affine(
+    wavefront_penalties_t* const wf_penalties,
     affine_penalties_t* const affine_penalties) {
   // Set distance model
-  wavefronts_penalties->distance_metric = gap_affine;
+  wf_penalties->distance_metric = gap_affine;
   // Check base penalties
   if (affine_penalties->match > 0) {
     fprintf(stderr,"[WFA::Penalties] Match score must be negative or zero (M=%d)\n",affine_penalties->match);
@@ -105,25 +107,25 @@ void wavefronts_penalties_set_affine(
   }
   // Set penalties (if needed, adjust using Eizenga's formula)
   if (affine_penalties->match < 0) {
-    wavefronts_penalties->match = affine_penalties->match;
-    wavefronts_penalties->mismatch = 2*affine_penalties->mismatch - 2*affine_penalties->match;
-    wavefronts_penalties->gap_opening1 = 2*affine_penalties->gap_opening;
-    wavefronts_penalties->gap_extension1 = 2*affine_penalties->gap_extension - affine_penalties->match;
+    wf_penalties->match = affine_penalties->match;
+    wf_penalties->mismatch = 2*affine_penalties->mismatch - 2*affine_penalties->match;
+    wf_penalties->gap_opening1 = 2*affine_penalties->gap_opening;
+    wf_penalties->gap_extension1 = 2*affine_penalties->gap_extension - affine_penalties->match;
   } else {
-    wavefronts_penalties->match = 0;
-    wavefronts_penalties->mismatch = affine_penalties->mismatch;
-    wavefronts_penalties->gap_opening1 = affine_penalties->gap_opening;
-    wavefronts_penalties->gap_extension1 = affine_penalties->gap_extension;
+    wf_penalties->match = 0;
+    wf_penalties->mismatch = affine_penalties->mismatch;
+    wf_penalties->gap_opening1 = affine_penalties->gap_opening;
+    wf_penalties->gap_extension1 = affine_penalties->gap_extension;
   }
   // Set unused
-  wavefronts_penalties->gap_opening2 = -1;
-  wavefronts_penalties->gap_extension2 = -1;
+  wf_penalties->gap_opening2 = -1;
+  wf_penalties->gap_extension2 = -1;
 }
-void wavefronts_penalties_set_affine2p(
-    wavefronts_penalties_t* const wavefronts_penalties,
+void wavefront_penalties_set_affine2p(
+    wavefront_penalties_t* const wf_penalties,
     affine2p_penalties_t* const affine2p_penalties) {
   // Set distance model
-  wavefronts_penalties->distance_metric = gap_affine_2p;
+  wf_penalties->distance_metric = gap_affine_2p;
   // Check base penalties
   if (affine2p_penalties->match > 0) {
     fprintf(stderr,"[WFA::Penalties] Match score must be negative or zero (M=%d)\n",affine2p_penalties->match);
@@ -143,29 +145,29 @@ void wavefronts_penalties_set_affine2p(
   }
   // Set penalties (if needed, adjust using Eizenga's formula)
   if (affine2p_penalties->match < 0) {
-    wavefronts_penalties->match = affine2p_penalties->match;
-    wavefronts_penalties->mismatch = 2*affine2p_penalties->mismatch - 2*wavefronts_penalties->match;
-    wavefronts_penalties->gap_opening1 = 2*affine2p_penalties->gap_opening1;
-    wavefronts_penalties->gap_extension1 = 2*affine2p_penalties->gap_extension1 - affine2p_penalties->match;
-    wavefronts_penalties->gap_opening2 = 2*affine2p_penalties->gap_opening2;
-    wavefronts_penalties->gap_extension2 = 2*affine2p_penalties->gap_extension2 - affine2p_penalties->match;
+    wf_penalties->match = affine2p_penalties->match;
+    wf_penalties->mismatch = 2*affine2p_penalties->mismatch - 2*wf_penalties->match;
+    wf_penalties->gap_opening1 = 2*affine2p_penalties->gap_opening1;
+    wf_penalties->gap_extension1 = 2*affine2p_penalties->gap_extension1 - affine2p_penalties->match;
+    wf_penalties->gap_opening2 = 2*affine2p_penalties->gap_opening2;
+    wf_penalties->gap_extension2 = 2*affine2p_penalties->gap_extension2 - affine2p_penalties->match;
   } else {
-    wavefronts_penalties->match = 0;
-    wavefronts_penalties->mismatch = affine2p_penalties->mismatch;
-    wavefronts_penalties->gap_opening1 = affine2p_penalties->gap_opening1;
-    wavefronts_penalties->gap_extension1 = affine2p_penalties->gap_extension1;
-    wavefronts_penalties->gap_opening2 = affine2p_penalties->gap_opening2;
-    wavefronts_penalties->gap_extension2 = affine2p_penalties->gap_extension2;
+    wf_penalties->match = 0;
+    wf_penalties->mismatch = affine2p_penalties->mismatch;
+    wf_penalties->gap_opening1 = affine2p_penalties->gap_opening1;
+    wf_penalties->gap_extension1 = affine2p_penalties->gap_extension1;
+    wf_penalties->gap_opening2 = affine2p_penalties->gap_opening2;
+    wf_penalties->gap_extension2 = affine2p_penalties->gap_extension2;
   }
 }
 /*
  * Display
  */
-void wavefronts_penalties_print(
+void wavefront_penalties_print(
     FILE* const stream,
-    wavefronts_penalties_t* const wavefronts_penalties) {
+    wavefront_penalties_t* const wf_penalties) {
   // Select penalties mode
-  switch (wavefronts_penalties->distance_metric) {
+  switch (wf_penalties->distance_metric) {
     case indel:
       fprintf(stream,"(Indel)");
       break;
@@ -174,22 +176,22 @@ void wavefronts_penalties_print(
       break;
     case gap_linear:
       fprintf(stream,"(GapLinear,%d,%d)",
-          wavefronts_penalties->mismatch,
-          wavefronts_penalties->gap_opening1);
+          wf_penalties->mismatch,
+          wf_penalties->gap_opening1);
       break;
     case gap_affine:
       fprintf(stream,"(GapAffine,%d,%d,%d)",
-          wavefronts_penalties->mismatch,
-          wavefronts_penalties->gap_opening1,
-          wavefronts_penalties->gap_extension1);
+          wf_penalties->mismatch,
+          wf_penalties->gap_opening1,
+          wf_penalties->gap_extension1);
       break;
     case gap_affine_2p:
-      fprintf(stream,"(GapAffine2p%d,%d,%d,%d,%d)",
-          wavefronts_penalties->mismatch,
-          wavefronts_penalties->gap_opening1,
-          wavefronts_penalties->gap_extension1,
-          wavefronts_penalties->gap_opening2,
-          wavefronts_penalties->gap_extension2);
+      fprintf(stream,"(GapAffine2p,%d,%d,%d,%d,%d)",
+          wf_penalties->mismatch,
+          wf_penalties->gap_opening1,
+          wf_penalties->gap_extension1,
+          wf_penalties->gap_opening2,
+          wf_penalties->gap_extension2);
       break;
     default:
       break;
