@@ -161,6 +161,11 @@ void wavefront_aligner_set_heuristic_wfadaptive(
     const int min_wavefront_length,
     const int max_distance_threshold,
     const int score_steps);
+void wavefront_aligner_set_heuristic_wfmash(
+    wavefront_aligner_t* const wf_aligner,
+    const int min_wavefront_length,
+    const int max_distance_threshold,
+    const int score_steps);
 void wavefront_aligner_set_heuristic_xdrop(
     wavefront_aligner_t* const wf_aligner,
     const int xdrop,

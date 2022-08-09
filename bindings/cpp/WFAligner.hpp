@@ -116,6 +116,10 @@ public:
       const int min_wavefront_length,
       const int max_distance_threshold,
       const int steps_between_cutoffs = 1);
+  void setHeuristicWFmash(
+      const int min_wavefront_length,
+      const int max_distance_threshold,
+      const int steps_between_cutoffs = 1);
   void setHeuristicXDrop(
       const int xdrop,
       const int steps_between_cutoffs = 1);

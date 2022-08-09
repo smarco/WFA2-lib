@@ -108,6 +108,7 @@ typedef struct {
   alignment_match_funct_t wfa_match_funct;
   void* wfa_match_funct_arguments;
   uint64_t wfa_max_memory;
+  int wfa_max_score;
   int wfa_max_threads;
   // Other algorithms parameters
   int bandwidth;

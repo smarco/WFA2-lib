@@ -83,6 +83,7 @@ align_bench_params_t parameters = {
   .wfa_match_funct = NULL,
   .wfa_match_funct_arguments = NULL,
   .wfa_max_memory = UINT64_MAX,
+  .wfa_max_score = INT_MAX,
   .wfa_max_threads = 1,
   // Other algorithms parameters
   .bandwidth = -1,
@@ -168,6 +169,7 @@ void usage() {
       "              P1 = z-drop                                               \n"
       "              P2 = steps-between-cutoffs                                \n"
       "          --wfa-max-memory BYTES                                        \n"
+      "          --wfa-max-score INT                                           \n"
       "          --wfa-max-threads INT (intra-parallelism; default=1)          \n"
       "        [Other Parameters]                                              \n"
       "          --bandwidth INT                                               \n"
@@ -208,7 +210,8 @@ void parse_arguments(
     { "wfa-heuristic-parameters", required_argument, 0, 1003 },
     { "wfa-custom-match-funct", no_argument, 0, 1004 },
     { "wfa-max-memory", required_argument, 0, 1005 },
-    { "wfa-max-threads", required_argument, 0, 1006 },
+    { "wfa-max-score", required_argument, 0, 1006 },
+    { "wfa-max-threads", required_argument, 0, 1007 },
     /* Other alignment parameters */
     { "bandwidth", required_argument, 0, 2000 },
     /* Misc */
@@ -401,7 +404,10 @@ void parse_arguments(
     case 1005: // --wfa-max-memory
       parameters.wfa_max_memory = atol(optarg);
       break;
-    case 1006: // --wfa-max-threads
+    case 1006: // --wfa-max-score
+      parameters.wfa_max_score = atoi(optarg);
+      break;
+    case 1007: // --wfa-max-threads
       parameters.wfa_max_threads = atoi(optarg);
       break;
     /*

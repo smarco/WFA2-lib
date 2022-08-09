@@ -169,6 +169,14 @@ void WFAligner::setHeuristicWFadaptive(
       wfAligner,min_wavefront_length,
       max_distance_threshold,steps_between_cutoffs);
 }
+void WFAligner::setHeuristicWFmash(
+    const int min_wavefront_length,
+    const int max_distance_threshold,
+    const int steps_between_cutoffs) {
+  wavefront_aligner_set_heuristic_wfmash(
+      wfAligner,min_wavefront_length,
+      max_distance_threshold,steps_between_cutoffs);
+}
 void WFAligner::setHeuristicXDrop(
     const int xdrop,
     const int steps_between_cutoffs) {
