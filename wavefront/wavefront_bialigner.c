@@ -93,10 +93,39 @@ uint64_t wavefront_bialigner_get_size(
       wavefront_aligner_get_size(wf_bialigner->alg_reverse) +
       wavefront_aligner_get_size(wf_bialigner->alg_subsidiary);
 }
-void wavefront_bialigner_heuristic_inherit(
+void wavefront_bialigner_set_heuristic(
     wavefront_bialigner_t* const wf_bialigner,
     wavefront_heuristic_t* const heuristic) {
   wf_bialigner->alg_forward->heuristic = *heuristic;
   wf_bialigner->alg_reverse->heuristic = *heuristic;
   wf_bialigner->alg_subsidiary->heuristic = *heuristic;
+}
+void wavefront_bialigner_set_match_funct(
+    wavefront_bialigner_t* const wf_bialigner,
+    int (*match_funct)(int,int,void*),
+    void* const match_funct_arguments) {
+  wf_bialigner->alg_forward->match_funct = match_funct;
+  wf_bialigner->alg_forward->match_funct_arguments = match_funct_arguments;
+  wf_bialigner->alg_reverse->match_funct = match_funct;
+  wf_bialigner->alg_reverse->match_funct_arguments = match_funct_arguments;
+  wf_bialigner->alg_subsidiary->match_funct = match_funct;
+  wf_bialigner->alg_subsidiary->match_funct_arguments = match_funct_arguments;
+}
+void wavefront_bialigner_set_max_alignment_score(
+    wavefront_bialigner_t* const wf_bialigner,
+    const int max_alignment_score) {
+  wf_bialigner->alg_forward->system.max_alignment_score = max_alignment_score;
+  wf_bialigner->alg_reverse->system.max_alignment_score = max_alignment_score;
+  wf_bialigner->alg_subsidiary->system.max_alignment_score = max_alignment_score;
+}
+void wavefront_bialigner_set_max_memory(
+    wavefront_bialigner_t* const wf_bialigner,
+    const uint64_t max_memory_resident,
+    const uint64_t max_memory_abort) {
+  wf_bialigner->alg_forward->system.max_memory_resident = max_memory_resident;
+  wf_bialigner->alg_forward->system.max_memory_abort = max_memory_abort;
+  wf_bialigner->alg_reverse->system.max_memory_resident = max_memory_resident;
+  wf_bialigner->alg_reverse->system.max_memory_abort = max_memory_abort;
+  wf_bialigner->alg_subsidiary->system.max_memory_resident = max_memory_resident;
+  wf_bialigner->alg_subsidiary->system.max_memory_abort = max_memory_abort;
 }

@@ -290,7 +290,7 @@ void wavefront_aligner_set_heuristic_none(
     wavefront_aligner_t* const wf_aligner) {
   wavefront_heuristic_set_none(&wf_aligner->heuristic);
   if (wf_aligner->bialigner != NULL) {
-    wavefront_bialigner_heuristic_inherit(wf_aligner->bialigner,&wf_aligner->heuristic);
+    wavefront_bialigner_set_heuristic(wf_aligner->bialigner,&wf_aligner->heuristic);
   }
 }
 void wavefront_aligner_set_heuristic_banded_static(
@@ -299,7 +299,7 @@ void wavefront_aligner_set_heuristic_banded_static(
     const int band_max_k) {
   wavefront_heuristic_set_banded_static(&wf_aligner->heuristic,band_min_k,band_max_k);
   if (wf_aligner->bialigner != NULL) {
-    wavefront_bialigner_heuristic_inherit(wf_aligner->bialigner,&wf_aligner->heuristic);
+    wavefront_bialigner_set_heuristic(wf_aligner->bialigner,&wf_aligner->heuristic);
   }
 }
 void wavefront_aligner_set_heuristic_banded_adaptive(
@@ -310,7 +310,7 @@ void wavefront_aligner_set_heuristic_banded_adaptive(
   wavefront_heuristic_set_banded_adaptive(
       &wf_aligner->heuristic,band_min_k,band_max_k,score_steps);
   if (wf_aligner->bialigner != NULL) {
-    wavefront_bialigner_heuristic_inherit(wf_aligner->bialigner,&wf_aligner->heuristic);
+    wavefront_bialigner_set_heuristic(wf_aligner->bialigner,&wf_aligner->heuristic);
   }
 }
 void wavefront_aligner_set_heuristic_wfadaptive(
@@ -322,7 +322,19 @@ void wavefront_aligner_set_heuristic_wfadaptive(
       &wf_aligner->heuristic,
       min_wavefront_length,max_distance_threshold,score_steps);
   if (wf_aligner->bialigner != NULL) {
-    wavefront_bialigner_heuristic_inherit(wf_aligner->bialigner,&wf_aligner->heuristic);
+    wavefront_bialigner_set_heuristic(wf_aligner->bialigner,&wf_aligner->heuristic);
+  }
+}
+void wavefront_aligner_set_heuristic_wfmash(
+    wavefront_aligner_t* const wf_aligner,
+    const int min_wavefront_length,
+    const int max_distance_threshold,
+    const int score_steps) {
+  wavefront_heuristic_set_wfmash(
+      &wf_aligner->heuristic,
+      min_wavefront_length,max_distance_threshold,score_steps);
+  if (wf_aligner->bialigner != NULL) {
+    wavefront_bialigner_set_heuristic(wf_aligner->bialigner,&wf_aligner->heuristic);
   }
 }
 void wavefront_aligner_set_heuristic_wfmash(
@@ -343,7 +355,7 @@ void wavefront_aligner_set_heuristic_xdrop(
     const int score_steps) {
   wavefront_heuristic_set_xdrop(&wf_aligner->heuristic,xdrop,score_steps);
   if (wf_aligner->bialigner != NULL) {
-    wavefront_bialigner_heuristic_inherit(wf_aligner->bialigner,&wf_aligner->heuristic);
+    wavefront_bialigner_set_heuristic(wf_aligner->bialigner,&wf_aligner->heuristic);
   }
 }
 void wavefront_aligner_set_heuristic_zdrop(
@@ -352,7 +364,7 @@ void wavefront_aligner_set_heuristic_zdrop(
     const int score_steps) {
   wavefront_heuristic_set_zdrop(&wf_aligner->heuristic,ydrop,score_steps);
   if (wf_aligner->bialigner != NULL) {
-    wavefront_bialigner_heuristic_inherit(wf_aligner->bialigner,&wf_aligner->heuristic);
+    wavefront_bialigner_set_heuristic(wf_aligner->bialigner,&wf_aligner->heuristic);
   }
 }
 /*
@@ -364,6 +376,10 @@ void wavefront_aligner_set_match_funct(
     void* const match_funct_arguments) {
   wf_aligner->match_funct = match_funct;
   wf_aligner->match_funct_arguments = match_funct_arguments;
+  if (wf_aligner->bialigner != NULL) {
+    wavefront_bialigner_set_match_funct(
+        wf_aligner->bialigner,match_funct,match_funct_arguments);
+  }
 }
 /*
  * System configuration
@@ -372,6 +388,10 @@ void wavefront_aligner_set_max_alignment_score(
     wavefront_aligner_t* const wf_aligner,
     const int max_alignment_score) {
   wf_aligner->system.max_alignment_score = max_alignment_score;
+  if (wf_aligner->bialigner != NULL) {
+    wavefront_bialigner_set_max_alignment_score(
+        wf_aligner->bialigner,max_alignment_score);
+  }
 }
 void wavefront_aligner_set_max_memory(
     wavefront_aligner_t* const wf_aligner,
@@ -379,6 +399,10 @@ void wavefront_aligner_set_max_memory(
     const uint64_t max_memory_abort) {
   wf_aligner->system.max_memory_resident = max_memory_resident;
   wf_aligner->system.max_memory_abort = max_memory_abort;
+  if (wf_aligner->bialigner != NULL) {
+    wavefront_bialigner_set_max_memory(
+        wf_aligner->bialigner,max_memory_resident,max_memory_abort);
+  }
 }
 /*
  * Utils
