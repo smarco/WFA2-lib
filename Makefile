@@ -9,8 +9,8 @@ FOLDER_TESTS=tests
 
 UNAME=$(shell uname)
 
-CC:=gcc
-CPP:=g++
+CC:=$(CC)
+CPP:=$(CXX)
 
 CC_FLAGS=-Wall -g
 

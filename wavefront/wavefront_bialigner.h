@@ -75,8 +75,19 @@ void wavefront_bialigner_delete(
  */
 uint64_t wavefront_bialigner_get_size(
     wavefront_bialigner_t* const wf_bialigner);
-void wavefront_bialigner_heuristic_inherit(
+void wavefront_bialigner_set_heuristic(
     wavefront_bialigner_t* const wf_bialigner,
     wavefront_heuristic_t* const heuristic);
+void wavefront_bialigner_set_match_funct(
+    wavefront_bialigner_t* const wf_bialigner,
+    int (*match_funct)(int,int,void*),
+    void* const match_funct_arguments);
+void wavefront_bialigner_set_max_alignment_score(
+    wavefront_bialigner_t* const wf_bialigner,
+    const int max_alignment_score);
+void wavefront_bialigner_set_max_memory(
+    wavefront_bialigner_t* const wf_bialigner,
+    const uint64_t max_memory_resident,
+    const uint64_t max_memory_abort);
 
 #endif /* WAVEFRONT_BIALIGNER_H_ */
