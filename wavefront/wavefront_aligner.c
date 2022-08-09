@@ -337,18 +337,6 @@ void wavefront_aligner_set_heuristic_wfmash(
     wavefront_bialigner_set_heuristic(wf_aligner->bialigner,&wf_aligner->heuristic);
   }
 }
-void wavefront_aligner_set_heuristic_wfmash(
-    wavefront_aligner_t* const wf_aligner,
-    const int min_wavefront_length,
-    const int max_distance_threshold,
-    const int score_steps) {
-  wavefront_heuristic_set_wfmash(
-      &wf_aligner->heuristic,
-      min_wavefront_length,max_distance_threshold,score_steps);
-  if (wf_aligner->bialigner != NULL) {
-    wavefront_bialigner_heuristic_inherit(wf_aligner->bialigner,&wf_aligner->heuristic);
-  }
-}
 void wavefront_aligner_set_heuristic_xdrop(
     wavefront_aligner_t* const wf_aligner,
     const int xdrop,
