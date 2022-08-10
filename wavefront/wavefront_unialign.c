@@ -324,7 +324,7 @@ bool wavefront_unialign_reached_limits(
   // Global probing interval
   alignment_system_t* const system = &wf_aligner->system;
   if (score % system->probe_interval_global != 0) return false; // Continue
-  if (system->verbose >= 1) {
+  if (system->verbose >= 3) {
     wavefront_unialign_print_status(stderr,wf_aligner,score); // DEBUG
   }
   // BT-Buffer
