@@ -125,6 +125,8 @@ void wavefront_aligner_init_heuristic(
   if (wf_heuristic->strategy == wf_heuristic_none) {
     wavefront_heuristic_set_none(&wf_aligner->heuristic);
   } else {
+    // Reset
+    wf_aligner->heuristic.strategy = 0;
     // WF-Adaptive
     if (wf_heuristic->strategy & wf_heuristic_wfadaptive) {
       wavefront_heuristic_set_wfadaptive(
