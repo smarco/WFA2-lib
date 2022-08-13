@@ -36,7 +36,7 @@ SRCS=$(addsuffix .c, $(MODULES))
 OBJS=$(addprefix $(FOLDER_BUILD)/, $(SRCS:.c=.o))
 
 ifeq ($(BUILD_WFA_PARALLEL),1) 
-PFLAGS=-DWFA_PARALLEL -fopenmp
+PFLAGS=-fopenmp #-DWFA_PARALLEL
 endif
 #CC_XFLAGS+=-fopt-info-vec-optimized
 
