@@ -24,7 +24,7 @@ ifndef BUILD_TOOLS
 BUILD_TOOLS=1
 endif
 ifndef BUILD_WFA_PARALLEL
-BUILD_WFA_PARALLEL=0
+BUILD_WFA_PARALLEL=1
 endif
 
 ###############################################################################
