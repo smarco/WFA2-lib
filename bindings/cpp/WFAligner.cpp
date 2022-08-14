@@ -210,6 +210,15 @@ void WFAligner::setMaxMemory(
     const uint64_t maxMemoryAbort) {
   wavefront_aligner_set_max_memory(wfAligner,maxMemoryResident,maxMemoryAbort);
 }
+// Parallelization
+void WFAligner::setMaxNumThreads(
+        const int maxNumThreads) {
+    wavefront_aligner_set_max_num_threads(wfAligner, maxNumThreads);
+}
+void WFAligner::setMinOffsetsPerThread(
+        const int minOffsetsPerThread) {
+    wavefront_aligner_set_min_offsets_per_thread(wfAligner, minOffsetsPerThread);
+}
 /*
  * Accessors
  */

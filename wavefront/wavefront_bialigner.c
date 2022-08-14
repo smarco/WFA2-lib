@@ -129,3 +129,17 @@ void wavefront_bialigner_set_max_memory(
   wf_bialigner->alg_subsidiary->system.max_memory_resident = max_memory_resident;
   wf_bialigner->alg_subsidiary->system.max_memory_abort = max_memory_abort;
 }
+void wavefront_bialigner_set_max_num_threads(
+        wavefront_bialigner_t* const wf_bialigner,
+        const int max_num_threads) {
+    wf_bialigner->alg_forward->system.max_num_threads = max_num_threads;
+    wf_bialigner->alg_reverse->system.max_num_threads = max_num_threads;
+    wf_bialigner->alg_subsidiary->system.max_num_threads = max_num_threads;
+}
+void wavefront_bialigner_set_min_offsets_per_thread(
+        wavefront_bialigner_t* const wf_bialigner,
+        const int min_offsets_per_thread) {
+    wf_bialigner->alg_forward->system.min_offsets_per_thread = min_offsets_per_thread;
+    wf_bialigner->alg_reverse->system.min_offsets_per_thread = min_offsets_per_thread;
+    wf_bialigner->alg_subsidiary->system.min_offsets_per_thread = min_offsets_per_thread;
+}

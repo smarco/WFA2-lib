@@ -136,6 +136,11 @@ public:
   void setMaxMemory(
       const uint64_t maxMemoryResident,
       const uint64_t maxMemoryAbort);
+  // Parallelization
+  void setMaxNumThreads(
+      const int maxNumThreads);
+  void setMinOffsetsPerThread(
+      const int minOffsetsPerThread);
   // Accessors
   int getAlignmentScore();
   int getAlignmentStatus();

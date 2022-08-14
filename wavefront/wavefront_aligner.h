@@ -202,7 +202,12 @@ void wavefront_aligner_set_max_memory(
     wavefront_aligner_t* const wf_aligner,
     const uint64_t max_memory_resident,
     const uint64_t max_memory_abort);
-
+void wavefront_aligner_set_max_num_threads(
+        wavefront_aligner_t* const wf_aligner,
+        const int max_num_threads);
+void wavefront_aligner_set_min_offsets_per_thread(
+        wavefront_aligner_t* const wf_aligner,
+        const int min_offsets_per_thread);
 /*
  * Utils
  */
