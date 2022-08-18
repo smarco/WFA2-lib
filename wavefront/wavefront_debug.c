@@ -129,25 +129,38 @@ void wavefront_report_lite(
   const int text_length = wf_aligner->text_length;
   const int status = wf_aligner->align_status.status;
   const uint64_t memory_used = wf_aligner->align_status.memory_used;
-  // Banner
+  // BANNER (#0)
   fprintf(stream,"[WFA::Debug]");
-  // Sequences
-  const int score = wavefront_compute_classic_score(
-      wf_aligner,wf_aligner->pattern_length,
-      wf_aligner->text_length,wf_aligner->cigar->score);
-  fprintf(stream,"\t%d",score);
-  fprintf(stream,"\t%d\t%d",pattern_length,text_length);
-  fprintf(stream,"\t%s",(status==0) ? "OK" : "FAIL");
+  // SCORE (#1)
+  const int score = wf_aligner->cigar->score;
+  fprintf(stream,"\t%d",(score==INT32_MIN) ? -1 : score);
+  // PATTERN_LENGTH (#2)
+  fprintf(stream,"\t%d",pattern_length);
+  // TEXT_LENGTH (#3)
+  fprintf(stream,"\t%d",text_length);
+  // STATUS (#4)
+  fprintf(stream,"\t%s",wavefront_align_strerror_short(status));
+  // TIME (#5)
   fprintf(stream,"\t%2.3f",TIMER_GET_TOTAL_MS(&wf_aligner->system.timer));
+  // MEMORY (#6)
   fprintf(stream,"\t%luMB\t",CONVERT_B_TO_MB(memory_used));
+  // ATTRIBUTES (#7)
   fprintf(stream,"[");
   wavefront_aligner_print_type(stream,wf_aligner);
-  fprintf(stream,",");
+  fprintf(stream,";");
   wavefront_aligner_print_scope(stream,wf_aligner);
-  fprintf(stream,",");
+  fprintf(stream,";");
   wavefront_penalties_print(stream,&wf_aligner->penalties);
+  fprintf(stream,";");
+  wavefront_aligner_print_mode(stream,wf_aligner);
   fprintf(stream,"]\t");
-  cigar_print(stream,wf_aligner->cigar,true);
+  // CIGAR (#8)
+  if (cigar_is_null(wf_aligner->cigar)) {
+    fprintf(stream,"-");
+  } else {
+    cigar_print(stream,wf_aligner->cigar,true);
+  }
+  // SEQUENCES (#9)
   if (wf_aligner->match_funct != NULL) {
     fprintf(stream,"\t-\t-");
   } else {
@@ -174,22 +187,18 @@ void wavefront_report_verbose_begin(
     fprintf(stream,"[WFA::Report]\tText\t%d\t%.*s\n",text_length,text_length,text);
   }
   // Alignment scope/form
-  fprintf(stream,"[WFA::Report]\tScope=");
+  fprintf(stream,"\n[WFA::Report]\tScope=");
   wavefront_aligner_print_scope(stream,wf_aligner);
-  fprintf(stream," Max-score=%d",
-      wf_aligner->system.max_alignment_score);
   // Penalties
-  fprintf(stream," Penalties=");
+  fprintf(stream,"\n[WFA::Report]\tPenalties=");
   wavefront_penalties_print(stream,&wf_aligner->penalties);
   // Heuristic
-  fprintf(stream," Heuristic=");
+  fprintf(stream,"\n[WFA::Report]\tHeuristic=");
   wavefront_heuristic_print(stream,&wf_aligner->heuristic);
-  // Memory mode
-  fprintf(stream," Memory.mode=(%d,%luMB,%luMB,%luMB)\n",
-      wf_aligner->memory_mode,
-      CONVERT_B_TO_MB(wf_aligner->system.max_memory_compact),
-      CONVERT_B_TO_MB(wf_aligner->system.max_memory_resident),
-      CONVERT_B_TO_MB(wf_aligner->system.max_memory_abort));
+  // Mode
+  fprintf(stream,"\n[WFA::Report]\tMode=");
+  wavefront_aligner_print_mode(stream,wf_aligner);
+  fprintf(stream,"\n");
 }
 void wavefront_report_verbose_end(
     FILE* const stream,
@@ -223,6 +232,7 @@ void wavefront_debug_prologue(
     const int text_length) {
   // Check verbose level
   if (wf_aligner->system.verbose >= 1) {
+    timer_reset(&wf_aligner->system.timer);
     timer_start(&wf_aligner->system.timer);
     if (wf_aligner->system.verbose >= 4) {
       wavefront_report_verbose_begin(stderr,wf_aligner,

@@ -523,6 +523,9 @@ void wavefront_bialign_exception(
   if (align_status == WF_STATUS_MAX_SCORE_REACHED ||
       align_status == WF_STATUS_UNFEASIBLE) {
     wf_aligner->align_status.status = align_status;
+    if (align_status == WF_STATUS_MAX_SCORE_REACHED) {
+      wf_aligner->cigar->score = -wf_aligner->system.max_alignment_score;
+    }
     return;
   }
   // Check end reached
@@ -624,6 +627,8 @@ void wavefront_bialign_alignment(
       &breakpoint,align_level);
   // DEBUG
   if (wf_aligner->system.verbose >= 2) {
+    wf_aligner->bialigner->alg_forward->align_status.status = align_status;
+    wf_aligner->bialigner->alg_reverse->align_status.status = align_status;
     wavefront_debug_epilogue(wf_aligner->bialigner->alg_forward);
     wavefront_debug_epilogue(wf_aligner->bialigner->alg_reverse);
   }
@@ -693,8 +698,12 @@ void wavefront_bialign_compute_score(
     wavefront_debug_epilogue(wf_aligner->bialigner->alg_reverse);
   }
   // Check status
-  if (align_status == WF_STATUS_MAX_SCORE_REACHED || align_status == WF_STATUS_UNFEASIBLE) {
+  if (align_status == WF_STATUS_MAX_SCORE_REACHED ||
+      align_status == WF_STATUS_UNFEASIBLE) {
     wf_aligner->align_status.status = align_status;
+    if (align_status == WF_STATUS_MAX_SCORE_REACHED) {
+      wf_aligner->cigar->score = -wf_aligner->system.max_alignment_score;
+    }
     return;
   }
   if (align_status == WF_STATUS_END_REACHED) {

@@ -285,11 +285,16 @@ The WFA2 library allows computing alignments with different spans or shapes. Alt
 ```C
     wavefront_aligner_attr_t attributes = wavefront_aligner_attr_default;
     attributes.alignment_form.span = alignment_endsfree;
-    attributes.alignment_form.pattern_begin_free = pattern_begin_free;
-    attributes.alignment_form.pattern_end_free = pattern_end_free;
-    attributes.alignment_form.text_begin_free = text_begin_free;
-    attributes.alignment_form.text_end_free = text_end_free;
+    attributes.alignment_form.pattern_begin_free = 20;
+    attributes.alignment_form.pattern_end_free = 0;
+    attributes.alignment_form.text_begin_free = 20;
+    attributes.alignment_form.text_end_free = 20;
 ```
+
+<p align = "center">
+<img src = "img/wfa.endsfree.png" width="600px">
+</p>
+
 
 - **Other**
 
@@ -457,7 +462,7 @@ WFA2's heuristics are classified into the following categories: ['wf-adaptive'](
   attributes.heuristic.steps_between_cutoffs = 100;
 ```
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Z-drop** implements the Z-drop heuristic (as described in Minimap2). This heuristic halts the alignment process if the score drops too fast in the diagonal direction. Let $sw_{max}$ be the maximum observed score so far, computed at cell ($i'$,$j'$). Then, let $sw$ be the maximum score found in the last computed wavefront, computed at cell ($i$,$j$). The Z-drop heuristic stops the alignment process if $sw_{max} - sw > zdrop + gap_e·|(i-i')-(j-j')|$, being $gap_e$ the gap-extension penalty and $zdrop$ a parameter of the heuristic.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Z-drop** implements the Z-drop heuristic (as described in Minimap2). This heuristic halts the alignment process if the score drops too fast in the diagonal direction. Let $sw_{max}$ be the maximum observed score so far, computed at cell ($i'$, $j'$). Then, let $sw$ be the maximum score found in the last computed wavefront, computed at cell ($i$, $j$). The Z-drop heuristic stops the alignment process if $sw_{max} - sw > zdrop + gap_e·|(i-i')-(j-j')|$, being $gap_e$ the gap-extension penalty and $zdrop$ a parameter of the heuristic.
   
 
 ```C

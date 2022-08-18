@@ -74,8 +74,6 @@ void wavefront_unialigner_system_clear(
     default:
       break;
   }
-  // Profile
-  timer_reset(&wf_aligner->system.timer);
 }
 /*
  * Resize
@@ -316,7 +314,7 @@ bool wavefront_unialign_reached_limits(
     const int score) {
   // Check alignment-score limit
   if (score >= wf_aligner->system.max_alignment_score) {
-    wf_aligner->cigar->score = wf_aligner->system.max_alignment_score;
+    wf_aligner->cigar->score = -wf_aligner->system.max_alignment_score;
     wf_aligner->align_status.status = WF_STATUS_MAX_SCORE_REACHED;
     wf_aligner->align_status.score = score;
     return true; // Stop

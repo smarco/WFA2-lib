@@ -50,12 +50,22 @@ char* wf_error_msg[] =
   /* WF_STATUS_UNFEASIBLE           == -1 */ "[WFA] Alignment unfeasible (possible due to heuristic parameters)",
   /* WF_STATUS_SUCCESSFUL           ==  0 */ "[WFA] Alignment finished successfully",
 };
+char* wf_error_msg_short[] =
+{
+  /* WF_STATUS_OOM                  == -3 */ "OOM",
+  /* WF_STATUS_MAX_SCORE_REACHED    == -2 */ "MaxScore",
+  /* WF_STATUS_UNFEASIBLE           == -1 */ "Unfeasible",
+  /* WF_STATUS_SUCCESSFUL           ==  0 */ "OK",
+};
 char* wavefront_align_strerror(const int error_code) {
   if (error_code > 0) {
     fprintf(stderr,"[WFA] Internal alignment error code (%d)",error_code);
     exit(1);
   }
   return wf_error_msg[error_code+3];
+}
+char* wavefront_align_strerror_short(const int error_code) {
+  return wf_error_msg_short[error_code+3];
 }
 /*
  * Setup
@@ -394,6 +404,24 @@ void wavefront_aligner_set_max_memory(
         wf_aligner->bialigner,max_memory_resident,max_memory_abort);
   }
 }
+void wavefront_aligner_set_max_num_threads(
+    wavefront_aligner_t* const wf_aligner,
+    const int max_num_threads) {
+  wf_aligner->system.max_num_threads = max_num_threads;
+  if (wf_aligner->bialigner != NULL) {
+    wavefront_bialigner_set_max_num_threads(
+        wf_aligner->bialigner,max_num_threads);
+  }
+}
+void wavefront_aligner_set_min_offsets_per_thread(
+    wavefront_aligner_t* const wf_aligner,
+    const int min_offsets_per_thread) {
+  wf_aligner->system.min_offsets_per_thread = min_offsets_per_thread;
+  if (wf_aligner->bialigner != NULL) {
+    wavefront_bialigner_set_min_offsets_per_thread(
+        wf_aligner->bialigner,min_offsets_per_thread);
+  }
+}
 /*
  * Utils
  */
@@ -420,26 +448,25 @@ uint64_t wavefront_aligner_get_size(
 void wavefront_aligner_print_type(
     FILE* const stream,
     wavefront_aligner_t* const wf_aligner) {
-  if (wf_aligner->align_mode_tag == NULL) {
-    switch (wf_aligner->align_mode) {
-      case wf_align_biwfa:
-        fprintf(stream,"BiWFA");
-        break;
-      case wf_align_biwfa_breakpoint_forward:
-        fprintf(stream,"BiWFA::Forward");
-        break;
-      case wf_align_biwfa_breakpoint_reverse:
-        fprintf(stream,"BiWFA::Reverse");
-        break;
-      case wf_align_biwfa_subsidiary:
-        fprintf(stream,"BiWFA::SubWFA");
-        break;
-      default:
-        fprintf(stream,"WFA");
-        break;
-    }
-  } else {
-    fprintf(stream,"%s",wf_aligner->align_mode_tag);
+  if (wf_aligner->align_mode_tag != NULL) {
+    fprintf(stream,"%s::",wf_aligner->align_mode_tag);
+  }
+  switch (wf_aligner->align_mode) {
+    case wf_align_biwfa:
+      fprintf(stream,"BiWFA");
+      break;
+    case wf_align_biwfa_breakpoint_forward:
+      fprintf(stream,"BiWFA::Forward");
+      break;
+    case wf_align_biwfa_breakpoint_reverse:
+      fprintf(stream,"BiWFA::Reverse");
+      break;
+    case wf_align_biwfa_subsidiary:
+      fprintf(stream,"BiWFA::SubWFA");
+      break;
+    default:
+      fprintf(stream,"WFA");
+      break;
   }
 }
 void wavefront_aligner_print_scope(
@@ -463,10 +490,15 @@ void wavefront_aligner_print_mode(
     wavefront_aligner_t* const wf_aligner) {
   fprintf(stream,"(%s,",(wf_aligner->alignment_scope==compute_score)?"Score":"Alg");
   switch (wf_aligner->memory_mode) {
-    case wavefront_memory_high: fprintf(stream,"MHigh)"); break;
-    case wavefront_memory_med: fprintf(stream,"MMed)"); break;
-    case wavefront_memory_low: fprintf(stream,"MLow)"); break;
-    case wavefront_memory_ultralow: fprintf(stream,"BiWFA)"); break;
+    case wavefront_memory_high: fprintf(stream,"MHigh"); break;
+    case wavefront_memory_med: fprintf(stream,"MMed"); break;
+    case wavefront_memory_low: fprintf(stream,"MLow"); break;
+    case wavefront_memory_ultralow: fprintf(stream,"BiWFA"); break;
+  }
+  if (wf_aligner->system.max_alignment_score == INT_MAX) {
+    fprintf(stream,",inf)");
+  } else {
+    fprintf(stream,",%d)",wf_aligner->system.max_alignment_score);
   }
 }
 

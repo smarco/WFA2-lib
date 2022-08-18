@@ -269,7 +269,6 @@ void wavefront_plot_print(
   fprintf(stream,"\n");
   // Alignment mode
   fprintf(stream,"# WFAMode ");
-  wavefront_aligner_print_mode(stream,wf_aligner);
   wavefront_heuristic_t* const wf_heuristic = &wf_aligner->heuristic;
   if (wf_heuristic->strategy != wf_heuristic_none) {
     wavefront_heuristic_print(stream,wf_heuristic);

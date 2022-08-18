@@ -210,6 +210,15 @@ void WFAligner::setMaxMemory(
     const uint64_t maxMemoryAbort) {
   wavefront_aligner_set_max_memory(wfAligner,maxMemoryResident,maxMemoryAbort);
 }
+// Parallelization
+void WFAligner::setMaxNumThreads(
+    const int maxNumThreads) {
+  wavefront_aligner_set_max_num_threads(wfAligner, maxNumThreads);
+}
+void WFAligner::setMinOffsetsPerThread(
+    const int minOffsetsPerThread) {
+  wavefront_aligner_set_min_offsets_per_thread(wfAligner, minOffsetsPerThread);
+}
 /*
  * Accessors
  */
@@ -240,9 +249,14 @@ char* WFAligner::strError(
     const int wfErrorCode) {
   return wavefront_align_strerror(wfErrorCode);
 }
-void WFAligner::setVerbose(
-    const int verbose) {
-  wfAligner->system.verbose = verbose;
+void WFAligner::debugAddTag(
+    char* const debugTag) {
+  wfAligner->align_mode_tag = debugTag;
+  if (wfAligner->bialigner != NULL) {
+    wfAligner->bialigner->alg_forward->align_mode_tag = debugTag;
+    wfAligner->bialigner->alg_reverse->align_mode_tag = debugTag;
+    wfAligner->bialigner->alg_subsidiary->align_mode_tag = debugTag;
+  }
 }
 /*
  * Indel Aligner (a.k.a Longest Common Subsequence - LCS)

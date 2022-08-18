@@ -136,6 +136,11 @@ public:
   void setMaxMemory(
       const uint64_t maxMemoryResident,
       const uint64_t maxMemoryAbort);
+  // Parallelization
+  void setMaxNumThreads(
+      const int maxNumThreads);
+  void setMinOffsetsPerThread(
+      const int minOffsetsPerThread);
   // Accessors
   int getAlignmentScore();
   int getAlignmentStatus();
@@ -146,8 +151,8 @@ public:
   // Misc
   char* strError(
       const int wfErrorCode);
-  void setVerbose(
-      const int verbose);
+  void debugAddTag(
+      char* const debugTag);
 protected:
   wavefront_aligner_attr_t attributes;
   wavefront_aligner_t* wfAligner;

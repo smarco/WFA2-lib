@@ -121,7 +121,10 @@ void wavefront_align_unidirectional(
   // Wavefront align sequences
   wavefront_unialign(wf_aligner);
   // Finish
-  if (wf_aligner->align_status.status == WF_STATUS_MAX_SCORE_REACHED) return; // Alignment paused
+  if (wf_aligner->align_status.status == WF_STATUS_MAX_SCORE_REACHED) {
+    wavefront_debug_epilogue(wf_aligner);
+    return; // Alignment paused
+  }
   wavefront_align_unidirectional_cleanup(wf_aligner);
   // DEBUG
   wavefront_debug_epilogue(wf_aligner);
@@ -189,7 +192,6 @@ int wavefront_align_resume(
   }
   wavefront_align_unidirectional_cleanup(wf_aligner);
   // DEBUG
-  wavefront_debug_epilogue(wf_aligner);
   wavefront_debug_check_correct(wf_aligner);
   // Return
   return align_status->status;
