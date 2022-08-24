@@ -63,6 +63,37 @@ void strings_padded_add_padding(
   // Add end padding
   memset(*buffer_padded_begin+buffer_length,padding_value,end_padding_length);
 }
+/*
+ * Strings (text/pattern) lambda padded
+ */
+void strings_padded_add_padding_lambda(
+    const int* const buffer,
+    const int buffer_length,
+    const int begin_padding_length,
+    const int end_padding_length,
+    const int padding_value,
+    int** const buffer_padded,
+    int** const buffer_padded_begin,
+    const bool reverse_sequence,
+    mm_allocator_t* const mm_allocator) {
+  // Allocate
+  const int buffer_padded_length = begin_padding_length + buffer_length + end_padding_length;
+  *buffer_padded = mm_allocator_malloc(mm_allocator,buffer_padded_length*sizeof(int));
+  // Add begin padding (memset(*buffer_padded,padding_value,begin_padding_length);)
+  for (int i=0;i<begin_padding_length;i++) {(*buffer_padded)[i] = padding_value; }
+  // Copy buffer
+  *buffer_padded_begin = *buffer_padded + begin_padding_length;
+  if (reverse_sequence) {
+      int i;
+      for (i=0;i<buffer_length;i++) {
+          (*buffer_padded_begin)[i] = buffer[buffer_length-1-i];
+      }
+  } else {
+      memcpy(*buffer_padded_begin,buffer,buffer_length*sizeof(int));
+  }
+  // Add end padding (memset(*buffer_padded_begin+buffer_length,padding_value,end_padding_length);)
+  for (int i=0;i<end_padding_length;i++) {(*buffer_padded_begin+buffer_length)[i] = padding_value; }
+}
 strings_padded_t* strings_padded_new(
     const char* const pattern,
     const int pattern_length,
@@ -98,8 +129,10 @@ strings_padded_t* strings_padded_new(
 }
 strings_padded_t* strings_padded_new_rhomb(
     const char* const pattern,
+    const int* const pattern_lambda,
     const int pattern_length,
     const char* const text,
+    const int* const text_lambda,
     const int text_length,
     const int padding_length,
     const bool reverse_sequences,
@@ -114,18 +147,33 @@ strings_padded_t* strings_padded_new_rhomb(
   const int text_begin_padding_length = padding_length;
   const int text_end_padding_length = text_length + padding_length;
   // Add padding
-  strings_padded_add_padding(
-      pattern,pattern_length,
-      pattern_begin_padding_length,pattern_end_padding_length,'?',
-      &(strings_padded->pattern_padded_buffer),
-      &(strings_padded->pattern_padded),
-      reverse_sequences,mm_allocator);
-  strings_padded_add_padding(
-      text,text_length,
-      text_begin_padding_length,text_end_padding_length,'!',
-      &(strings_padded->text_padded_buffer),
-      &(strings_padded->text_padded),
-      reverse_sequences,mm_allocator);
+  if (pattern != NULL && text != NULL) {
+    strings_padded_add_padding(
+            pattern,pattern_length,
+            pattern_begin_padding_length,pattern_end_padding_length,'?',
+            &(strings_padded->pattern_padded_buffer),
+            &(strings_padded->pattern_padded),
+            reverse_sequences,mm_allocator);
+    strings_padded_add_padding(
+            text,text_length,
+            text_begin_padding_length,text_end_padding_length,'!',
+            &(strings_padded->text_padded_buffer),
+            &(strings_padded->text_padded),
+            reverse_sequences,mm_allocator);
+  } else if (pattern_lambda != NULL && text_lambda != NULL) {
+    strings_padded_add_padding_lambda(
+            pattern_lambda,pattern_length,
+            pattern_begin_padding_length,pattern_end_padding_length,-1,
+            &(strings_padded->pattern_lambda_padded_buffer),
+            &(strings_padded->pattern_lambda_padded),
+            reverse_sequences,mm_allocator);
+    strings_padded_add_padding_lambda(
+            text_lambda,text_length,
+            text_begin_padding_length,text_end_padding_length,-1,
+            &(strings_padded->text_lambda_padded_buffer),
+            &(strings_padded->text_lambda_padded),
+            reverse_sequences,mm_allocator);
+  }
   // Set lengths
   strings_padded->pattern_length = pattern_length;
   strings_padded->text_length = text_length;
@@ -135,5 +183,10 @@ strings_padded_t* strings_padded_new_rhomb(
 void strings_padded_delete(strings_padded_t* const strings_padded) {
   mm_allocator_free(strings_padded->mm_allocator,strings_padded->pattern_padded_buffer);
   mm_allocator_free(strings_padded->mm_allocator,strings_padded->text_padded_buffer);
+  mm_allocator_free(strings_padded->mm_allocator,strings_padded);
+}
+void strings_padded_delete_lambda(strings_padded_t* const strings_padded) {
+  mm_allocator_free(strings_padded->mm_allocator,strings_padded->pattern_lambda_padded_buffer);
+  mm_allocator_free(strings_padded->mm_allocator,strings_padded->text_lambda_padded_buffer);
   mm_allocator_free(strings_padded->mm_allocator,strings_padded);
 }

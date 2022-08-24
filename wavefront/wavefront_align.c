@@ -109,12 +109,14 @@ void wavefront_align_unidirectional_cleanup(
 void wavefront_align_unidirectional(
     wavefront_aligner_t* const wf_aligner,
     const char* const pattern,
+    const int* const pattern_lambda,
     const int pattern_length,
     const char* const text,
+    const int* const text_lambda,
     const int text_length) {
   // Prepare alignment
   wavefront_unialign_init(
-      wf_aligner,pattern,pattern_length,text,text_length,
+      wf_aligner,pattern,pattern_lambda,pattern_length,text,text_lambda,text_length,
       affine2p_matrix_M,affine2p_matrix_M);
   // DEBUG
   wavefront_debug_prologue(wf_aligner,pattern,pattern_length,text,text_length);
@@ -133,13 +135,15 @@ void wavefront_align_unidirectional(
 void wavefront_align_bidirectional(
     wavefront_aligner_t* const wf_aligner,
     const char* const pattern,
+    const int* const pattern_lambda,
     const int pattern_length,
     const char* const text,
+    const int* const text_lambda,
     const int text_length) {
   // DEBUG
   wavefront_debug_prologue(wf_aligner,pattern,pattern_length,text,text_length);
   // Bidirectional alignment
-  wavefront_bialign(wf_aligner,pattern,pattern_length,text,text_length);
+  wavefront_bialign(wf_aligner,pattern,pattern_lambda,pattern_length,text,text_lambda,text_length);
   // Finish
   const uint64_t memory_used = wavefront_aligner_get_size(wf_aligner);
   wf_aligner->align_status.memory_used = memory_used;
@@ -153,8 +157,10 @@ void wavefront_align_bidirectional(
 int wavefront_align(
     wavefront_aligner_t* const wf_aligner,
     const char* const pattern,
+    int* const pattern_lambda,
     const int pattern_length,
     const char* const text,
+    int* const text_lambda,
     const int text_length) {
   // Checks
   wavefront_align_checks(wf_aligner,pattern_length,text_length);
@@ -164,9 +170,9 @@ int wavefront_align(
   }
   // Dispatcher
   if (wf_aligner->bialigner != NULL) {
-    wavefront_align_bidirectional(wf_aligner,pattern,pattern_length,text,text_length);
+    wavefront_align_bidirectional(wf_aligner,pattern,pattern_lambda,pattern_length,text,text_lambda,text_length);
   } else {
-    wavefront_align_unidirectional(wf_aligner,pattern,pattern_length,text,text_length);
+    wavefront_align_unidirectional(wf_aligner,pattern,pattern_lambda,pattern_length,text,text_lambda,text_length);
   }
   // Return
   return wf_aligner->align_status.status;

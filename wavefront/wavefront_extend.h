@@ -50,5 +50,8 @@ int wavefront_extend_endsfree(
 int wavefront_extend_custom(
     wavefront_aligner_t* const wf_aligner,
     const int score);
-
+int wavefront_extend_custom_max(
+    wavefront_aligner_t* const wf_aligner,
+    const int score,
+    int* const max_antidiagonal);
 #endif /* WAVEFRONT_EXTEND_H_ */

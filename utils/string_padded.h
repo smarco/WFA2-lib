@@ -47,10 +47,14 @@ typedef struct {
   int text_length;
   // Padded strings
   char* pattern_padded;
+  int* pattern_lambda_padded;
   char* text_padded;
+  int* text_lambda_padded;
   // MM
   char* pattern_padded_buffer;
+  int* pattern_lambda_padded_buffer;
   char* text_padded_buffer;
+  int* text_lambda_padded_buffer;
   mm_allocator_t* mm_allocator;
 } strings_padded_t;
 
@@ -67,13 +71,16 @@ strings_padded_t* strings_padded_new(
     mm_allocator_t* const mm_allocator);
 strings_padded_t* strings_padded_new_rhomb(
     const char* const pattern,
+    const int* const pattern_lambda,
     const int pattern_length,
     const char* const text,
+    const int* const text_lambda,
     const int text_length,
     const int padding_length,
     const bool reverse_sequences,
     mm_allocator_t* const mm_allocator);
 void strings_padded_delete(
     strings_padded_t* const strings_padded);
-
+void strings_padded_delete_lambda(
+    strings_padded_t* const strings_padded);
 #endif /* STRING_PADDED_H_ */

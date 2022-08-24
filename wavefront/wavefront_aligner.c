@@ -223,7 +223,11 @@ void wavefront_aligner_reap(
     wavefront_aligner_t* const wf_aligner) {
   // Padded sequences
   if (wf_aligner->sequences != NULL) {
-    strings_padded_delete(wf_aligner->sequences);
+    if (wf_aligner->match_funct == NULL) {
+      strings_padded_delete(wf_aligner->sequences);
+    } else {
+      strings_padded_delete_lambda(wf_aligner->sequences);
+    }
     wf_aligner->sequences = NULL;
   }
   // Select alignment mode
@@ -243,7 +247,11 @@ void wavefront_aligner_delete(
   const bool mm_allocator_own = wf_aligner->mm_allocator_own;
   // Padded sequences
   if (wf_aligner->sequences != NULL) {
-    strings_padded_delete(wf_aligner->sequences);
+    if (wf_aligner->match_funct == NULL) {
+      strings_padded_delete(wf_aligner->sequences);
+    } else {
+      strings_padded_delete_lambda(wf_aligner->sequences);
+    }
   }
   // Select alignment mode
   if (wf_aligner->bialigner != NULL) {

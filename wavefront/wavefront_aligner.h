@@ -67,13 +67,14 @@ char* wavefront_align_strerror(const int error_code);
 typedef struct _wavefront_aligner_t wavefront_aligner_t;
 typedef struct {
   // Status
-  int status;                                                     // Status code
-  int score;                                                      // Current WF-alignment score
-  int num_null_steps;                                             // Total contiguous null-steps performed
-  uint64_t memory_used;                                           // Total memory used
+  int status;                                                                    // Status code
+  int score;                                                                     // Current WF-alignment score
+  int num_null_steps;                                                            // Total contiguous null-steps performed
+  uint64_t memory_used;                                                          // Total memory used
   // Wavefront alignment functions
-  void (*wf_align_compute)(wavefront_aligner_t* const,const int); // WF Compute function
-  int (*wf_align_extend)(wavefront_aligner_t* const,const int);   // WF Extend function
+  void (*wf_align_compute)(wavefront_aligner_t* const,const int);                // WF Compute function
+  int (*wf_align_extend)(wavefront_aligner_t* const,const int);                  // WF Extend function
+  int (*wf_align_extend_max)(wavefront_aligner_t* const,const int,int* const);   // WF Extend function (for BiWFA)
 } wavefront_align_status_t;
 
 /*
@@ -98,8 +99,10 @@ typedef struct _wavefront_aligner_t {
   // Sequences
   strings_padded_t* sequences;                // Padded sequences
   char* pattern;                              // Pattern sequence (padded)
+  int* pattern_lambda;                        // Pattern sequence (padded)
   int pattern_length;                         // Pattern length
   char* text;                                 // Text sequence (padded)
+  int* text_lambda;                           // Text sequence (padded)
   int text_length;                            // Text length
   // Custom function to compare sequences
   alignment_match_funct_t match_funct;        // Custom matching function (match(v,h,args))

@@ -276,9 +276,11 @@ bool wavefront_extend_matches_custom(
     wf_offset_t offset = offsets[k];
     if (offset == WAVEFRONT_OFFSET_NULL) continue;
     // Count equal characters
+    int* pattern_lambda = wf_aligner->pattern_lambda;
+    int* text_lambda = wf_aligner->text_lambda;
     int v = WAVEFRONT_V(k,offset);
     int h = WAVEFRONT_H(k,offset);
-    while (match_funct(v,h,func_arguments)) {
+    while (match_funct(pattern_lambda[v],text_lambda[h],func_arguments)) {
       h++; v++; offset++;
     }
     // Update offset
@@ -290,6 +292,38 @@ bool wavefront_extend_matches_custom(
   }
   // Alignment not finished
   return false;
+}
+wf_offset_t wavefront_extend_matches_custom_max(
+        wavefront_aligner_t* const wf_aligner,
+        wavefront_t* const mwavefront,
+        const int lo,
+        const int hi) {
+    // Parameters (custom matching function)
+    alignment_match_funct_t match_funct = wf_aligner->match_funct;
+    void* const func_arguments = wf_aligner->match_funct_arguments;
+    // Extend diagonally each wavefront point
+    wf_offset_t* const offsets = mwavefront->offsets;
+    wf_offset_t max_antidiag = 0;
+    int k;
+    for (k=lo;k<=hi;++k) {
+        // Check offset
+        wf_offset_t offset = offsets[k];
+        if (offset == WAVEFRONT_OFFSET_NULL) continue;
+        // Count equal characters
+        int* pattern_lambda = wf_aligner->pattern_lambda;
+        int* text_lambda = wf_aligner->text_lambda;
+        int v = WAVEFRONT_V(k,offset);
+        int h = WAVEFRONT_H(k,offset);
+        while (match_funct(pattern_lambda[v],text_lambda[h],func_arguments)) {
+            h++; v++; offset++;
+        }
+        // Update offset
+        offsets[k] = offset;
+        // Compute max
+        const wf_offset_t antidiag = WAVEFRONT_ANTIDIAGONAL(k,offsets[k]);
+        if (max_antidiag < antidiag) max_antidiag = antidiag;
+    }
+    return max_antidiag;
 }
 /*
  * Wavefront exact "extension"
@@ -510,5 +544,61 @@ int wavefront_extend_custom(
   }
   return 0; // Not done
 }
-
-
+int wavefront_extend_custom_max(
+        wavefront_aligner_t* const wf_aligner,
+        const int score,
+        int* const max_antidiagonal) {
+    // Compute score
+    const bool memory_modular = wf_aligner->wf_components.memory_modular;
+    const int max_score_scope = wf_aligner->wf_components.max_score_scope;
+    const int score_mod = (memory_modular) ? score % max_score_scope : score;
+    *max_antidiagonal = 0; // Init
+    // Fetch m-wavefront
+    wavefront_t* const mwavefront = wf_aligner->wf_components.mwavefronts[score_mod];
+    if (mwavefront == NULL) {
+        // Check alignment feasibility (for heuristic variants that can lead to no solution)
+        if (wf_aligner->align_status.num_null_steps > wf_aligner->wf_components.max_score_scope) {
+            wf_aligner->align_status.status = WF_STATUS_UNFEASIBLE;
+            wf_aligner->align_status.score = score;
+            return 1; // Done
+        }
+        return 0; // Not done
+    }
+    // Multithreading dispatcher
+    const int lo = mwavefront->lo;
+    const int hi = mwavefront->hi;
+    wf_offset_t max_antidiag = 0;
+    const int num_threads = wavefront_compute_num_threads(wf_aligner,lo,hi);
+    if (num_threads == 1) {
+        // Extend wavefront
+        max_antidiag = wavefront_extend_matches_custom_max(wf_aligner,mwavefront,lo,hi);
+    } else {
+#ifdef WFA_PARALLEL
+        // Extend wavefront in parallel
+        #pragma omp parallel num_threads(num_threads)
+        {
+            int t_lo, t_hi;
+            wavefront_compute_thread_limits(
+                    omp_get_thread_num(),omp_get_num_threads(),lo,hi,&t_lo,&t_hi);
+            wf_offset_t t_max_antidiag = wavefront_extend_matches_custom_max(wf_aligner,mwavefront,t_lo,t_hi);
+            #pragma omp critical
+            {
+                if (t_max_antidiag > max_antidiag) max_antidiag = t_max_antidiag;
+            }
+        }
+#endif
+    }
+    // Check end-to-end finished
+    const bool end_reached = wavefront_extend_end2end_check_termination(wf_aligner,mwavefront,score,score_mod);
+    if (end_reached) {
+        wf_aligner->align_status.status = WF_STATUS_END_REACHED;
+        wf_aligner->align_status.score = score;
+        return 1; // Done
+    }
+    // Cut-off wavefront heuristically
+    if (wf_aligner->heuristic.strategy != wf_heuristic_none) {
+        wavefront_heuristic_cufoff(wf_aligner,score,score_mod);
+    }
+    *max_antidiagonal = max_antidiag;
+    return 0; // Not done
+}

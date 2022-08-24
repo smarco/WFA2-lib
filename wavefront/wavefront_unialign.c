@@ -83,8 +83,10 @@ void wavefront_unialigner_system_clear(
 void wavefront_unialign_resize(
     wavefront_aligner_t* const wf_aligner,
     const char* const pattern,
+    const int* const pattern_lambda,
     const int pattern_length,
     const char* const text,
+    const int* const text_lambda,
     const int text_length,
     const bool reverse_sequences) {
   // Configure sequences and status
@@ -93,15 +95,25 @@ void wavefront_unialign_resize(
   if (wf_aligner->match_funct == NULL) {
     if (wf_aligner->sequences != NULL) strings_padded_delete(wf_aligner->sequences);
     wf_aligner->sequences = strings_padded_new_rhomb(
-            pattern,pattern_length,text,text_length,
+            pattern,NULL,pattern_length,
+            text,NULL,text_length,
             SEQUENCES_PADDING,reverse_sequences,
             wf_aligner->mm_allocator);
     wf_aligner->pattern = wf_aligner->sequences->pattern_padded;
     wf_aligner->text = wf_aligner->sequences->text_padded;
+    wf_aligner->pattern_lambda = NULL;
+    wf_aligner->text_lambda = NULL;
   } else {
-    wf_aligner->sequences = NULL;
+    if (wf_aligner->sequences != NULL) strings_padded_delete_lambda(wf_aligner->sequences);
+    wf_aligner->sequences = strings_padded_new_rhomb(
+            NULL,pattern_lambda,pattern_length,
+            NULL,text_lambda,text_length,
+            SEQUENCES_PADDING,reverse_sequences,
+            wf_aligner->mm_allocator);
     wf_aligner->pattern = NULL;
     wf_aligner->text = NULL;
+    wf_aligner->pattern_lambda = wf_aligner->sequences->pattern_lambda_padded;
+    wf_aligner->text_lambda = wf_aligner->sequences->text_lambda_padded;
   }
   wavefront_unialign_status_clear(&wf_aligner->align_status);
   // Heuristics clear
@@ -261,15 +273,17 @@ void wavefront_unialign_initialize_wavefronts(
 void wavefront_unialign_init(
     wavefront_aligner_t* const wf_aligner,
     const char* const pattern,
+    const int* const pattern_lambda,
     const int pattern_length,
     const char* const text,
+    const int* const text_lambda,
     const int text_length,
     const affine2p_matrix_type component_begin,
     const affine2p_matrix_type component_end) {
   // Parameters
   wavefront_align_status_t* const align_status = &wf_aligner->align_status;
   // Resize wavefront aligner
-  wavefront_unialign_resize(wf_aligner,pattern,pattern_length,text,text_length,false);
+  wavefront_unialign_resize(wf_aligner,pattern,pattern_lambda,pattern_length,text,text_lambda,text_length,false);
   // Configure WF-compute function
   switch (wf_aligner->penalties.distance_metric) {
     case indel:

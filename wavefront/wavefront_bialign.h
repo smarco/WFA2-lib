@@ -40,8 +40,10 @@
 void wavefront_bialign(
     wavefront_aligner_t* const wf_aligner,
     const char* const pattern,
+    const int* const pattern_lambda,
     const int pattern_length,
     const char* const text,
+    const int* const text_lambda,
     const int text_length);
 
 #endif /* WAVEFRONT_BIALIGN_H_ */

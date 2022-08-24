@@ -40,8 +40,10 @@
 int wavefront_align(
     wavefront_aligner_t* const wf_aligner,
     const char* const pattern,
+    int* const pattern_lambda,
     const int pattern_length,
     const char* const text,
+    int* const text_lambda,
     const int text_length);
 int wavefront_align_resume(
     wavefront_aligner_t* const wf_aligner);
