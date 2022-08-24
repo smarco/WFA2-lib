@@ -331,9 +331,7 @@ int wavefront_extend_end2end_max(
       wavefront_compute_thread_limits(
           omp_get_thread_num(),omp_get_num_threads(),lo,hi,&t_lo,&t_hi);
       wf_offset_t t_max_antidiag = wavefront_extend_matches_packed_max(wf_aligner,mwavefront,t_lo,t_hi);
-      #ifdef WFA_PARALLEL
       #pragma omp critical
-      #endif
       {
         if (t_max_antidiag > max_antidiag) max_antidiag = t_max_antidiag;
       }
