@@ -394,6 +394,24 @@ void wavefront_aligner_set_max_memory(
         wf_aligner->bialigner,max_memory_resident,max_memory_abort);
   }
 }
+void wavefront_aligner_set_max_num_threads(
+        wavefront_aligner_t* const wf_aligner,
+        const int max_num_threads) {
+    wf_aligner->system.max_num_threads = max_num_threads;
+    if (wf_aligner->bialigner != NULL) {
+        wavefront_bialigner_set_max_num_threads(
+          wf_aligner->bialigner,max_num_threads);
+    }
+}
+void wavefront_aligner_set_min_offsets_per_thread(
+        wavefront_aligner_t* const wf_aligner,
+        const int min_offsets_per_thread) {
+    wf_aligner->system.min_offsets_per_thread = min_offsets_per_thread;
+    if (wf_aligner->bialigner != NULL) {
+        wavefront_bialigner_set_min_offsets_per_thread(
+                wf_aligner->bialigner,min_offsets_per_thread);
+    }
+}
 /*
  * Utils
  */
