@@ -113,7 +113,7 @@ void align_pairwise_test() {
   wavefront_aligner_t* const wf_aligner = wavefront_aligner_new(&attributes);
   // Align
   wavefront_align(wf_aligner,
-      pattern,strlen(pattern),text,strlen(text));
+      pattern,NULL,strlen(pattern),text,NULL,strlen(text));
   // CIGAR
   fprintf(stderr,">> WFA2");
   cigar_print_pretty(stderr,

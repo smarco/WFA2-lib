@@ -74,8 +74,8 @@ void benchmark_gap_linear_wavefront(
   // Align
   timer_start(&align_input->timer);
   wavefront_align(wf_aligner,
-      align_input->pattern,align_input->pattern_length,
-      align_input->text,align_input->text_length);
+      align_input->pattern,NULL,align_input->pattern_length,
+      align_input->text,NULL,align_input->text_length);
   timer_stop(&align_input->timer);
   // DEBUG
   if (align_input->debug_flags) {
