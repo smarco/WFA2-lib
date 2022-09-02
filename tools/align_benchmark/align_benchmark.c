@@ -306,7 +306,9 @@ bool align_benchmark_read_input(
   align_input->pattern[align_input->pattern_length] = '\0';
   align_input->text = *line2 + 1;
   align_input->text_length = line2_length - 2;
-  align_input->text[align_input->text_length] = '\0';
+  if (align_input->text[align_input->text_length] == '\n') {
+    align_input->text[align_input->text_length] = '\0';
+  }
   return true;
 }
 /*
