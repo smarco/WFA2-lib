@@ -29,24 +29,16 @@
  * DESCRIPTION: WFA module for the "extension" of exact matches
  */
 
-#ifndef WAVEFRONT_EXTEND_H_
-#define WAVEFRONT_EXTEND_H_
+#ifndef WAVEFRONT_EXTEND_CUSTOM_H_
+#define WAVEFRONT_EXTEND_CUSTOM_H_
 
 #include "wavefront_aligner.h"
 
 /*
- * Wavefront extension
+ * Extend Custom
  */
-int wavefront_extend_end2end(
-    wavefront_aligner_t* const wf_aligner,
-    const int score);
-int wavefront_extend_endsfree(
+int wavefront_extend_custom(
     wavefront_aligner_t* const wf_aligner,
     const int score);
 
-int wavefront_extend_end2end_max(
-    wavefront_aligner_t* const wf_aligner,
-    const int score,
-    int* const max_antidiagonal);
-
-#endif /* WAVEFRONT_EXTEND_H_ */
+#endif /* WAVEFRONT_EXTEND_CUSTOM_H_ */

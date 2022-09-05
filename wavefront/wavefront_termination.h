@@ -26,27 +26,32 @@
  *
  * PROJECT: Wavefront Alignment Algorithms
  * AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
- * DESCRIPTION: WFA module for the "extension" of exact matches
+ * DESCRIPTION: WFA module to check for the termination of an alignment
  */
 
-#ifndef WAVEFRONT_EXTEND_H_
-#define WAVEFRONT_EXTEND_H_
+#ifndef WAVEFRONT_TERMINATION_H_
+#define WAVEFRONT_TERMINATION_H_
 
 #include "wavefront_aligner.h"
 
 /*
- * Wavefront extension
+ * Necessary condition for ends-free termination
  */
-int wavefront_extend_end2end(
-    wavefront_aligner_t* const wf_aligner,
-    const int score);
-int wavefront_extend_endsfree(
-    wavefront_aligner_t* const wf_aligner,
-    const int score);
+#define WF_TERMINATION_ENDSFREE(h,v) ((h >= text_length) || (v >= pattern_length))
 
-int wavefront_extend_end2end_max(
+/*
+ * Detect alignment termination (end of alignment)
+ */
+bool wavefront_termination_end2end(
     wavefront_aligner_t* const wf_aligner,
+    wavefront_t* const mwavefront,
     const int score,
-    int* const max_antidiagonal);
+    const int score_mod);
+bool wavefront_termination_endsfree(
+    wavefront_aligner_t* const wf_aligner,
+    wavefront_t* const mwavefront,
+    const int score,
+    const int k,
+    const wf_offset_t offset);
 
-#endif /* WAVEFRONT_EXTEND_H_ */
+#endif /* WAVEFRONT_TERMINATION_H_ */

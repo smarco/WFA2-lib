@@ -43,6 +43,7 @@
 #include "wavefront_compute_edit.h"
 #include "wavefront_compute_linear.h"
 #include "wavefront_extend.h"
+#include "wavefront_extend_custom.h"
 #include "wavefront_backtrace.h"
 #include "wavefront_backtrace_buffer.h"
 

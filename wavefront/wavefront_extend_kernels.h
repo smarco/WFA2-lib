@@ -29,24 +29,27 @@
  * DESCRIPTION: WFA module for the "extension" of exact matches
  */
 
-#ifndef WAVEFRONT_EXTEND_H_
-#define WAVEFRONT_EXTEND_H_
+#ifndef WAVEFRONT_EXTEND_KERNELS_H_
+#define WAVEFRONT_EXTEND_KERNELS_H_
 
 #include "wavefront_aligner.h"
 
-/*
- * Wavefront extension
- */
-int wavefront_extend_end2end(
+void wavefront_extend_matches_packed_end2end(
     wavefront_aligner_t* const wf_aligner,
-    const int score);
-int wavefront_extend_endsfree(
+    wavefront_t* const mwavefront,
+    const int lo,
+    const int hi);
+bool wavefront_extend_matches_packed_endsfree(
     wavefront_aligner_t* const wf_aligner,
-    const int score);
-
-int wavefront_extend_end2end_max(
-    wavefront_aligner_t* const wf_aligner,
+    wavefront_t* const mwavefront,
     const int score,
-    int* const max_antidiagonal);
+    const int lo,
+    const int hi);
 
-#endif /* WAVEFRONT_EXTEND_H_ */
+wf_offset_t wavefront_extend_matches_packed_max(
+    wavefront_aligner_t* const wf_aligner,
+    wavefront_t* const mwavefront,
+    const int lo,
+    const int hi);
+
+#endif /* WAVEFRONT_EXTEND_KERNELS_H_ */
