@@ -31,6 +31,10 @@
 #include "align_benchmark_params.h"
 
 /*
+ * Match function
+ */
+match_function_params_t match_function_params;
+/*
  * Default parameters
  */
 align_bench_params_t parameters = {

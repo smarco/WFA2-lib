@@ -69,7 +69,7 @@ typedef struct {
   char* text;
   int text_length;
 } match_function_params_t;
-match_function_params_t match_function_params;
+extern match_function_params_t match_function_params;
 
 /*
  * Align-benchmark Parameters
