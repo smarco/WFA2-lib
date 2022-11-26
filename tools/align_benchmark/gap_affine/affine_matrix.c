@@ -29,6 +29,8 @@
  * DESCRIPTION: Gap-affine Matrix
  */
 
+#include "utils/commons.h"
+#include "system/mm_allocator.h"
 #include "gap_affine/affine_matrix.h"
 
 /*

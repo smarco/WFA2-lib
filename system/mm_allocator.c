@@ -32,6 +32,7 @@
  *   and dispatching memory segments in order.
  */
 
+#include "utils/commons.h"
 #include "mm_allocator.h"
 
 /*
@@ -611,6 +612,3 @@ void mm_allocator_print(
     mm_allocator_print_allocator_requests(stream,mm_allocator,false);
   }
 }
-
-
-

@@ -32,7 +32,6 @@
 #ifndef WAVEFRONT_H_
 #define WAVEFRONT_H_
 
-#include "utils/commons.h"
 #include "system/mm_allocator.h"
 #include "wavefront_offset.h"
 #include "wavefront_backtrace_buffer.h"

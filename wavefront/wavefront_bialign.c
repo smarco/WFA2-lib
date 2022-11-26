@@ -28,6 +28,7 @@
  * AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
  */
 
+#include "utils/commons.h"
 #include "wavefront_bialign.h"
 #include "wavefront_unialign.h"
 #include "wavefront_bialigner.h"
@@ -743,4 +744,3 @@ void wavefront_bialign(
         min_length ? 0 : INT_MAX,0);
   }
 }
-

@@ -32,8 +32,6 @@
 #ifndef WAVEFRONT_OFFSET_H_
 #define WAVEFRONT_OFFSET_H_
 
-#include "utils/commons.h"
-
 /*
  * Wavefront Offset
  */

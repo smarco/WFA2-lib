@@ -29,6 +29,7 @@
  * DESCRIPTION: Edit cigar data-structure (match/mismatch/insertion/deletion)
  */
 
+#include "utils/commons.h"
 #include "cigar.h"
 
 /*
@@ -506,5 +507,3 @@ void cigar_print_pretty(
   mm_allocator_free(mm_allocator,ops_alg);
   mm_allocator_free(mm_allocator,text_alg);
 }
-
-

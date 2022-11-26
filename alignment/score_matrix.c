@@ -29,7 +29,9 @@
  * DESCRIPTION: Score matrix for alignment using dynamic programming
  */
 
+#include "utils/commons.h"
 #include "score_matrix.h"
+
 
 /*
  * Setup
@@ -114,7 +116,3 @@ void score_matrix_print(
   }
   fprintf(stream,"\n");
 }
-
-
-
-

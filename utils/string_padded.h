@@ -33,12 +33,6 @@
 #define STRING_PADDED_H_
 
 /*
- * Includes
- */
-#include "utils/commons.h"
-#include "system/mm_allocator.h"
-
-/*
  * Strings Padded
  */
 typedef struct {

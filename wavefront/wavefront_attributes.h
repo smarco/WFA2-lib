@@ -32,7 +32,6 @@
 #ifndef WAVEFRONT_ATTRIBUTES_H_
 #define WAVEFRONT_ATTRIBUTES_H_
 
-#include "utils/commons.h"
 #include "alignment/cigar.h"
 #include "alignment/affine_penalties.h"
 #include "alignment/affine2p_penalties.h"
