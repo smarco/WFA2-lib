@@ -32,7 +32,6 @@
 #ifndef SCORE_MATRIX_H_
 #define SCORE_MATRIX_H_
 
-#include "utils/commons.h"
 #include "system/mm_allocator.h"
 #include "alignment/cigar.h"
 

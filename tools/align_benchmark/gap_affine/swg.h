@@ -33,7 +33,6 @@
 #ifndef SWG_H_
 #define SWG_H_
 
-#include "utils/commons.h"
 #include "gap_affine/affine_matrix.h"
 
 /*

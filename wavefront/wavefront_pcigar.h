@@ -32,7 +32,6 @@
 #ifndef WAVEFRONT_PACKED_CIGAR_H_
 #define WAVEFRONT_PACKED_CIGAR_H_
 
-#include "utils/commons.h"
 #include "wavefront_attributes.h"
 
 /*

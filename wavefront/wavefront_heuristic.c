@@ -29,6 +29,8 @@
  * DESCRIPTION: Support functions for wavefront heuristic strategies
  */
 
+#include "utils/commons.h"
+#include "system/mm_allocator.h"
 #include "wavefront_heuristic.h"
 #include "wavefront_aligner.h"
 

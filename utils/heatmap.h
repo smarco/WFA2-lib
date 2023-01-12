@@ -31,8 +31,6 @@
 #ifndef HEATMAP_H_
 #define HEATMAP_H_
 
-#include "utils/commons.h"
-
 /*
  * Heatmap
  */

@@ -29,6 +29,8 @@
  * DESCRIPTION: Dynamic-programming algorithm to compute Levenshtein alignment (edit)
  */
 
+#include "utils/commons.h"
+#include "system/mm_allocator.h"
 #include "edit_dp.h"
 
 /*

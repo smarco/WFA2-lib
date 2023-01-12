@@ -29,6 +29,8 @@
  * DESCRIPTION: WaveFront alignment module for computing wavefronts
  */
 
+#include "utils/commons.h"
+#include "system/mm_allocator.h"
 #include "utils/string_padded.h"
 #include "alignment/affine2p_penalties.h"
 #include "wavefront_compute.h"
@@ -649,4 +651,3 @@ void wavefront_compute_thread_limits(
   *thread_hi = t_hi;
 }
 #endif
-

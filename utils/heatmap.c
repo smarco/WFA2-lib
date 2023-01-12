@@ -28,6 +28,7 @@
  * AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
  */
 
+#include "utils/commons.h"
 #include "heatmap.h"
 
 /*
@@ -168,6 +169,3 @@ void heatmap_print(
     fprintf(stream,"\n");
   }
 }
-
-
-

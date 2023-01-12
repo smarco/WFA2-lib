@@ -29,6 +29,8 @@
  * DESCRIPTION: WaveFront penalties handling module
  */
 
+#include "utils/commons.h"
+#include "system/mm_allocator.h"
 #include "wavefront_penalties.h"
 
 /*
@@ -197,5 +199,3 @@ void wavefront_penalties_print(
       break;
   }
 }
-
-

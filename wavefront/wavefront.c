@@ -29,6 +29,8 @@
  * DESCRIPTION: Individual WaveFront data structure
  */
 
+#include "utils/commons.h"
+#include "system/mm_allocator.h"
 #include "wavefront.h"
 
 /*
@@ -170,7 +172,3 @@ uint64_t wavefront_get_size(
   }
   return total_size;
 }
-
-
-
-

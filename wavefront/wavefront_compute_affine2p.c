@@ -29,6 +29,8 @@
  * DESCRIPTION: WaveFront alignment module for computing wavefronts (gap-affine-2p)
  */
 
+#include "utils/commons.h"
+#include "system/mm_allocator.h"
 #include "utils/string_padded.h"
 #include "wavefront_compute.h"
 #include "wavefront_compute_affine.h"
@@ -363,4 +365,3 @@ void wavefront_compute_affine2p(
   // Process wavefront ends
   wavefront_compute_process_ends(wf_aligner,&wavefront_set,score);
 }
-

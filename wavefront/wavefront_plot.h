@@ -32,7 +32,6 @@
 #ifndef WAVEFRONT_PLOT_H_
 #define WAVEFRONT_PLOT_H_
 
-#include "utils/commons.h"
 #include "utils/heatmap.h"
 #include "alignment/score_matrix.h"
 #include "wavefront/wavefront_penalties.h"

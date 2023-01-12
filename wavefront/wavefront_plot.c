@@ -29,6 +29,8 @@
  * DESCRIPTION: Wavefront alignment module for plot
  */
 
+#include "utils/commons.h"
+#include "system/mm_allocator.h"
 #include "wavefront_plot.h"
 #include "wavefront_aligner.h"
 
