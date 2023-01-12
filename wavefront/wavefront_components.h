@@ -32,7 +32,6 @@
 #ifndef WAVEFRONT_WAVEFRONT_COMPONENTS_H_
 #define WAVEFRONT_WAVEFRONT_COMPONENTS_H_
 
-#include "utils/commons.h"
 #include "wavefront/wavefront.h"
 #include "wavefront/wavefront_backtrace_buffer.h"
 #include "wavefront/wavefront_penalties.h"
@@ -70,7 +69,7 @@ void wavefront_components_allocate(
     wavefront_components_t* const wf_components,
     const int max_pattern_length,
     const int max_text_length,
-    wavefronts_penalties_t* const penalties,
+    wavefront_penalties_t* const penalties,
     const bool memory_modular,
     const bool bt_piggyback,
     mm_allocator_t* const mm_allocator);
@@ -88,7 +87,7 @@ void wavefront_components_resize(
     wavefront_components_t* const wf_components,
     const int max_pattern_length,
     const int max_text_length,
-    wavefronts_penalties_t* const penalties);
+    wavefront_penalties_t* const penalties);
 void wavefront_components_resize_null__victim(
     wavefront_components_t* const wf_components,
     const int lo,
@@ -100,6 +99,6 @@ void wavefront_components_resize_null__victim(
 void wavefront_components_compact_bt_buffer(
     wavefront_components_t* const wf_components,
     const int score,
-    const bool verbose);
+    const int verbose);
 
 #endif /* WAVEFRONT_WAVEFRONT_COMPONENTS_H_ */

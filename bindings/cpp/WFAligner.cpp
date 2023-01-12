@@ -51,9 +51,11 @@ WFAligner::WFAligner(
     case MemoryHigh: this->attributes.memory_mode = wavefront_memory_high; break;
     case MemoryMed: this->attributes.memory_mode = wavefront_memory_med; break;
     case MemoryLow: this->attributes.memory_mode = wavefront_memory_low; break;
+    case MemoryUltralow: this->attributes.memory_mode = wavefront_memory_ultralow; break;
     default: this->attributes.memory_mode = wavefront_memory_high; break;
   }
   this->attributes.alignment_scope = (alignmentScope==Score) ? compute_score : compute_alignment;
+  //this->attributes.system.verbose = 2;
   this->wfAligner = nullptr;
 }
 WFAligner::~WFAligner() {
@@ -127,9 +129,11 @@ WFAligner::AlignmentStatus WFAligner::alignEndsFree(
     const int textBeginFree,
     const int textEndFree) {
   // Delegate
-  return alignEnd2End(
+  return alignEndsFree(
       pattern.c_str(),pattern.length(),
-      text.c_str(),text.length());
+      patternBeginFree,patternEndFree,
+      text.c_str(),text.length(),
+      textBeginFree,textEndFree);
 }
 /*
  * Alignment resume
@@ -165,6 +169,14 @@ void WFAligner::setHeuristicWFadaptive(
       wfAligner,min_wavefront_length,
       max_distance_threshold,steps_between_cutoffs);
 }
+void WFAligner::setHeuristicWFmash(
+    const int min_wavefront_length,
+    const int max_distance_threshold,
+    const int steps_between_cutoffs) {
+  wavefront_aligner_set_heuristic_wfmash(
+      wfAligner,min_wavefront_length,
+      max_distance_threshold,steps_between_cutoffs);
+}
 void WFAligner::setHeuristicXDrop(
     const int xdrop,
     const int steps_between_cutoffs) {
@@ -194,23 +206,33 @@ void WFAligner::setMaxAlignmentScore(
       wfAligner,maxAlignmentScore);
 }
 void WFAligner::setMaxMemory(
-    const uint64_t maxMemoryCompact,
     const uint64_t maxMemoryResident,
     const uint64_t maxMemoryAbort) {
-  wavefront_aligner_set_max_memory(wfAligner,
-      maxMemoryCompact,maxMemoryResident,maxMemoryAbort);
+  wavefront_aligner_set_max_memory(wfAligner,maxMemoryResident,maxMemoryAbort);
+}
+// Parallelization
+void WFAligner::setMaxNumThreads(
+        const int maxNumThreads) {
+    wavefront_aligner_set_max_num_threads(wfAligner, maxNumThreads);
+}
+void WFAligner::setMinOffsetsPerThread(
+        const int minOffsetsPerThread) {
+    wavefront_aligner_set_min_offsets_per_thread(wfAligner, minOffsetsPerThread);
 }
 /*
  * Accessors
  */
 int WFAligner::getAlignmentScore() {
-  return wfAligner->cigar.score;
+  return wfAligner->cigar->score;
+}
+int WFAligner::getAlignmentStatus() {
+  return wfAligner->align_status.status;
 }
 void WFAligner::getAlignmentCigar(
     char** const cigarOperations,
     int* cigarLength) {
- *cigarOperations = wfAligner->cigar.operations + wfAligner->cigar.begin_offset;
- *cigarLength = wfAligner->cigar.end_offset - wfAligner->cigar.begin_offset;
+ *cigarOperations = wfAligner->cigar->operations + wfAligner->cigar->begin_offset;
+ *cigarLength = wfAligner->cigar->end_offset - wfAligner->cigar->begin_offset;
 }
 std::string WFAligner::getAlignmentCigar() {
   // Fetch CIGAR
@@ -266,6 +288,19 @@ WFAlignerGapLinear::WFAlignerGapLinear(
   attributes.linear_penalties.indel = indel;
   wfAligner = wavefront_aligner_new(&attributes);
 }
+WFAlignerGapLinear::WFAlignerGapLinear(
+    const int match,
+    const int mismatch,
+    const int indel,
+    const AlignmentScope alignmentScope,
+    const MemoryModel memoryModel) :
+        WFAligner(alignmentScope,memoryModel) {
+  attributes.distance_metric = gap_linear;
+  attributes.linear_penalties.match = match;
+  attributes.linear_penalties.mismatch = mismatch;
+  attributes.linear_penalties.indel = indel;
+  wfAligner = wavefront_aligner_new(&attributes);
+}
 /*
  * Gap-Affine Aligner (a.k.a Smith-Waterman-Gotoh)
  */
@@ -278,6 +313,21 @@ WFAlignerGapAffine::WFAlignerGapAffine(
         WFAligner(alignmentScope,memoryModel) {
   attributes.distance_metric = gap_affine;
   attributes.affine_penalties.match = 0;
+  attributes.affine_penalties.mismatch = mismatch;
+  attributes.affine_penalties.gap_opening = gapOpening;
+  attributes.affine_penalties.gap_extension = gapExtension;
+  wfAligner = wavefront_aligner_new(&attributes);
+}
+WFAlignerGapAffine::WFAlignerGapAffine(
+    const int match,
+    const int mismatch,
+    const int gapOpening,
+    const int gapExtension,
+    const AlignmentScope alignmentScope,
+    const MemoryModel memoryModel) :
+        WFAligner(alignmentScope,memoryModel) {
+  attributes.distance_metric = gap_affine;
+  attributes.affine_penalties.match = match;
   attributes.affine_penalties.mismatch = mismatch;
   attributes.affine_penalties.gap_opening = gapOpening;
   attributes.affine_penalties.gap_extension = gapExtension;
@@ -297,6 +347,25 @@ WFAlignerGapAffine2Pieces::WFAlignerGapAffine2Pieces(
         WFAligner(alignmentScope,memoryModel) {
   attributes.distance_metric = gap_affine_2p;
   attributes.affine2p_penalties.match = 0;
+  attributes.affine2p_penalties.mismatch = mismatch;
+  attributes.affine2p_penalties.gap_opening1 = gapOpening1;
+  attributes.affine2p_penalties.gap_extension1 = gapExtension1;
+  attributes.affine2p_penalties.gap_opening2 = gapOpening2;
+  attributes.affine2p_penalties.gap_extension2 = gapExtension2;
+  wfAligner = wavefront_aligner_new(&attributes);
+}
+WFAlignerGapAffine2Pieces::WFAlignerGapAffine2Pieces(
+    const int match,
+    const int mismatch,
+    const int gapOpening1,
+    const int gapExtension1,
+    const int gapOpening2,
+    const int gapExtension2,
+    const AlignmentScope alignmentScope,
+    const MemoryModel memoryModel) :
+        WFAligner(alignmentScope,memoryModel) {
+  attributes.distance_metric = gap_affine_2p;
+  attributes.affine2p_penalties.match = match;
   attributes.affine2p_penalties.mismatch = mismatch;
   attributes.affine2p_penalties.gap_opening1 = gapOpening1;
   attributes.affine2p_penalties.gap_extension1 = gapExtension1;

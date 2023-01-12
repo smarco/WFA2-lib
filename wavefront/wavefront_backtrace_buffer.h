@@ -33,7 +33,6 @@
 #define WAVEFRONT_BACKTRACE_BUFFER_H_
 
 #include "alignment/cigar.h"
-#include "utils/commons.h"
 #include "utils/vector.h"
 #include "utils/bitmap.h"
 #include "system/mm_allocator.h"
@@ -162,7 +161,7 @@ void wf_backtrace_buffer_mark_backtrace_batch(
 bt_block_idx_t wf_backtrace_buffer_compact_marked(
     wf_backtrace_buffer_t* const bt_buffer,
     bitmap_t* const bitmap,
-    const bool verbose);
+    const int verbose);
 
 /*
  * Utils

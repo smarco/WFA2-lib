@@ -107,12 +107,16 @@ void benchmark_print_output_lite(
     const int score,
     cigar_t* const cigar) {
   // Retrieve CIGAR
-  char* const cigar_str = malloc(cigar->end_offset-cigar->begin_offset);
-  cigar_sprint(cigar_str,cigar,true);
+  const bool cigar_null = (cigar->begin_offset >= cigar->end_offset);
+  char* cigar_str = NULL;
+  if (!cigar_null) {
+    cigar_str = malloc(2*(cigar->end_offset-cigar->begin_offset)+10);
+    cigar_sprint(cigar_str,cigar,true);
+  }
   // Print
-  fprintf(stream,"%d\t%s\n",score,cigar_str);
+  fprintf(stream,"%d\t%s\n",score,(cigar_null) ? "-" : cigar_str);
   // Free
-  free(cigar_str);
+  if (!cigar_null) free(cigar_str);
 }
 void benchmark_print_output_full(
     FILE* const stream,
@@ -120,18 +124,22 @@ void benchmark_print_output_full(
     const int score,
     cigar_t* const cigar) {
   // Retrieve CIGAR
-  char* const cigar_str = malloc(cigar->end_offset-cigar->begin_offset);
-  cigar_sprint(cigar_str,cigar,true);
+  const bool cigar_null = (cigar->begin_offset >= cigar->end_offset);
+  char* cigar_str = NULL;
+  if (!cigar_null) {
+    cigar_str = malloc(2*(cigar->end_offset-cigar->begin_offset));
+    cigar_sprint(cigar_str,cigar,true);
+  }
   // Print
   fprintf(stream,"%d\t%d\t%d\t%s\t%s\t%s\n",
-      align_input->pattern_length, // Pattern length
-      align_input->text_length,    // Text length
-      score,                       // Alignment score
-      align_input->pattern,        // Pattern sequence
-      align_input->text,           // Text sequence
-      cigar_str);                  // CIGAR
+      align_input->pattern_length,     // Pattern length
+      align_input->text_length,        // Text length
+      score,                           // Alignment score
+      align_input->pattern,            // Pattern sequence
+      align_input->text,               // Text sequence
+      (cigar_null) ? "-" : cigar_str); // CIGAR
   // Free
-  free(cigar_str);
+  if (!cigar_null) free(cigar_str);
 }
 void benchmark_print_output(
     align_input_t* const align_input,

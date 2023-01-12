@@ -29,6 +29,8 @@
  * DESCRIPTION: WaveFront-Alignment module for display and report
  */
 
+#include "utils/commons.h"
+#include "system/mm_allocator.h"
 #include "wavefront_display.h"
 #include "wavefront_aligner.h"
 #include "wavefront_compute.h"
@@ -172,7 +174,7 @@ void wavefront_display_print_header_component(
     wavefront_t* const wavefront,
     char* const wavefront_id,
     const int bt_length) {
-  fprintf(stream,"[ %s]",wavefront_id);
+  fprintf(stream,"[%s]",wavefront_id);
   if (bt_length > 0) {
     if (wavefront!=NULL && bt_length >= 10) {
       PRINT_CHAR_REP(stream,' ',bt_length-10);

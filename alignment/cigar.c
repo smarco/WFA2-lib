@@ -29,15 +29,17 @@
  * DESCRIPTION: Edit cigar data-structure (match/mismatch/insertion/deletion)
  */
 
+#include "utils/commons.h"
 #include "cigar.h"
 
 /*
  * Setup
  */
-void cigar_allocate(
-    cigar_t* const cigar,
+cigar_t* cigar_new(
     const int max_operations,
     mm_allocator_t* const mm_allocator) {
+  // Allocate
+  cigar_t* const cigar = mm_allocator_alloc(mm_allocator,cigar_t);
   // Allocate buffer
   cigar->max_operations = max_operations;
   cigar->operations = mm_allocator_malloc(mm_allocator,cigar->max_operations);
@@ -46,6 +48,8 @@ void cigar_allocate(
   cigar->score = INT32_MIN;
   // MM
   cigar->mm_allocator = mm_allocator;
+  // Return
+  return cigar;
 }
 void cigar_clear(
     cigar_t* const cigar) {
@@ -70,6 +74,7 @@ void cigar_resize(
 void cigar_free(
     cigar_t* const cigar) {
   mm_allocator_free(cigar->mm_allocator,cigar->operations);
+  mm_allocator_free(cigar->mm_allocator,cigar);
 }
 /*
  * Accessors
@@ -250,6 +255,41 @@ void cigar_copy(
   memcpy(cigar_dst->operations+cigar_src->begin_offset,
          cigar_src->operations+cigar_src->begin_offset,
          cigar_src->end_offset-cigar_src->begin_offset);
+}
+void cigar_append(
+    cigar_t* const cigar_dst,
+    cigar_t* const cigar_src) {
+  // Append
+  const int cigar_length = cigar_src->end_offset - cigar_src->begin_offset;
+  char* const operations_src = cigar_src->operations + cigar_src->begin_offset;
+  char* const operations_dst = cigar_dst->operations + cigar_dst->end_offset;
+  memcpy(operations_dst,operations_src,cigar_length);
+  // Update offset
+  cigar_dst->end_offset += cigar_length;
+}
+void cigar_append_deletion(
+    cigar_t* const cigar,
+    const int length) {
+  // Append deletions
+  char* const operations = cigar->operations + cigar->end_offset;
+  int i;
+  for (i=0;i<length;++i) {
+    operations[i] = 'D';
+  }
+  // Update offset
+  cigar->end_offset += length;
+}
+void cigar_append_insertion(
+    cigar_t* const cigar,
+    const int length) {
+  // Append insertions
+  char* const operations = cigar->operations + cigar->end_offset;
+  int i;
+  for (i=0;i<length;++i) {
+    operations[i] = 'I';
+  }
+  // Update offset
+  cigar->end_offset += length;
 }
 bool cigar_check_alignment(
     FILE* const stream,
@@ -467,5 +507,3 @@ void cigar_print_pretty(
   mm_allocator_free(mm_allocator,ops_alg);
   mm_allocator_free(mm_allocator,text_alg);
 }
-
-

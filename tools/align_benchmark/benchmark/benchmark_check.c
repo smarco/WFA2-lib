@@ -132,22 +132,21 @@ void benchmark_check_alignment_indel(
   score_matrix_allocate(
       &score_matrix,align_input->pattern_length+1,
       align_input->text_length+1,align_input->mm_allocator);
-  cigar_t cigar;
-  cigar_allocate(&cigar,
+  cigar_t* const cigar = cigar_new(
       align_input->pattern_length+align_input->text_length,
       align_input->mm_allocator);
   indel_dp_compute(&score_matrix,
       align_input->pattern,align_input->pattern_length,
-      align_input->text,align_input->text_length,&cigar);
-  const int score_correct = cigar_score_edit(&cigar);
+      align_input->text,align_input->text_length,cigar);
+  const int score_correct = cigar_score_edit(cigar);
   const int score_computed = cigar_score_edit(cigar_computed);
   // Check alignment
   benchmark_check_alignment_using_solution(
       align_input,cigar_computed,score_computed,
-      &cigar,score_correct);
+      cigar,score_correct);
   // Free
   score_matrix_free(&score_matrix);
-  cigar_free(&cigar);
+  cigar_free(cigar);
 }
 void benchmark_check_alignment_edit(
     align_input_t* const align_input,
@@ -156,29 +155,28 @@ void benchmark_check_alignment_edit(
   score_matrix_allocate(
       &score_matrix,align_input->pattern_length+1,
       align_input->text_length+1,align_input->mm_allocator);
-  cigar_t cigar;
-  cigar_allocate(&cigar,
+  cigar_t* const cigar = cigar_new(
       align_input->pattern_length+align_input->text_length,
       align_input->mm_allocator);
   if (align_input->check_bandwidth <= 0) {
-    edit_dp_compute(&score_matrix,
+    edit_dp_align(&score_matrix,
         align_input->pattern,align_input->pattern_length,
-        align_input->text,align_input->text_length,&cigar);
+        align_input->text,align_input->text_length,cigar);
   } else {
-    edit_dp_compute_banded(&score_matrix,
+    edit_dp_align_banded(&score_matrix,
         align_input->pattern,align_input->pattern_length,
         align_input->text,align_input->text_length,
-        align_input->check_bandwidth,&cigar);
+        align_input->check_bandwidth,cigar);
   }
-  const int score_correct = cigar_score_edit(&cigar);
+  const int score_correct = cigar_score_edit(cigar);
   const int score_computed = cigar_score_edit(cigar_computed);
   // Check alignment
   benchmark_check_alignment_using_solution(
       align_input,cigar_computed,score_computed,
-      &cigar,score_correct);
+      cigar,score_correct);
   // Free
   score_matrix_free(&score_matrix);
-  cigar_free(&cigar);
+  cigar_free(cigar);
 }
 void benchmark_check_alignment_gap_linear(
     align_input_t* const align_input,
@@ -188,25 +186,24 @@ void benchmark_check_alignment_gap_linear(
   score_matrix_allocate(
       &score_matrix,align_input->pattern_length+1,
       align_input->text_length+1,align_input->mm_allocator);
-  cigar_t cigar;
-  cigar_allocate(&cigar,
+  cigar_t* const cigar = cigar_new(
       align_input->pattern_length+align_input->text_length,
       align_input->mm_allocator);
-  nw_compute(&score_matrix,
+  nw_align(&score_matrix,
       align_input->check_linear_penalties,
       align_input->pattern,align_input->pattern_length,
-      align_input->text,align_input->text_length,&cigar);
+      align_input->text,align_input->text_length,cigar);
   const int score_correct = cigar_score_gap_linear(
-      &cigar,align_input->check_linear_penalties);
+      cigar,align_input->check_linear_penalties);
   const int score_computed = cigar_score_gap_linear(
       cigar_computed,align_input->check_linear_penalties);
   // Check alignment
   benchmark_check_alignment_using_solution(
       align_input,cigar_computed,score_computed,
-      &cigar,score_correct);
+      cigar,score_correct);
   // Free
   score_matrix_free(&score_matrix);
-  cigar_free(&cigar);
+  cigar_free(cigar);
 }
 void benchmark_check_alignment_gap_affine(
     align_input_t* const align_input,
@@ -216,32 +213,31 @@ void benchmark_check_alignment_gap_affine(
   affine_matrix_allocate(
       &affine_matrix,align_input->pattern_length+1,
       align_input->text_length+1,align_input->mm_allocator);
-  cigar_t cigar;
-  cigar_allocate(&cigar,
+  cigar_t* const cigar = cigar_new(
       align_input->pattern_length+align_input->text_length,
       align_input->mm_allocator);
   // Compute correct
   if (align_input->check_bandwidth <= 0) {
-    swg_compute(&affine_matrix,align_input->check_affine_penalties,
+    swg_align(&affine_matrix,align_input->check_affine_penalties,
         align_input->pattern,align_input->pattern_length,
-        align_input->text,align_input->text_length,&cigar);
+        align_input->text,align_input->text_length,cigar);
   } else {
-    swg_compute_banded(&affine_matrix,align_input->check_affine_penalties,
+    swg_align_banded(&affine_matrix,align_input->check_affine_penalties,
         align_input->pattern,align_input->pattern_length,
         align_input->text,align_input->text_length,
-        align_input->check_bandwidth,&cigar);
+        align_input->check_bandwidth,cigar);
   }
   const int score_correct = cigar_score_gap_affine(
-      &cigar,align_input->check_affine_penalties);
+      cigar,align_input->check_affine_penalties);
   const int score_computed = cigar_score_gap_affine(
       cigar_computed,align_input->check_affine_penalties);
   // Check alignment
   benchmark_check_alignment_using_solution(
       align_input,cigar_computed,score_computed,
-      &cigar,score_correct);
+      cigar,score_correct);
   // Free
   affine_matrix_free(&affine_matrix,align_input->mm_allocator);
-  cigar_free(&cigar);
+  cigar_free(cigar);
 }
 void benchmark_check_alignment_gap_affine2p(
     align_input_t* const align_input,
@@ -251,26 +247,25 @@ void benchmark_check_alignment_gap_affine2p(
   affine2p_matrix_allocate(
       &affine_matrix,align_input->pattern_length+1,
       align_input->text_length+1,align_input->mm_allocator);
-  cigar_t cigar;
-  cigar_allocate(&cigar,
+  cigar_t* const cigar = cigar_new(
       align_input->pattern_length+align_input->text_length,
       align_input->mm_allocator);
   // Compute correct
-  affine2p_dp_compute(
+  affine2p_dp_align(
       &affine_matrix,align_input->check_affine2p_penalties,
       align_input->pattern,align_input->pattern_length,
-      align_input->text,align_input->text_length,&cigar);
+      align_input->text,align_input->text_length,cigar);
   const int score_correct = cigar_score_gap_affine2p(
-      &cigar,align_input->check_affine2p_penalties);
+      cigar,align_input->check_affine2p_penalties);
   const int score_computed = cigar_score_gap_affine2p(
       cigar_computed,align_input->check_affine2p_penalties);
   // Check alignment
   benchmark_check_alignment_using_solution(
       align_input,cigar_computed,score_computed,
-      &cigar,score_correct);
+      cigar,score_correct);
   // Free
   affine2p_matrix_free(&affine_matrix,align_input->mm_allocator);
-  cigar_free(&cigar);
+  cigar_free(cigar);
 }
 /*
  * Check

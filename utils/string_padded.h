@@ -33,12 +33,6 @@
 #define STRING_PADDED_H_
 
 /*
- * Includes
- */
-#include "utils/commons.h"
-#include "system/mm_allocator.h"
-
-/*
  * Strings Padded
  */
 typedef struct {
@@ -63,6 +57,7 @@ strings_padded_t* strings_padded_new(
     const char* const text,
     const int text_length,
     const int padding_length,
+    const bool reverse_sequences,
     mm_allocator_t* const mm_allocator);
 strings_padded_t* strings_padded_new_rhomb(
     const char* const pattern,
@@ -70,6 +65,7 @@ strings_padded_t* strings_padded_new_rhomb(
     const char* const text,
     const int text_length,
     const int padding_length,
+    const bool reverse_sequences,
     mm_allocator_t* const mm_allocator);
 void strings_padded_delete(
     strings_padded_t* const strings_padded);

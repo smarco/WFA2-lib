@@ -32,7 +32,6 @@
 #ifndef CIGAR_H_
 #define CIGAR_H_
 
-#include "utils/commons.h"
 #include "system/mm_allocator.h"
 #include "alignment/linear_penalties.h"
 #include "alignment/affine_penalties.h"
@@ -56,8 +55,7 @@ typedef struct {
 /*
  * Setup
  */
-void cigar_allocate(
-    cigar_t* const cigar,
+cigar_t* cigar_new(
     const int max_operations,
     mm_allocator_t* const mm_allocator);
 void cigar_clear(
@@ -104,6 +102,17 @@ int cigar_cmp(
 void cigar_copy(
     cigar_t* const cigar_dst,
     cigar_t* const cigar_src);
+
+void cigar_append(
+    cigar_t* const cigar_dst,
+    cigar_t* const cigar_src);
+void cigar_append_deletion(
+    cigar_t* const cigar,
+    const int length);
+void cigar_append_insertion(
+    cigar_t* const cigar,
+    const int length);
+
 bool cigar_check_alignment(
     FILE* const stream,
     const char* const pattern,

@@ -34,9 +34,7 @@
 
 #include <string>
 
-extern "C" {
-  #include "../../wavefront/wavefront_aligner.h"
-}
+#include "../../wavefront/wfa.hpp"
 
 /*
  * Namespace
@@ -53,6 +51,7 @@ public:
     MemoryHigh,
     MemoryMed,
     MemoryLow,
+    MemoryUltralow,
   };
   enum AlignmentScope {
     Score,
@@ -60,7 +59,7 @@ public:
   };
   enum AlignmentStatus {
     StatusSuccessful = WF_STATUS_SUCCESSFUL,
-    StatusDropped = WF_STATUS_HEURISTICALY_DROPPED,
+    StatusUnfeasible = WF_STATUS_UNFEASIBLE,
     StatusMaxScoreReached = WF_STATUS_MAX_SCORE_REACHED,
     StatusOOM = WF_STATUS_OOM,
   };
@@ -115,6 +114,10 @@ public:
       const int min_wavefront_length,
       const int max_distance_threshold,
       const int steps_between_cutoffs = 1);
+  void setHeuristicWFmash(
+      const int min_wavefront_length,
+      const int max_distance_threshold,
+      const int steps_between_cutoffs = 1);
   void setHeuristicXDrop(
       const int xdrop,
       const int steps_between_cutoffs = 1);
@@ -129,11 +132,16 @@ public:
   void setMaxAlignmentScore(
       const int maxAlignmentScore);
   void setMaxMemory(
-      const uint64_t maxMemoryCompact,
       const uint64_t maxMemoryResident,
       const uint64_t maxMemoryAbort);
+  // Parallelization
+  void setMaxNumThreads(
+      const int maxNumThreads);
+  void setMinOffsetsPerThread(
+      const int minOffsetsPerThread);
   // Accessors
   int getAlignmentScore();
+  int getAlignmentStatus();
   void getAlignmentCigar(
       char** const cigarOperations,
       int* cigarLength);
@@ -182,6 +190,12 @@ public:
       const int indel,
       const AlignmentScope alignmentScope,
       const MemoryModel memoryModel = MemoryHigh);
+  WFAlignerGapLinear(
+      const int match,
+      const int mismatch,
+      const int indel,
+      const AlignmentScope alignmentScope,
+      const MemoryModel memoryModel = MemoryHigh);
 };
 /*
  * Gap-Affine Aligner (a.k.a Smith-Waterman-Gotoh)
@@ -194,6 +208,13 @@ public:
       const int gapExtension,
       const AlignmentScope alignmentScope,
       const MemoryModel memoryModel = MemoryHigh);
+  WFAlignerGapAffine(
+      const int match,
+      const int mismatch,
+      const int gapOpening,
+      const int gapExtension,
+      const AlignmentScope alignmentScope,
+      const MemoryModel memoryModel = MemoryHigh);
 };
 /*
  * Gap-Affine Dual-Cost Aligner (a.k.a. concave 2-pieces)
@@ -201,6 +222,15 @@ public:
 class WFAlignerGapAffine2Pieces : public WFAligner {
 public:
   WFAlignerGapAffine2Pieces(
+      const int mismatch,
+      const int gapOpening1,
+      const int gapExtension1,
+      const int gapOpening2,
+      const int gapExtension2,
+      const AlignmentScope alignmentScope,
+      const MemoryModel memoryModel = MemoryHigh);
+  WFAlignerGapAffine2Pieces(
+      const int match,
       const int mismatch,
       const int gapOpening1,
       const int gapExtension1,

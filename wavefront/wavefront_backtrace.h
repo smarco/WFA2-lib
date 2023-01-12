@@ -35,7 +35,7 @@
 #include "wavefront_aligner.h"
 
 /*
- * Backtrace
+ * Backtrace wavefronts
  */
 void wavefront_backtrace_linear(
     wavefront_aligner_t* const wf_aligner,
@@ -44,6 +44,8 @@ void wavefront_backtrace_linear(
     const wf_offset_t alignment_offset);
 void wavefront_backtrace_affine(
     wavefront_aligner_t* const wf_aligner,
+    const affine2p_matrix_type component_begin,
+    const affine2p_matrix_type component_end,
     const int alignment_score,
     const int alignment_k,
     const wf_offset_t alignment_offset);
