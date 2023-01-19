@@ -1,6 +1,6 @@
 ;; Set up build environment using GNU Guix packages
 ;;
-;; CC0 license, Pjotr Prins (c) 2022
+;; CC0 license, Pjotr Prins (c) 2022-2023
 ;;
 ;; To use this file to build HEAD:
 ;;

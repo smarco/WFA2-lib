@@ -1,0 +1,138 @@
+cmake_minimum_required(VERSION 3.16)
+project(wfa2lib)
+
+set(CMAKE_CXX_STANDARD 17)
+
+include(FeatureSummary)
+
+find_package(PkgConfig REQUIRED)
+
+feature_summary(
+  FATAL_ON_MISSING_REQUIRED_PACKAGES
+  WHAT REQUIRED_PACKAGES_NOT_FOUND)
+
+# ---- Options
+
+option(OPENMP "Enable OpenMP" ON)
+option(PROFILING "Enable profiling" OFF)
+option(ASAN "Use address sanitiser" OFF)
+
+# include(CheckIPOSupported) # adds lto
+# check_ipo_supported(RESULT ipo_supported OUTPUT output)
+
+# ---- Dependencies
+
+if(OPENMP)
+  include(FindOpenMP)
+endif(OPENMP)
+
+find_package(Threads)
+set_package_properties(Threads PROPERTIES TYPE REQUIRED)
+
+# ---- Build switches
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+# set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ${ipo_supported})
+
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release CACHE STRING
+          "Choose the type of build, options are: Release|Debug|RelWithDebInfo (for distros)." FORCE)
+endif()
+
+if (${CMAKE_BUILD_TYPE} MATCHES Release)
+  set(EXTRA_FLAGS "-march=native -D_FILE_OFFSET_BITS=64")
+endif()
+
+if ((${CMAKE_BUILD_TYPE} MATCHES Release) OR (${CMAKE_BUILD_TYPE} MATCHES RelWithDebInfo))
+  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} -DWFA_PARALLEL")
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -DWFA_PARALLEL")
+endif ()
+
+if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
+  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_FLAGS}")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_FLAGS}")
+  add_definitions(-Wfatal-errors)
+endif ()
+
+if (ASAN)
+  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address  -fno-omit-frame-pointer -fno-common")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address  -fno-omit-frame-pointer -fno-common")
+endif(ASAN)
+
+if(PROFILING)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+endif(PROFILING)
+
+if(GPROF)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
+endif(GPROF)
+
+# ---- Include files
+
+include_directories(wavefront)
+include_directories(utils)
+include_directories(.)
+
+file(GLOB INCLUDES
+  wavefront/*.h*
+  utils/*.h*
+  )
+
+set(wfa2lib_SOURCE
+  wavefront/wavefront_align.c
+  wavefront/wavefront_aligner.c
+  wavefront/wavefront_attributes.c
+  wavefront/wavefront_backtrace_buffer.c
+  wavefront/wavefront_backtrace.c
+  wavefront/wavefront_backtrace_offload.c
+  wavefront/wavefront_bialign.c
+  wavefront/wavefront_bialigner.c
+  wavefront/wavefront.c
+  wavefront/wavefront_components.c
+  wavefront/wavefront_compute_affine2p.c
+  wavefront/wavefront_compute_affine.c
+  wavefront/wavefront_compute.c
+  wavefront/wavefront_compute_edit.c
+  wavefront/wavefront_compute_linear.c
+  wavefront/wavefront_debug.c
+  wavefront/wavefront_display.c
+  wavefront/wavefront_extend.c
+  wavefront/wavefront_heuristic.c
+  wavefront/wavefront_pcigar.c
+  wavefront/wavefront_penalties.c
+  wavefront/wavefront_plot.c
+  wavefront/wavefront_slab.c
+  wavefront/wavefront_unialign.c
+)
+
+
+add_library(wfa-static STATIC
+    ${wfa2lib_SOURCE}
+    )
+set_target_properties(wfa-static
+  PROPERTIES OUTPUT_NAME wfa)
+
+add_library(wfa SHARED
+    ${wfa2lib_SOURCE}
+    )
+
+# ---- Get version
+
+file (STRINGS "VERSION" BUILD_NUMBER)
+add_definitions(-DWFA2LIB_VERSION="${BUILD_NUMBER}")
+add_definitions(-DVERSION="${BUILD_NUMBER}")
+
+set(wfa2lib_LIBS
+)
+
+# add_dependencies(wfa2lib ${wfa2lib_DEPS})
+
+# ---- Build all
+
+# ---- Install
+
+install(TARGETS wfa ARCHIVE DESTINATION lib)
+install(TARGETS wfa-static ARCHIVE DESTINATION lib)
+
+install(FILES ${INCLUDES} DESTINATION include)
+
+# install(DIRECTORY ${CMAKE_SOURCE_DIR}/man/ DESTINATION ${CMAKE_INSTALL_PREFIX}/man/man1)
