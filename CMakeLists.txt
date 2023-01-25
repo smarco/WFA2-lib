@@ -13,7 +13,7 @@ feature_summary(
 
 # ---- Options
 
-option(OPENMP "Enable OpenMP" ON) # enables WFA_PARALLEL
+option(OPENMP "Enable OpenMP" OFF) # enables WFA_PARALLEL
 option(PROFILING "Enable profiling" OFF)
 option(ASAN "Use address sanitiser" OFF)
 option(EXTRA_FLAGS "Add optimization flags for C/C++ compiler" OFF)
@@ -25,8 +25,12 @@ option(EXTRA_FLAGS "Add optimization flags for C/C++ compiler" OFF)
 
 if(OPENMP)
   include(FindOpenMP)
-  set(EXTRA_FLAGS "${EXTRA_FLAGS} -DWFA_PARALLEL")
+  set(OPTIMIZE_FLAGS "-DWFA_PARALLEL")
 endif(OPENMP)
+
+if(EXTRA_FLAGS)
+  set(OPTIMIZE_FLAGS "${OPTIMIZE_FLAGS} ${EXTRA_FLAGS}")
+endif(EXTRA_FLAGS)
 
 find_package(Threads)
 set_package_properties(Threads PROPERTIES TYPE REQUIRED)
@@ -41,7 +45,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 if (${CMAKE_BUILD_TYPE} MATCHES Release)
-  set(OPTIMIZE_FLAGS "-march=native -D_FILE_OFFSET_BITS=64")
+  set(OPTIMIZE_FLAGS "${OPTIMIZE_FLAGS} -march=native -D_FILE_OFFSET_BITS=64")
 endif()
 
 if ((${CMAKE_BUILD_TYPE} MATCHES Release) OR (${CMAKE_BUILD_TYPE} MATCHES RelWithDebInfo))
@@ -50,8 +54,8 @@ if ((${CMAKE_BUILD_TYPE} MATCHES Release) OR (${CMAKE_BUILD_TYPE} MATCHES RelWit
 endif ()
 
 if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
-  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_FLAGS}")
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_FLAGS}")
+  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OPTIMIZE_FLAGS}")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OPTIMIZE_FLAGS}")
   add_definitions(-Wfatal-errors)
 endif ()
 

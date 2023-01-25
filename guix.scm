@@ -14,6 +14,12 @@
 ;;
 ;;   mkdir -p /bin ; ln -s $GUIX_ENVIRONMENT/bin/bash /bin/bash
 ;;
+;; To find tools
+;;
+;;   cd build
+;;   cmake .. -DCMAKE_MAKE_PROGRAM=make -DCMAKE_C_COMPILER=gcc
+;;   cmake --build . --verbose
+;;
 ;; and run the tests with
 ;;
 ;;   env CC=gcc make
