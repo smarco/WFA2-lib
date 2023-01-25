@@ -134,6 +134,21 @@ set(wfa2lib_LIBS
 
 # ---- Build all
 
+# ---- Test
+
+enable_testing()
+
+
+function(add_wfa_test)
+  add_test(
+    NAME wfa2lib
+    COMMAND ./tests/wfa.utest.sh
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    )
+endfunction()
+
+add_wfa_test()
+
 # ---- Install
 
 install(TARGETS wfa ARCHIVE DESTINATION lib)
