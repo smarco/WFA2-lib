@@ -13,9 +13,10 @@ feature_summary(
 
 # ---- Options
 
-option(OPENMP "Enable OpenMP" ON)
+option(OPENMP "Enable OpenMP" ON) # enables WFA_PARALLEL
 option(PROFILING "Enable profiling" OFF)
 option(ASAN "Use address sanitiser" OFF)
+option(EXTRA_FLAGS "Add optimization flags for C/C++ compiler" OFF)
 
 # include(CheckIPOSupported) # adds lto
 # check_ipo_supported(RESULT ipo_supported OUTPUT output)
@@ -24,6 +25,7 @@ option(ASAN "Use address sanitiser" OFF)
 
 if(OPENMP)
   include(FindOpenMP)
+  set(EXTRA_FLAGS "${EXTRA_FLAGS} -DWFA_PARALLEL")
 endif(OPENMP)
 
 find_package(Threads)
@@ -39,12 +41,12 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 if (${CMAKE_BUILD_TYPE} MATCHES Release)
-  set(EXTRA_FLAGS "-march=native -D_FILE_OFFSET_BITS=64")
+  set(OPTIMIZE_FLAGS "-march=native -D_FILE_OFFSET_BITS=64")
 endif()
 
 if ((${CMAKE_BUILD_TYPE} MATCHES Release) OR (${CMAKE_BUILD_TYPE} MATCHES RelWithDebInfo))
-  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} -DWFA_PARALLEL")
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -DWFA_PARALLEL")
+  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} ${OPTIMIZE_FLAGS}")
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} ${OPTIMIZE_FLAGS}")
 endif ()
 
 if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
