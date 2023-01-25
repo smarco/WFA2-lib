@@ -1,9 +1,12 @@
+# See below option statements and the README for build information
+
 cmake_minimum_required(VERSION 3.16)
 project(wfa2lib)
 
 set(CMAKE_CXX_STANDARD 17)
 
 include(FeatureSummary)
+include(GNUInstallDirs)
 
 find_package(PkgConfig REQUIRED)
 
@@ -13,9 +16,10 @@ feature_summary(
 
 # ---- Options
 
-option(OPENMP "Enable OpenMP" ON)
+option(OPENMP "Enable OpenMP" OFF) # enables WFA_PARALLEL
 option(PROFILING "Enable profiling" OFF)
 option(ASAN "Use address sanitiser" OFF)
+option(EXTRA_FLAGS "Add optimization flags for C/C++ compiler" OFF)
 
 # include(CheckIPOSupported) # adds lto
 # check_ipo_supported(RESULT ipo_supported OUTPUT output)
@@ -24,7 +28,12 @@ option(ASAN "Use address sanitiser" OFF)
 
 if(OPENMP)
   include(FindOpenMP)
+  set(OPTIMIZE_FLAGS "-DWFA_PARALLEL")
 endif(OPENMP)
+
+if(EXTRA_FLAGS)
+  set(OPTIMIZE_FLAGS "${OPTIMIZE_FLAGS} ${EXTRA_FLAGS}")
+endif(EXTRA_FLAGS)
 
 find_package(Threads)
 set_package_properties(Threads PROPERTIES TYPE REQUIRED)
@@ -39,17 +48,17 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 if (${CMAKE_BUILD_TYPE} MATCHES Release)
-  set(EXTRA_FLAGS "-march=native -D_FILE_OFFSET_BITS=64")
+  set(OPTIMIZE_FLAGS "${OPTIMIZE_FLAGS} -march=native -D_FILE_OFFSET_BITS=64")
 endif()
 
 if ((${CMAKE_BUILD_TYPE} MATCHES Release) OR (${CMAKE_BUILD_TYPE} MATCHES RelWithDebInfo))
-  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} -DWFA_PARALLEL")
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -DWFA_PARALLEL")
+  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} ${OPTIMIZE_FLAGS}")
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} ${OPTIMIZE_FLAGS}")
 endif ()
 
 if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
-  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_FLAGS}")
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_FLAGS}")
+  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OPTIMIZE_FLAGS}")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OPTIMIZE_FLAGS}")
   add_definitions(-Wfatal-errors)
 endif ()
 
@@ -105,13 +114,7 @@ set(wfa2lib_SOURCE
 )
 
 
-add_library(wfa-static STATIC
-    ${wfa2lib_SOURCE}
-    )
-set_target_properties(wfa-static
-  PROPERTIES OUTPUT_NAME wfa)
-
-add_library(wfa SHARED
+add_library(wfa
     ${wfa2lib_SOURCE}
     )
 
@@ -128,11 +131,25 @@ set(wfa2lib_LIBS
 
 # ---- Build all
 
+# ---- Test
+
+enable_testing()
+
+
+function(add_wfa_test)
+  add_test(
+    NAME wfa2lib
+    COMMAND ./tests/wfa.utest.sh
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    )
+endfunction()
+
+add_wfa_test()
+
 # ---- Install
 
 install(TARGETS wfa ARCHIVE DESTINATION lib)
-install(TARGETS wfa-static ARCHIVE DESTINATION lib)
 
-install(FILES ${INCLUDES} DESTINATION include)
+install(FILES ${INCLUDES} DESTINATION include/wfa2lib)
 
 # install(DIRECTORY ${CMAKE_SOURCE_DIR}/man/ DESTINATION ${CMAKE_INSTALL_PREFIX}/man/man1)
