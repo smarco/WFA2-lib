@@ -6,6 +6,7 @@ project(wfa2lib)
 set(CMAKE_CXX_STANDARD 17)
 
 include(FeatureSummary)
+include(GNUInstallDirs)
 
 find_package(PkgConfig REQUIRED)
 

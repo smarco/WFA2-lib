@@ -39,7 +39,7 @@ To add vector optimization try
 cmake .. -DCMAKE_BUILD_TYPE=Release -DEXTRA_FLAGS="-ftree-vectorize -msse2 -mfpmath=sse -ftree-vectorizer-verbose=5"
 ```
 
-To build a shared library
+To build a shared library (static is the default)
 
 ```
 cmake -DBUILD_SHARED_LIBS=ON
