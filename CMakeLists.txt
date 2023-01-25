@@ -1,3 +1,5 @@
+# See below option statements and the README for build information
+
 cmake_minimum_required(VERSION 3.16)
 project(wfa2lib)
 
@@ -111,13 +113,7 @@ set(wfa2lib_SOURCE
 )
 
 
-add_library(wfa-static STATIC
-    ${wfa2lib_SOURCE}
-    )
-set_target_properties(wfa-static
-  PROPERTIES OUTPUT_NAME wfa)
-
-add_library(wfa SHARED
+add_library(wfa
     ${wfa2lib_SOURCE}
     )
 
@@ -152,7 +148,6 @@ add_wfa_test()
 # ---- Install
 
 install(TARGETS wfa ARCHIVE DESTINATION lib)
-install(TARGETS wfa-static ARCHIVE DESTINATION lib)
 
 install(FILES ${INCLUDES} DESTINATION include)
 

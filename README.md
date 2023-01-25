@@ -24,6 +24,7 @@ cd WFA2-lib
 mkdir build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 cmake --build . --verbose
+ctest . --verbose
 ```
 
 There are some flags that can be used:
@@ -36,6 +37,12 @@ To add vector optimization try
 
 ```
 cmake .. -DCMAKE_BUILD_TYPE=Release -DEXTRA_FLAGS="-ftree-vectorize -msse2 -mfpmath=sse -ftree-vectorizer-verbose=5"
+```
+
+To build a shared library
+
+```
+cmake -DBUILD_SHARED_LIBS=ON
 ```
 
 It is possible to build WFA2-lib in a GNU Guix container, for more information see [guix.scm](./guix.scm).
