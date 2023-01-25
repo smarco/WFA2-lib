@@ -150,6 +150,6 @@ add_wfa_test()
 
 install(TARGETS wfa ARCHIVE DESTINATION lib)
 
-install(FILES ${INCLUDES} DESTINATION include)
+install(FILES ${INCLUDES} DESTINATION include/wfa2lib)
 
 # install(DIRECTORY ${CMAKE_SOURCE_DIR}/man/ DESTINATION ${CMAKE_INSTALL_PREFIX}/man/man1)
