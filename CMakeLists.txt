@@ -114,9 +114,13 @@ set(wfa2lib_SOURCE
 )
 
 
-add_library(wfa
+add_library(wfa2_static
     ${wfa2lib_SOURCE}
     )
+add_library(wfa2 SHARED ${wfa2lib_SOURCE})
+set_target_properties(wfa2_static PROPERTIES OUTPUT_NAME wfa2)
+set_target_properties(wfa2 PROPERTIES SOVERSION 0)
+
 
 # ---- Get version
 
@@ -148,6 +152,7 @@ add_wfa_test()
 
 # ---- Install
 
-install(TARGETS wfa ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} )
+install(TARGETS wfa2_static ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} )
+install(TARGETS wfa2 ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} )
 
 install(FILES ${INCLUDES} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/wfa2lib)
