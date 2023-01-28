@@ -1,3 +1,10 @@
+# For Debian currently with
+#
+#   cd build
+#   cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
+#   make
+#   make test
+#   make install
 # See below option statements and the README for build information
 
 cmake_minimum_required(VERSION 3.16)
@@ -83,7 +90,15 @@ include_directories(.)
 
 file(GLOB INCLUDES
   wavefront/*.h*
+  )
+file(GLOB UTILS_INCLUDES
   utils/*.h*
+  )
+file(GLOB ALIGNMENT_INCLUDES
+  alignment/*.h*
+  )
+file(GLOB SYSTEM_INCLUDES
+  system/*.h*
   )
 
 set(wfa2lib_SOURCE
@@ -111,8 +126,22 @@ set(wfa2lib_SOURCE
   wavefront/wavefront_plot.c
   wavefront/wavefront_slab.c
   wavefront/wavefront_unialign.c
+  system/mm_stack.c
+  system/mm_allocator.c
+  system/profiler_counter.c
+  system/profiler_timer.c
+  utils/bitmap.c
+  utils/dna_text.c
+  utils/sequence_buffer.c
+  utils/vector.c
+  utils/commons.c
+  utils/heatmap.c
+  utils/string_padded.c
+  alignment/affine2p_penalties.c
+  alignment/affine_penalties.c
+  alignment/cigar.c
+  alignment/score_matrix.c
 )
-
 
 add_library(wfa2_static
     ${wfa2lib_SOURCE}
@@ -155,4 +184,7 @@ add_wfa_test()
 install(TARGETS wfa2_static ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} )
 install(TARGETS wfa2 ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} )
 
-install(FILES ${INCLUDES} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/wfa2lib)
+install(FILES ${INCLUDES} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/wfa2lib/wavefront)
+install(FILES ${UTILS_INCLUDES} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/wfa2lib/utils)
+install(FILES ${ALIGNMENT_INCLUDES} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/wfa2lib/alignment)
+install(FILES ${SYSTEM_INCLUDES} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/wfa2lib/system)
