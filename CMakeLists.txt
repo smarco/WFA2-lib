@@ -84,10 +84,6 @@ endif(GPROF)
 
 # ---- Include files
 
-include_directories(wavefront)
-include_directories(utils)
-include_directories(.)
-
 file(GLOB INCLUDES
   wavefront/*.h*
   )
@@ -149,6 +145,8 @@ add_library(wfa2_static
 add_library(wfa2 SHARED ${wfa2lib_SOURCE})
 set_target_properties(wfa2_static PROPERTIES OUTPUT_NAME wfa2)
 set_target_properties(wfa2 PROPERTIES SOVERSION 0)
+target_include_directories(wfa2 PUBLIC . wavefront utils)
+target_include_directories(wfa2_static PUBLIC . wavefront utils)
 
 # ---- C++ binding library
 
