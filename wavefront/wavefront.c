@@ -29,6 +29,8 @@
  * DESCRIPTION: Individual WaveFront data structure
  */
 
+#include "utils/commons.h"
+#include "system/mm_allocator.h"
 #include "wavefront.h"
 
 /*
@@ -88,14 +90,14 @@ void wavefront_init(
     wavefront_t* const wavefront,
     const int min_lo,
     const int max_hi) {
-  // Configure limits
+  // Limits
   wavefront->null = false;
   wavefront->lo =  1;
   wavefront->hi = -1;
-  wavefront->bt_occupancy_max = 0;
-  // Setup elements
+  // Elements
   wavefront->offsets = wavefront->offsets_mem - min_lo; // Center at k=0
   if (wavefront->bt_pcigar_mem) {
+    wavefront->bt_occupancy_max = 0;
     wavefront->bt_pcigar = wavefront->bt_pcigar_mem - min_lo; // Center at k=0
     wavefront->bt_prev = wavefront->bt_prev_mem - min_lo; // Center at k=0
   }
@@ -109,14 +111,14 @@ void wavefront_init_null(
     wavefront_t* const wavefront,
     const int min_lo,
     const int max_hi) {
-  // Configure limits
+  // Limits
   wavefront->null = true;
   wavefront->lo =  1;
   wavefront->hi = -1;
-  wavefront->bt_occupancy_max = 0;
-  // Setup elements
+  // Elements
   wavefront->offsets = wavefront->offsets_mem - min_lo; // Center at k=0
   if (wavefront->bt_pcigar_mem) {
+    wavefront->bt_occupancy_max = 0;
     wavefront->bt_pcigar = wavefront->bt_pcigar_mem - min_lo; // Center at k=0
     wavefront->bt_prev = wavefront->bt_prev_mem - min_lo; // Center at k=0
   }
@@ -170,7 +172,3 @@ uint64_t wavefront_get_size(
   }
   return total_size;
 }
-
-
-
-

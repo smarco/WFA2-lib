@@ -3,7 +3,7 @@
 # LICENCE: MIT License 
 # AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
 # DESCRIPTION: Compares alignments (*.alg) from two folders
-# USAGE: ./wfa.utest.cmp.alignments.sh wfa_results_folder_1 wfa_results_folder_2
+# USAGE: ./wfa.utest.performance.cmp.sh wfa_results_folder_1 wfa_results_folder_2
 
 # Parameters
 FOLDER1=$1

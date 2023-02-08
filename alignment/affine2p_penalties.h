@@ -32,8 +32,6 @@
 #ifndef AFFINE2P_PENALTIES_H_
 #define AFFINE2P_PENALTIES_H_
 
-#include "utils/commons.h"
-
 /*
  * Affine 2-piece penalties
  */

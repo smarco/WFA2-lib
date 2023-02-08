@@ -49,7 +49,7 @@ void wavefront_compute_affine_idm_piggyback(
     const int hi);
 
 /*
- * Compute wavefront (gap-affine)
+ * Compute Wavefronts (gap-affine)
  */
 void wavefront_compute_affine(
     wavefront_aligner_t* const wf_aligner,

@@ -32,7 +32,6 @@
 #ifndef AFFINE_MATRIX_H_
 #define AFFINE_MATRIX_H_
 
-#include "utils/commons.h"
 #include "alignment/cigar.h"
 
 /*

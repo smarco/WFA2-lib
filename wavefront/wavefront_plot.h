@@ -26,14 +26,14 @@
  *
  * PROJECT: Wavefront Alignment Algorithms
  * AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
- * DESCRIPTION: WaveFront-Alignment module for plot
+ * DESCRIPTION: Wavefront alignment module for plot
  */
 
 #ifndef WAVEFRONT_PLOT_H_
 #define WAVEFRONT_PLOT_H_
 
-#include "utils/commons.h"
 #include "utils/heatmap.h"
+#include "alignment/score_matrix.h"
 #include "wavefront/wavefront_penalties.h"
 
 // Wavefront ahead definition
@@ -43,36 +43,43 @@ typedef struct _wavefront_aligner_t wavefront_aligner_t;
  * Wavefront Display
  */
 typedef struct {
-  // Display enabled
-  bool plot_enabled;
-  // Resolution and range
-  int resolution_points;
+  bool enabled;               // Is plotting enabled
+  int resolution_points;      // Total resolution points
+  int align_level;            // Level of recursion to plot (-1 == final)
+} wavefront_plot_attr_t;
+typedef struct {
+  // Configuration
+  wavefront_plot_attr_t attributes;
+  distance_metric_t distance_metric;
   int min_v;
   int max_v;
   int min_h;
   int max_h;
-} wavefront_plot_params_t;
-typedef struct {
-  // Wavefront components
+  // Wavefront Heatmaps
   heatmap_t* m_heatmap;
   heatmap_t* i1_heatmap;
   heatmap_t* d1_heatmap;
   heatmap_t* i2_heatmap;
   heatmap_t* d2_heatmap;
-  // Alignment behavior
   heatmap_t* behavior_heatmap;
+  // Offsets
+  int offset_h;
+  int offset_v;
 } wavefront_plot_t;
 
 /*
  * Setup
  */
-void wavefront_plot_allocate(
-    wavefront_plot_t* const wf_plot,
+wavefront_plot_t* wavefront_plot_new(
     const distance_metric_t distance_metric,
     const int pattern_length,
     const int text_length,
-    wavefront_plot_params_t* const plot_params);
-void wavefront_plot_free(
+    wavefront_plot_attr_t* const attributes);
+void wavefront_plot_resize(
+    wavefront_plot_t* const wf_plot,
+    const int pattern_length,
+    const int text_length);
+void wavefront_plot_delete(
     wavefront_plot_t* const wf_plot);
 
 /*
@@ -80,9 +87,8 @@ void wavefront_plot_free(
  */
 void wavefront_plot(
     wavefront_aligner_t* const wf_aligner,
-    const char* const pattern,
-    const char* const text,
-    const int score);
+    const int score,
+    const int align_level);
 
 /*
  * Display

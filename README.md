@@ -16,13 +16,36 @@ The WFA2 library implements the WFA algorithm for different distance metrics and
 
 ### 1.3 Getting started
 
-Git clone and compile the library, tools, and examples.
+Git clone and compile the library, tools, and examples. By default use cmake:
 
 ```
-$> git clone https://github.com/smarco/WFA2-lib
-$> cd WFA2-lib
-$> make clean all
+git clone https://github.com/smarco/WFA2-lib
+cd WFA2-lib
+mkdir build
+cmake .. -DCMAKE_BUILD_TYPE=Release
+cmake --build . --verbose
+ctest . --verbose
 ```
+
+There are some flags that can be used:
+
+```
+cmake .. -DOPENMP=TRUE
+```
+
+To add vector optimization try
+
+```
+cmake .. -DCMAKE_BUILD_TYPE=Release -DEXTRA_FLAGS="-ftree-vectorize -msse2 -mfpmath=sse -ftree-vectorizer-verbose=5"
+```
+
+To build a shared library (static is the default)
+
+```
+cmake -DBUILD_SHARED_LIBS=ON
+```
+
+It is possible to build WFA2-lib in a GNU Guix container, for more information see [guix.scm](./guix.scm).
 
 ### 1.4 Contents (where to go from here)
 
@@ -40,7 +63,7 @@ Section [WFA2-lib features](#wfa2.features) explores the most relevant options a
     * [Technical notes](#wfa2.other.notes)
 * [Reporting Bugs and Feature Request](#wfa2.complains)
 * [License](#wfa2.licence)
-* [Citation](#wfa2.cite) 
+* [Citation](#wfa2.cite)
 
 ### 1.5 Important notes and clarifications
 
@@ -62,7 +85,7 @@ This simple example illustrates how to align two sequences using the WFA2 librar
 #include "wavefront/wavefront_align.h"
 ```
 
-Next, create and configure the WFA alignment object. The following example uses the defaults configuration and sets custom `gap_affine` penalties. Note that mismatch, gap-opening, and gap-extension must be positive values.  
+Next, create and configure the WFA alignment object. The following example uses the defaults configuration and sets custom `gap_affine` penalties. Note that mismatch, gap-opening, and gap-extension must be positive values.
 
 ```C
 // Configure alignment attributes
@@ -142,6 +165,11 @@ cout << "Alignment score " << aligner.getAlignmentScore() << endl;
 
 **IMPORTANT.** Once an alignment object is created, **it is strongly recommended to reuse it to compute multiple alignments**. Creating and destroying the alignment object for every alignment computed can have a significant overhead. Reusing the alignment object allows repurposing internal data structures, minimising the cost of memory allocations, and avoiding multiple alignment setups and precomputations.
 
+### <a name="wfa2.programming.rust"></a> 2.3 Rust bindings
+
+Rust bindings can be generated automatically using `bindgen`, see [bindings/rust/build.rs](bindings/rust/build.rs).
+An example of how to use them is [here](./bindings/rust/example.rs).
+
 ## <a name="wfa2.features"></a> 3. WFA2-LIB FEATURES
 
 * **Exact alignment** method that computes the optimal **alignment score** and/or **alignment CIGAR**.
@@ -156,7 +184,7 @@ cout << "Alignment score " << aligner.getAlignmentScore() << endl;
 
 The WFA2 library implements the wavefront algorithm for the most widely used distance metrics. The practical alignment time can change depending on the distance function, although the computational complexity always remains proportional to the alignment score or distance. The WFA2 library offers the following distance metrics or functions:
 
-- **Indel (or LCS).** Produces alignments allowing matches, insertions, and deletions with unitary cost (i.e., {M,I,D} = {0,1,1}) but not mismatches. Also known as the longest common subsequence (LCS) problem. The LCS is defined as the longest subsequence common to both sequences, provided that the characters of the subsequence are not required to occupy consecutive positions within the original sequences. 
+- **Indel (or LCS).** Produces alignments allowing matches, insertions, and deletions with unitary cost (i.e., {M,I,D} = {0,1,1}) but not mismatches. Also known as the longest common subsequence (LCS) problem. The LCS is defined as the longest subsequence common to both sequences, provided that the characters of the subsequence are not required to occupy consecutive positions within the original sequences.
 
 ```
     PATTERN    A-GCTA-GTGTC--AATGGCTACT-T-T-TCAGGTCCT
@@ -199,7 +227,7 @@ The WFA2 library implements the wavefront algorithm for the most widely used dis
     // Configuration
     wavefront_aligner_attr_t attributes = wavefront_aligner_attr_default;
     attributes.distance_metric = gap_linear;
-    attributes.linear_penalties.mismatch = 6; // X > 0 
+    attributes.linear_penalties.mismatch = 6; // X > 0
     attributes.linear_penalties.indel = 2;    // I > 0
 ```
 
@@ -235,9 +263,9 @@ The WFA2 library implements the wavefront algorithm for the most widely used dis
 
 ### <a name="wfa2.scope"></a> 3.2 Alignment Scope
 
-Depending on the use case, it is often the case that an application is only required to compute the alignment score, not the complete alignment (i.e., CIGAR). As it happens with traditional dynamic programming algorithms, the WFA algorithm requires less memory (i.e., `O(s)`) to compute the alignment score. In turn, this results in slighter faster alignment executions. For this reason, the WFA2 library implements two different modes depending on the alignment scope: score-only and full-CIGAR alignment. 
+Depending on the use case, it is often the case that an application is only required to compute the alignment score, not the complete alignment (i.e., CIGAR). As it happens with traditional dynamic programming algorithms, the WFA algorithm requires less memory (i.e., `O(s)`) to compute the alignment score. In turn, this results in slighter faster alignment executions. For this reason, the WFA2 library implements two different modes depending on the alignment scope: score-only and full-CIGAR alignment.
 
-The ** score-only alignment ** mode computes only the alignment score. This mode utilizes only the front-wavefronts of the WFA algorithm to keep track of the optimal alignment score. As a result, it requires `O(s)` memory and, in practice, performs slighter faster than the standard full-CIGAR mode. 
+The ** score-only alignment ** mode computes only the alignment score. This mode utilizes only the front-wavefronts of the WFA algorithm to keep track of the optimal alignment score. As a result, it requires `O(s)` memory and, in practice, performs slighter faster than the standard full-CIGAR mode.
 
 ```C
     wavefront_aligner_attr_t attributes = wavefront_aligner_attr_default;
@@ -273,7 +301,7 @@ The WFA2 library allows computing alignments with different spans or shapes. Alt
 
 ```
     PATTERN    AATTAATTTAAGTCTAGGCTACTTTCGGTACTTTGTTCTT
-                   |||||||||||||||||||||||||||||| ||   
+                   |||||||||||||||||||||||||||||| ||
     TEXT       ----AATTTAAGTCTAGGCTACTTTCGGTACTTTCTT---
 ```
 
@@ -295,7 +323,7 @@ The WFA2 library allows computing alignments with different spans or shapes. Alt
 
 ```
     PATTERN    -------------AATTTAAGTCTAGGCTACTTTC---------------
-                            ||||||||| ||||||||||||               
+                            ||||||||| ||||||||||||
     TEXT       ACGACTACTACGAAATTTAAGTATAGGCTACTTTCCGTACGTACGTACGT
 ```
 
@@ -324,9 +352,9 @@ The WFA2 library allows computing alignments with different spans or shapes. Alt
     attributes.alignment_form.pattern_end_free = pattern_end_free;
     attributes.alignment_form.text_begin_free = 0;
     attributes.alignment_form.text_end_free = text_end_free;
-    
+
     PATTERN    AATTTAAGTCTG-CTACTTTCACGCA-GCT----------
-               ||||| |||||| ||||||||||| | | |          
+               ||||| |||||| ||||||||||| | | |
     TEXT       AATTTCAGTCTGGCTACTTTCACGTACGATGACAGACTCT
 ```
 
@@ -338,7 +366,7 @@ The WFA2 library allows computing alignments with different spans or shapes. Alt
     attributes.alignment_form.pattern_end_free = 0;
     attributes.alignment_form.text_begin_free = text_begin_free;
     attributes.alignment_form.text_end_free = 0;
-    
+
     PATTERN    -------------AAACTTTCACGTACG-TGACAGTCTCT
                               ||||||||||||| |||||| ||||
     TEXT       AATTTCAGTCTGGCTACTTTCACGTACGATGACAGACTCT
@@ -350,7 +378,7 @@ The WFA2 library allows computing alignments with different spans or shapes. Alt
 <details><summary>Overlapped alignment</summary>
 <p>
 
-- **Overlapped alignment (a.k.a. dovetail).** 
+- **Overlapped alignment (a.k.a. dovetail).**
 
 ```C
     // Overlapped (Right-Left)
@@ -360,9 +388,9 @@ The WFA2 library allows computing alignments with different spans or shapes. Alt
     attributes.alignment_form.pattern_end_free = 0;
     attributes.alignment_form.text_begin_free = 0;
     attributes.alignment_form.text_end_free = text_end_free;
-    
+
     PATTERN    ACGCGTCTGACTGACTGACTAAACTTTCATGTAC-TGACA-----------------
-                                   ||||||||| |||| |||||                 
+                                   ||||||||| |||| |||||
     TEXT       --------------------AAACTTTCACGTACGTGACATATAGCGATCGATGACT
 ```
 
@@ -376,7 +404,7 @@ The WFA2 library allows computing alignments with different spans or shapes. Alt
     attributes.alignment_form.text_end_free = 0;
 
     PATTERN    ----------------------ACGCGTCTGACTGACTACGACTACGACTGACTAGCAT
-                                     ||||||||| || ||                      
+                                     ||||||||| || ||
     TEXT       ACATGCATCGATCAGACTGACTACGCGTCTG-CTAAC----------------------
 ```
 
@@ -396,7 +424,9 @@ The WFA2 library implements various memory modes: `wavefront_memory_high`, `wave
 
 The WFA algorithm can be used combined with many heuristics to reduce the alignment time and memory used. As it happens to other alignment methods, heuristics can result in suboptimal solutions and loss of accuracy. Moreover, some heuristics may drop the alignment if the sequences exceed certain divergence thresholds (i.e., x-drop/z-drop). Due to the popularity and efficiency of these methods, the WFA2 library implements many of these heuristics. Note, **it is not about how little DP-matrix you compute, but about how good/accurate the resulting alignments are.**
 
-- **None (for comparison)**. If no heuristic is used, the WFA behaves exploring cells of the DP-matrix in increasing score order (increasing scores correspond to colours from blue to red). 
+WFA2's heuristics are classified into the following categories: ['wf-adaptive'](#wfa2.wfadaptive), ['drops'](#wfa2.drops), and ['bands'](#wfa2.bands). It is possible to combine a maximum of one heuristic from each category (OR-ing the strategy values or using the API). In the case of using multiple heuristics, these will applied in cascade, starting with 'wf-adaptive', then 'drops', and finally 'bands'.
+
+- **None (for comparison)**. If no heuristic is used, the WFA behaves exploring cells of the DP-matrix in increasing score order (increasing scores correspond to colours from blue to red).
 
 <p align="center">
 <table>
@@ -414,52 +444,17 @@ The WFA algorithm can be used combined with many heuristics to reduce the alignm
   attributes.heuristic.strategy = wf_heuristic_none;
 ```
 
-- **Banded alignment.** Sets a fixed band in the diagonals preventing the wavefront from growing beyond those limits. It allows setting the minimum diagonal (i.e., min_k) and maximum diagonal (i.e., max_k).
-
-<p align="center">
-<table>
-  <tr>
-    <td><p align="center">Banded(10,10)</p></td>
-    <td><p align="center">Banded(10,150)</p></td>
-  </tr>
-  <tr>
-    <td><img src="img/heuristics.band.10.10.png" align="center" width="400px"></td>
-    <td><img src="img/heuristics.band.10.150.png" align="center" width="400px"></td>
-  </tr>
-</table>
-</p>
+- <a name="wfa2.wfadaptive"></a> **Heuristic wf-adaptive.** This WFA heuristic removes outer diagonals that are extremely far behind compared to other ones in the same wavefront. Unlike other methods, the adaptive-wavefront reduction heuristic prunes based on the potential of the diagonal to lead to the optimal solution without previous knowledge of the error between the sequences.
 
 ```C
   wavefront_aligner_attr_t attributes = wavefront_aligner_attr_default;
-  attributes.heuristic.strategy = wf_heuristic_banded_static;
-  attributes.heuristic.min_k = -10;
-  attributes.heuristic.max_k = +10;
-```
-
-- **Adaptive-Band alignment.** Similar to the static-band heuristic, it allows the band to move towards the diagonals closer to the end of the alignment. Unlike the static-band that is performed on each step, the adaptive-band heuristics allows configuring the number of steps between heuristic band cut-offs.
-
-<p align="center">
-<table>
-  <tr>
-    <td><p align="center">Adaptive-Band(10,10,1)</p></td>
-    <td><p align="center">Adaptive-Band(50,50,1)</p></td>
-  </tr>
-  <tr>
-    <td><img src="img/heuristics.aband.10.10.png" align="center" width="400px"></td>
-    <td><img src="img/heuristics.aband.50.50.png" align="center" width="400px"></td>
-  </tr>
-</table>
-</p>
-
-```C
-  wavefront_aligner_attr_t attributes = wavefront_aligner_attr_default;
-  attributes.heuristic.strategy = wf_heuristic_banded_adaptive;
-  attributes.heuristic.min_k = -10;
-  attributes.heuristic.max_k = +10;
+  attributes.heuristic.strategy = wf_heuristic_wfadaptive;
+  attributes.heuristic.min_wavefront_length = 10;
+  attributes.heuristic.max_distance_threshold = 50;
   attributes.heuristic.steps_between_cutoffs = 1;
 ```
 
-- **Adaptive-Wavefront alignment.** This WFA heuristic removes outer diagonals that are extremely far behind compared to other ones in the same wavefront. Unlike other methods, the adaptive-wavefront reduction heuristic prunes based on the potential of the diagonal to lead to the optimal solution without previous knowledge of the error between the sequences.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Graphical examples:**
 
 <p align="center">
 <table>
@@ -474,15 +469,9 @@ The WFA algorithm can be used combined with many heuristics to reduce the alignm
 </table>
 </p>
 
-```C
-  wavefront_aligner_attr_t attributes = wavefront_aligner_attr_default;
-  attributes.heuristic.strategy = wf_heuristic_wfadaptive;
-  attributes.heuristic.min_wavefront_length = 10;
-  attributes.heuristic.max_distance_threshold = 50;
-  attributes.heuristic.steps_between_cutoffs = 1;
-```
+- <a name="wfa2.drops"></a> **Heuristic drops.** This heuristic compares the maximum score computed so far with the score of the last computed cells. Depending on the score difference, these heuristic strategies can reduce the size of the wavefront computed or even abandon the alignment process. In the case of zero-match alignment, $M=1$ will be assumed just for computation of the score drop. Also note that this heuristic is not compatible with distances 'edit' or 'indel'. In this category, WFA2 implements 'X-drop' and 'Z-drop'.
 
-- **X-drop.** [Under Testing] Implements the classical X-drop heuristic to abandon diagonals (or even alignments) that fall more than X from the previous best-observed score.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**X-drop** implements the classical X-drop heuristic. For each diagonal $k$, the X-drop heuristic compares the current score $sw_k$ with the maximum observed score so far $sw_{max}$. If the difference drops more than the $xdrop$ parameter (i.e., $sw_{max} - sw_k > xdrop$), the heuristic prunes the diagonal $k$ as it is unlikely to lead to the optimum alignment. If all the diagonals are pruned under this criteria, the alignment process is abandoned.
 
 ```C
   wavefront_aligner_attr_t attributes = wavefront_aligner_attr_default;
@@ -491,7 +480,8 @@ The WFA algorithm can be used combined with many heuristics to reduce the alignm
   attributes.heuristic.steps_between_cutoffs = 100;
 ```
 
-- **Z-drop**. [Under Testing] Implements the Z-drop heuristic. It drops the diagonals (or even the alignment) if the score drops too fast in the diagonal direction.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Z-drop** implements the Z-drop heuristic (as described in Minimap2). This heuristic halts the alignment process if the score drops too fast in the diagonal direction. Let $sw_{max}$ be the maximum observed score so far, computed at cell ($i'$,$j'$). Then, let $sw$ be the maximum score found in the last computed wavefront, computed at cell ($i$,$j$). The Z-drop heuristic stops the alignment process if $sw_{max} - sw > zdrop + gap_e·|(i-i')-(j-j')|$, being $gap_e$ the gap-extension penalty and $zdrop$ a parameter of the heuristic.
+
 
 ```C
   wavefront_aligner_attr_t attributes = wavefront_aligner_attr_default;
@@ -500,9 +490,74 @@ The WFA algorithm can be used combined with many heuristics to reduce the alignm
   attributes.heuristic.steps_between_cutoffs = 100;
 ```
 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Graphical examples:**
+
+<p align="center">
+<table>
+  <tr>
+    <td><p align="center">None</p></td>
+    <td><p align="center">X-drop(200,1)</p></td>
+    <td><p align="center">Y-drop(200,1)</p></td>
+  </tr>
+  <tr>
+    <td><img src="img/heuristics.drop.none.png" align="center" width="300px"></td>
+    <td><img src="img/heuristics.xdrop.200.png" align="center" width="300px"></td>
+    <td><img src="img/heuristics.zdrop.200.png" align="center" width="300px"></td>
+  </tr>
+</table>
+</p>
+
+
+- <a name="wfa2.bands"></a> **Heuristic bands.** These heuristics set a band in the diagonals preventing the wavefront from growing beyond those limits. It allows setting the minimum diagonal (i.e., min_k) and maximum diagonal (i.e., max_k). These heuristics are the most restrictive but the fastest and simplest to compute. In this category, WFA2 implements 'static-band' and 'adaptive-band'.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Static-band** sets a fixed band in the diagonals preventing the wavefront from growing beyond those limits. It allows setting the minimum diagonal (i.e., min_k) and maximum diagonal (i.e., max_k).
+
+```C
+  wavefront_aligner_attr_t attributes = wavefront_aligner_attr_default;
+  attributes.heuristic.strategy = wf_heuristic_banded_static;
+  attributes.heuristic.min_k = -10;
+  attributes.heuristic.max_k = +10;
+```
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Adaptive-band** is similar to the static-band heuristic; however, it allows the band to move towards the diagonals closer to the end of the alignment. Unlike the static-band that is performed on each step, the adaptive-band heuristics allows configuring the number of steps between heuristic band cut-offs.
+
+```C
+  wavefront_aligner_attr_t attributes = wavefront_aligner_attr_default;
+  attributes.heuristic.strategy = wf_heuristic_banded_adaptive;
+  attributes.heuristic.min_k = -10;
+  attributes.heuristic.max_k = +10;
+  attributes.heuristic.steps_between_cutoffs = 1;
+```
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Graphical examples:**
+
+<p align="center">
+<table>
+  <tr>
+    <td><p align="center">Banded(10,10)</p></td>
+    <td><p align="center">Banded(10,150)</p></td>
+  </tr>
+  <tr>
+    <td><img src="img/heuristics.band.10.10.png" align="center" width="400px"></td>
+    <td><img src="img/heuristics.band.10.150.png" align="center" width="400px"></td>
+  </tr>
+  <tr>
+    <td><p align="center">Adaptive-Band(10,10,1)</p></td>
+    <td><p align="center">Adaptive-Band(50,50,1)</p></td>
+  </tr>
+  <tr>
+    <td><img src="img/heuristics.aband.10.10.png" align="center" width="400px"></td>
+    <td><img src="img/heuristics.aband.50.50.png" align="center" width="400px"></td>
+  </tr>
+</table>
+</p>
+
+
 ### <a name="wfa2.other.notes"></a> 3.6 Some technical notes
 
 - Thanks to Eizenga's formulation, WFA2-lib can operate with any match score. Although, in practice, M=0 is still the most efficient choice.
+
+- Note that edit and LCS are distance metrics and, thus, the score computed is always positive. However, weighted distances, like gap-linear and gap-affine, have the sign of the computed alignment evaluated under the selected penalties. If WFA2-lib is executed using $M=0$, the final score is expected to be negative.
 
 - All WFA2-lib algorithms/variants are stable. That is, for alignments having the same score, the library always resolves ties (between M, X, I,and D) using the same criteria: M (highest prio) > X > D > I (lowest prio). Nevertheless, the memory mode `ultralow` (BiWFA) is optimal (always reports the best alignment) but not stable.
 
@@ -523,7 +578,9 @@ WFA2-lib is distributed under MIT licence.
 
 [Santiago Marco-Sola](https://github.com/smarco) (santiagomsola@gmail.com) is the main developer and the person you should address your complaints.
 
-[Andrea Guarracino](https://github.com/AndreaGuarracino) and [Erik Garrison](https://github.com/ekg) have contributed to the design of new features and intensive testing of this library.
+[Andrea Guarracino](https://github.com/AndreaGuarracino) and [Erik Garrison](https://github.com/ekg) have contributed to the design of new features and intensive testing of the library.
+
+[Pjotr Prins](https://thebird.nl/) contributed the CMake build system, preventing of leaking variables in include headers and other tweaks.
 
 Miquel Moretó has contributed with fruitful technical discussions and tireless efforts seeking funding, so we could keep working on this project.
 
@@ -538,4 +595,3 @@ Miquel Moretó has contributed with fruitful technical discussions and tireless 
 **Santiago Marco-Sola, Juan Carlos Moure, Miquel Moreto, Antonio Espinosa**. ["Fast gap-affine pairwise alignment using the wavefront algorithm."](https://doi.org/10.1093/bioinformatics/btaa777) Bioinformatics, 2020.
 
 **Santiago Marco-Sola, Jordan M Eizenga, Andrea Guarracino, Benedict Paten, Erik Garrison, Miquel Moreto**. Optimal gap-affine alignment in O(s) space.  _bioRxiv_  (2022). DOI [2022.04.14.488380](https://doi.org/10.1101/2022.04.14.488380)
-

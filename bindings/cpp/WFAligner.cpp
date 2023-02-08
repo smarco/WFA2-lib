@@ -169,6 +169,14 @@ void WFAligner::setHeuristicWFadaptive(
       wfAligner,min_wavefront_length,
       max_distance_threshold,steps_between_cutoffs);
 }
+void WFAligner::setHeuristicWFmash(
+    const int min_wavefront_length,
+    const int max_distance_threshold,
+    const int steps_between_cutoffs) {
+  wavefront_aligner_set_heuristic_wfmash(
+      wfAligner,min_wavefront_length,
+      max_distance_threshold,steps_between_cutoffs);
+}
 void WFAligner::setHeuristicXDrop(
     const int xdrop,
     const int steps_between_cutoffs) {
@@ -202,11 +210,20 @@ void WFAligner::setMaxMemory(
     const uint64_t maxMemoryAbort) {
   wavefront_aligner_set_max_memory(wfAligner,maxMemoryResident,maxMemoryAbort);
 }
+// Parallelization
+void WFAligner::setMaxNumThreads(
+        const int maxNumThreads) {
+    wavefront_aligner_set_max_num_threads(wfAligner, maxNumThreads);
+}
+void WFAligner::setMinOffsetsPerThread(
+        const int minOffsetsPerThread) {
+    wavefront_aligner_set_min_offsets_per_thread(wfAligner, minOffsetsPerThread);
+}
 /*
  * Accessors
  */
 int WFAligner::getAlignmentScore() {
-  return wfAligner->cigar.score;
+  return wfAligner->cigar->score;
 }
 int WFAligner::getAlignmentStatus() {
   return wfAligner->align_status.status;
@@ -214,8 +231,8 @@ int WFAligner::getAlignmentStatus() {
 void WFAligner::getAlignmentCigar(
     char** const cigarOperations,
     int* cigarLength) {
- *cigarOperations = wfAligner->cigar.operations + wfAligner->cigar.begin_offset;
- *cigarLength = wfAligner->cigar.end_offset - wfAligner->cigar.begin_offset;
+ *cigarOperations = wfAligner->cigar->operations + wfAligner->cigar->begin_offset;
+ *cigarLength = wfAligner->cigar->end_offset - wfAligner->cigar->begin_offset;
 }
 std::string WFAligner::getAlignmentCigar() {
   // Fetch CIGAR

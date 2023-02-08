@@ -32,7 +32,6 @@
 #ifndef WAVEFRONT_ATTRIBUTES_H_
 #define WAVEFRONT_ATTRIBUTES_H_
 
-#include "utils/commons.h"
 #include "alignment/cigar.h"
 #include "alignment/affine_penalties.h"
 #include "alignment/affine2p_penalties.h"
@@ -102,10 +101,10 @@ typedef struct {
   uint64_t max_memory_abort;     // Maximum memory allowed to be used before aborting alignment
   // Verbose
   //  0 - Quiet
-  //  1 - Report WFA progress and heavy tasks               (brief)
-  //  2 - Report each sequence aligned                      (succinct)
-  //  3 - Full report of each sequence aligned              (verbose)
-  //  4 - Full report of each sequence aligned + debug info (very verbose)
+  //  1 - Report each sequence aligned                      (brief)
+  //  2 - Report each sequence/subsequence aligned          (brief)
+  //  3 - Report WFA progress (heavy tasks)                 (verbose)
+  //  4 - Full report of each sequence/subsequence aligned  (very verbose)
   int verbose;                   // Verbose (regulates messages during alignment)
   // Debug
   bool check_alignment_correct;  // Verify that the alignment CIGAR output is correct
@@ -148,7 +147,7 @@ typedef struct {
   // External MM (instead of allocating one inside)
   mm_allocator_t* mm_allocator;            // MM-Allocator
   // Display
-  wavefront_plot_params_t plot_params;     // Wavefront plot
+  wavefront_plot_attr_t plot;              // Plot wavefront
   // System
   alignment_system_t system;               // System related parameters
 } wavefront_aligner_attr_t;

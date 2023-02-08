@@ -31,7 +31,6 @@
 #ifndef SEQUENCE_BUFFER_H_
 #define SEQUENCE_BUFFER_H_
 
-#include "utils/commons.h"
 #include "system/mm_allocator.h"
 
 typedef struct {

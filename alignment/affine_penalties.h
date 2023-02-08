@@ -32,8 +32,6 @@
 #ifndef AFFINE_PENALTIES_H_
 #define AFFINE_PENALTIES_H_
 
-#include "utils/commons.h"
-
 /*
  * Affine penalties
  */

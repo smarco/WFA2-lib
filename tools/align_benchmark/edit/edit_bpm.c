@@ -22,6 +22,8 @@
  * DESCRIPTION: Edit-Distance based BPM alignment algorithm
  */
 
+#include "utils/commons.h"
+#include "system/mm_allocator.h"
 #include "edit/edit_bpm.h"
 #include "utils/dna_text.h"
 
@@ -153,7 +155,7 @@ void edit_bpm_matrix_allocate(
   bpm_matrix->Mv = Mv;
   bpm_matrix->Pv = Pv;
   // CIGAR
-  cigar_allocate(&bpm_matrix->cigar,pattern_length+text_length,mm_allocator);
+  bpm_matrix->cigar = cigar_new(pattern_length+text_length,mm_allocator);
 }
 void edit_bpm_matrix_free(
     bpm_matrix_t* const bpm_matrix,
@@ -161,7 +163,7 @@ void edit_bpm_matrix_free(
   mm_allocator_free(mm_allocator,bpm_matrix->Mv);
   mm_allocator_free(mm_allocator,bpm_matrix->Pv);
   // CIGAR
-  cigar_free(&bpm_matrix->cigar);
+  cigar_free(bpm_matrix->cigar);
 }
 /*
  * Edit distance computation using BPM
@@ -282,8 +284,8 @@ void edit_bpm_backtrace_matrix(
   const uint64_t pattern_length = bpm_pattern->pattern_length;
   const uint64_t* const Pv = bpm_matrix->Pv;
   const uint64_t* const Mv = bpm_matrix->Mv;
-  char* const operations = bpm_matrix->cigar.operations;
-  int op_sentinel = bpm_matrix->cigar.end_offset-1;
+  char* const operations = bpm_matrix->cigar->operations;
+  int op_sentinel = bpm_matrix->cigar->end_offset-1;
   // Retrieve the alignment. Store the match
   const uint64_t num_words64 = bpm_pattern->pattern_num_words64;
   int64_t h = bpm_matrix->min_score_column;
@@ -311,7 +313,7 @@ void edit_bpm_backtrace_matrix(
   }
   while (h>=0) {operations[op_sentinel--] = 'I'; --h;}
   while (v>=0) {operations[op_sentinel--] = 'D'; --v;}
-  bpm_matrix->cigar.begin_offset = op_sentinel+1;
+  bpm_matrix->cigar->begin_offset = op_sentinel+1;
 }
 void edit_bpm_compute(
     bpm_matrix_t* const bpm_matrix,

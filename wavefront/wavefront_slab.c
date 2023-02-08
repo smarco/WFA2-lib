@@ -29,6 +29,8 @@
  * DESCRIPTION: WaveFront Slab for fast pre-allocated wavefronts' memory handling
  */
 
+#include "utils/commons.h"
+#include "system/mm_allocator.h"
 #include "wavefront_slab.h"
 
 /*
@@ -286,6 +288,3 @@ uint64_t wavefront_slab_get_size(
     wavefront_slab_t* const wavefront_slab) {
   return wavefront_slab->memory_used;
 }
-
-
-

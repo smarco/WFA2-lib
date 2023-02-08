@@ -31,6 +31,8 @@
  * DESCRIPTION: WaveFront-Alignment module for the "extension" of exact matches
  */
 
+#include "utils/commons.h"
+#include "system/mm_allocator.h"
 #include "utils/string_padded.h"
 #include "wavefront_extend.h"
 #include "wavefront_align.h"
@@ -685,5 +687,3 @@ int wavefront_extend_custom(
   }
   return 0; // Not done
 }
-
-

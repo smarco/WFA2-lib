@@ -29,6 +29,7 @@
  * DESCRIPTION: WFA Sample-Code
  */
 
+#include "utils/commons.h"
 #include "wavefront/wavefront_align.h"
 
 int main(int argc,char* argv[]) {
@@ -46,15 +47,15 @@ int main(int argc,char* argv[]) {
   wavefront_aligner_t* const wf_aligner = wavefront_aligner_new(&attributes);
   // Align
   wavefront_align(wf_aligner,pattern,strlen(pattern),text,strlen(text));
-  fprintf(stderr,"WFA-Alignment returns score %d\n",wf_aligner->cigar.score);
+  fprintf(stderr,"WFA-Alignment returns score %d\n",wf_aligner->cigar->score);
   // Display alignment
   fprintf(stderr,"  PATTERN  %s\n",pattern);
   fprintf(stderr,"  TEXT     %s\n",text);
   fprintf(stderr,"  SCORE (RE)COMPUTED %d\n",
-      cigar_score_gap_affine(&wf_aligner->cigar,&attributes.affine_penalties));
+      cigar_score_gap_affine(wf_aligner->cigar,&attributes.affine_penalties));
   cigar_print_pretty(stderr,
       pattern,strlen(pattern),text,strlen(text),
-      &wf_aligner->cigar,wf_aligner->mm_allocator);
+      wf_aligner->cigar,wf_aligner->mm_allocator);
   // Free
   wavefront_aligner_delete(wf_aligner);
 }

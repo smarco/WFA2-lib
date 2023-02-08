@@ -29,6 +29,7 @@
  * DESCRIPTION: WaveFront backtrace buffer to store bactrace-blocks
  */
 
+#include "utils/commons.h"
 #include "wavefront_backtrace_buffer.h"
 
 /*
@@ -398,7 +399,7 @@ void wf_backtrace_buffer_mark_backtrace_batch(
   while (active_blocks < max_batch_size && next_idx < num_block_idxs) {
     // Check NULL
     const bt_block_idx_t block_idx = bt_block_idxs[next_idx];
-    if (offsets[next_idx] >= 0 && 
+    if (offsets[next_idx] >= 0 &&
         block_idx >= num_compacted_blocks) { // NOTE block_idx != BT_BLOCK_IDX_NULL
       // Prefetch (bt-block and bt_block)
       BITMAP_PREFETCH_BLOCK(bitmap,block_idx);
@@ -465,7 +466,7 @@ void wf_backtrace_buffer_mark_backtrace_batch(
 bt_block_idx_t wf_backtrace_buffer_compact_marked(
     wf_backtrace_buffer_t* const bt_buffer,
     bitmap_t* const bitmap,
-    const bool verbose) {
+    const int verbose) {
   // Parameters
   const int num_segments = vector_get_used(bt_buffer->segments);
   bt_block_t** const segments = vector_get_mem(bt_buffer->segments,bt_block_t*);
@@ -517,7 +518,7 @@ bt_block_idx_t wf_backtrace_buffer_compact_marked(
   bt_buffer->block_next = write_block;
   bt_buffer->num_compactions++;
   // DEBUG
-  if (verbose) {
+  if (verbose >= 3) {
     fprintf(stderr,"[WFA::BacktraceBuffer] Compacted from %lu MB to %lu MB (%2.2f%%)",
         CONVERT_B_TO_MB(read_global_pos*sizeof(bt_block_t)),
         CONVERT_B_TO_MB(write_global_pos*sizeof(bt_block_t)),
@@ -526,6 +527,3 @@ bt_block_idx_t wf_backtrace_buffer_compact_marked(
   // Return last index
   return write_global_pos - 1;
 }
-
-
-

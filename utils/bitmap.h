@@ -35,7 +35,6 @@
 /*
  * Includes
  */
-#include "utils/commons.h"
 #include "system/mm_allocator.h"
 
 #define BITMAP_BLOCK_ELEMENTS 64

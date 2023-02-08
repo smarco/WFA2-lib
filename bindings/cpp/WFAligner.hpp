@@ -34,9 +34,7 @@
 
 #include <string>
 
-extern "C" {
-  #include "../../wavefront/wavefront_aligner.h"
-}
+#include "../../wavefront/wfa.hpp"
 
 /*
  * Namespace
@@ -116,6 +114,10 @@ public:
       const int min_wavefront_length,
       const int max_distance_threshold,
       const int steps_between_cutoffs = 1);
+  void setHeuristicWFmash(
+      const int min_wavefront_length,
+      const int max_distance_threshold,
+      const int steps_between_cutoffs = 1);
   void setHeuristicXDrop(
       const int xdrop,
       const int steps_between_cutoffs = 1);
@@ -132,6 +134,11 @@ public:
   void setMaxMemory(
       const uint64_t maxMemoryResident,
       const uint64_t maxMemoryAbort);
+  // Parallelization
+  void setMaxNumThreads(
+      const int maxNumThreads);
+  void setMinOffsetsPerThread(
+      const int minOffsetsPerThread);
   // Accessors
   int getAlignmentScore();
   int getAlignmentStatus();

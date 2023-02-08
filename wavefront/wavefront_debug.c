@@ -32,6 +32,7 @@
 #include "utils/commons.h"
 #include "wavefront_debug.h"
 #include "wavefront_align.h"
+#include "wavefront_compute.h"
 
 /*
  * Checks
@@ -48,7 +49,7 @@ bool wavefront_check_alignment(
   alignment_match_funct_t match_funct = wf_aligner->match_funct;
   void* match_funct_arguments = wf_aligner->match_funct_arguments;
   // CIGAR
-  cigar_t* const cigar = &wf_aligner->cigar;
+  cigar_t* const cigar = wf_aligner->cigar;
   char* const operations = cigar->operations;
   const int begin_offset = cigar->begin_offset;
   const int end_offset = cigar->end_offset;
@@ -120,8 +121,7 @@ bool wavefront_check_alignment(
  */
 void wavefront_report_lite(
     FILE* const stream,
-    wavefront_aligner_t* const wf_aligner,
-    const bool subalignment) {
+    wavefront_aligner_t* const wf_aligner) {
   // Parameters
   const char* const pattern = wf_aligner->pattern;
   const int pattern_length = wf_aligner->pattern_length;
@@ -132,17 +132,22 @@ void wavefront_report_lite(
   // Banner
   fprintf(stream,"[WFA::Debug]");
   // Sequences
-  fprintf(stream,"\t%d",-wf_aligner->cigar.score);
+  const int score = wavefront_compute_classic_score(
+      wf_aligner,wf_aligner->pattern_length,
+      wf_aligner->text_length,wf_aligner->cigar->score);
+  fprintf(stream,"\t%d",score);
   fprintf(stream,"\t%d\t%d",pattern_length,text_length);
   fprintf(stream,"\t%s",(status==0) ? "OK" : "FAIL");
   fprintf(stream,"\t%2.3f",TIMER_GET_TOTAL_MS(&wf_aligner->system.timer));
   fprintf(stream,"\t%luMB\t",CONVERT_B_TO_MB(memory_used));
-  fprintf(stream,"(%s",(subalignment) ? "SubWFA" : ((wf_aligner->bidirectional_alignment) ? "BiWFA" : "WFA"));
-  fprintf(stream,",%s",(wf_aligner->alignment_scope == compute_score) ? "score" : "alignment");
-  fprintf(stream,",%s,",(wf_aligner->alignment_form.span == alignment_end2end) ? "end2end" : "endsfree");
-  wavefronts_penalties_print(stream,&wf_aligner->penalties);
-  fprintf(stream,")\t");
-  cigar_print(stream,&wf_aligner->cigar,true);
+  fprintf(stream,"[");
+  wavefront_aligner_print_type(stream,wf_aligner);
+  fprintf(stream,",");
+  wavefront_aligner_print_scope(stream,wf_aligner);
+  fprintf(stream,",");
+  wavefront_penalties_print(stream,&wf_aligner->penalties);
+  fprintf(stream,"]\t");
+  cigar_print(stream,wf_aligner->cigar,true);
   if (wf_aligner->match_funct != NULL) {
     fprintf(stream,"\t-\t-");
   } else {
@@ -156,42 +161,31 @@ void wavefront_report_verbose_begin(
     const char* const pattern,
     const int pattern_length,
     const char* const text,
-    const int text_length,
-    const bool subalignment) {
+    const int text_length) {
   // Input sequences
-  fprintf(stream,"[WFA::Debug] [%s]-Alignment (obj=%p)\n",
-      (subalignment) ? "SubWFA" : ((wf_aligner->bidirectional_alignment) ? "BiWFA" : "WFA"),wf_aligner);
+  fprintf(stream,"[WFA::Report::Begin] [");
+  wavefront_aligner_print_type(stream,wf_aligner);
+  fprintf(stream,"]-Alignment (obj=%p)\n",wf_aligner);
   if (wf_aligner->match_funct != NULL) {
-    fprintf(stream,"[WFA::Debug]\tPattern\t%d\tcustom-funct()\n",pattern_length);
-    fprintf(stream,"[WFA::Debug]\tText\t%d\tcustom-funct()\n",text_length);
+    fprintf(stream,"[WFA::Report]\tPattern\t%d\tcustom-funct()\n",pattern_length);
+    fprintf(stream,"[WFA::Report]\tText\t%d\tcustom-funct()\n",text_length);
   } else {
-    fprintf(stream,"[WFA::Debug]\tPattern\t%d\t%.*s\n",pattern_length,pattern_length,pattern);
-    fprintf(stream,"[WFA::Debug]\tText\t%d\t%.*s\n",text_length,text_length,text);
+    fprintf(stream,"[WFA::Report]\tPattern\t%d\t%.*s\n",pattern_length,pattern_length,pattern);
+    fprintf(stream,"[WFA::Report]\tText\t%d\t%.*s\n",text_length,text_length,text);
   }
   // Alignment scope/form
-  fprintf(stream,"[WFA::Debug]\tScope\t%s\n",
-      (wf_aligner->alignment_scope == compute_score) ? "score" : "alignment");
-  if (wf_aligner->alignment_form.span == alignment_end2end) {
-    fprintf(stream,"[WFA::Debug]\tForm\t(end2end)\n");
-  } else {
-    fprintf(stream,"[WFA::Debug]\tForm\t(endsfree,%d,%d,%d,%d)\n",
-        wf_aligner->alignment_form.pattern_begin_free,
-        wf_aligner->alignment_form.pattern_end_free,
-        wf_aligner->alignment_form.text_begin_free,
-        wf_aligner->alignment_form.text_end_free);
-  }
-  fprintf(stream,"[WFA::Debug]\tMax-score\t%d\n",
+  fprintf(stream,"[WFA::Report]\tScope=");
+  wavefront_aligner_print_scope(stream,wf_aligner);
+  fprintf(stream," Max-score=%d",
       wf_aligner->system.max_alignment_score);
   // Penalties
-  fprintf(stream,"[WFA::Debug]\tPenalties\t");
-  wavefronts_penalties_print(stream,&wf_aligner->penalties);
-  fprintf(stream,"\n");
+  fprintf(stream," Penalties=");
+  wavefront_penalties_print(stream,&wf_aligner->penalties);
   // Heuristic
-  fprintf(stream,"[WFA::Debug]\tHeuristic\t");
+  fprintf(stream," Heuristic=");
   wavefront_heuristic_print(stream,&wf_aligner->heuristic);
-  fprintf(stream,"\n");
   // Memory mode
-  fprintf(stream,"[WFA::Debug]\tMemory.mode\t(%d,%luMB,%luMB,%luMB)\n",
+  fprintf(stream," Memory.mode=(%d,%luMB,%luMB,%luMB)\n",
       wf_aligner->memory_mode,
       CONVERT_B_TO_MB(wf_aligner->system.max_memory_compact),
       CONVERT_B_TO_MB(wf_aligner->system.max_memory_resident),
@@ -201,20 +195,22 @@ void wavefront_report_verbose_end(
     FILE* const stream,
     wavefront_aligner_t* const wf_aligner) {
   // Finish report
-  fprintf(stream,"[WFA::Debug]\tFinish.status\t%d\n",wf_aligner->align_status.status);
-  fprintf(stream,"[WFA::Debug]\tTime.taken\t");
+  fprintf(stream,"[WFA::Report::End]\tFinish.status=%d",wf_aligner->align_status.status);
+  fprintf(stream," Time.taken=");
   timer_print_total(stream,&wf_aligner->system.timer);
-  fprintf(stream,"\n");
-  fprintf(stream,"[WFA::Debug]\tMemory.used\t%luMB\n",
+  fprintf(stream," Memory.used=%luMB",
       CONVERT_B_TO_MB(wf_aligner->align_status.memory_used));
-  fprintf(stream,"[WFA::Debug]\tWFA.score\t%d\n",-(wf_aligner->cigar.score));
-  fprintf(stream,"[WFA::Debug]\tWFA.cigar\t");
-  cigar_print(stream,&wf_aligner->cigar,true);
-  fprintf(stream,"\n");
-  fprintf(stream,"[WFA::Debug]\tWFA.components (wfs=%d,maxlo=%d,maxhi=%d)\n",
+  fprintf(stream," WFA.components=(wfs=%d,maxlo=%d,maxhi=%d)",
       wf_aligner->wf_components.num_wavefronts,
       wf_aligner->wf_components.historic_min_lo,
       wf_aligner->wf_components.historic_max_hi);
+  const int score = wavefront_compute_classic_score(
+      wf_aligner,wf_aligner->pattern_length,
+      wf_aligner->text_length,wf_aligner->cigar->score);
+  fprintf(stream," WFA.score=%d",score);
+  fprintf(stream," WFA.cigar=");
+  cigar_print(stream,wf_aligner->cigar,true);
+  fprintf(stream,"\n");
 }
 /*
  * Debug
@@ -224,36 +220,38 @@ void wavefront_debug_prologue(
     const char* const pattern,
     const int pattern_length,
     const char* const text,
-    const int text_length,
-    const bool subalignment) {
+    const int text_length) {
   // Check verbose level
-  if (wf_aligner->system.verbose >= 2) {
+  if (wf_aligner->system.verbose >= 1) {
     timer_start(&wf_aligner->system.timer);
-    if (wf_aligner->system.verbose > 2) {
+    if (wf_aligner->system.verbose >= 4) {
       wavefront_report_verbose_begin(stderr,wf_aligner,
-          pattern,pattern_length,text,text_length,subalignment);
+          pattern,pattern_length,text,text_length);
     }
   }
 }
 void wavefront_debug_epilogue(
-    wavefront_aligner_t* const wf_aligner,
-    const bool subalignment) {
+    wavefront_aligner_t* const wf_aligner) {
   // Print Summary
-  if (wf_aligner->system.verbose >= 2) {
+  if (wf_aligner->system.verbose >= 1) {
     timer_stop(&wf_aligner->system.timer);
-    if (wf_aligner->system.verbose == 2) {
-      wavefront_report_lite(stderr,wf_aligner,subalignment);
-    } else {
+    if (wf_aligner->system.verbose >= 4) {
       wavefront_report_verbose_end(stderr,wf_aligner);
     }
+    wavefront_report_lite(stderr,wf_aligner);
   }
+}
+/*
+ * Check
+ */
+void wavefront_debug_check_correct(
+    wavefront_aligner_t* const wf_aligner) {
   // Check correct
   if (wf_aligner->system.check_alignment_correct &&
       wf_aligner->align_status.status == WF_STATUS_SUCCESSFUL &&
       wf_aligner->alignment_scope == compute_alignment) {
     if (!wavefront_check_alignment(stderr,wf_aligner)) {
-      fprintf(stderr,"[WFA::Check] Alignment incorrect\n");
-      wavefront_report_verbose_end(stderr,wf_aligner);
+      fprintf(stderr,"[WFA::Check] Error: Alignment incorrect\n");
       exit(1);
     }
   }

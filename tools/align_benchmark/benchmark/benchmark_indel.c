@@ -48,11 +48,11 @@ void benchmark_indel_wavefront(
   timer_stop(&align_input->timer);
   // DEBUG
   if (align_input->debug_flags) {
-    benchmark_check_alignment(align_input,&wf_aligner->cigar);
+    benchmark_check_alignment(align_input,wf_aligner->cigar);
   }
   // Output
   if (align_input->output_file) {
     const int score_only = (wf_aligner->alignment_scope == compute_score);
-    benchmark_print_output(align_input,indel,score_only,&wf_aligner->cigar);
+    benchmark_print_output(align_input,indel,score_only,wf_aligner->cigar);
   }
 }

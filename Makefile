@@ -5,6 +5,7 @@ FOLDER_BIN=bin
 FOLDER_BUILD=build
 FOLDER_BUILD_CPP=build/cpp
 FOLDER_LIB=lib
+FOLDER_TESTS=tests
 
 UNAME=$(shell uname)
 
@@ -17,7 +18,7 @@ AR=ar
 AR_FLAGS=-rsc
 
 ifndef BUILD_EXAMPLES 
-BUILD_EXAMPLES=0
+BUILD_EXAMPLES=1
 endif
 ifndef BUILD_TOOLS 
 BUILD_TOOLS=1
@@ -73,9 +74,10 @@ lib_wfa: $(SUBDIRS)
 	$(AR) $(AR_FLAGS) $(LIB_WFA_CPP) $(FOLDER_BUILD)/*.o $(FOLDER_BUILD_CPP)/*.o 2> /dev/null
 
 clean:
-	rm -rf $(FOLDER_BIN) $(FOLDER_BUILD) $(FOLDER_LIB)
+	rm -rf $(FOLDER_BIN) $(FOLDER_BUILD) $(FOLDER_LIB) 2> /dev/null
 	$(MAKE) --directory=tools/align_benchmark clean
 	$(MAKE) --directory=examples clean
+	rm -rf $(FOLDER_TESTS)/*.alg $(FOLDER_TESTS)/*.log* 2> /dev/null
 	
 ###############################################################################
 # Subdir rule

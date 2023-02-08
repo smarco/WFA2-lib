@@ -25,7 +25,6 @@
 #ifndef EDIT_BPM_H_
 #define EDIT_BPM_H_
 
-#include "utils/commons.h"
 #include "alignment/cigar.h"
 #include "system/mm_allocator.h"
 
@@ -56,7 +55,7 @@ typedef struct {
   uint64_t min_score;
   uint64_t min_score_column;
   // CIGAR
-  cigar_t cigar;
+  cigar_t* cigar;
 } bpm_matrix_t;
 
 /*

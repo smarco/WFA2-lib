@@ -29,21 +29,9 @@
  * DESCRIPTION: WaveFront alignment module for sequence pairwise alignment
  */
 
-#ifndef WAVEFRONT_ALIGN_H_
-#define WAVEFRONT_ALIGN_H_
+#pragma once
 
 #include "wavefront_aligner.h"
-#include "wavefront_display.h" // For convenience
-
-/*
- * Initialize alignment
- */
-void wavefront_align_end2end_initialize(
-    wavefront_aligner_t* const wf_aligner);
-void wavefront_align_endsfree_initialize(
-    wavefront_aligner_t* const wf_aligner,
-    const int pattern_length,
-    const int text_length);
 
 /*
  * Wavefront Alignment
@@ -56,5 +44,3 @@ int wavefront_align(
     const int text_length);
 int wavefront_align_resume(
     wavefront_aligner_t* const wf_aligner);
-
-#endif /* WAVEFRONT_ALIGN_H_ */

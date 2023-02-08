@@ -35,3 +35,9 @@ build/
 *.out
 *.app
 
+# Test output files
+tests/wfa.utest.log.correct
+tests/wfa.utest.log.mem
+tests/wfa.utest.log.time
+
+
