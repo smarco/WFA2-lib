@@ -150,6 +150,20 @@ add_library(wfa2 SHARED ${wfa2lib_SOURCE})
 set_target_properties(wfa2_static PROPERTIES OUTPUT_NAME wfa2)
 set_target_properties(wfa2 PROPERTIES SOVERSION 0)
 
+# ---- C++ binding library
+
+set(wfa2cpp_SOURCE
+  bindings/cpp/WFAligner.cpp
+)
+file(GLOB CPP_INCLUDES
+  bindings/cpp/*.h*
+  )
+add_library(wfa2cpp_static STATIC ${wfa2cpp_SOURCE})
+add_library(wfa2cpp SHARED ${wfa2cpp_SOURCE})
+set_target_properties(wfa2cpp PROPERTIES SOVERSION 0)
+set_target_properties(wfa2cpp_static PROPERTIES OUTPUT_NAME wfa2cpp)
+target_link_libraries(wfa2cpp PUBLIC wfa2)
+target_link_libraries(wfa2cpp_static PUBLIC wfa2)
 
 # ---- Get version
 
@@ -188,3 +202,7 @@ install(FILES ${INCLUDES} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/wfa2lib/wavefr
 install(FILES ${UTILS_INCLUDES} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/wfa2lib/utils)
 install(FILES ${ALIGNMENT_INCLUDES} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/wfa2lib/alignment)
 install(FILES ${SYSTEM_INCLUDES} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/wfa2lib/system)
+
+install(TARGETS wfa2cpp ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(TARGETS wfa2cpp_static ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(FILES ${CPP_INCLUDES} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/wfa2lib/bindings/cpp)
