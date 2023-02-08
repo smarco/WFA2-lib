@@ -147,6 +147,8 @@ set_target_properties(wfa2_static PROPERTIES OUTPUT_NAME wfa2)
 set_target_properties(wfa2 PROPERTIES SOVERSION 0)
 target_include_directories(wfa2 PUBLIC . wavefront utils)
 target_include_directories(wfa2_static PUBLIC . wavefront utils)
+add_library(wfa2::wfa2 ALIAS wfa2)
+add_library(wfa2::wfa2_static ALIAS wfa2_static)
 
 # ---- C++ binding library
 
@@ -162,6 +164,8 @@ set_target_properties(wfa2cpp PROPERTIES SOVERSION 0)
 set_target_properties(wfa2cpp_static PROPERTIES OUTPUT_NAME wfa2cpp)
 target_link_libraries(wfa2cpp PUBLIC wfa2)
 target_link_libraries(wfa2cpp_static PUBLIC wfa2)
+add_library(wfa2::wfa2cpp ALIAS wfa2cpp)
+add_library(wfa2::wfa2cpp_static ALIAS wfa2cpp_static)
 
 # ---- Get version
 
