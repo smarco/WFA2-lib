@@ -235,15 +235,10 @@ FORCE_NO_INLINE void wavefront_extend_matches_packed_end2end(
   wf_offset_t* const offsets = mwavefront->offsets;
   int k_min = lo;
   int k_max = hi;
-  const int pattern_length = wf_aligner->pattern_length;
-  const int text_length = wf_aligner->text_length;
   const char* pattern = wf_aligner->pattern;
   const char* text = wf_aligner->text;
 
-  // Extend diagonally each wavefront point
-  int k;
-
-  const __m256i vector_null = _mm256_set1_epi32(WAVEFRONT_OFFSET_NULL);
+  const __m256i vector_null = _mm256_set1_epi32(-1);
   const __m256i fours = _mm256_set1_epi32(4);
   const __m256i eights = _mm256_set1_epi32(8);
   const __m256i vecShuffle = _mm256_set_epi8(28,29,30,31,24,25,26,27,
@@ -256,42 +251,14 @@ FORCE_NO_INLINE void wavefront_extend_matches_packed_end2end(
   int num_of_diagonals = k_max-k_min+1;
   int loop_peeling_iters = num_of_diagonals%elems_per_register;
 
-  for(int i=k_min;i<k_min+loop_peeling_iters;i++){
-    const uint32_t v = offsets[i] - i; // Make unsigned to avoid checking negative
-    if (v >= pattern_length) continue;
-    const uint32_t h = offsets[i]; // Make unsigned to avoid checking negative
-    if (h >= text_length) continue;
-
-    // Fetch pattern/text blocks
-    uint64_t* pattern_blocks = (uint64_t*)(pattern+v);
-    uint64_t* text_blocks = (uint64_t*)(text+h);
-    uint64_t pattern_block = *pattern_blocks;
-    uint64_t text_block = *text_blocks;
-    // Compare 64-bits blocks
-    uint64_t cmp = pattern_block ^ text_block;
-
-    while (__builtin_expect(!cmp,0)) {
-      // Increment offset (full block)
-      offsets[i] += 8;
-      // Next blocks
-      ++pattern_blocks;
-      ++text_blocks;
-      // Fetch
-      pattern_block = *pattern_blocks;
-      text_block = *text_blocks;
-
-      // Compare
-      cmp = pattern_block ^ text_block;
-    }
-
-    // Count equal characters
-    const int equal_right_bits = __builtin_ctzl(cmp);
-    const int equal_chs = DIV_FLOOR(equal_right_bits,8);
-
-    offsets[i] += equal_chs;
+  for(int k=k_min;k<k_min+loop_peeling_iters;k++){
+    const wf_offset_t offset = offsets[k];
+    if (offset < 0) continue;
+    // Extend offset
+    offsets[k] = wavefront_extend_matches_packed_kernel(wf_aligner,k,offset);
   }
 
-  if (num_of_diagonals <= 8) return;
+  if (num_of_diagonals < elems_per_register) return;
 
   k_min+=loop_peeling_iters;
 
@@ -299,16 +266,16 @@ FORCE_NO_INLINE void wavefront_extend_matches_packed_end2end(
                                  k_min+2,k_min+1,k_min);
 
   // Main SIMD extension loop
-  for (k=k_min;k<=k_max;k+=elems_per_register) {
+  for (int k=k_min;k<=k_max;k+=elems_per_register) {
     __m256i offsets_vector = _mm256_lddqu_si256 ((__m256i*)&offsets[k]);
     __m256i h_vector = offsets_vector;
     __m256i v_vector = _mm256_sub_epi32(offsets_vector, ks);
     ks =_mm256_add_epi32 (ks, eights);
 
     // NULL offsets will read at index 0 (avoid segfaults)
-    __m256i null_mask = _mm256_cmpeq_epi32(offsets_vector, vector_null);
-    v_vector = _mm256_andnot_si256(null_mask, v_vector);
-    h_vector = _mm256_andnot_si256(null_mask, h_vector);
+    __m256i null_mask = _mm256_cmpgt_epi32(offsets_vector, vector_null);
+    v_vector = _mm256_and_si256(null_mask, v_vector);
+    h_vector = _mm256_and_si256(null_mask, h_vector);
 
     __m256i pattern_vector = _mm256_i32gather_epi32((int const*)&pattern[0],v_vector, 1);
     __m256i text_vector = _mm256_i32gather_epi32((int const*)&text[0],h_vector, 1);
@@ -342,38 +309,12 @@ FORCE_NO_INLINE void wavefront_extend_matches_packed_end2end(
       int tz = __builtin_ctz(mask);
       int curr_k = k + (tz/4);
 
-      const uint32_t v = offsets[curr_k] - (curr_k); // Make unsigned to avoid checking negative
-      const uint32_t h = offsets[curr_k]; // Make unsigned to avoid checking negative
+      const wf_offset_t offset = offsets[curr_k];
+      if (offset >= 0) {
+        // Extend offset
+        offsets[curr_k] = wavefront_extend_matches_packed_kernel(wf_aligner,curr_k,offset);
+      } else offsets[curr_k] = WAVEFRONT_OFFSET_NULL;
 
-      if ((v < pattern_length) && (h < text_length)) {
-        // Fetch pattern/text blocks
-        uint64_t* pattern_blocks = (uint64_t*)(pattern+v);
-        uint64_t* text_blocks = (uint64_t*)(text+h);
-        uint64_t pattern_block = *pattern_blocks;
-        uint64_t text_block = *text_blocks;
-        // Compare 64-bits blocks
-        uint64_t cmp = pattern_block ^ text_block;
-
-        while (__builtin_expect(!cmp,0)) {
-          // Increment offset (full block)
-          offsets[curr_k] += 8;
-          // Next blocks
-          ++pattern_blocks;
-          ++text_blocks;
-          // Fetch
-          pattern_block = *pattern_blocks;
-          text_block = *text_blocks;
-
-          // Compare
-          cmp = pattern_block ^ text_block;
-        }
-
-        // Count equal characters
-        const int equal_right_bits = __builtin_ctzl(cmp);
-        const int equal_chs = DIV_FLOOR(equal_right_bits,8);
-
-        offsets[curr_k] += equal_chs;
-      }
       mask &= (0xfffffff0 << tz);
     }
   }
