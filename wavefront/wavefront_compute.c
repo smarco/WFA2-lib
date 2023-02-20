@@ -29,6 +29,8 @@
  * DESCRIPTION: WaveFront alignment module for computing wavefronts
  */
 
+#include "utils/commons.h"
+#include "system/mm_allocator.h"
 #include "alignment/affine2p_penalties.h"
 #include "wavefront_compute.h"
 

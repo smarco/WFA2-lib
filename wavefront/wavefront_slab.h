@@ -32,7 +32,6 @@
 #ifndef WAVEFRONT_SLAB_H_
 #define WAVEFRONT_SLAB_H_
 
-#include "utils/commons.h"
 #include "utils/vector.h"
 #include "system/mm_allocator.h"
 #include "wavefront.h"

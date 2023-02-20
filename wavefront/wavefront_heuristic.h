@@ -32,8 +32,6 @@
 #ifndef WAVEFRONT_HEURISTIC_H_
 #define WAVEFRONT_HEURISTIC_H_
 
-#include "utils/commons.h"
-
 // Wavefront ahead definition
 typedef struct _wavefront_aligner_t wavefront_aligner_t;
 

@@ -29,6 +29,7 @@
  * DESCRIPTION: WaveFront aligner data structure attributes
  */
 
+#include "utils/commons.h"
 #include "wavefront_attributes.h"
 
 /*

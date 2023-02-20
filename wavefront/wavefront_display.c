@@ -29,6 +29,8 @@
  * DESCRIPTION: WaveFront-Alignment module for display and report
  */
 
+#include "utils/commons.h"
+#include "system/mm_allocator.h"
 #include "wavefront_display.h"
 #include "wavefront_aligner.h"
 #include "wavefront_compute.h"

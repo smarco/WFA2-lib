@@ -30,6 +30,8 @@
  *   pairwise alignment (Smith-Waterman-Gotoh - SWG)
  */
 
+#include "utils/commons.h"
+#include "system/mm_allocator.h"
 #include "gap_affine/swg.h"
 
 /*

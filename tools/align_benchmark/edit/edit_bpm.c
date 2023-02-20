@@ -22,6 +22,8 @@
  * DESCRIPTION: Edit-Distance based BPM alignment algorithm
  */
 
+#include "utils/commons.h"
+#include "system/mm_allocator.h"
 #include "edit/edit_bpm.h"
 #include "utils/dna_text.h"
 

@@ -29,6 +29,7 @@
  * DESCRIPTION: WFA Sample-Code
  */
 
+#include "utils/commons.h"
 #include "wavefront/wavefront_align.h"
 
 int main(int argc,char* argv[]) {

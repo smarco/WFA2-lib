@@ -28,6 +28,8 @@
  * AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
  */
 
+#include "utils/commons.h"
+#include "system/mm_allocator.h"
 #include "wavefront_unialign.h"
 #include "wavefront.h"
 #include "wavefront_attributes.h"
@@ -329,4 +331,3 @@ void wavefront_unialign_print_status(
       CONVERT_B_TO_MB(bt_buffer_used),
       million_offsets);
 }
-

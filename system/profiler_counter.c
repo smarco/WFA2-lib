@@ -30,6 +30,7 @@
  * DESCRIPTION: Simple profile counter
  */
 
+#include "utils/commons.h"
 #include "profiler_counter.h"
 
 /*

@@ -30,6 +30,7 @@
  * DESCRIPTION: Simple time profiler
  */
 
+#include "utils/commons.h"
 #include "profiler_timer.h"
 
 #ifdef __MACH__

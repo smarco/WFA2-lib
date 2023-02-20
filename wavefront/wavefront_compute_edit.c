@@ -29,6 +29,8 @@
  * DESCRIPTION: WaveFront alignment module for computing wavefronts (edit/indel)
  */
 
+#include "utils/commons.h"
+#include "system/mm_allocator.h"
 #include "wavefront_compute.h"
 #include "wavefront_backtrace_offload.h"
 
@@ -370,5 +372,3 @@ void wavefront_compute_edit(
     wavefront_compute_edit_exact_prune(wf_aligner,wf_curr);
   }
 }
-
-

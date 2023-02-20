@@ -26,29 +26,11 @@
  *
  * PROJECT: Wavefront Alignment Algorithms
  * AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
- * DESCRIPTION: Gap-Affine penalties
+ * DESCRIPTION: WaveFront aligner external C-ABI functions with accompanying data structures
  */
 
-#ifndef AFFINE_PENALTIES_H_
-#define AFFINE_PENALTIES_H_
+#pragma once
 
-/*
- * Affine penalties
- */
-typedef struct {
-  int match;              // (Penalty representation; usually M <= 0)
-  int mismatch;           // (Penalty representation; usually X > 0)
-  int gap_opening;        // (Penalty representation; usually O > 0)
-  int gap_extension;      // (Penalty representation; usually E > 0)
-} affine_penalties_t;
-
-/*
- * Affine matrix-type (for backtrace)
- */
-typedef enum {
-  affine_matrix_M,
-  affine_matrix_I,
-  affine_matrix_D,
-} affine_matrix_type;
-
-#endif /* AFFINE_PENALTIES_H_ */
+extern "C" {
+  #include "wfa.h"
+}

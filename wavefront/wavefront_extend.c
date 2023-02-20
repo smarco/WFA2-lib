@@ -29,6 +29,8 @@
  * DESCRIPTION: WFA module for the "extension" of exact matches
  */
 
+#include "utils/commons.h"
+#include "system/mm_allocator.h"
 #include "wavefront_extend.h"
 #include "wavefront_extend_kernels.h"
 #include "wavefront_compute.h"

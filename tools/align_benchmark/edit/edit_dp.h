@@ -32,7 +32,6 @@
 #ifndef EDIT_DP_H_
 #define EDIT_DP_H_
 
-#include "utils/commons.h"
 #include "alignment/score_matrix.h"
 
 /*

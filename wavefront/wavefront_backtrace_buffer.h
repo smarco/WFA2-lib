@@ -33,7 +33,6 @@
 #define WAVEFRONT_BACKTRACE_BUFFER_H_
 
 #include "alignment/cigar.h"
-#include "utils/commons.h"
 #include "utils/vector.h"
 #include "utils/bitmap.h"
 #include "system/mm_allocator.h"

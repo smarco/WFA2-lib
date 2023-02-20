@@ -32,6 +32,7 @@
  *   and dispatching memory segments in order.
  */
 
+#include "utils/commons.h"
 #include "mm_allocator.h"
 
 /*

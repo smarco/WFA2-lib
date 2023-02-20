@@ -29,6 +29,7 @@
  * DESCRIPTION: WaveFront aligner components
  */
 
+#include "utils/commons.h"
 #include "wavefront_components.h"
 #include "utils/bitmap.h"
 #include "system/profiler_timer.h"
@@ -459,4 +460,3 @@ void wavefront_components_compact_bt_buffer(
     fprintf(stderr,"]\n");
   }
 }
-

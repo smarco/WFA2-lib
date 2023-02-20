@@ -34,9 +34,7 @@
 
 #include <string>
 
-extern "C" {
-  #include "../../wavefront/wavefront_aligner.h"
-}
+#include "../../wavefront/wfa.hpp"
 
 /*
  * Namespace

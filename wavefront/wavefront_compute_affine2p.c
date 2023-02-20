@@ -29,6 +29,8 @@
  * DESCRIPTION: WaveFront alignment module for computing wavefronts (gap-affine-2p)
  */
 
+#include "utils/commons.h"
+#include "system/mm_allocator.h"
 #include "wavefront_compute.h"
 #include "wavefront_compute_affine.h"
 #include "wavefront_backtrace_offload.h"

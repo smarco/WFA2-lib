@@ -29,6 +29,7 @@
  * DESCRIPTION: WaveFront-Alignment module for backtracing alignments
  */
 
+#include "utils/commons.h"
 #include "wavefront_backtrace.h"
 
 /*

@@ -29,6 +29,8 @@
  * DESCRIPTION: Packed CIGAR (Alignment operations in 2-bits)
  */
 
+#include "utils/commons.h"
+#include "system/mm_allocator.h"
 #include "wavefront_pcigar.h"
 
 /*

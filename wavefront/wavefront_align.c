@@ -29,6 +29,7 @@
  * DESCRIPTION: WaveFront alignment module for sequence pairwise alignment
  */
 
+#include "utils/commons.h"
 #include "wavefront_align.h"
 #include "wavefront_unialign.h"
 #include "wavefront_bialign.h"

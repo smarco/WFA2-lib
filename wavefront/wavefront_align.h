@@ -29,8 +29,7 @@
  * DESCRIPTION: WaveFront alignment module for sequence pairwise alignment
  */
 
-#ifndef WAVEFRONT_ALIGN_H_
-#define WAVEFRONT_ALIGN_H_
+#pragma once
 
 #include "wavefront_aligner.h"
 
@@ -55,5 +54,3 @@ int wavefront_align_packed2bits(
     const int pattern_length,
     const uint8_t* const text,
     const int text_length);
-
-#endif /* WAVEFRONT_ALIGN_H_ */

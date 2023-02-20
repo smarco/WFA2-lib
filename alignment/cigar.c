@@ -29,6 +29,7 @@
  * DESCRIPTION: Edit cigar data-structure (match/mismatch/insertion/deletion)
  */
 
+#include "utils/commons.h"
 #include "cigar.h"
 
 /*

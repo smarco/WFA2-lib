@@ -31,7 +31,6 @@
 #ifndef WAVEFRONT_BIALIGN_H_
 #define WAVEFRONT_BIALIGN_H_
 
-#include "utils/commons.h"
 #include "wavefront_aligner.h"
 
 /*
