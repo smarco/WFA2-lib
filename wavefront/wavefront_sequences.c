@@ -66,7 +66,7 @@ void wavefront_sequences_init_allocate(
     const int pattern_length,
     const int text_length) {
   // Compute dimensions
-  const int buffer_size = pattern_length + text_length + 2*WF_SEQUENCES_PADDING;
+  const int buffer_size = pattern_length + text_length + 3*WF_SEQUENCES_PADDING;
   // Check internal buffer allocated
   if (wf_sequences->seq_buffer_allocated < buffer_size) {
     // Free
@@ -77,8 +77,8 @@ void wavefront_sequences_init_allocate(
     wf_sequences->seq_buffer_allocated = proposed_size;
   }
   // Assign memory
-  wf_sequences->pattern_buffer = wf_sequences->seq_buffer;
-  wf_sequences->text_buffer = wf_sequences->seq_buffer + pattern_length + WF_SEQUENCES_PADDING;
+  wf_sequences->pattern_buffer = wf_sequences->seq_buffer + WF_SEQUENCES_PADDING;
+  wf_sequences->text_buffer = wf_sequences->seq_buffer + WF_SEQUENCES_PADDING + pattern_length + WF_SEQUENCES_PADDING;
 }
 void wavefront_sequences_init_copy(
     char* const buffer_dst,
@@ -97,7 +97,45 @@ void wavefront_sequences_init_copy(
     memcpy(buffer_dst,sequence,sequence_length);
   }
   // Add end padding
-  // memset(buffer_dst+sequence_length,padding_value,padding_length);
+  buffer_dst[sequence_length] = padding_value;
+}
+void wavefront_sequences_init_decode2bits(
+    char* const buffer_dst,
+    const uint8_t* const sequence,
+    const int sequence_length,
+    const int padding_length,
+    const char padding_value,
+    const bool reverse) {
+  // Parameters
+  const char dna_packed2bits_decode[4] = {'A','C','G','T'};
+  // Compute dimensions
+  const int num_words = DIV_CEIL(sequence_length,8);
+  int buffer_pos = (reverse) ? sequence_length-1 : 0;
+  // Decode and copy sequence
+  int word_num;
+  for (word_num=0;word_num<num_words;++word_num) {
+    // Fetch next word
+    const uint8_t word = sequence[word_num];
+    // Decode 4 letters packed
+    const char letter0 = dna_packed2bits_decode[(word    & 3)];
+    const char letter1 = dna_packed2bits_decode[(word>>2 & 3)];
+    const char letter2 = dna_packed2bits_decode[(word>>4 & 3)];
+    const char letter3 = dna_packed2bits_decode[(word>>6 & 3)];
+    if (reverse) {
+      buffer_dst[buffer_pos  ] = letter0;
+      buffer_dst[buffer_pos-1] = letter1;
+      buffer_dst[buffer_pos-2] = letter2;
+      buffer_dst[buffer_pos-3] = letter3;
+      buffer_pos -= 4;
+    } else {
+      buffer_dst[buffer_pos  ] = letter0;
+      buffer_dst[buffer_pos+1] = letter1;
+      buffer_dst[buffer_pos+2] = letter2;
+      buffer_dst[buffer_pos+3] = letter3;
+      buffer_pos += 4;
+    }
+  }
+  // Add end padding
   buffer_dst[sequence_length] = padding_value;
 }
 void wavefront_sequences_init_ascii(
@@ -158,10 +196,28 @@ void wavefront_sequences_init_packed2bits(
     const uint8_t* const text,
     const int text_length,
     const bool reverse) {
-  // TODO
-  // TODO
-  // TODO
-  // TODO
+  // Mode
+  wf_sequences->mode = wf_sequences_ascii;
+  wf_sequences->reverse = reverse;
+  // Allocate buffers
+  wavefront_sequences_init_allocate(wf_sequences,pattern_length,text_length);
+  // Copy internal sequences
+  wavefront_sequences_init_decode2bits(wf_sequences->pattern_buffer,
+      pattern,pattern_length,WF_SEQUENCES_PADDING,WF_SEQUENCES_PATTERN_EOS,reverse);
+  wf_sequences->pattern_buffer_length = pattern_length;
+  wavefront_sequences_init_decode2bits(wf_sequences->text_buffer,
+      text,text_length,WF_SEQUENCES_PADDING,WF_SEQUENCES_TEXT_EOS,reverse);
+  wf_sequences->text_buffer_length = text_length;
+  // Set pattern
+  wf_sequences->pattern = wf_sequences->pattern_buffer;
+  wf_sequences->pattern_begin = 0;
+  wf_sequences->pattern_length = pattern_length;
+  wf_sequences->pattern_eos = wf_sequences->pattern[pattern_length];
+  // Set text
+  wf_sequences->text = wf_sequences->text_buffer;
+  wf_sequences->text_begin = 0;
+  wf_sequences->text_length = text_length;
+  wf_sequences->text_eos = wf_sequences->text[text_length];
 }
 /*
  * Accessors
