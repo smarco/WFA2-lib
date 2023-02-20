@@ -175,25 +175,19 @@ bool wavefront_sequences_cmp(
     // Custom function to compare sequences
     alignment_match_funct_t match_funct = wf_sequences->match_funct;
     void* match_funct_arguments = wf_sequences->match_funct_arguments;
-    // Compare using lambda
+    // Check coordinates (EOS)
+    const int pattern_length = wf_sequences->pattern_length;
+    const int text_length = wf_sequences->text_length;
+    if (pattern_pos >= pattern_length || text_pos >= text_length) return false;
+    // Compare using lambda (given coordinates)
+    const int pattern_begin = wf_sequences->pattern_begin;
+    const int text_begin = wf_sequences->text_begin;
     if (wf_sequences->reverse) {
-      // Parameters
-      const int pattern_end = wf_sequences->pattern_begin + wf_sequences->pattern_length;
-      const int text_end = wf_sequences->text_begin + wf_sequences->text_length;
-      // Compare given coordinates
-      return match_funct(
-          wf_sequences->pattern_begin + (pattern_end-1-pattern_pos),
-          wf_sequences->text_begin + (text_end-1-text_pos),
-          match_funct_arguments);
+      const int pattern_end = pattern_begin + pattern_length - 1;
+      const int text_end = text_begin + text_length - 1;
+      return match_funct(pattern_end-pattern_pos,text_end-text_pos,match_funct_arguments);
     } else {
-      // Parameters
-      const int pattern_begin = wf_sequences->pattern_begin;
-      const int text_begin = wf_sequences->text_begin;
-      // Compare given coordinates
-      return match_funct(
-          wf_sequences->pattern_begin + pattern_begin + pattern_pos,
-          wf_sequences->text_begin + text_begin + text_pos,
-          match_funct_arguments);
+      return match_funct(pattern_begin+pattern_pos,text_begin+text_pos,match_funct_arguments);
     }
   } else {
     // Compare regular strings

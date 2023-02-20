@@ -66,7 +66,7 @@ int lambda_function(int v,int h,void* arguments) {
   // Extract parameters
   match_function_params_t* const match_arguments = (match_function_params_t*)arguments;
   // Check match
-  if (v > match_arguments->pattern_length || h > match_arguments->text_length) return 0;
+  if (v >= match_arguments->pattern_length || h >= match_arguments->text_length) return 0;
   return (match_arguments->pattern[v] == match_arguments->text[h]);
 }
 /*

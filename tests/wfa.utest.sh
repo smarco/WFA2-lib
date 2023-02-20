@@ -12,7 +12,7 @@ OUTPUT="./tests"
 LOG="./tests/wfa.utest.log"
 
 # Clear
-rm $OUTPUT/*.alg $OUTPUT/*.log*
+rm $OUTPUT/*.alg $OUTPUT/*.log* &> /dev/null
 
 # Run tests
 for opt in "--check=correct","test" \
@@ -90,7 +90,7 @@ STATUS_EXIT=$(grep "Exit status:" $LOG | grep -v "Exit status: 0" | sort | uniq 
 STATUS_SIGNAL=$(grep "Command terminated by signal" $LOG | sort | uniq -c | tr '\n' ' ')
 STATUS_CORRECT=$(cat $OUTPUT/wfa.utest.log.correct | awk '{print $5$6}' | sort | uniq -c | tr '\n' ' ')
 echo ">>> Correct: ExitStatus($STATUS_EXIT) Signal($STATUS_SIGNAL) Correct($STATUS_CORRECT)"
-if [[ $STATUS==0 && "$STATUS_EXIT"=="" && "$STATUS_SIGNAL"=="" ]]
+if [[ $STATUS -eq 0 && "$STATUS_EXIT"=="" && "$STATUS_SIGNAL"=="" ]]
 then
   echo -e ">>>\n>>> ALL GOOD!\n>>>"
 else
