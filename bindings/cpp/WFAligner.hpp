@@ -66,9 +66,6 @@ public:
     StatusOOM = WF_STATUS_OOM,
   };
   // Align End-to-end
-  AlignmentStatus alignEnd2EndLambda(
-      const int patternLength,
-      const int textLength);
   AlignmentStatus alignEnd2End(
       const char* const pattern,
       const int patternLength,
@@ -77,14 +74,12 @@ public:
   AlignmentStatus alignEnd2End(
       std::string& pattern,
       std::string& text);
-  // Align Ends-free
-  AlignmentStatus alignEndsFreeLambda(
+  AlignmentStatus alignEnd2EndLambda(
+      int (*matchFunct)(int,int,void*),
+      void* matchFunctArguments,
       const int patternLength,
-      const int patternBeginFree,
-      const int patternEndFree,
-      const int textLength,
-      const int textBeginFree,
-      const int textEndFree);
+      const int textLength);
+  // Align Ends-free
   AlignmentStatus alignEndsFree(
       const char* const pattern,
       const int patternLength,
@@ -101,8 +96,15 @@ public:
       std::string& text,
       const int textBeginFree,
       const int textEndFree);
-  // Alignment resume
-  AlignmentStatus alignResume();
+  AlignmentStatus alignEndsFreeLambda(
+      int (*matchFunct)(int,int,void*),
+      void* matchFunctArguments,
+      const int patternLength,
+      const int patternBeginFree,
+      const int patternEndFree,
+      const int textLength,
+      const int textBeginFree,
+      const int textEndFree);
   // Heuristics
   void setHeuristicNone();
   void setHeuristicBandedStatic(
@@ -126,10 +128,6 @@ public:
   void setHeuristicZDrop(
       const int zdrop,
       const int steps_between_cutoffs = 1);
-  // Custom extend-match function (lambda)
-  void setMatchFunct(
-      int (*matchFunct)(int,int,void*),
-      void* matchFunctArguments);
   // Limits
   void setMaxAlignmentScore(
       const int maxAlignmentScore);

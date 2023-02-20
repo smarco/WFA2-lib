@@ -38,4 +38,4 @@ rm $OUTPUT/*.log $OUTPUT/*.alg
 \time -v ./bin/align_benchmark -a $ALGORITHM -i ../data/sim.l100K.n1.e10.seq -o $OUTPUT/sim.l100K.e10.Wb.alg $BIWFA      &> $OUTPUT/sim.l100K.e10.Wb.log
 
 # Run the check
-./tests/wfa.utest.performance.cmp.sh tests/ tests/wfa.utest.performance.check/
+./tests/wfa.utest.cmp.sh tests/ tests/wfa.utest.performance.check/ --cmp-performance

@@ -42,9 +42,15 @@ void benchmark_indel_wavefront(
   wavefront_aligner_t* const wf_aligner = align_input->wf_aligner;
   // Align
   timer_start(&align_input->timer);
-  wavefront_align(wf_aligner,
-      align_input->pattern,align_input->pattern_length,
-      align_input->text,align_input->text_length);
+  if (align_input->wfa_match_funct == NULL) {
+    wavefront_align(wf_aligner,
+        align_input->pattern,align_input->pattern_length,
+        align_input->text,align_input->text_length);
+  } else {
+    wavefront_align_lambda(wf_aligner,
+        align_input->wfa_match_funct,align_input->wfa_match_funct_arguments,
+        align_input->pattern_length,align_input->text_length);
+  }
   timer_stop(&align_input->timer);
   // DEBUG
   if (align_input->debug_flags) {

@@ -48,8 +48,6 @@ wavefront_bialigner_t* wavefront_bialigner_new(
   subsidiary_attr.linear_penalties = attributes->linear_penalties;
   subsidiary_attr.affine_penalties = attributes->affine_penalties;
   subsidiary_attr.affine2p_penalties = attributes->affine2p_penalties;
-  subsidiary_attr.match_funct = attributes->match_funct;
-  subsidiary_attr.match_funct_arguments = attributes->match_funct_arguments;
   // Set specifics for subsidiary aligners
   subsidiary_attr.heuristic = attributes->heuristic; // Inherit same heuristic
   subsidiary_attr.memory_mode = wavefront_memory_high; // Classic WFA
@@ -85,6 +83,70 @@ void wavefront_bialigner_delete(
   free(wf_bialigner);
 }
 /*
+ * Sequences
+ */
+void wavefront_bialigner_set_sequences_ascii(
+    wavefront_bialigner_t* const wf_bialigner,
+    const char* const pattern,
+    const int pattern_length,
+    const char* const text,
+    const int text_length) {
+  wavefront_sequences_init_ascii(
+      &wf_bialigner->alg_forward->sequences,
+      pattern,pattern_length,text,text_length,false);
+  wavefront_sequences_init_ascii(
+      &wf_bialigner->alg_reverse->sequences,
+      pattern,pattern_length,text,text_length,true);
+  wavefront_sequences_init_ascii(
+      &wf_bialigner->alg_subsidiary->sequences,
+      pattern,pattern_length,text,text_length,false);
+}
+void wavefront_bialigner_set_sequences_lambda(
+    wavefront_bialigner_t* const wf_bialigner,
+    alignment_match_funct_t match_funct,
+    void* match_funct_arguments,
+    const int pattern_length,
+    const int text_length) {
+  wavefront_sequences_init_lambda(&wf_bialigner->alg_forward->sequences,
+      match_funct,match_funct_arguments,pattern_length,text_length,false);
+  wavefront_sequences_init_lambda(&wf_bialigner->alg_reverse->sequences,
+      match_funct,match_funct_arguments,pattern_length,text_length,true);
+  wavefront_sequences_init_lambda(&wf_bialigner->alg_subsidiary->sequences,
+      match_funct,match_funct_arguments,pattern_length,text_length,false);
+}
+void wavefront_bialigner_set_sequences_packed2bits(
+    wavefront_bialigner_t* const wf_bialigner,
+    const uint8_t* const pattern,
+    const int pattern_length,
+    const uint8_t* const text,
+    const int text_length) {
+  wavefront_sequences_init_packed2bits(
+      &wf_bialigner->alg_forward->sequences,
+      pattern,pattern_length,text,text_length,false);
+  wavefront_sequences_init_packed2bits(
+      &wf_bialigner->alg_reverse->sequences,
+      pattern,pattern_length,text,text_length,true);
+  wavefront_sequences_init_packed2bits(
+      &wf_bialigner->alg_subsidiary->sequences,
+      pattern,pattern_length,text,text_length,false);
+}
+void wavefront_bialigner_set_sequences_bounds(
+    wavefront_bialigner_t* const wf_bialigner,
+    const int pattern_begin,
+    const int pattern_end,
+    const int text_begin,
+    const int text_end) {
+  wavefront_sequences_set_bounds(
+      &wf_bialigner->alg_forward->sequences,
+      pattern_begin,pattern_end,text_begin,text_end);
+  wavefront_sequences_set_bounds(
+      &wf_bialigner->alg_reverse->sequences,
+      pattern_begin,pattern_end,text_begin,text_end);
+  wavefront_sequences_set_bounds(
+      &wf_bialigner->alg_subsidiary->sequences,
+      pattern_begin,pattern_end,text_begin,text_end);
+}
+/*
  * Accessors
  */
 uint64_t wavefront_bialigner_get_size(
@@ -99,17 +161,6 @@ void wavefront_bialigner_set_heuristic(
   wf_bialigner->alg_forward->heuristic = *heuristic;
   wf_bialigner->alg_reverse->heuristic = *heuristic;
   wf_bialigner->alg_subsidiary->heuristic = *heuristic;
-}
-void wavefront_bialigner_set_match_funct(
-    wavefront_bialigner_t* const wf_bialigner,
-    int (*match_funct)(int,int,void*),
-    void* const match_funct_arguments) {
-  wf_bialigner->alg_forward->match_funct = match_funct;
-  wf_bialigner->alg_forward->match_funct_arguments = match_funct_arguments;
-  wf_bialigner->alg_reverse->match_funct = match_funct;
-  wf_bialigner->alg_reverse->match_funct_arguments = match_funct_arguments;
-  wf_bialigner->alg_subsidiary->match_funct = match_funct;
-  wf_bialigner->alg_subsidiary->match_funct_arguments = match_funct_arguments;
 }
 void wavefront_bialigner_set_max_alignment_score(
     wavefront_bialigner_t* const wf_bialigner,

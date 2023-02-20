@@ -29,7 +29,6 @@
  * DESCRIPTION: WaveFront alignment module for offloading partial backtraces
  */
 
-#include "utils/string_padded.h"
 #include "wavefront_backtrace_offload.h"
 
 /*

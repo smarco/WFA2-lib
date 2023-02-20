@@ -29,10 +29,7 @@
  * DESCRIPTION: WaveFront-Alignment module for the "extension" of exact matches
  */
 
-#include "utils/string_padded.h"
 #include "wavefront_extend.h"
 #include "wavefront_align.h"
 #include "wavefront_compute.h"
 #include "wavefront_heuristic.h"
-
-

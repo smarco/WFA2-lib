@@ -37,13 +37,9 @@
 /*
  * Debug
  */
-void wavefront_debug_prologue(
-    wavefront_aligner_t* const wf_aligner,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length);
-void wavefront_debug_epilogue(
+void wavefront_debug_begin(
+    wavefront_aligner_t* const wf_aligner);
+void wavefront_debug_end(
     wavefront_aligner_t* const wf_aligner);
 
 /*

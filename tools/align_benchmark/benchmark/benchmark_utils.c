@@ -47,6 +47,8 @@ void benchmark_align_input_clear(
   align_input->text_begin_free = 0;
   align_input->pattern_end_free = 0;
   align_input->text_end_free = 0;
+  align_input->wfa_match_funct = NULL;
+  align_input->wfa_match_funct_arguments = NULL;
   // Output
   align_input->output_file = NULL;
   align_input->output_full = false;

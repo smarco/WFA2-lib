@@ -134,10 +134,11 @@ void wavefront_plot_component(
   // Check wavefront
   if (wavefront == NULL) return;
   // Parameters
-  const int pattern_length = wf_aligner->pattern_length;
-  const int text_length = wf_aligner->text_length;
-  const char* const pattern = wf_aligner->pattern;
-  const char* const text = wf_aligner->text;
+  wavefront_sequences_t* const sequences = &wf_aligner->sequences;
+  const int pattern_length = sequences->pattern_length;
+  const int text_length = sequences->text_length;
+  const char* const pattern = sequences->pattern;
+  const char* const text = sequences->text;
   wavefront_plot_t* const plot = wf_aligner->plot;
   const bool reverse = (wf_aligner->align_mode == wf_align_biwfa_breakpoint_reverse);
   // Traverse all offsets
@@ -252,17 +253,20 @@ void wavefront_plot_print(
   // Parameters
   const distance_metric_t distance_metric = wf_aligner->penalties.distance_metric;
   wavefront_plot_t* const wf_plot = wf_aligner->plot;
+  wavefront_sequences_t* const sequences = &wf_aligner->sequences;
+  const int pattern_length = sequences->pattern_length;
+  const int text_length = sequences->text_length;
   // Metadata
-  if (wf_aligner->match_funct != NULL) {
-    fprintf(stream,"# PatternLength 0\n");
-    fprintf(stream,"# TextLength 0\n");
+  if (sequences->mode == wf_sequences_lambda) {
+    fprintf(stream,"# PatternLength %d\n",pattern_length);
+    fprintf(stream,"# TextLength %d\n",text_length);
     fprintf(stream,"# Pattern -\n");
     fprintf(stream,"# Text -\n");
   } else {
-    fprintf(stream,"# PatternLength %d\n",wf_aligner->pattern_length);
-    fprintf(stream,"# Pattern %.*s\n",wf_aligner->pattern_length,wf_aligner->pattern);
-    fprintf(stream,"# TextLength %d\n",wf_aligner->text_length);
-    fprintf(stream,"# Text %.*s\n",wf_aligner->text_length,wf_aligner->text);
+    fprintf(stream,"# PatternLength %d\n",pattern_length);
+    fprintf(stream,"# Pattern %.*s\n",pattern_length,sequences->pattern);
+    fprintf(stream,"# TextLength %d\n",text_length);
+    fprintf(stream,"# Text %.*s\n",text_length,sequences->text);
   }
   fprintf(stream,"# Penalties ");
   wavefront_penalties_print(stream,&wf_aligner->penalties);

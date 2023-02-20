@@ -52,6 +52,24 @@
 #include "benchmark/benchmark_gap_affine2p.h"
 
 /*
+ * WFA lambda (custom match function)
+ */
+typedef struct {
+  char* pattern;
+  int pattern_length;
+  char* text;
+  int text_length;
+} match_function_params_t;
+match_function_params_t lambda_params;
+// Simplest Extend-matching function (for testing purposes)
+int lambda_function(int v,int h,void* arguments) {
+  // Extract parameters
+  match_function_params_t* const match_arguments = (match_function_params_t*)arguments;
+  // Check match
+  if (v > match_arguments->pattern_length || h > match_arguments->text_length) return 0;
+  return (match_arguments->pattern[v] == match_arguments->text[h]);
+}
+/*
  * Algorithms
  */
 bool align_benchmark_is_wavefront(
@@ -203,10 +221,6 @@ wavefront_aligner_t* align_input_configure_wavefront(
   // Select alignment form
   attributes.alignment_form.span = (parameters.endsfree) ? alignment_endsfree : alignment_end2end;
   // Misc
-  if (parameters.wfa_match_funct_arguments != NULL) {
-    attributes.match_funct = parameters.wfa_match_funct;
-    attributes.match_funct_arguments = parameters.wfa_match_funct_arguments;
-  }
   attributes.plot.enabled = (parameters.plot != 0);
   attributes.plot.align_level = (parameters.plot < 0) ? -1 : parameters.plot - 1;
   attributes.system.verbose = parameters.verbose;
@@ -233,6 +247,10 @@ void align_input_configure_global(
   align_input->mm_allocator = mm_allocator_new(BUFFER_SIZE_1M);
   // WFA
   if (align_benchmark_is_wavefront(parameters.algorithm)) {
+    if (parameters.wfa_lambda) {
+      align_input->wfa_match_funct = lambda_function;
+      align_input->wfa_match_funct_arguments = &lambda_params;
+    }
     align_input->wf_aligner = align_input_configure_wavefront(align_input);
   } else {
     align_input->wf_aligner = NULL;
@@ -269,11 +287,11 @@ void align_input_configure_local(
     }
   }
   // Custom extend-match function
-  if (parameters.wfa_match_funct != NULL) {
-    match_function_params.pattern = align_input->pattern;
-    match_function_params.pattern_length = align_input->pattern_length;
-    match_function_params.text = align_input->text;
-    match_function_params.text_length = align_input->text_length;
+  if (parameters.wfa_lambda) {
+    lambda_params.pattern = align_input->pattern;
+    lambda_params.pattern_length = align_input->pattern_length;
+    lambda_params.text = align_input->text;
+    lambda_params.text_length = align_input->text_length;
   }
 }
 void align_benchmark_free(

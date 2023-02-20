@@ -56,9 +56,8 @@ int match_function(
 int main(int argc,char* argv[]) {
   // Create a WFAligner
   WFAlignerGapAffine aligner(1,0,1,WFAligner::Alignment,WFAligner::MemoryHigh);
-  aligner.setMatchFunct(match_function,NULL);
   // Align
-  aligner.alignEnd2EndLambda(patternLength,textLength);
+  aligner.alignEnd2EndLambda(match_function,NULL,patternLength,textLength);
   cout << "WFA-Alignment returns score " << aligner.getAlignmentScore() << endl;
 
   // Print CIGAR

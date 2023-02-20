@@ -45,9 +45,6 @@ wavefront_aligner_attr_t wavefront_aligner_attr_default = {
         .text_begin_free = 0,
         .text_end_free = 0,
     },
-    // Custom matching functions
-    .match_funct = NULL,           // Use default match-compare function
-    .match_funct_arguments = NULL, // No arguments
     // Penalties
     .linear_penalties = {
         .match = 0,

@@ -34,7 +34,15 @@
 
 #include "wavefront_aligner.h"
 
+/*
+ * Wavefront-Extend Inner Kernels
+ */
 void wavefront_extend_matches_packed_end2end(
+    wavefront_aligner_t* const wf_aligner,
+    wavefront_t* const mwavefront,
+    const int lo,
+    const int hi);
+wf_offset_t wavefront_extend_matches_packed_end2end_max(
     wavefront_aligner_t* const wf_aligner,
     wavefront_t* const mwavefront,
     const int lo,
@@ -46,10 +54,16 @@ bool wavefront_extend_matches_packed_endsfree(
     const int lo,
     const int hi);
 
-wf_offset_t wavefront_extend_matches_packed_max(
+/*
+ * Wavefront-Extend Inner Kernel (Custom match function)
+ */
+bool wavefront_extend_matches_custom(
     wavefront_aligner_t* const wf_aligner,
     wavefront_t* const mwavefront,
+    const int score,
     const int lo,
-    const int hi);
+    const int hi,
+    const bool endsfree,
+    wf_offset_t* const max_antidiag);
 
 #endif /* WAVEFRONT_EXTEND_KERNELS_H_ */

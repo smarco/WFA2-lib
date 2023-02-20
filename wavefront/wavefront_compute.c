@@ -29,7 +29,6 @@
  * DESCRIPTION: WaveFront alignment module for computing wavefronts
  */
 
-#include "utils/string_padded.h"
 #include "alignment/affine2p_penalties.h"
 #include "wavefront_compute.h"
 
@@ -569,8 +568,9 @@ void wavefront_compute_trim_ends(
     wavefront_aligner_t* const wf_aligner,
     wavefront_t* const wavefront) {
   // Parameters
-  const int pattern_length = wf_aligner->pattern_length;
-  const int text_length = wf_aligner->text_length;
+  wavefront_sequences_t* const sequences = &wf_aligner->sequences;
+  const int pattern_length = sequences->pattern_length;
+  const int text_length = sequences->text_length;
   wf_offset_t* const offsets = wavefront->offsets;
   // Trim from hi
   int k;

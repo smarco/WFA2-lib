@@ -40,8 +40,9 @@ FORCE_NO_INLINE bool wavefront_termination_end2end(
     const int score,
     const int score_mod) {
   // Parameters
-  const int pattern_length = wf_aligner->pattern_length;
-  const int text_length = wf_aligner->text_length;
+  wavefront_sequences_t* const sequences = &wf_aligner->sequences;
+  const int pattern_length = sequences->pattern_length;
+  const int text_length = sequences->text_length;
   const affine2p_matrix_type component_end = wf_aligner->component_end;
   const int alignment_k = DPMATRIX_DIAGONAL(text_length,pattern_length);
   const wf_offset_t alignment_offset = DPMATRIX_OFFSET(text_length,pattern_length);
@@ -118,8 +119,9 @@ FORCE_NO_INLINE bool wavefront_termination_endsfree(
     const int k,
     const wf_offset_t offset) {
   // Parameters
-  const int pattern_length = wf_aligner->pattern_length;
-  const int text_length = wf_aligner->text_length;
+  wavefront_sequences_t* const sequences = &wf_aligner->sequences;
+  const int pattern_length = sequences->pattern_length;
+  const int text_length = sequences->text_length;
   // Check ends-free reaching boundaries
   const int h_pos = WAVEFRONT_H(k,offset);
   const int v_pos = WAVEFRONT_V(k,offset);

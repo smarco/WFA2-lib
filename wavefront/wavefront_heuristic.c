@@ -257,8 +257,9 @@ void wavefront_heuristic_wfadaptive(
     wavefront_t* const wavefront,
     const bool wfmash_mode) {
   // Parameters
-  const int pattern_length = wf_aligner->pattern_length;
-  const int text_length = wf_aligner->text_length;
+  wavefront_sequences_t* const sequences = &wf_aligner->sequences;
+  const int pattern_length = sequences->pattern_length;
+  const int text_length = sequences->text_length;
   const int min_wavefront_length = wf_aligner->heuristic.min_wavefront_length;
   const int max_distance_threshold = wf_aligner->heuristic.max_distance_threshold;
   wavefront_heuristic_t* const wf_heuristic = &wf_aligner->heuristic;
@@ -462,8 +463,9 @@ void wavefront_heuristic_banded_adaptive(
     wavefront_aligner_t* const wf_aligner,
     wavefront_t* const wavefront) {
   // Parameters
-  const int pattern_length = wf_aligner->pattern_length;
-  const int text_length = wf_aligner->text_length;
+  wavefront_sequences_t* const sequences = &wf_aligner->sequences;
+  const int pattern_length = sequences->pattern_length;
+  const int text_length = sequences->text_length;
   wavefront_heuristic_t* const wf_heuristic = &wf_aligner->heuristic;
   // Check steps
   if (wf_heuristic->steps_wait > 0) return;
