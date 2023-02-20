@@ -726,4 +726,3 @@ void wavefront_bialign(
         min_length ? 0 : INT_MAX,0);
   }
 }
-

@@ -246,4 +246,3 @@ int wavefront_align_resume(
   // Return
   return align_status->status;
 }
-

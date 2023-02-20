@@ -616,4 +616,3 @@ void wavefront_aligner_print_conf(
     fprintf(stream,",%d)",wf_aligner->system.max_alignment_score);
   }
 }
-
