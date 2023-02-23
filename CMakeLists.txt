@@ -163,7 +163,7 @@ add_library(wfa2cpp SHARED ${wfa2cpp_SOURCE})
 set_target_properties(wfa2cpp PROPERTIES SOVERSION 0)
 set_target_properties(wfa2cpp_static PROPERTIES OUTPUT_NAME wfa2cpp)
 target_link_libraries(wfa2cpp PUBLIC wfa2)
-target_link_libraries(wfa2cpp_static PUBLIC wfa2)
+target_link_libraries(wfa2cpp_static PUBLIC wfa2_static)
 add_library(wfa2::wfa2cpp ALIAS wfa2cpp)
 add_library(wfa2::wfa2cpp_static ALIAS wfa2cpp_static)
 
