@@ -47,8 +47,7 @@ void benchmark_gap_affine_swg(
       &affine_matrix,align_input->pattern_length+1,
       align_input->text_length+1,align_input->mm_allocator);
   cigar_t* const cigar = cigar_new(
-      align_input->pattern_length+align_input->text_length,
-      align_input->mm_allocator);
+      align_input->pattern_length+align_input->text_length);
   // Align
   timer_start(&align_input->timer);
   swg_align(&affine_matrix,penalties,
@@ -76,8 +75,7 @@ void benchmark_gap_affine_swg_endsfree(
       &affine_matrix,align_input->pattern_length+1,
       align_input->text_length+1,align_input->mm_allocator);
   cigar_t* const cigar = cigar_new(
-      align_input->pattern_length+align_input->text_length,
-      align_input->mm_allocator);
+      align_input->pattern_length+align_input->text_length);
   // Align
   timer_start(&align_input->timer);
   swg_align_endsfree(&affine_matrix,penalties,
@@ -108,8 +106,7 @@ void benchmark_gap_affine_swg_banded(
       &affine_matrix,align_input->pattern_length+1,
       align_input->text_length+1,align_input->mm_allocator);
   cigar_t* const cigar = cigar_new(
-      align_input->pattern_length+align_input->text_length,
-      align_input->mm_allocator);
+      align_input->pattern_length+align_input->text_length);
   // Align
   timer_start(&align_input->timer);
   swg_align_banded(&affine_matrix,penalties,

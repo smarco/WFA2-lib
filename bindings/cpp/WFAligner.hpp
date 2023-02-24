@@ -72,6 +72,11 @@ public:
   AlignmentStatus alignEnd2End(
       std::string& pattern,
       std::string& text);
+  AlignmentStatus alignEnd2End(
+      const uint8_t* const pattern,
+      const int patternLength,
+      const uint8_t* const text,
+      const int textLength);
   AlignmentStatus alignEnd2EndLambda(
       int (*matchFunct)(int,int,void*),
       void* matchFunctArguments,
@@ -92,6 +97,15 @@ public:
       const int patternBeginFree,
       const int patternEndFree,
       std::string& text,
+      const int textBeginFree,
+      const int textEndFree);
+  AlignmentStatus alignEndsFree(
+      const uint8_t* const pattern,
+      const int patternLength,
+      const int patternBeginFree,
+      const int patternEndFree,
+      const uint8_t* const text,
+      const int textLength,
       const int textBeginFree,
       const int textEndFree);
   AlignmentStatus alignEndsFreeLambda(
@@ -140,10 +154,13 @@ public:
   // Accessors
   int getAlignmentScore();
   int getAlignmentStatus();
-  void getAlignmentCigar(
-      char** const cigarOperations,
-      int* cigarLength);
-  std::string getAlignmentCigar();
+  std::string getAlignment();
+  void getCIGAR(
+      const bool show_mismatches,
+      uint32_t** const cigar_ops,
+      int* const num_cigar_ops);
+  std::string getCIGARString(
+      const bool show_mismatches);
   // Misc
   char* strError(
       const int wfErrorCode);

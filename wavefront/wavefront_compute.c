@@ -127,9 +127,11 @@ bool wavefront_compute_endsfree_required(
   // Parameters
   alignment_form_t* const alg_form = &wf_aligner->alignment_form;
   wavefront_penalties_t* const penalties = &wf_aligner->penalties;
-  // Return is ends-free initialization is required
+  // Return if ends-free initialization is required
   if (penalties->match == 0) return false;
   if (alg_form->span != alignment_endsfree) return false;
+  if (alg_form->text_begin_free == 0 &&
+      alg_form->pattern_begin_free == 0) return false;
   if (score % (-penalties->match) != 0) return false;
   // Ok
   return true;

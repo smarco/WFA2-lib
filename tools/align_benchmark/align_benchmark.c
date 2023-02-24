@@ -134,9 +134,7 @@ void align_pairwise_test() {
       pattern,strlen(pattern),text,strlen(text));
   // CIGAR
   fprintf(stderr,">> WFA2");
-  cigar_print_pretty(stderr,
-      pattern,strlen(pattern),text,strlen(text),
-      wf_aligner->cigar,wf_aligner->mm_allocator);
+  cigar_print_pretty(stderr,wf_aligner->cigar,pattern,strlen(pattern),text,strlen(text));
   fprintf(stderr,"SCORE: %d \n",cigar_score_gap_affine(
       wf_aligner->cigar,&affine_penalties));
   // Plot

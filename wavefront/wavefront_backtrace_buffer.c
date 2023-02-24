@@ -276,10 +276,9 @@ void wf_backtrace_buffer_unpack_cigar_linear(
   // Parameters
   const int pattern_length = sequences->pattern_length;
   const int text_length = sequences->text_length;
-  // Clear cigar
-  char* cigar_buffer = cigar->operations;
-  cigar->begin_offset = 0;
   // Add init insertions/deletions
+  cigar_clear(cigar);
+  char* cigar_buffer = cigar->operations;
   int i;
   int v = begin_v;
   int h = begin_h;
@@ -320,10 +319,9 @@ void wf_backtrace_buffer_unpack_cigar_affine(
   // Parameters
   const int pattern_length = sequences->pattern_length;
   const int text_length = sequences->text_length;
-  // Clear cigar
-  char* cigar_buffer = cigar->operations;
-  cigar->begin_offset = 0;
   // Add init insertions/deletions
+  cigar_clear(cigar);
+  char* cigar_buffer = cigar->operations;
   int i;
   int v = begin_v;
   int h = begin_h;

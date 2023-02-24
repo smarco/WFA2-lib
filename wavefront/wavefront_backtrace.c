@@ -233,6 +233,7 @@ void wavefront_backtrace_linear(
   const distance_metric_t distance_metric = penalties->distance_metric;
   // Prepare cigar
   cigar_t* const cigar = wf_aligner->cigar;
+  cigar_clear(cigar);
   cigar->end_offset = cigar->max_operations - 1;
   cigar->begin_offset = cigar->max_operations - 2;
   cigar->operations[cigar->end_offset] = '\0';
@@ -331,6 +332,7 @@ void wavefront_backtrace_affine(
   const distance_metric_t distance_metric = penalties->distance_metric;
   // Prepare cigar
   cigar_t* const cigar = wf_aligner->cigar;
+  cigar_clear(cigar);
   cigar->end_offset = cigar->max_operations - 1;
   cigar->begin_offset = cigar->max_operations - 2;
   cigar->operations[cigar->end_offset] = '\0';

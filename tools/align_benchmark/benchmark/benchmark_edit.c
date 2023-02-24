@@ -78,8 +78,7 @@ void benchmark_edit_dp(
       &score_matrix,pattern_length+1,
       text_length+1,align_input->mm_allocator);
   cigar_t* const cigar = cigar_new(
-      pattern_length+text_length,
-      align_input->mm_allocator);
+      pattern_length+text_length);
   // Align
   timer_start(&align_input->timer);
   edit_dp_align(&score_matrix,
@@ -110,8 +109,7 @@ void benchmark_edit_dp_banded(
       &score_matrix,pattern_length+1,
       text_length+1,align_input->mm_allocator);
   cigar_t* const cigar = cigar_new(
-      pattern_length+text_length,
-      align_input->mm_allocator);
+      pattern_length+text_length);
   // Align
   timer_start(&align_input->timer);
   edit_dp_align_banded(&score_matrix,

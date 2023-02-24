@@ -223,7 +223,7 @@ wavefront_aligner_t* wavefront_aligner_new(
   wavefront_sequences_allocate(&wf_aligner->sequences);
   // CIGAR
   const int cigar_length = (score_only) ? 10 : 2*(PATTERN_LENGTH_INIT+TEXT_LENGTH_INIT);
-  wf_aligner->cigar = cigar_new(cigar_length,wf_aligner->mm_allocator);
+  wf_aligner->cigar = cigar_new(cigar_length);
   // System
   wf_aligner->system = attributes->system;
   // Return

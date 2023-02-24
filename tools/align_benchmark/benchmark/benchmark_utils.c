@@ -86,10 +86,9 @@ void benchmark_print_alignment(
     fprintf(stream,"\n");
   }
   if (cigar_computed != NULL) {
-    cigar_print_pretty(stream,
+    cigar_print_pretty(stream,cigar_computed,
         align_input->pattern,align_input->pattern_length,
-        align_input->text,align_input->text_length,
-        cigar_computed,align_input->mm_allocator);
+        align_input->text,align_input->text_length);
   }
   if (cigar_correct != NULL && score_correct != -1) {
     fprintf(stream,"    CORRECT \tscore=%d\t",score_correct);
@@ -97,10 +96,9 @@ void benchmark_print_alignment(
     fprintf(stream,"\n");
   }
   if (cigar_correct != NULL) {
-    cigar_print_pretty(stream,
+    cigar_print_pretty(stream,cigar_correct,
         align_input->pattern,align_input->pattern_length,
-        align_input->text,align_input->text_length,
-        cigar_correct,align_input->mm_allocator);
+        align_input->text,align_input->text_length);
   }
 }
 void benchmark_print_output_lite(

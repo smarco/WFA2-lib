@@ -717,7 +717,7 @@ void wavefront_bialign(
     wavefront_sequences_t* const sequences = &wf_aligner->bialigner->alg_forward->sequences;
     const int text_length = sequences->text_length;
     const int pattern_length = sequences->pattern_length;
-    cigar_resize(wf_aligner->cigar,2*(pattern_length+text_length));
+    cigar_resize(wf_aligner->cigar,2*(pattern_length+text_length)); // Resize & clear
     // Bidirectional alignment
     const bool min_length = MAX(pattern_length,text_length) <= WF_BIALIGN_FALLBACK_MIN_LENGTH;
     wavefront_bialign_alignment(wf_aligner,
