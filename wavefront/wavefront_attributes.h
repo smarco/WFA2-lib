@@ -59,6 +59,8 @@ typedef enum {
 typedef struct {
   // Mode
   alignment_span_t span;   // Alignment form (End-to-end/Ends-free)
+  // Extension
+  bool extension;          // Activate extension-like alignment
   // Ends-free
   int pattern_begin_free;  // Allow free-gap at the beginning of the pattern
   int pattern_end_free;    // Allow free-gap at the end of the pattern

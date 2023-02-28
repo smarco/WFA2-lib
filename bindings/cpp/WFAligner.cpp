@@ -93,7 +93,7 @@ WFAligner::AlignmentStatus WFAligner::alignEnd2End(
   return (WFAligner::AlignmentStatus) wavefront_align_packed2bits(
       wfAligner,pattern,patternLength,text,textLength);
 }
-WFAligner::AlignmentStatus WFAligner::alignEnd2EndLambda(
+WFAligner::AlignmentStatus WFAligner::alignEnd2End(
     int (*matchFunct)(int,int,void*),
     void* matchFunctArguments,
     const int patternLength,
@@ -153,7 +153,7 @@ WFAligner::AlignmentStatus WFAligner::alignEndsFree(
   return (WFAligner::AlignmentStatus) wavefront_align_packed2bits(
       wfAligner,pattern,patternLength,text,textLength);
 }
-WFAligner::AlignmentStatus WFAligner::alignEndsFreeLambda(
+WFAligner::AlignmentStatus WFAligner::alignEndsFree(
     int (*matchFunct)(int,int,void*),
     void* matchFunctArguments,
     const int patternLength,
@@ -170,13 +170,48 @@ WFAligner::AlignmentStatus WFAligner::alignEndsFreeLambda(
   return (WFAligner::AlignmentStatus) wavefront_align_lambda(
       wfAligner,matchFunct,matchFunctArguments,patternLength,textLength);
 }
-///*
-// * Alignment resume
-// */
-//WFAligner::AlignmentStatus WFAligner::alignResume() {
-//  // Resume alignment
-//  return (WFAligner::AlignmentStatus) wavefront_align_resume(wfAligner);
-//}
+/*
+ * Align Extension
+ */
+WFAligner::AlignmentStatus WFAligner::alignExtension(
+    const char* const pattern,
+    const int patternLength,
+    const char* const text,
+    const int textLength) {
+  // Configure
+  wavefront_aligner_set_alignment_extension(wfAligner);
+  // Align
+  return (WFAligner::AlignmentStatus) wavefront_align(
+      wfAligner,pattern,patternLength,text,textLength);
+}
+WFAligner::AlignmentStatus WFAligner::alignExtension(
+    std::string& pattern,
+    std::string& text) {
+  // Delegate
+  return alignExtension(pattern.c_str(),pattern.length(),text.c_str(),text.length());
+}
+WFAligner::AlignmentStatus WFAligner::alignExtension(
+    const uint8_t* const pattern,
+    const int patternLength,
+    const uint8_t* const text,
+    const int textLength) {
+  // Configure
+  wavefront_aligner_set_alignment_extension(wfAligner);
+  // Align
+  return (WFAligner::AlignmentStatus) wavefront_align_packed2bits(
+      wfAligner,pattern,patternLength,text,textLength);
+}
+WFAligner::AlignmentStatus WFAligner::alignExtension(
+    int (*matchFunct)(int,int,void*),
+    void* matchFunctArguments,
+    const int patternLength,
+    const int textLength) {
+  // Configure
+  wavefront_aligner_set_alignment_extension(wfAligner);
+  // Align (using custom matching function)
+  return (WFAligner::AlignmentStatus) wavefront_align_lambda(
+      wfAligner,matchFunct,matchFunctArguments,patternLength,textLength);
+}
 /*
  * Heuristics
  */
@@ -241,10 +276,6 @@ void WFAligner::setMaxMemory(
 void WFAligner::setMaxNumThreads(
     const int maxNumThreads) {
   wavefront_aligner_set_max_num_threads(wfAligner, maxNumThreads);
-}
-void WFAligner::setMinOffsetsPerThread(
-    const int minOffsetsPerThread) {
-  wavefront_aligner_set_min_offsets_per_thread(wfAligner, minOffsetsPerThread);
 }
 /*
  * Accessors

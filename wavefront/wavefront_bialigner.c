@@ -50,11 +50,12 @@ wavefront_bialigner_t* wavefront_bialigner_new(
   subsidiary_attr.affine_penalties = attributes->affine_penalties;
   subsidiary_attr.affine2p_penalties = attributes->affine2p_penalties;
   // Set specifics for subsidiary aligners
-  subsidiary_attr.heuristic = attributes->heuristic; // Inherit same heuristic
+  subsidiary_attr.heuristic = attributes->heuristic;   // Inherit same heuristic
   subsidiary_attr.memory_mode = wavefront_memory_high; // Classic WFA
-  subsidiary_attr.alignment_scope = compute_score;
+  subsidiary_attr.alignment_scope = compute_score;     // BiWFAs are score-only
+  subsidiary_attr.alignment_form.extension = false;    // Deactivate extension mode
   // Set other parameter for subsidiary aligners
-  subsidiary_attr.system = attributes->system;
+  subsidiary_attr.system = attributes->system;         // Inherit system configuration
   // Allocate forward/reverse aligners
   wf_bialigner->alg_forward = wavefront_aligner_new(&subsidiary_attr);
   wf_bialigner->alg_forward->align_mode = wf_align_biwfa_breakpoint_forward;

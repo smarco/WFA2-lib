@@ -258,6 +258,11 @@ void wavefront_plot_print(
   wavefront_sequences_t* const sequences = &wf_aligner->sequences;
   const int pattern_length = sequences->pattern_length;
   const int text_length = sequences->text_length;
+  // Check plot
+  if (wf_aligner->plot == NULL) {
+    fprintf(stream,"# WFA-plot not enabled\n");
+    return;
+  }
   // Metadata
   if (sequences->mode == wf_sequences_lambda) {
     fprintf(stream,"# PatternLength %d\n",pattern_length);

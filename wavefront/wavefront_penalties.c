@@ -88,6 +88,8 @@ void wavefront_penalties_set_linear(
   wf_penalties->gap_extension1 = -1;
   wf_penalties->gap_opening2 = -1;
   wf_penalties->gap_extension2 = -1;
+  // Internals
+  wf_penalties->linear_penalties = *linear_penalties;
 }
 void wavefront_penalties_set_affine(
     wavefront_penalties_t* const wf_penalties,
@@ -122,6 +124,8 @@ void wavefront_penalties_set_affine(
   // Set unused
   wf_penalties->gap_opening2 = -1;
   wf_penalties->gap_extension2 = -1;
+  // Internals
+  wf_penalties->affine_penalties = *affine_penalties;
 }
 void wavefront_penalties_set_affine2p(
     wavefront_penalties_t* const wf_penalties,
@@ -161,6 +165,8 @@ void wavefront_penalties_set_affine2p(
     wf_penalties->gap_opening2 = affine2p_penalties->gap_opening2;
     wf_penalties->gap_extension2 = affine2p_penalties->gap_extension2;
   }
+  // Internals
+  wf_penalties->affine2p_penalties = *affine2p_penalties;
 }
 /*
  * Display
@@ -171,29 +177,32 @@ void wavefront_penalties_print(
   // Select penalties mode
   switch (wf_penalties->distance_metric) {
     case indel:
-      fprintf(stream,"(Indel)");
+      fprintf(stream,"(Indel,0,inf,1)");
       break;
     case edit:
-      fprintf(stream,"(Edit)");
+      fprintf(stream,"(Edit,0,1,1)");
       break;
     case gap_linear:
-      fprintf(stream,"(GapLinear,%d,%d)",
-          wf_penalties->mismatch,
-          wf_penalties->gap_opening1);
+      fprintf(stream,"(GapLinear,%d,%d,%d)",
+          wf_penalties->linear_penalties.match,
+          wf_penalties->linear_penalties.mismatch,
+          wf_penalties->linear_penalties.indel);
       break;
     case gap_affine:
-      fprintf(stream,"(GapAffine,%d,%d,%d)",
-          wf_penalties->mismatch,
-          wf_penalties->gap_opening1,
-          wf_penalties->gap_extension1);
+      fprintf(stream,"(GapAffine,%d,%d,%d,%d)",
+          wf_penalties->affine_penalties.match,
+          wf_penalties->affine_penalties.mismatch,
+          wf_penalties->affine_penalties.gap_opening,
+          wf_penalties->affine_penalties.gap_extension);
       break;
     case gap_affine_2p:
-      fprintf(stream,"(GapAffine2p,%d,%d,%d,%d,%d)",
-          wf_penalties->mismatch,
-          wf_penalties->gap_opening1,
-          wf_penalties->gap_extension1,
-          wf_penalties->gap_opening2,
-          wf_penalties->gap_extension2);
+      fprintf(stream,"(GapAffine2p,%d,%d,%d,%d,%d,%d)",
+          wf_penalties->affine2p_penalties.match,
+          wf_penalties->affine2p_penalties.mismatch,
+          wf_penalties->affine2p_penalties.gap_opening1,
+          wf_penalties->affine2p_penalties.gap_extension1,
+          wf_penalties->affine2p_penalties.gap_opening2,
+          wf_penalties->affine2p_penalties.gap_extension2);
       break;
     default:
       break;

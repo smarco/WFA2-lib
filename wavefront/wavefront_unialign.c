@@ -105,9 +105,19 @@ void wavefront_unialign_init(
     const affine2p_matrix_type component_begin,
     const affine2p_matrix_type component_end) {
   // Parameters
+  alignment_form_t* const alignment_form = &wf_aligner->alignment_form;
+  const bool end2end = (alignment_form->span == alignment_end2end);
   wavefront_align_status_t* const align_status = &wf_aligner->align_status;
   // Resize wavefront aligner
   wavefront_unialign_resize(wf_aligner);
+  // Configure extension alignment mode
+  if (!end2end && wf_aligner->alignment_form.extension) {
+    wavefront_sequences_t* const sequences = &wf_aligner->sequences;
+    alignment_form->pattern_begin_free = 0;
+    alignment_form->pattern_end_free = sequences->pattern_length;
+    alignment_form->text_begin_free = 0;
+    alignment_form->text_end_free = sequences->text_length;
+  }
   // Configure WF-compute function
   switch (wf_aligner->penalties.distance_metric) {
     case indel:
@@ -129,7 +139,6 @@ void wavefront_unialign_init(
       break;
   }
   // Configure WF-extend function
-  const bool end2end = (wf_aligner->alignment_form.span == alignment_end2end);
   if (end2end) {
     align_status->wf_align_extend = &wavefront_extend_end2end;
   } else {
@@ -236,9 +245,16 @@ void wavefront_unialign_terminate(
             score,alignment_end_k,alignment_end_offset);
       }
     }
-    // Set score & finish
-    wf_aligner->cigar->score =
-        wavefront_compute_classic_score(wf_aligner,pattern_length,text_length,score);
+    // Alignment post-processing
+    if (wf_aligner->alignment_form.extension &&
+        wf_aligner->penalties.distance_metric > edit) {
+      // Apply alignment extension
+      wavefront_aligner_maxtrim_cigar(wf_aligner);
+    } else {
+      // Translate score
+      wf_aligner->cigar->score = wavefront_compute_classic_score(
+          wf_aligner,pattern_length,text_length,score);
+    }
   }
   // Set successful
   wf_aligner->align_status.status = WF_STATUS_SUCCESSFUL;

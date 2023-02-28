@@ -57,7 +57,11 @@ void wavefront_align_checks(
         form->text_begin_free > 0 ||
         form->text_end_free > 0;
     if (ends_free) {
-      fprintf(stderr,"[WFA] BiWFA and ends-free is not supported yet\n");
+      fprintf(stderr,"[WFA] BiWFA ends-free has not been tested properly yet (let me know and I'll do it)\n");
+      exit(1);
+    }
+    if (wf_aligner->alignment_form.extension) {
+      fprintf(stderr,"[WFA] BiWFA extension is not implemented yet (let me know and I'll add it)\n");
       exit(1);
     }
   }

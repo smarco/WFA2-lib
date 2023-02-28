@@ -41,6 +41,7 @@ wavefront_aligner_attr_t wavefront_aligner_attr_default = {
     .alignment_scope = compute_alignment,
     .alignment_form = {
         .span = alignment_end2end,
+        .extension = false,
         .pattern_begin_free = 0,
         .pattern_end_free = 0,
         .text_begin_free = 0,

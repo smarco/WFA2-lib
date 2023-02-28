@@ -127,6 +127,19 @@ void cigar_discover_mismatches(
     const int text_length,
     cigar_t* const cigar);
 
+void cigar_maxtrim_gap_linear(
+    cigar_t* const cigar,
+    linear_penalties_t* const penalties);
+void cigar_maxtrim_gap_affine(
+    cigar_t* const cigar,
+    affine_penalties_t* const penalties);
+void cigar_maxtrim_gap_affine2p(
+    cigar_t* const cigar,
+    affine2p_penalties_t* const penalties);
+
+/*
+ * Check
+ */
 bool cigar_check_alignment(
     FILE* const stream,
     const char* const pattern,

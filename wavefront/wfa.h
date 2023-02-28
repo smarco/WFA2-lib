@@ -127,12 +127,6 @@ void wavefront_aligner_delete(
     wavefront_aligner_t* const wf_aligner);
 
 /*
- * Initialize wf-alignment conditions
- */
-void wavefront_aligner_init_wf(
-    wavefront_aligner_t* const wf_aligner);
-
-/*
  * Span configuration
  */
 void wavefront_aligner_set_alignment_end_to_end(
@@ -143,6 +137,8 @@ void wavefront_aligner_set_alignment_free_ends(
     const int pattern_end_free,
     const int text_begin_free,
     const int text_end_free);
+void wavefront_aligner_set_alignment_extension(
+    wavefront_aligner_t* const wf_aligner);
 
 /*
  * Heuristic configuration
@@ -188,29 +184,11 @@ void wavefront_aligner_set_max_memory(
     const uint64_t max_memory_resident,
     const uint64_t max_memory_abort);
 void wavefront_aligner_set_max_num_threads(
-        wavefront_aligner_t* const wf_aligner,
-        const int max_num_threads);
+    wavefront_aligner_t* const wf_aligner,
+    const int max_num_threads);
 void wavefront_aligner_set_min_offsets_per_thread(
-        wavefront_aligner_t* const wf_aligner,
-        const int min_offsets_per_thread);
-/*
- * Utils
- */
-uint64_t wavefront_aligner_get_size(
-    wavefront_aligner_t* const wf_aligner);
-
-/*
- * Display
- */
-void wavefront_aligner_print_mode(
-    FILE* const stream,
-    wavefront_aligner_t* const wf_aligner);
-void wavefront_aligner_print_scope(
-    FILE* const stream,
-    wavefront_aligner_t* const wf_aligner);
-void wavefront_aligner_print_conf(
-    FILE* const stream,
-    wavefront_aligner_t* const wf_aligner);
+    wavefront_aligner_t* const wf_aligner,
+    const int min_offsets_per_thread);
 
 /*
  * Wavefront Align

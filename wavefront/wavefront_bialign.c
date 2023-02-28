@@ -556,6 +556,7 @@ void wavefront_bialign_init_half_0(
        global_form->text_begin_free > 0) ?
            alignment_endsfree : alignment_end2end;
   half_form->span = span_0;
+  half_form->extension = false;
   half_form->pattern_begin_free = global_form->pattern_begin_free;
   half_form->pattern_end_free = 0;
   half_form->text_begin_free = global_form->text_begin_free;
@@ -570,6 +571,7 @@ void wavefront_bialign_init_half_1(
        global_form->text_begin_free > 0) ?
            alignment_endsfree : alignment_end2end;
   half_form->span = span_1;
+  half_form->extension = false;
   half_form->pattern_begin_free = 0;
   half_form->pattern_end_free = global_form->pattern_end_free;
   half_form->text_begin_free = 0;
@@ -657,7 +659,7 @@ void wavefront_bialign_alignment(
   if (wf_aligner->align_status.status != WF_STATUS_SUCCESSFUL) return;
   // Set score
   wf_aligner->cigar->score = wavefront_compute_classic_score(
-      wf_aligner,pattern_length,text_length,breakpoint.score);
+      wf_aligner,pattern_length,text_length,breakpoint.score); // FIXME Only needed in level0 ???
 }
 /*
  * Bidirectional Score-only

@@ -37,3 +37,33 @@
 #include "system/mm_stack.h"
 #include "alignment/cigar.h"
 #include "wfa.h"
+
+/*
+ * Initialize wf-alignment conditions
+ */
+void wavefront_aligner_init_wf(
+    wavefront_aligner_t* const wf_aligner);
+
+/*
+ * Utils
+ */
+uint64_t wavefront_aligner_get_size(
+    wavefront_aligner_t* const wf_aligner);
+
+void wavefront_aligner_maxtrim_cigar(
+    wavefront_aligner_t* const wf_aligner);
+
+/*
+ * Display
+ */
+void wavefront_aligner_print_mode(
+    FILE* const stream,
+    wavefront_aligner_t* const wf_aligner);
+void wavefront_aligner_print_scope(
+    FILE* const stream,
+    wavefront_aligner_t* const wf_aligner);
+void wavefront_aligner_print_conf(
+    FILE* const stream,
+    wavefront_aligner_t* const wf_aligner);
+
+

@@ -411,6 +411,7 @@ void wavefront_aligner_init_wf(
 void wavefront_aligner_set_alignment_end_to_end(
     wavefront_aligner_t* const wf_aligner) {
   wf_aligner->alignment_form.span = alignment_end2end;
+  wf_aligner->alignment_form.extension = false;
 }
 void wavefront_aligner_set_alignment_free_ends(
     wavefront_aligner_t* const wf_aligner,
@@ -419,10 +420,16 @@ void wavefront_aligner_set_alignment_free_ends(
     const int text_begin_free,
     const int text_end_free) {
   wf_aligner->alignment_form.span = alignment_endsfree;
+  wf_aligner->alignment_form.extension = false;
   wf_aligner->alignment_form.pattern_begin_free = pattern_begin_free;
   wf_aligner->alignment_form.pattern_end_free = pattern_end_free;
   wf_aligner->alignment_form.text_begin_free = text_begin_free;
   wf_aligner->alignment_form.text_end_free = text_end_free;
+}
+void wavefront_aligner_set_alignment_extension(
+    wavefront_aligner_t* const wf_aligner) {
+  wf_aligner->alignment_form.span = alignment_endsfree;
+  wf_aligner->alignment_form.extension = true;
 }
 /*
  * Heuristic configuration
@@ -555,6 +562,24 @@ uint64_t wavefront_aligner_get_size(
     const uint64_t slab_size = wavefront_slab_get_size(wf_aligner->wavefront_slab);
     // Return overall size
     return sub_aligners + bt_buffer_size + slab_size;
+  }
+}
+void wavefront_aligner_maxtrim_cigar(
+    wavefront_aligner_t* const wf_aligner) {
+  switch (wf_aligner->penalties.distance_metric) {
+    case indel:
+    case edit:
+      // Maxtrim does not apply to edit/indel distances
+      break;
+    case gap_linear:
+      cigar_maxtrim_gap_linear(wf_aligner->cigar,&wf_aligner->penalties.linear_penalties);
+      break;
+    case gap_affine:
+      cigar_maxtrim_gap_affine(wf_aligner->cigar,&wf_aligner->penalties.affine_penalties);
+      break;
+    case gap_affine_2p:
+      cigar_maxtrim_gap_affine2p(wf_aligner->cigar,&wf_aligner->penalties.affine2p_penalties);
+      break;
   }
 }
 /*

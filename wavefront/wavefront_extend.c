@@ -110,7 +110,10 @@ int wavefront_extend_end2end(
   }
   // Cut-off wavefront heuristically
   if (wf_aligner->heuristic.strategy != wf_heuristic_none) {
-    wavefront_heuristic_cufoff(wf_aligner,score,score_mod);
+    if (wavefront_heuristic_cufoff(wf_aligner,score,score_mod)) {
+      wf_aligner->align_status.status = WF_STATUS_END_REACHED;
+      return 1; // Done
+    }
   }
   return 0; // Not done
 }
@@ -195,7 +198,10 @@ int wavefront_extend_end2end_max(
   }
   // Cut-off wavefront heuristically
   if (wf_aligner->heuristic.strategy != wf_heuristic_none) {
-    wavefront_heuristic_cufoff(wf_aligner,score,score_mod);
+    if (wavefront_heuristic_cufoff(wf_aligner,score,score_mod)) {
+      wf_aligner->align_status.status = WF_STATUS_END_REACHED;
+      return 1; // Done
+    }
   }
   *max_antidiagonal = max_ak;
   return 0; // Not done
@@ -274,7 +280,10 @@ int wavefront_extend_endsfree(
   }
   // Cut-off wavefront heuristically
   if (wf_aligner->heuristic.strategy != wf_heuristic_none) {
-    wavefront_heuristic_cufoff(wf_aligner,score,score_mod);
+    if (wavefront_heuristic_cufoff(wf_aligner,score,score_mod)) {
+      wf_aligner->align_status.status = WF_STATUS_END_REACHED;
+      return 1; // Done
+    }
   }
   return 0; // Not done
 }

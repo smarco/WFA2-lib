@@ -64,26 +64,26 @@ public:
     StatusOOM = WF_STATUS_OOM,
   };
   // Align End-to-end
-  AlignmentStatus alignEnd2End(
+  AlignmentStatus alignEnd2End( // Regular ASCII Sequences
       const char* const pattern,
       const int patternLength,
       const char* const text,
       const int textLength);
-  AlignmentStatus alignEnd2End(
+  AlignmentStatus alignEnd2End( // String ASCII Sequences
       std::string& pattern,
       std::string& text);
-  AlignmentStatus alignEnd2End(
+  AlignmentStatus alignEnd2End( // 2bits-Packed Sequences
       const uint8_t* const pattern,
       const int patternLength,
       const uint8_t* const text,
       const int textLength);
-  AlignmentStatus alignEnd2EndLambda(
+  AlignmentStatus alignEnd2End( // Lambda Sequence
       int (*matchFunct)(int,int,void*),
       void* matchFunctArguments,
       const int patternLength,
       const int textLength);
   // Align Ends-free
-  AlignmentStatus alignEndsFree(
+  AlignmentStatus alignEndsFree( // Regular ASCII Sequences
       const char* const pattern,
       const int patternLength,
       const int patternBeginFree,
@@ -92,14 +92,14 @@ public:
       const int textLength,
       const int textBeginFree,
       const int textEndFree);
-  AlignmentStatus alignEndsFree(
+  AlignmentStatus alignEndsFree( // String ASCII Sequences
       std::string& pattern,
       const int patternBeginFree,
       const int patternEndFree,
       std::string& text,
       const int textBeginFree,
       const int textEndFree);
-  AlignmentStatus alignEndsFree(
+  AlignmentStatus alignEndsFree( // 2bits-Packed Sequences
       const uint8_t* const pattern,
       const int patternLength,
       const int patternBeginFree,
@@ -108,7 +108,7 @@ public:
       const int textLength,
       const int textBeginFree,
       const int textEndFree);
-  AlignmentStatus alignEndsFreeLambda(
+  AlignmentStatus alignEndsFree( // Lambda Sequence
       int (*matchFunct)(int,int,void*),
       void* matchFunctArguments,
       const int patternLength,
@@ -117,6 +117,25 @@ public:
       const int textLength,
       const int textBeginFree,
       const int textEndFree);
+  // Alignment Extension
+  AlignmentStatus alignExtension( // Regular ASCII Sequences
+      const char* const pattern,
+      const int patternLength,
+      const char* const text,
+      const int textLength);
+  AlignmentStatus alignExtension( // String ASCII Sequences
+      std::string& pattern,
+      std::string& text);
+  AlignmentStatus alignExtension( // 2bits-Packed Sequences
+      const uint8_t* const pattern,
+      const int patternLength,
+      const uint8_t* const text,
+      const int textLength);
+  AlignmentStatus alignExtension( // Lambda Sequence
+      int (*matchFunct)(int,int,void*),
+      void* matchFunctArguments,
+      const int patternLength,
+      const int textLength);
   // Heuristics
   void setHeuristicNone();
   void setHeuristicBandedStatic(
@@ -149,8 +168,6 @@ public:
   // Parallelization
   void setMaxNumThreads(
       const int maxNumThreads);
-  void setMinOffsetsPerThread(
-      const int minOffsetsPerThread);
   // Accessors
   int getAlignmentScore();
   int getAlignmentStatus();
