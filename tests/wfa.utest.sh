@@ -6,10 +6,12 @@
 # USAGE: ./wfa.utest.sh
 
 # Config
-BIN="./bin/align_benchmark"
-INPUT="./tests/wfa.utest.seq"
-OUTPUT="./tests"
-LOG="./tests/wfa.utest.log"
+PREFIX=$(dirname $0)
+BIN=$(readlink -f "$PREFIX/../bin/align_benchmark")
+INPUT="$PREFIX/wfa.utest.seq"
+OUTPUT="$PREFIX"
+LOG="$PREFIX/wfa.utest.log"
+CMP_SCORE=$(readlink -f "$PREFIX/../scripts/wfa.alg.cmp.score.sh")
 
 # Clear
 rm $OUTPUT/*.alg $OUTPUT/*.log* &> /dev/null
@@ -47,30 +49,30 @@ do
 done
 
 # Intra-tests
-diff tests/wfa.utest.check/test.edit.alg tests/wfa.utest.check/test.pb.edit.alg >> $LOG.correct 2>&1
-diff tests/wfa.utest.check/test.indel.alg tests/wfa.utest.check/test.pb.indel.alg >> $LOG.correct 2>&1
-diff tests/wfa.utest.check/test.affine.alg tests/wfa.utest.check/test.pb.affine.alg >> $LOG.correct 2>&1
-diff tests/wfa.utest.check/test.affine2p.alg tests/wfa.utest.check/test.pb.affine2p.alg >> $LOG.correct 2>&1
-diff tests/wfa.utest.check/test.affine.p0.alg tests/wfa.utest.check/test.pb.affine.p0.alg >> $LOG.correct 2>&1
-diff tests/wfa.utest.check/test.affine.p1.alg tests/wfa.utest.check/test.pb.affine.p1.alg >> $LOG.correct 2>&1
-diff tests/wfa.utest.check/test.affine.p2.alg tests/wfa.utest.check/test.pb.affine.p2.alg >> $LOG.correct 2>&1
-diff tests/wfa.utest.check/test.affine.p3.alg tests/wfa.utest.check/test.pb.affine.p3.alg >> $LOG.correct 2>&1
-diff tests/wfa.utest.check/test.affine.p4.alg tests/wfa.utest.check/test.pb.affine.p4.alg >> $LOG.correct 2>&1
-diff tests/wfa.utest.check/test.affine.p5.alg tests/wfa.utest.check/test.pb.affine.p5.alg >> $LOG.correct 2>&1
-diff tests/wfa.utest.check/test.affine.wfapt0.alg tests/wfa.utest.check/test.pb.affine.wfapt0.alg >> $LOG.correct 2>&1
-diff tests/wfa.utest.check/test.affine.wfapt1.alg tests/wfa.utest.check/test.pb.affine.wfapt1.alg >> $LOG.correct 2>&1
-./scripts/wfa.alg.cmp.score.sh tests/wfa.utest.check/test.edit.alg tests/wfa.utest.check/test.biwfa.edit.alg >> $LOG.correct 2>&1
-./scripts/wfa.alg.cmp.score.sh tests/wfa.utest.check/test.indel.alg tests/wfa.utest.check/test.biwfa.indel.alg >> $LOG.correct 2>&1
-./scripts/wfa.alg.cmp.score.sh tests/wfa.utest.check/test.affine.alg tests/wfa.utest.check/test.biwfa.affine.alg >> $LOG.correct 2>&1
-./scripts/wfa.alg.cmp.score.sh tests/wfa.utest.check/test.affine2p.alg tests/wfa.utest.check/test.biwfa.affine2p.alg >> $LOG.correct 2>&1
-./scripts/wfa.alg.cmp.score.sh tests/wfa.utest.check/test.affine.p0.alg tests/wfa.utest.check/test.biwfa.affine.p0.alg >> $LOG.correct 2>&1
-./scripts/wfa.alg.cmp.score.sh tests/wfa.utest.check/test.affine.p1.alg tests/wfa.utest.check/test.biwfa.affine.p1.alg >> $LOG.correct 2>&1
-./scripts/wfa.alg.cmp.score.sh tests/wfa.utest.check/test.affine.p2.alg tests/wfa.utest.check/test.biwfa.affine.p2.alg >> $LOG.correct 2>&1
-./scripts/wfa.alg.cmp.score.sh tests/wfa.utest.check/test.affine.p3.alg tests/wfa.utest.check/test.biwfa.affine.p3.alg >> $LOG.correct 2>&1
-./scripts/wfa.alg.cmp.score.sh tests/wfa.utest.check/test.affine.p4.alg tests/wfa.utest.check/test.biwfa.affine.p4.alg >> $LOG.correct 2>&1
-./scripts/wfa.alg.cmp.score.sh tests/wfa.utest.check/test.affine.p5.alg tests/wfa.utest.check/test.biwfa.affine.p5.alg >> $LOG.correct 2>&1
-./scripts/wfa.alg.cmp.score.sh tests/wfa.utest.check/test.affine.wfapt0.alg tests/wfa.utest.check/test.biwfa.affine.wfapt0.alg >> $LOG.correct 2>&1
-./scripts/wfa.alg.cmp.score.sh tests/wfa.utest.check/test.affine.wfapt1.alg tests/wfa.utest.check/test.biwfa.affine.wfapt1.alg >> $LOG.correct 2>&1
+diff $PREFIX/wfa.utest.check/test.edit.alg      $PREFIX/wfa.utest.check/test.pb.edit.alg >> $LOG.correct 2>&1
+diff $PREFIX/wfa.utest.check/test.indel.alg     $PREFIX/wfa.utest.check/test.pb.indel.alg >> $LOG.correct 2>&1
+diff $PREFIX/wfa.utest.check/test.affine.alg    $PREFIX/wfa.utest.check/test.pb.affine.alg >> $LOG.correct 2>&1
+diff $PREFIX/wfa.utest.check/test.affine2p.alg  $PREFIX/wfa.utest.check/test.pb.affine2p.alg >> $LOG.correct 2>&1
+diff $PREFIX/wfa.utest.check/test.affine.p0.alg $PREFIX/wfa.utest.check/test.pb.affine.p0.alg >> $LOG.correct 2>&1
+diff $PREFIX/wfa.utest.check/test.affine.p1.alg $PREFIX/wfa.utest.check/test.pb.affine.p1.alg >> $LOG.correct 2>&1
+diff $PREFIX/wfa.utest.check/test.affine.p2.alg $PREFIX/wfa.utest.check/test.pb.affine.p2.alg >> $LOG.correct 2>&1
+diff $PREFIX/wfa.utest.check/test.affine.p3.alg $PREFIX/wfa.utest.check/test.pb.affine.p3.alg >> $LOG.correct 2>&1
+diff $PREFIX/wfa.utest.check/test.affine.p4.alg $PREFIX/wfa.utest.check/test.pb.affine.p4.alg >> $LOG.correct 2>&1
+diff $PREFIX/wfa.utest.check/test.affine.p5.alg $PREFIX/wfa.utest.check/test.pb.affine.p5.alg >> $LOG.correct 2>&1
+diff $PREFIX/wfa.utest.check/test.affine.wfapt0.alg $PREFIX/wfa.utest.check/test.pb.affine.wfapt0.alg >> $LOG.correct 2>&1
+diff $PREFIX/wfa.utest.check/test.affine.wfapt1.alg $PREFIX/wfa.utest.check/test.pb.affine.wfapt1.alg >> $LOG.correct 2>&1
+$CMP_SCORE $PREFIX/wfa.utest.check/test.edit.alg      $PREFIX/wfa.utest.check/test.biwfa.edit.alg >> $LOG.correct 2>&1
+$CMP_SCORE $PREFIX/wfa.utest.check/test.indel.alg     $PREFIX/wfa.utest.check/test.biwfa.indel.alg >> $LOG.correct 2>&1
+$CMP_SCORE $PREFIX/wfa.utest.check/test.affine.alg    $PREFIX/wfa.utest.check/test.biwfa.affine.alg >> $LOG.correct 2>&1
+$CMP_SCORE $PREFIX/wfa.utest.check/test.affine2p.alg  $PREFIX/wfa.utest.check/test.biwfa.affine2p.alg >> $LOG.correct 2>&1
+$CMP_SCORE $PREFIX/wfa.utest.check/test.affine.p0.alg $PREFIX/wfa.utest.check/test.biwfa.affine.p0.alg >> $LOG.correct 2>&1
+$CMP_SCORE $PREFIX/wfa.utest.check/test.affine.p1.alg $PREFIX/wfa.utest.check/test.biwfa.affine.p1.alg >> $LOG.correct 2>&1
+$CMP_SCORE $PREFIX/wfa.utest.check/test.affine.p2.alg $PREFIX/wfa.utest.check/test.biwfa.affine.p2.alg >> $LOG.correct 2>&1
+$CMP_SCORE $PREFIX/wfa.utest.check/test.affine.p3.alg $PREFIX/wfa.utest.check/test.biwfa.affine.p3.alg >> $LOG.correct 2>&1
+$CMP_SCORE $PREFIX/wfa.utest.check/test.affine.p4.alg $PREFIX/wfa.utest.check/test.biwfa.affine.p4.alg >> $LOG.correct 2>&1
+$CMP_SCORE $PREFIX/wfa.utest.check/test.affine.p5.alg $PREFIX/wfa.utest.check/test.biwfa.affine.p5.alg >> $LOG.correct 2>&1
+$CMP_SCORE $PREFIX/wfa.utest.check/test.affine.wfapt0.alg $PREFIX/wfa.utest.check/test.biwfa.affine.wfapt0.alg >> $LOG.correct 2>&1
+$CMP_SCORE $PREFIX/wfa.utest.check/test.affine.wfapt1.alg $PREFIX/wfa.utest.check/test.biwfa.affine.wfapt1.alg >> $LOG.correct 2>&1
 
 # Summary tests (*.correct,*.time,*.mem)
 grep "Alignments.Correct" $LOG >> $LOG.correct
@@ -93,9 +95,9 @@ echo ">>> Correct: ExitStatus($STATUS_EXIT) Signal($STATUS_SIGNAL) Correct($STAT
 if [[ $STATUS -eq 0 && "$STATUS_EXIT"=="" && "$STATUS_SIGNAL"=="" ]]
 then
   echo -e ">>>\n>>> ALL GOOD!\n>>>"
+  exit 0
 else
   echo -e ">>>\n>>> ERROR\n>>>"
+  exit -1
 fi
-
-exit $STATUS
 
