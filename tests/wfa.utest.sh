@@ -7,11 +7,21 @@
 
 # Config
 PREFIX=$(dirname $0)
-BIN=$(readlink -f "$PREFIX/../bin/align_benchmark")
 INPUT="$PREFIX/wfa.utest.seq"
 OUTPUT="$PREFIX"
 LOG="$PREFIX/wfa.utest.log"
+
 CMP_SCORE=$(readlink -f "$PREFIX/../scripts/wfa.alg.cmp.score.sh")
+BIN=$(readlink -f "$PREFIX/../build/bin/align_benchmark")
+if [ ! -f "$BIN" ] 
+then
+    BIN=$(readlink -f "$PREFIX/../bin/align_benchmark")
+    if [ ! -f "$BIN" ]
+    then
+        echo "[Error] Binaries not built. Please run cmake or make"  
+        exit -1
+    fi 
+fi
 
 # Clear
 rm $OUTPUT/*.alg $OUTPUT/*.log* &> /dev/null

@@ -1,0 +1,21 @@
+name: CMake
+
+on:
+  push:
+    branches: [ "development" ]
+  pull_request:
+    branches: [ "development" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Build
+      run: make clean all
+
+    - name: Test
+      run: bash ./tests/wfa.utest.sh
+
