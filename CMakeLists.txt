@@ -123,6 +123,8 @@ set(wfa2lib_SOURCE
   wavefront/wavefront_sequences.c
   wavefront/wavefront_slab.c
   wavefront/wavefront_unialign.c
+  wavefront/wavefront_termination.c
+  wavefront/wavefront_extend_kernels.c
   system/mm_stack.c
   system/mm_allocator.c
   system/profiler_counter.c

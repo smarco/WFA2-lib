@@ -117,7 +117,7 @@ void wavefront_align_unidirectional(
   wavefront_unialign_init(wf_aligner,affine2p_matrix_M,affine2p_matrix_M); // Init
   wavefront_unialign(wf_aligner); // Align
   // Finish
-  if (wf_aligner->align_status.status == WF_STATUS_MAX_SCORE_REACHED) return; // Alignment paused
+  if (wf_aligner->align_status.status == WF_STATUS_MAX_STEPS_REACHED) return; // Alignment paused
   wavefront_align_unidirectional_cleanup(wf_aligner);
 }
 /*
@@ -233,7 +233,7 @@ int wavefront_align_resume(
   // Parameters
   wavefront_align_status_t* const align_status = &wf_aligner->align_status;
   // Check current alignment status
-  if (align_status->status != WF_STATUS_MAX_SCORE_REACHED ||
+  if (align_status->status != WF_STATUS_MAX_STEPS_REACHED ||
       wf_aligner->bialigner != NULL) {
     fprintf(stderr,"[WFA] Alignment cannot be resumed\n");
     exit(1);
@@ -241,8 +241,8 @@ int wavefront_align_resume(
   // Resume aligning sequences
   wavefront_unialign(wf_aligner);
   // Finish alignment
-  if (align_status->status == WF_STATUS_MAX_SCORE_REACHED) {
-    return WF_STATUS_MAX_SCORE_REACHED; // Alignment paused
+  if (align_status->status == WF_STATUS_MAX_STEPS_REACHED) {
+    return WF_STATUS_MAX_STEPS_REACHED; // Alignment paused
   }
   wavefront_align_unidirectional_cleanup(wf_aligner);
   // DEBUG

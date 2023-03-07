@@ -42,14 +42,11 @@
 /*
  * Error codes & messages
  */
-// Success
-#define WF_STATUS_SUCCESSFUL               0
-// Errors
-#define WF_STATUS_UNFEASIBLE              -1
-#define WF_STATUS_MAX_SCORE_REACHED       -2
-#define WF_STATUS_OOM                     -3
-// Internal
-#define WF_STATUS_END_REACHED              1
+#define WF_STATUS_SUCCESSFUL               0  // Success
+#define WF_STATUS_UNFEASIBLE              -1  // Alignment unattainable under current configuration (eg Z-drop)
+#define WF_STATUS_MAX_STEPS_REACHED       -2  // Maximum number of WFA-steps reached
+#define WF_STATUS_OOM                     -3  // Maximum memory limit reached
+#define WF_STATUS_END_REACHED              1  // [Internal] Alignment end reached
 // Error messages
 extern char* wf_error_msg[5];
 char* wavefront_align_strerror(const int error_code);
@@ -176,9 +173,9 @@ void wavefront_aligner_set_heuristic_banded_adaptive(
 /*
  * System configuration
  */
-void wavefront_aligner_set_max_alignment_score(
+void wavefront_aligner_set_max_alignment_steps(
     wavefront_aligner_t* const wf_aligner,
-    const int max_alignment_score);
+    const int max_alignment_steps);
 void wavefront_aligner_set_max_memory(
     wavefront_aligner_t* const wf_aligner,
     const uint64_t max_memory_resident,

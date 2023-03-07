@@ -81,7 +81,7 @@ align_bench_params_t parameters = {
   .wfa_heuristic_p3 = -1,
   .wfa_memory_mode = wavefront_memory_high,
   .wfa_max_memory = UINT64_MAX,
-  .wfa_max_score = INT_MAX,
+  .wfa_max_steps = INT_MAX,
   .wfa_max_threads = 1,
   .wfa_lambda = false,
   // Other algorithms parameters
@@ -158,7 +158,7 @@ void usage() {
       "              P1 = z-drop                                               \n"
       "              P2 = steps-between-cutoffs                                \n"
       "          --wfa-max-memory BYTES                                        \n"
-      "          --wfa-max-score INT                                           \n"
+      "          --wfa-max-steps INT                                           \n"
       "          --wfa-max-threads INT (intra-parallelism; default=1)          \n"
       "        [Other Parameters]                                              \n"
       "          --bandwidth INT                                               \n"
@@ -198,7 +198,7 @@ void parse_arguments(
     { "wfa-heuristic", required_argument, 0, 1002 },
     { "wfa-heuristic-parameters", required_argument, 0, 1003 },
     { "wfa-max-memory", required_argument, 0, 1005 },
-    { "wfa-max-score", required_argument, 0, 1006 },
+    { "wfa-max-steps", required_argument, 0, 1006 },
     { "wfa-max-threads", required_argument, 0, 1007 },
     { "wfa-lambda", no_argument, 0, 1008 },
     /* Other alignment parameters */
@@ -389,8 +389,8 @@ void parse_arguments(
     case 1005: // --wfa-max-memory
       parameters.wfa_max_memory = atol(optarg);
       break;
-    case 1006: // --wfa-max-score
-      parameters.wfa_max_score = atoi(optarg);
+    case 1006: // --wfa-max-steps
+      parameters.wfa_max_steps = atoi(optarg);
       break;
     case 1007: // --wfa-max-threads
       parameters.wfa_max_threads = atoi(optarg);

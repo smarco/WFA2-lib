@@ -95,7 +95,7 @@ typedef struct {
   int wfa_heuristic_p3;
   wavefront_memory_t wfa_memory_mode;
   uint64_t wfa_max_memory;
-  int wfa_max_score;
+  int wfa_max_steps;
   int wfa_max_threads;
   bool wfa_lambda;
   // Other algorithms parameters

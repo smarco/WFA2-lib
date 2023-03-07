@@ -109,9 +109,9 @@ uint64_t wavefront_bialigner_get_size(
 void wavefront_bialigner_set_heuristic(
     wavefront_bialigner_t* const wf_bialigner,
     wavefront_heuristic_t* const heuristic);
-void wavefront_bialigner_set_max_alignment_score(
+void wavefront_bialigner_set_max_alignment_steps(
     wavefront_bialigner_t* const wf_bialigner,
-    const int max_alignment_score);
+    const int max_alignment_steps);
 void wavefront_bialigner_set_max_memory(
     wavefront_bialigner_t* const wf_bialigner,
     const uint64_t max_memory_resident,

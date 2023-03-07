@@ -60,7 +60,7 @@ public:
   enum AlignmentStatus {
     StatusSuccessful = WF_STATUS_SUCCESSFUL,
     StatusUnfeasible = WF_STATUS_UNFEASIBLE,
-    StatusMaxScoreReached = WF_STATUS_MAX_SCORE_REACHED,
+    StatusMaxStepsReached = WF_STATUS_MAX_STEPS_REACHED,
     StatusOOM = WF_STATUS_OOM,
   };
   // Align End-to-end
@@ -160,8 +160,8 @@ public:
       const int zdrop,
       const int steps_between_cutoffs = 1);
   // Limits
-  void setMaxAlignmentScore(
-      const int maxAlignmentScore);
+  void setMaxAlignmentSteps(
+      const int maxAlignmentSteps);
   void setMaxMemory(
       const uint64_t maxMemoryResident,
       const uint64_t maxMemoryAbort);

@@ -164,12 +164,12 @@ void wavefront_bialigner_set_heuristic(
   wf_bialigner->alg_reverse->heuristic = *heuristic;
   wf_bialigner->alg_subsidiary->heuristic = *heuristic;
 }
-void wavefront_bialigner_set_max_alignment_score(
+void wavefront_bialigner_set_max_alignment_steps(
     wavefront_bialigner_t* const wf_bialigner,
-    const int max_alignment_score) {
-  wf_bialigner->alg_forward->system.max_alignment_score = max_alignment_score;
-  wf_bialigner->alg_reverse->system.max_alignment_score = max_alignment_score;
-  wf_bialigner->alg_subsidiary->system.max_alignment_score = max_alignment_score;
+    const int max_alignment_steps) {
+  wf_bialigner->alg_forward->system.max_alignment_steps = max_alignment_steps;
+  wf_bialigner->alg_reverse->system.max_alignment_steps = max_alignment_steps;
+  wf_bialigner->alg_subsidiary->system.max_alignment_steps = max_alignment_steps;
 }
 void wavefront_bialigner_set_max_memory(
     wavefront_bialigner_t* const wf_bialigner,

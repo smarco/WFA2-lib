@@ -39,9 +39,9 @@
 #include "wfa.h"
 
 /*
- * Initialize wf-alignment conditions
+ * Initialize Aligner (to perform a new alignment)
  */
-void wavefront_aligner_init_wf(
+void wavefront_aligner_init(
     wavefront_aligner_t* const wf_aligner);
 
 /*

@@ -223,7 +223,7 @@ wavefront_aligner_t* align_input_configure_wavefront(
   attributes.plot.align_level = (parameters.plot < 0) ? -1 : parameters.plot - 1;
   attributes.system.verbose = parameters.verbose;
   attributes.system.max_memory_abort = parameters.wfa_max_memory;
-  attributes.system.max_alignment_score = parameters.wfa_max_score;
+  attributes.system.max_alignment_steps = parameters.wfa_max_steps;
   attributes.system.max_num_threads = parameters.wfa_max_threads;
   // Allocate
   return wavefront_aligner_new(&attributes);

@@ -262,10 +262,9 @@ void WFAligner::setHeuristicZDrop(
 /*
  * Limits
  */
-void WFAligner::setMaxAlignmentScore(
-    const int maxAlignmentScore) {
-  wavefront_aligner_set_max_alignment_score(
-      wfAligner,maxAlignmentScore);
+void WFAligner::setMaxAlignmentSteps(
+    const int maxAlignmentSteps) {
+  wavefront_aligner_set_max_alignment_steps(wfAligner,maxAlignmentSteps);
 }
 void WFAligner::setMaxMemory(
     const uint64_t maxMemoryResident,
