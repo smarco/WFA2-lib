@@ -27,16 +27,11 @@ cmake --build . --verbose
 ctest . --verbose
 ```
 
-There are some flags that can be used:
+There are some flags that can be used. For instance:
 
 ```
 cmake .. -DOPENMP=TRUE
-```
-
-To add vector optimization try
-
-```
-cmake .. -DCMAKE_BUILD_TYPE=Release -DEXTRA_FLAGS="-ftree-vectorize -msse2 -mfpmath=sse -ftree-vectorizer-verbose=5"
+cmake .. -DCMAKE_BUILD_TYPE=Release -DEXTRA_FLAGS="-ftree-vectorizer-verbose=5"
 ```
 
 To build a shared library (static is the default)
@@ -417,7 +412,7 @@ The WFA2 library implements various memory modes: `wavefront_memory_high`, `wave
 
 ```C
   wavefront_aligner_attr_t attributes = wavefront_aligner_attr_default;
-  attributes.memory_mode = wavefront_memory_med;
+  attributes.memory_mode = wavefront_memory_ultralow;
 ```
 
 ### <a name="wfa2.heuristics"></a> 3.5 Heuristic modes
@@ -555,11 +550,16 @@ WFA2's heuristics are classified into the following categories: ['wf-adaptive'](
 
 ### <a name="wfa2.other.notes"></a> 3.6 Some technical notes
 
-- Thanks to Eizenga's formulation, WFA2-lib can operate with any match score. Although, in practice, M=0 is still the most efficient choice.
+- Thanks to Eizenga's formulation, WFA2-lib can operate with any match score. In practice, M=0 is often the most efficient choice.
 
-- Note that edit and LCS are distance metrics and, thus, the score computed is always positive. However, weighted distances, like gap-linear and gap-affine, have the sign of the computed alignment evaluated under the selected penalties. If WFA2-lib is executed using $M=0$, the final score is expected to be negative.
 
-- All WFA2-lib algorithms/variants are stable. That is, for alignments having the same score, the library always resolves ties (between M, X, I,and D) using the same criteria: M (highest prio) > X > D > I (lowest prio). Nevertheless, the memory mode `ultralow` (BiWFA) is optimal (always reports the best alignment) but not stable.
+- Note that edit and LCS are distance metrics and, thus, the score computed is always positive. However, using weighted distances (e.g., gap-linear and gap-affine) the alignment score is computed using the selected penalties (i.e., the alignment score can be positive or negative). For instance, if WFA2-lib is executed using $M=0$, the final score is expected to be negative.
+
+
+- All WFA2-lib algorithms/variants are stable. That is, for alignments having the same score, the all alignment modes always resolve ties (between M, X, I,and D) using the same criteria: M (highest prio) > X > D > I (lowest prio). Only the memory mode `ultralow` (BiWFA) resolves ties differently (although the results are still optimal).
+
+
+- WFA2lib follows the convention that describes how to transform the (1) Pattern/Query into the (2) Text/Database/Reference used in classic pattern matching papers. However, the SAM CIGAR specification describes the transformation from (2) Reference to (1) Query. If you want CIGAR-compliant alignments, swap the pattern and text sequences argument when calling the WFA2lib's align functions (to convert all the Ds into Is and vice-versa).
 
 ## <a name="wfa2.complains"></a> 4. REPORTING BUGS AND FEATURE REQUEST
 
