@@ -664,7 +664,7 @@ void cigar_print_pretty(
     const char* const text,
     const int text_length) {
   // Generate and print operations
-  char* const buffer = malloc(cigar->end_offset-cigar->begin_offset);
+  char* const buffer = malloc(10*(cigar->end_offset-cigar->begin_offset));
   cigar_sprint_pretty(buffer,cigar,pattern,pattern_length,text,text_length);
   fprintf(stream,"%s",buffer); // Print
   // Free

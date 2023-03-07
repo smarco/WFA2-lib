@@ -10,6 +10,9 @@ FOLDER_BIN=bin
 ###############################################################################
 LIB_WFA=$(FOLDER_LIB)/libwfa.a
 LIBS=-fopenmp -lm
+ifeq ($(UNAME), Linux)
+  LIBS+=-lrt 
+endif
         
 all: setup examples_c examples_cpp
 	
