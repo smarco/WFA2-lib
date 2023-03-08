@@ -169,19 +169,26 @@ public:
   void setMaxNumThreads(
       const int maxNumThreads);
   // Accessors
-  int getAlignmentScore();
   int getAlignmentStatus();
+  int getAlignmentScore();
   std::string getAlignment();
   void getCIGAR(
       const bool show_mismatches,
       uint32_t** const cigar_ops,
       int* const num_cigar_ops);
-  std::string getCIGARString(
+  std::string getCIGAR(
       const bool show_mismatches);
+  // Display
+  void printPretty(
+      FILE* const stream,
+      const char* const pattern,
+      const int patternLength,
+      const char* const text,
+      const int textLength);
   // Misc
-  char* strError(
-      const int wfErrorCode);
-  void debugAddTag(
+  char* strStatus(
+      const AlignmentStatus status);
+  void debugTag(
       char* const debugTag);
 protected:
   wavefront_aligner_attr_t attributes;

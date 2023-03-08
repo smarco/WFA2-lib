@@ -279,11 +279,11 @@ void WFAligner::setMaxNumThreads(
 /*
  * Accessors
  */
-int WFAligner::getAlignmentScore() {
-  return wfAligner->cigar->score;
-}
 int WFAligner::getAlignmentStatus() {
   return wfAligner->align_status.status;
+}
+int WFAligner::getAlignmentScore() {
+  return wfAligner->cigar->score;
 }
 std::string WFAligner::getAlignment() {
   // Fetch Alignment
@@ -298,7 +298,7 @@ void WFAligner::getCIGAR(
     int* const cigar_length) {
   cigar_get_CIGAR(wfAligner->cigar,show_mismatches,cigar_buffer,cigar_length);
 }
-std::string WFAligner::getCIGARString(
+std::string WFAligner::getCIGAR(
     const bool show_mismatches) {
   // Check length
   const int alignment_length = wfAligner->cigar->end_offset - wfAligner->cigar->begin_offset;
@@ -313,13 +313,24 @@ std::string WFAligner::getCIGARString(
   return cigarString;
 }
 /*
+ * Display
+ */
+void WFAligner::printPretty(
+    FILE* const stream,
+    const char* const pattern,
+    const int patternLength,
+    const char* const text,
+    const int textLength) {
+  cigar_print_pretty(stream,wfAligner->cigar,pattern,patternLength,text,textLength);
+}
+/*
  * Misc
  */
-char* WFAligner::strError(
-    const int wfErrorCode) {
-  return wavefront_align_strerror(wfErrorCode);
+char* WFAligner::strStatus(
+    const WFAligner::AlignmentStatus status) {
+  return wavefront_align_strerror((int)status);
 }
-void WFAligner::debugAddTag(
+void WFAligner::debugTag(
     char* const debugTag) {
   wfAligner->align_mode_tag = debugTag;
   if (wfAligner->bialigner != NULL) {
