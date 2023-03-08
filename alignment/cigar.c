@@ -416,9 +416,13 @@ void cigar_maxtrim_gap_linear(
     }
   }
   // Keep the max-scoring part of the cigar
-  cigar->operations[max_score_offset+1] = '\0';
-  cigar->end_offset = max_score_offset + 1;
-  cigar->score = score;
+  if (max_score_offset == begin_offset) {
+    cigar_clear(cigar);
+  } else {
+    cigar->operations[max_score_offset+1] = '\0';
+    cigar->end_offset = max_score_offset + 1;
+    cigar->score = score;
+  }
 }
 void cigar_maxtrim_gap_affine(
     cigar_t* const cigar,
@@ -455,10 +459,13 @@ void cigar_maxtrim_gap_affine(
       max_score_offset = i;
     }
   }
-  // Keep the max-scoring part of the cigar
-  cigar->operations[max_score_offset+1] = '\0';
-  cigar->end_offset = max_score_offset + 1;
-  cigar->score = score;
+  if (max_score_offset == begin_offset) {
+    cigar_clear(cigar);
+  } else {
+    cigar->operations[max_score_offset+1] = '\0';
+    cigar->end_offset = max_score_offset + 1;
+    cigar->score = score;
+  }
 }
 void cigar_maxtrim_gap_affine2p(
     cigar_t* const cigar,
@@ -493,10 +500,13 @@ void cigar_maxtrim_gap_affine2p(
     max_score = score;
     max_score_offset = i;
   }
-  // Keep the max-scoring part of the cigar
-  cigar->operations[max_score_offset+1] = '\0';
-  cigar->end_offset = max_score_offset + 1;
-  cigar->score = score;
+  if (max_score_offset == begin_offset) {
+    cigar_clear(cigar);
+  } else {
+    cigar->operations[max_score_offset+1] = '\0';
+    cigar->end_offset = max_score_offset + 1;
+    cigar->score = score;
+  }
 }
 /*
  * Check
@@ -581,9 +591,9 @@ void cigar_print(
     cigar_t* const cigar,
     const bool print_matches) {
   // Check null
-  if (cigar->begin_offset >= cigar->end_offset) return;
+  if (cigar_is_null(cigar)) return;
   // Generate and print operations
-  char* const buffer = malloc(cigar->end_offset-cigar->begin_offset);
+  char* const buffer = malloc(2*(cigar->end_offset-cigar->begin_offset)+10);
   cigar_sprint(buffer,cigar,print_matches);
   fprintf(stream,"%s",buffer); // Print
   // Free
@@ -594,7 +604,7 @@ int cigar_sprint(
     cigar_t* const cigar,
     const bool print_matches) {
   // Check null
-  if (cigar->begin_offset >= cigar->end_offset) {
+  if (cigar_is_null(cigar)) {
     buffer[0] = '\0';
     return 0;
   }
@@ -629,9 +639,9 @@ void cigar_print_SAM_CIGAR(
     cigar_t* const cigar,
     const bool show_mismatches) {
   // Check null
-  if (cigar->begin_offset >= cigar->end_offset) return;
+  if (cigar_is_null(cigar)) return;
   // Generate and print operations
-  char* const buffer = malloc(cigar->end_offset-cigar->begin_offset);
+  char* const buffer = malloc(2*(cigar->end_offset-cigar->begin_offset));
   cigar_sprint_SAM_CIGAR(buffer,cigar,show_mismatches);
   fprintf(stream,"%s",buffer); // Print
   // Free
@@ -658,20 +668,6 @@ int cigar_sprint_SAM_CIGAR(
 }
 void cigar_print_pretty(
     FILE* const stream,
-    cigar_t* const cigar,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length) {
-  // Generate and print operations
-  char* const buffer = malloc(10*(cigar->end_offset-cigar->begin_offset));
-  cigar_sprint_pretty(buffer,cigar,pattern,pattern_length,text,text_length);
-  fprintf(stream,"%s",buffer); // Print
-  // Free
-  free(buffer);
-}
-int cigar_sprint_pretty(
-    char* const buffer,
     cigar_t* const cigar,
     const char* const pattern,
     const int pattern_length,
@@ -741,20 +737,17 @@ int cigar_sprint_pretty(
     ++i;
   }
   // Print string
-  int cursor = 0;
-  cursor += sprintf(buffer,"      ALIGNMENT\t");
-  cursor += cigar_sprint(buffer+cursor,cigar,true);
-  cursor += sprintf(buffer+cursor,"\n");
-  cursor += sprintf(buffer+cursor,"      ALIGNMENT.COMPACT\t");
-  cursor += cigar_sprint(buffer+cursor,cigar,false);
-  cursor += sprintf(buffer+cursor,"\n");
-  cursor += sprintf(buffer+cursor,"      PATTERN    %s\n",pattern_alg);
-  cursor += sprintf(buffer+cursor,"                 %s\n",ops_alg);
-  cursor += sprintf(buffer+cursor,"      TEXT       %s\n",text_alg);
-  buffer[cursor] = '\0';
-  // Free & return
+  fprintf(stream,"      ALIGNMENT\t");
+  cigar_print(stream,cigar,true);
+  fprintf(stream,"\n");
+  fprintf(stream,"      ALIGNMENT.COMPACT\t");
+  cigar_print(stream,cigar,false);
+  fprintf(stream,"\n");
+  fprintf(stream,"      PATTERN    %s\n",pattern_alg);
+  fprintf(stream,"                 %s\n",ops_alg);
+  fprintf(stream,"      TEXT       %s\n",text_alg);
+  // Free
   free(mem);
-  return cursor;
 }
 
 

@@ -97,6 +97,8 @@ void wavefront_unialign_init(
   wf_aligner->component_begin = component_begin;
   wf_aligner->component_end = component_end;
   wavefront_aligner_init(wf_aligner);
+  // Clear cigar
+  cigar_clear(wf_aligner->cigar);
 }
 /*
  * Limits
@@ -159,7 +161,6 @@ void wavefront_unialign_terminate(
   const int text_length = sequences->text_length;
   // Retrieve alignment
   if (wf_aligner->alignment_scope == compute_score) {
-    cigar_clear(wf_aligner->cigar);
     wf_aligner->cigar->score =
         wavefront_compute_classic_score(wf_aligner,pattern_length,text_length,score);
   } else {
@@ -200,8 +201,11 @@ void wavefront_unialign_terminate(
           wf_aligner,pattern_length,text_length,score);
     }
   }
-  // Set successful
-  wf_aligner->align_status.status = WF_STATUS_SUCCESSFUL;
+  // Set status
+  wavefront_align_status_t* const align_status = &wf_aligner->align_status;
+  if (align_status->status == WF_STATUS_END_REACHED) {
+    align_status->status = WF_STATUS_SUCCESSFUL;
+  }
 }
 /*
  * Classic WF-Alignment (Unidirectional)

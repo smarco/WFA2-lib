@@ -177,12 +177,5 @@ void cigar_print_pretty(
     const int pattern_length,
     const char* const text,
     const int text_length);
-int cigar_sprint_pretty(
-    char* const buffer,
-    cigar_t* const cigar,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length);
 
 #endif /* CIGAR_H_ */

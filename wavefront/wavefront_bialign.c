@@ -666,6 +666,8 @@ void wavefront_bialign_compute_score(
   wavefront_sequences_t* const sequences = &wf_aligner->bialigner->alg_forward->sequences;
   const int text_length = sequences->text_length;
   const int pattern_length = sequences->pattern_length;
+  // Clear cigar
+  cigar_clear(wf_aligner->cigar);
   // Find breakpoint in the alignment
   wf_bialign_breakpoint_t breakpoint;
   const int align_status = wavefront_bialign_find_breakpoint(wf_aligner->bialigner,
@@ -695,7 +697,6 @@ void wavefront_bialign_compute_score(
     }
   }
   // Report score
-  cigar_clear(wf_aligner->cigar);
   wf_aligner->cigar->score = wavefront_compute_classic_score(
       wf_aligner,pattern_length,text_length,breakpoint.score);
   wf_aligner->align_status.status = WF_STATUS_SUCCESSFUL;
