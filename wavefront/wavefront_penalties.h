@@ -64,6 +64,7 @@ typedef struct {
   linear_penalties_t linear_penalties;     // Original gap-linear penalties
   affine_penalties_t affine_penalties;     // Original gap-affine penalties
   affine2p_penalties_t affine2p_penalties; // Original gap-affine2p penalties
+  int internal_gap_e;                      // Original gap-extension value (used for z-drop)
 } wavefront_penalties_t;
 
 /*

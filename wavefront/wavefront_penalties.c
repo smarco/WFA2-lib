@@ -90,6 +90,7 @@ void wavefront_penalties_set_linear(
   wf_penalties->gap_extension2 = -1;
   // Internals
   wf_penalties->linear_penalties = *linear_penalties;
+  wf_penalties->internal_gap_e = linear_penalties->indel;
 }
 void wavefront_penalties_set_affine(
     wavefront_penalties_t* const wf_penalties,
@@ -126,6 +127,7 @@ void wavefront_penalties_set_affine(
   wf_penalties->gap_extension2 = -1;
   // Internals
   wf_penalties->affine_penalties = *affine_penalties;
+  wf_penalties->internal_gap_e = affine_penalties->gap_extension;
 }
 void wavefront_penalties_set_affine2p(
     wavefront_penalties_t* const wf_penalties,
@@ -167,6 +169,7 @@ void wavefront_penalties_set_affine2p(
   }
   // Internals
   wf_penalties->affine2p_penalties = *affine2p_penalties;
+  wf_penalties->internal_gap_e = affine2p_penalties->gap_extension1;
 }
 /*
  * Display
