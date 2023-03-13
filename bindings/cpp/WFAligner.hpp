@@ -58,8 +58,10 @@ public:
     Alignment,
   };
   enum AlignmentStatus {
-    StatusSuccessful = WF_STATUS_SUCCESSFUL,
-    StatusUnfeasible = WF_STATUS_UNFEASIBLE,
+    // OK Status (>=0)
+    StatusAlgCompleted = WF_STATUS_ALG_COMPLETED,
+    StatusAlgPartial = WF_STATUS_ALG_PARTIAL,
+    // FAILED Status (<0)
     StatusMaxStepsReached = WF_STATUS_MAX_STEPS_REACHED,
     StatusOOM = WF_STATUS_OOM,
   };

@@ -46,36 +46,61 @@
 /*
  * Error messages
  */
-char* wf_error_msg[] =
-{
-  /* WF_STATUS_OOM                  == -3 */ "[WFA] Alignment failed. Maximum memory limit reached",
-  /* WF_STATUS_MAX_STEPS_REACHED    == -2 */ "[WFA] Alignment failed. Maximum WFA-steps limit reached",
-  /* WF_STATUS_UNFEASIBLE           == -1 */ "[WFA] Alignment unattainable under current configuration (possible due to the use of heuristics)",
-  /* WF_STATUS_SUCCESSFUL           ==  0 */ "[WFA] Alignment finished successfully",
-};
-char* wf_error_msg_short[] =
-{
-  /* WF_STATUS_OOM                  == -3 */ "OOM",
-  /* WF_STATUS_MAX_STEPS_REACHED    == -2 */ "MaxWFASteps",
-  /* WF_STATUS_UNFEASIBLE           == -1 */ "Unfeasible",
-  /* WF_STATUS_SUCCESSFUL           ==  0 */ "OK",
-};
+// OK
+#define WF_STATUS_ALG_COMPLETED_MSG           "[WFA] Alignment completed successfully"
+#define WF_STATUS_ALG_PARTIAL_MSG             "[WFA] Alignment extension computed (partial alignment)"
+#define WF_STATUS_ALG_COMPLETED_MSG_SHORT     "OK.Completed"
+#define WF_STATUS_ALG_PARTIAL_MSG_SHORT       "OK.Partial"
+// FAILED
+#define WF_STATUS_MAX_STEPS_REACHED_MSG       "[WFA] Alignment failed. Maximum WFA-steps limit reached"
+#define WF_STATUS_OOM_MSG                     "[WFA] Alignment failed. Maximum memory limit reached"
+#define WF_STATUS_UNATTAINABLE_MSG            "[WFA] Alignment failed. Unattainable under configured heuristics"
+#define WF_STATUS_MAX_STEPS_REACHED_MSG_SHORT "FAILED.MaxWFASteps"
+#define WF_STATUS_OOM_MSG_SHORT               "FAILED.OOM"
+#define WF_STATUS_UNATTAINABLE_MSG_SHORT      "FAILED.Unattainable"
+
+// Internal
+#define WF_STATUS_END_REACHED_MSG             "[WFA] Alignment end reached"
+#define WF_STATUS_END_UNREACHABLE_MSG         "[WFA] Alignment end unreachable under current configuration (due to heuristics like Z-drop)"
+#define WF_STATUS_UNKNOWN_MSG                 "[WFA] Unknown error code"
+#define WF_STATUS_END_REACHED_MSG_SHORT       "INTERNAL.Reached"
+#define WF_STATUS_END_UNREACHABLE_MSG_SHORT   "INTERNAL.Dropped"
+#define WF_STATUS_UNKNOWN_MSG_SHORT           "Unknown"
+/* */
 char* wavefront_align_strerror(const int error_code) {
-  if (error_code > 0) {
-    fprintf(stderr,"[WFA] Internal alignment error code (%d)",error_code);
-    exit(1);
-  }
-  return wf_error_msg[error_code+3];
+  // OK
+  if (error_code == WF_STATUS_ALG_COMPLETED) return WF_STATUS_ALG_COMPLETED_MSG;
+  if (error_code == WF_STATUS_ALG_PARTIAL) return WF_STATUS_ALG_PARTIAL_MSG;
+  // FAILED
+  if (error_code == WF_STATUS_MAX_STEPS_REACHED) return WF_STATUS_MAX_STEPS_REACHED_MSG;
+  if (error_code == WF_STATUS_OOM) return WF_STATUS_OOM_MSG;
+  if (error_code == WF_STATUS_UNATTAINABLE) return WF_STATUS_UNATTAINABLE_MSG;
+  // Internal
+  if (error_code == WF_STATUS_END_REACHED) return WF_STATUS_END_REACHED_MSG;
+  if (error_code == WF_STATUS_END_UNREACHABLE) return WF_STATUS_END_UNREACHABLE_MSG;
+  // Unknown
+  return WF_STATUS_UNKNOWN_MSG;
 }
 char* wavefront_align_strerror_short(const int error_code) {
-  return wf_error_msg_short[error_code+3];
+  // OK
+  if (error_code == WF_STATUS_ALG_COMPLETED) return WF_STATUS_ALG_COMPLETED_MSG_SHORT;
+  if (error_code == WF_STATUS_ALG_PARTIAL) return WF_STATUS_ALG_PARTIAL_MSG_SHORT;
+  // FAILED
+  if (error_code == WF_STATUS_MAX_STEPS_REACHED) return WF_STATUS_MAX_STEPS_REACHED_MSG_SHORT;
+  if (error_code == WF_STATUS_OOM) return WF_STATUS_OOM_MSG_SHORT;
+  if (error_code == WF_STATUS_UNATTAINABLE) return WF_STATUS_UNATTAINABLE_MSG_SHORT;
+  // Internal
+  if (error_code == WF_STATUS_END_REACHED) return WF_STATUS_END_REACHED_MSG_SHORT;
+  if (error_code == WF_STATUS_END_UNREACHABLE) return WF_STATUS_END_UNREACHABLE_MSG_SHORT;
+  // Unknown
+  return WF_STATUS_UNKNOWN_MSG_SHORT;
 }
 /*
  * Initialize Status & System
  */
 void wavefront_aligner_init_status(
     wavefront_aligner_t* const wf_aligner) {
-  wf_aligner->align_status.status = WF_STATUS_SUCCESSFUL;
+  wf_aligner->align_status.status = WF_STATUS_OK;
   wf_aligner->align_status.score = 0;
 }
 void wavefront_aligner_init_system(
@@ -632,22 +657,17 @@ uint64_t wavefront_aligner_get_size(
     return sub_aligners + bt_buffer_size + slab_size;
   }
 }
-void wavefront_aligner_maxtrim_cigar(
+bool wavefront_aligner_maxtrim_cigar(
     wavefront_aligner_t* const wf_aligner) {
   switch (wf_aligner->penalties.distance_metric) {
-    case indel:
-    case edit:
-      // Maxtrim does not apply to edit/indel distances
-      break;
     case gap_linear:
-      cigar_maxtrim_gap_linear(wf_aligner->cigar,&wf_aligner->penalties.linear_penalties);
-      break;
+      return cigar_maxtrim_gap_linear(wf_aligner->cigar,&wf_aligner->penalties.linear_penalties);
     case gap_affine:
-      cigar_maxtrim_gap_affine(wf_aligner->cigar,&wf_aligner->penalties.affine_penalties);
-      break;
+      return cigar_maxtrim_gap_affine(wf_aligner->cigar,&wf_aligner->penalties.affine_penalties);
     case gap_affine_2p:
-      cigar_maxtrim_gap_affine2p(wf_aligner->cigar,&wf_aligner->penalties.affine2p_penalties);
-      break;
+      return cigar_maxtrim_gap_affine2p(wf_aligner->cigar,&wf_aligner->penalties.affine2p_penalties);
+    default:
+      return false; // Maxtrim does not apply to edit/indel distances
   }
 }
 /*

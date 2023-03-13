@@ -50,7 +50,7 @@ void wavefront_aligner_init(
 uint64_t wavefront_aligner_get_size(
     wavefront_aligner_t* const wf_aligner);
 
-void wavefront_aligner_maxtrim_cigar(
+bool wavefront_aligner_maxtrim_cigar(
     wavefront_aligner_t* const wf_aligner);
 
 /*

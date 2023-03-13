@@ -45,11 +45,25 @@
 /*
  * Checks
  */
-void wavefront_align_checks(
+void wavefront_align_presets__checks(
     wavefront_aligner_t* const wf_aligner,
     const int pattern_length,
     const int text_length) {
+  // Parameters
   alignment_form_t* const form = &wf_aligner->alignment_form;
+  /*
+   * Configuration presets
+   */
+  if (form->span == alignment_endsfree && wf_aligner->alignment_form.extension) {
+    // Configure WF-extend mode
+    form->pattern_begin_free = 0;
+    form->pattern_end_free = pattern_length;
+    form->text_begin_free = 0;
+    form->text_end_free = text_length;
+  }
+  /*
+   * Checks
+   */
   if (wf_aligner->bialigner != NULL) {
     const bool ends_free =
         form->pattern_begin_free > 0 ||
@@ -140,7 +154,7 @@ int wavefront_align_lambda(
     const int pattern_length,
     const int text_length) {
   // Checks
-  wavefront_align_checks(wf_aligner,pattern_length,text_length);
+  wavefront_align_presets__checks(wf_aligner,pattern_length,text_length);
   wavefront_debug_begin(wf_aligner);
   // Plot
   if (wf_aligner->plot != NULL) wavefront_plot_resize(wf_aligner->plot,pattern_length,text_length);
@@ -172,7 +186,7 @@ int wavefront_align_packed2bits(
     const uint8_t* const text,
     const int text_length) {
   // Checks
-  wavefront_align_checks(wf_aligner,pattern_length,text_length);
+  wavefront_align_presets__checks(wf_aligner,pattern_length,text_length);
   wavefront_debug_begin(wf_aligner);
   // Plot
   if (wf_aligner->plot != NULL) wavefront_plot_resize(wf_aligner->plot,pattern_length,text_length);
@@ -202,7 +216,7 @@ int wavefront_align(
     const char* const text,
     const int text_length) {
   // Checks
-  wavefront_align_checks(wf_aligner,pattern_length,text_length);
+  wavefront_align_presets__checks(wf_aligner,pattern_length,text_length);
   wavefront_debug_begin(wf_aligner);
   // Plot
   if (wf_aligner->plot != NULL) wavefront_plot_resize(wf_aligner->plot,pattern_length,text_length);

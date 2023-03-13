@@ -94,7 +94,7 @@ int wavefront_extend_end2end(
   if (mwavefront == NULL) {
     // Check alignment feasibility (for heuristic variants that can lead to no solution)
     if (wf_aligner->align_status.num_null_steps > wf_aligner->wf_components.max_score_scope) {
-      wf_aligner->align_status.status = WF_STATUS_UNFEASIBLE;
+      wf_aligner->align_status.status = WF_STATUS_END_UNREACHABLE;
       wf_aligner->align_status.score = score;
       return 1; // Done
     }
@@ -111,7 +111,8 @@ int wavefront_extend_end2end(
   // Cut-off wavefront heuristically
   if (wf_aligner->heuristic.strategy != wf_heuristic_none) {
     if (wavefront_heuristic_cufoff(wf_aligner,score,score_mod)) {
-      wf_aligner->align_status.status = WF_STATUS_UNFEASIBLE;
+      wf_aligner->align_status.status = WF_STATUS_END_UNREACHABLE;
+      wf_aligner->align_status.score = score;
       return 1; // Done
     }
   }
@@ -182,7 +183,7 @@ int wavefront_extend_end2end_max(
   if (mwavefront == NULL) {
     // Check alignment feasibility (heuristic variants that can lead to no solution)
     if (wf_aligner->align_status.num_null_steps > wf_aligner->wf_components.max_score_scope) {
-      wf_aligner->align_status.status = WF_STATUS_UNFEASIBLE;
+      wf_aligner->align_status.status = WF_STATUS_END_UNREACHABLE;
       wf_aligner->align_status.score = score;
       return 1; // Done
     }
@@ -199,7 +200,8 @@ int wavefront_extend_end2end_max(
   // Cut-off wavefront heuristically
   if (wf_aligner->heuristic.strategy != wf_heuristic_none) {
     if (wavefront_heuristic_cufoff(wf_aligner,score,score_mod)) {
-      wf_aligner->align_status.status = WF_STATUS_UNFEASIBLE;
+      wf_aligner->align_status.status = WF_STATUS_END_UNREACHABLE;
+      wf_aligner->align_status.score = score;
       return 1; // Done
     }
   }
@@ -265,7 +267,7 @@ int wavefront_extend_endsfree(
   if (mwavefront == NULL) {
     // Check alignment feasibility (heuristic variants that can lead to no solution)
     if (wf_aligner->align_status.num_null_steps > wf_aligner->wf_components.max_score_scope) {
-      wf_aligner->align_status.status = WF_STATUS_UNFEASIBLE;
+      wf_aligner->align_status.status = WF_STATUS_END_UNREACHABLE;
       wf_aligner->align_status.score = score;
       return 1; // Done
     }
@@ -281,7 +283,8 @@ int wavefront_extend_endsfree(
   // Cut-off wavefront heuristically
   if (wf_aligner->heuristic.strategy != wf_heuristic_none) {
     if (wavefront_heuristic_cufoff(wf_aligner,score,score_mod)) {
-      wf_aligner->align_status.status = WF_STATUS_UNFEASIBLE;
+      wf_aligner->align_status.status = WF_STATUS_END_UNREACHABLE;
+      wf_aligner->align_status.score = score;
       return 1; // Done
     }
   }

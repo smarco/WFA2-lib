@@ -46,11 +46,13 @@ typedef struct {
   int max_operations;      // Maximum buffer size
   int begin_offset;        // Begin offset
   int end_offset;          // End offset
-  // Score
+  // Score and end position (useful for partial alignments like Z-dropped)
   int score;               // Computed scored
+  int end_v;               // Alignment-end vertical coordinate (pattern characters aligned)
+  int end_h;               // Alignment-end horizontal coordinate (text characters aligned)
   // CIGAR (SAM compliant)
   bool has_misms;          // Show 'X' and '=', instead of  just 'M'
-  uint32_t* cigar_buffer;  // CIGAR-operations
+  uint32_t* cigar_buffer;  // CIGAR-operations (max_operations length)
   int cigar_length;        // Total CIGAR-operations
 } cigar_t;
 
@@ -127,13 +129,13 @@ void cigar_discover_mismatches(
     const int text_length,
     cigar_t* const cigar);
 
-void cigar_maxtrim_gap_linear(
+bool cigar_maxtrim_gap_linear(
     cigar_t* const cigar,
     linear_penalties_t* const penalties);
-void cigar_maxtrim_gap_affine(
+bool cigar_maxtrim_gap_affine(
     cigar_t* const cigar,
     affine_penalties_t* const penalties);
-void cigar_maxtrim_gap_affine2p(
+bool cigar_maxtrim_gap_affine2p(
     cigar_t* const cigar,
     affine2p_penalties_t* const penalties);
 

@@ -42,13 +42,18 @@
 /*
  * Error codes & messages
  */
-#define WF_STATUS_SUCCESSFUL               0  // Success
-#define WF_STATUS_UNFEASIBLE              -1  // Alignment unattainable under current configuration (eg Z-drop)
-#define WF_STATUS_MAX_STEPS_REACHED       -2  // Maximum number of WFA-steps reached
-#define WF_STATUS_OOM                     -3  // Maximum memory limit reached
-#define WF_STATUS_END_REACHED              1  // [Internal] Alignment end reached
+// [OK]
+#define WF_STATUS_ALG_COMPLETED            0  // Success (Complete alignment found)
+#define WF_STATUS_ALG_PARTIAL              1  // Success (Partial alignment found)
+// [FAIL]
+#define WF_STATUS_MAX_STEPS_REACHED     -100  // Maximum number of WFA-steps reached
+#define WF_STATUS_OOM                   -200  // Maximum memory limit reached
+#define WF_STATUS_UNATTAINABLE          -300  // Alignment unattainable under configured heuristics
+// [INTERNAL]
+#define WF_STATUS_OK                      -1  // Computing alignment (in progress)
+#define WF_STATUS_END_REACHED             -2  // Alignment end reached
+#define WF_STATUS_END_UNREACHABLE         -3  // Alignment end unreachable under current configuration (eg Z-drop)
 // Error messages
-extern char* wf_error_msg[5];
 char* wavefront_align_strerror(const int error_code);
 char* wavefront_align_strerror_short(const int error_code);
 

@@ -35,27 +35,27 @@ for opt in "--check=correct","test" \
 do 
     # Config
     IFS=','; set -- $opt
-    IFS=' '; MODE="$1"; PREFIX="$2"
-    echo ">>> Testing '$PREFIX' ($MODE)"
+    IFS=' '; MODE="$1"; NAME="$2"
+    echo ">>> Testing '$NAME' ($MODE)"
     
     # Testing distance functions
-    \time -v $BIN -i $INPUT -o $OUTPUT/$PREFIX.indel.alg    -a indel-wfa        $MODE >> $LOG 2>&1 
-    \time -v $BIN -i $INPUT -o $OUTPUT/$PREFIX.edit.alg     -a edit-wfa         $MODE >> $LOG 2>&1        
-    \time -v $BIN -i $INPUT -o $OUTPUT/$PREFIX.affine.alg   -a gap-affine-wfa   $MODE >> $LOG 2>&1    
-    \time -v $BIN -i $INPUT -o $OUTPUT/$PREFIX.affine2p.alg -a gap-affine2p-wfa $MODE >> $LOG 2>&1 
+    \time -v $BIN -i $INPUT -o $OUTPUT/$NAME.indel.alg    -a indel-wfa        $MODE >> $LOG 2>&1 
+    \time -v $BIN -i $INPUT -o $OUTPUT/$NAME.edit.alg     -a edit-wfa         $MODE >> $LOG 2>&1        
+    \time -v $BIN -i $INPUT -o $OUTPUT/$NAME.affine.alg   -a gap-affine-wfa   $MODE >> $LOG 2>&1    
+    \time -v $BIN -i $INPUT -o $OUTPUT/$NAME.affine2p.alg -a gap-affine2p-wfa $MODE >> $LOG 2>&1 
     
     # Testing penalty-scores
-    \time -v $BIN -i $INPUT -o $OUTPUT/$PREFIX.affine.p0.alg -a gap-affine-wfa $MODE --affine-penalties="0,1,2,1" >> $LOG 2>&1 
-    \time -v $BIN -i $INPUT -o $OUTPUT/$PREFIX.affine.p1.alg -a gap-affine-wfa $MODE --affine-penalties="0,3,1,4" >> $LOG 2>&1 
-    \time -v $BIN -i $INPUT -o $OUTPUT/$PREFIX.affine.p2.alg -a gap-affine-wfa $MODE --affine-penalties="0,5,3,2" >> $LOG 2>&1  
+    \time -v $BIN -i $INPUT -o $OUTPUT/$NAME.affine.p0.alg -a gap-affine-wfa $MODE --affine-penalties="0,1,2,1" >> $LOG 2>&1 
+    \time -v $BIN -i $INPUT -o $OUTPUT/$NAME.affine.p1.alg -a gap-affine-wfa $MODE --affine-penalties="0,3,1,4" >> $LOG 2>&1 
+    \time -v $BIN -i $INPUT -o $OUTPUT/$NAME.affine.p2.alg -a gap-affine-wfa $MODE --affine-penalties="0,5,3,2" >> $LOG 2>&1  
     
-    \time -v $BIN -i $INPUT -o $OUTPUT/$PREFIX.affine.p3.alg -a gap-affine-wfa $MODE --affine-penalties="-5,1,2,1" >> $LOG 2>&1 
-    \time -v $BIN -i $INPUT -o $OUTPUT/$PREFIX.affine.p4.alg -a gap-affine-wfa $MODE --affine-penalties="-2,3,1,4" >> $LOG 2>&1 
-    \time -v $BIN -i $INPUT -o $OUTPUT/$PREFIX.affine.p5.alg -a gap-affine-wfa $MODE --affine-penalties="-3,5,3,2" >> $LOG 2>&1 
+    \time -v $BIN -i $INPUT -o $OUTPUT/$NAME.affine.p3.alg -a gap-affine-wfa $MODE --affine-penalties="-5,1,2,1" >> $LOG 2>&1 
+    \time -v $BIN -i $INPUT -o $OUTPUT/$NAME.affine.p4.alg -a gap-affine-wfa $MODE --affine-penalties="-2,3,1,4" >> $LOG 2>&1 
+    \time -v $BIN -i $INPUT -o $OUTPUT/$NAME.affine.p5.alg -a gap-affine-wfa $MODE --affine-penalties="-3,5,3,2" >> $LOG 2>&1 
     
     # Heuristics
-    \time -v $BIN -i $INPUT -o $OUTPUT/$PREFIX.affine.wfapt0.alg -a gap-affine-wfa $MODE --wfa-heuristic=wfa-adaptive --wfa-heuristic-parameters=10,50,1 >> $LOG 2>&1 
-    \time -v $BIN -i $INPUT -o $OUTPUT/$PREFIX.affine.wfapt1.alg -a gap-affine-wfa $MODE --wfa-heuristic=wfa-adaptive --wfa-heuristic-parameters=10,50,10 >> $LOG 2>&1 
+    \time -v $BIN -i $INPUT -o $OUTPUT/$NAME.affine.wfapt0.alg -a gap-affine-wfa $MODE --wfa-heuristic=wfa-adaptive --wfa-heuristic-parameters=10,50,1 >> $LOG 2>&1 
+    \time -v $BIN -i $INPUT -o $OUTPUT/$NAME.affine.wfapt1.alg -a gap-affine-wfa $MODE --wfa-heuristic=wfa-adaptive --wfa-heuristic-parameters=10,50,10 >> $LOG 2>&1 
 done
 
 # Intra-tests
@@ -91,9 +91,9 @@ grep "Maximum resident set size" $LOG | awk '{print $6}' | sort -n > $LOG.mem
 
 # Display performance
 echo ">>> Performance Time (s): "
-paste <(tail -n 4 $OUTPUT/wfa.utest.log.time) <(tail -n 4 $OUTPUT/wfa.utest.check/wfa.utest.log.time)
+paste <(tail -n 4 $OUTPUT/wfa.utest.check/wfa.utest.log.time) <(tail -n 4 $OUTPUT/wfa.utest.log.time) 
 echo ">>> Performance Mem (KB): "
-paste <(tail -n 4 $OUTPUT/wfa.utest.log.mem) <(tail -n 4 $OUTPUT/wfa.utest.check/wfa.utest.log.mem)
+paste <(tail -n 4 $OUTPUT/wfa.utest.check/wfa.utest.log.mem) <(tail -n 4 $OUTPUT/wfa.utest.log.mem) 
 
 # Display correct
 ./tests/wfa.utest.cmp.sh $OUTPUT $OUTPUT/wfa.utest.check

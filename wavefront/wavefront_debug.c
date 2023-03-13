@@ -208,7 +208,7 @@ void wavefront_debug_check_correct(
     wavefront_aligner_t* const wf_aligner) {
   // Check correct
   if (wf_aligner->system.check_alignment_correct &&
-      wf_aligner->align_status.status == WF_STATUS_SUCCESSFUL &&
+      wf_aligner->align_status.status == WF_STATUS_ALG_COMPLETED &&
       wf_aligner->alignment_scope == compute_alignment) {
     if (!wavefront_check_alignment(stderr,wf_aligner)) {
       fprintf(stderr,"[WFA::Check] Error: Alignment incorrect\n");

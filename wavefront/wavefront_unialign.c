@@ -79,14 +79,6 @@ void wavefront_unialign_init(
       exit(1);
       break;
   }
-  // Configure WF-extend mode
-  if (!end2end && wf_aligner->alignment_form.extension) {
-    wavefront_sequences_t* const sequences = &wf_aligner->sequences;
-    alignment_form->pattern_begin_free = 0;
-    alignment_form->pattern_end_free = sequences->pattern_length;
-    alignment_form->text_begin_free = 0;
-    alignment_form->text_end_free = sequences->text_length;
-  }
   // Configure WF-extend function
   if (end2end) {
     align_status->wf_align_extend = &wavefront_extend_end2end;
@@ -156,13 +148,27 @@ void wavefront_unialign_terminate(
     wavefront_aligner_t* const wf_aligner,
     const int score) {
   // Parameters
+  wavefront_align_status_t* const align_status = &wf_aligner->align_status;
   wavefront_sequences_t* const sequences = &wf_aligner->sequences;
   const int pattern_length = sequences->pattern_length;
   const int text_length = sequences->text_length;
-  // Retrieve alignment
+  cigar_t* const cigar = wf_aligner->cigar;
+  // Select alignment scope
   if (wf_aligner->alignment_scope == compute_score) {
-    wf_aligner->cigar->score =
-        wavefront_compute_classic_score(wf_aligner,pattern_length,text_length,score);
+    // Set end-alignment position & score
+    if (align_status->status == WF_STATUS_END_REACHED) {
+      cigar->end_v = pattern_length;
+      cigar->end_h = text_length;
+      cigar->score = wavefront_compute_classic_score(wf_aligner,pattern_length,text_length,score);
+      align_status->status = WF_STATUS_ALG_COMPLETED;
+    } else {
+      const int k = wf_aligner->alignment_end_pos.k;
+      const int offset = wf_aligner->alignment_end_pos.offset;
+      cigar->end_v = WAVEFRONT_V(k,offset);
+      cigar->end_h = WAVEFRONT_H(k,offset);
+      cigar->score = wavefront_compute_classic_score(wf_aligner,cigar->end_v,cigar->end_h,score);
+      align_status->status = WF_STATUS_ALG_PARTIAL;
+    }
   } else {
     // Parameters
     wavefront_components_t* const wf_components = &wf_aligner->wf_components;
@@ -190,21 +196,37 @@ void wavefront_unialign_terminate(
             score,alignment_end_k,alignment_end_offset);
       }
     }
-    // Alignment post-processing
-    if (wf_aligner->alignment_form.extension &&
-        wf_aligner->penalties.distance_metric > edit) {
-      // Apply alignment extension
-      wavefront_aligner_maxtrim_cigar(wf_aligner);
+    /*
+     * Post-processing (Extension-Trim, Score, and Ends)
+     *
+     *                   |     Alignment-Regular    |      Alignment-Extension         |
+     *  |------------------------------------------------------------------------------|
+     *  |  END_REACHABLE |  NoTrim + ALG_COMPLETED  | Trim + ALG_PARTIAL/ALG_COMPLETED |
+     *  |END_UNREACHABLE |  NoTrim + ALG_PARTIAL    | Trim + ALG_PARTIAL               |
+     */
+    const bool do_extension = (wf_aligner->alignment_form.extension && wf_aligner->penalties.distance_metric > edit);
+    if (do_extension) {
+      // Alignment extension (maximal score)
+      const bool cigar_trimmed = wavefront_aligner_maxtrim_cigar(wf_aligner);
+      if (cigar_trimmed) {
+        align_status->status = WF_STATUS_ALG_PARTIAL;
+      } else {
+        align_status->status = (align_status->status == WF_STATUS_END_UNREACHABLE) ?
+            WF_STATUS_ALG_PARTIAL : WF_STATUS_ALG_COMPLETED;
+      }
     } else {
-      // Translate score
-      wf_aligner->cigar->score = wavefront_compute_classic_score(
-          wf_aligner,pattern_length,text_length,score);
+      const int k = wf_aligner->alignment_end_pos.k;
+      const int offset = wf_aligner->alignment_end_pos.offset;
+      cigar->end_v = WAVEFRONT_V(k,offset);
+      cigar->end_h = WAVEFRONT_H(k,offset);
+      cigar->score = wavefront_compute_classic_score(wf_aligner,cigar->end_v,cigar->end_h,score);
+      // Set status
+      if (align_status->status == WF_STATUS_END_UNREACHABLE) {
+        align_status->status = WF_STATUS_ALG_PARTIAL;
+      } else {
+        align_status->status = WF_STATUS_ALG_COMPLETED;
+      }
     }
-  }
-  // Set status
-  wavefront_align_status_t* const align_status = &wf_aligner->align_status;
-  if (align_status->status == WF_STATUS_END_REACHED) {
-    align_status->status = WF_STATUS_SUCCESSFUL;
   }
 }
 /*
@@ -225,7 +247,7 @@ int wavefront_unialign(
       // DEBUG
       // wavefront_aligner_print(stderr,wf_aligner,0,score,7,0);
       if (align_status->status == WF_STATUS_END_REACHED ||
-          align_status->status == WF_STATUS_UNFEASIBLE) {
+          align_status->status == WF_STATUS_END_UNREACHABLE) {
         wavefront_unialign_terminate(wf_aligner,score);
       }
       return align_status->status;
@@ -240,10 +262,8 @@ int wavefront_unialign(
     // DEBUG
     //wavefront_aligner_print(stderr,wf_aligner,score,score,7,0);
   }
-  // Return OK
-  align_status->score = score;
-  align_status->status = WF_STATUS_SUCCESSFUL;
-  return WF_STATUS_SUCCESSFUL;
+  // Unreachable code
+  return WF_STATUS_OK;
 }
 /*
  * Display
