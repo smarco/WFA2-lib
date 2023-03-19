@@ -137,11 +137,12 @@ void wavefront_plot_component(
   if (wavefront == NULL) return;
   // Parameters
   wavefront_sequences_t* const sequences = &wf_aligner->sequences;
+  const int pattern_begin = sequences->pattern_begin;
   const int pattern_length = sequences->pattern_length;
+  const int text_begin = sequences->text_begin;
   const int text_length = sequences->text_length;
   const char* const pattern = sequences->pattern;
   const char* const text = sequences->text;
-  wavefront_plot_t* const plot = wf_aligner->plot;
   const bool reverse = (wf_aligner->align_mode == wf_align_biwfa_breakpoint_reverse);
   // Traverse all offsets
   int k;
@@ -156,11 +157,11 @@ void wavefront_plot_component(
     // Compute global coordinates
     int v_global, h_global;
     if (reverse) {
-      v_global = plot->offset_v + (pattern_length - 1 - v_local);
-      h_global = plot->offset_h + (text_length - 1 - h_local);
+      v_global = pattern_begin + (pattern_length - 1 - v_local);
+      h_global = text_begin + (text_length - 1 - h_local);
     } else {
-      v_global = plot->offset_v + v_local;
-      h_global = plot->offset_h + h_local;
+      v_global = pattern_begin + v_local;
+      h_global = text_begin + h_local;
     }
     // Plot
     if (reverse) {
@@ -192,7 +193,6 @@ void wavefront_plot(
     wavefront_aligner_t* const wf_aligner,
     const int score,
     const int align_level) {
-  //if (wf_aligner->align_mode == wf_align_biwfa_breakpoint_forward) return;
   // Check plotting enabled wrt align-level
   if (wf_aligner->align_mode == wf_align_biwfa_breakpoint_forward ||
       wf_aligner->align_mode == wf_align_biwfa_breakpoint_reverse) {
@@ -255,9 +255,17 @@ void wavefront_plot_print(
   // Parameters
   const distance_metric_t distance_metric = wf_aligner->penalties.distance_metric;
   wavefront_plot_t* const wf_plot = wf_aligner->plot;
-  wavefront_sequences_t* const sequences = &wf_aligner->sequences;
-  const int pattern_length = sequences->pattern_length;
-  const int text_length = sequences->text_length;
+  wavefront_sequences_t* sequences = NULL;
+  if (wf_aligner->bialigner == NULL) {
+    sequences = &wf_aligner->sequences;
+  } else {
+    sequences = &wf_aligner->bialigner->alg_forward->sequences;
+    wavefront_sequences_set_bounds(sequences,
+        0,sequences->pattern_buffer_length,
+        0,sequences->text_buffer_length);
+  }
+  const int pattern_length = sequences->pattern_buffer_length;
+  const int text_length = sequences->text_buffer_length;
   // Check plot
   if (wf_aligner->plot == NULL) {
     fprintf(stream,"# WFA-plot not enabled\n");

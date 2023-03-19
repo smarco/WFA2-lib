@@ -385,7 +385,8 @@ void wavefront_aligner_init_wf(
  * Initialize Aligner (to perform a new alignment)
  */
 void wavefront_aligner_init(
-    wavefront_aligner_t* const wf_aligner) {
+    wavefront_aligner_t* const wf_aligner,
+    const int align_level) {
   // Parameters
   wavefront_sequences_t* const sequences = &wf_aligner->sequences;
   const int pattern_length = sequences->pattern_length;
@@ -411,7 +412,7 @@ void wavefront_aligner_init(
   wf_aligner->alignment_end_pos.k = DPMATRIX_DIAGONAL_NULL;
   wavefront_aligner_init_wf(wf_aligner);
   // Plot (WF_0)
-  if (wf_aligner->plot != NULL) wavefront_plot(wf_aligner,0,0);
+  if (wf_aligner->plot != NULL) wavefront_plot(wf_aligner,0,align_level);
 }
 /*
  * Setup

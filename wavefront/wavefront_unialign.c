@@ -88,7 +88,7 @@ void wavefront_unialign_init(
   // Initialize wavefront-aligner (to perform a new alignment)
   wf_aligner->component_begin = component_begin;
   wf_aligner->component_end = component_end;
-  wavefront_aligner_init(wf_aligner);
+  wavefront_aligner_init(wf_aligner,0);
   // Clear cigar
   cigar_clear(wf_aligner->cigar);
 }

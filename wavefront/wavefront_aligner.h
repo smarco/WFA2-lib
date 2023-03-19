@@ -42,7 +42,8 @@
  * Initialize Aligner (to perform a new alignment)
  */
 void wavefront_aligner_init(
-    wavefront_aligner_t* const wf_aligner);
+    wavefront_aligner_t* const wf_aligner,
+    const int align_level);
 
 /*
  * Utils

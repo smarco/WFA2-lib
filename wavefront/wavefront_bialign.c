@@ -47,6 +47,7 @@
  */
 #define WF_BIALIGN_FALLBACK_MIN_SCORE  250
 #define WF_BIALIGN_FALLBACK_MIN_LENGTH 100
+#define WF_BIALIGN_RECOVERY_MIN_SCORE  500
 
 /*
  * Debug
@@ -120,7 +121,7 @@ void wavefront_bialign_init(
   alg_forward->alignment_form = form_forward;
   alg_forward->component_begin = component_begin;
   alg_forward->component_end = component_end;
-  wavefront_aligner_init(alg_forward);
+  wavefront_aligner_init(alg_forward,align_level);
   // Initialize wavefront-aligner (reverse)
   alignment_span_t span_reverse =
       (form->pattern_end_free > 0 || form->text_end_free > 0) ?
@@ -135,7 +136,7 @@ void wavefront_bialign_init(
   alg_reverse->alignment_form = form_reverse;
   alg_reverse->component_begin = component_end;
   alg_reverse->component_end = component_begin;
-  wavefront_aligner_init(alg_reverse);
+  wavefront_aligner_init(alg_reverse,align_level);
   // Plot
   const bool plot_enabled = (alg_forward->plot != NULL);
   if (plot_enabled) {
@@ -220,7 +221,8 @@ void wavefront_bialign_breakpoint_indel2indel(
     const int dh_0 = WAVEFRONT_H(k_0,doffset_0);
     const int dh_1 = WAVEFRONT_H(k_1,doffset_1);
     // Check breakpoint d2d
-    if (dh_0 + dh_1 >= text_length && score_0 + score_1 - gap_open < breakpoint->score) {
+    if (dh_0 + dh_1 >= text_length && score_0 + score_1 - gap_open < breakpoint->score &&
+        dh_0 <= text_length && dh_1 <= text_length) {
       if (breakpoint_forward) {
         breakpoint->score_forward = score_0;
         breakpoint->score_reverse = score_1;
@@ -526,7 +528,7 @@ int wavefront_bialign_find_breakpoint_exception(
       score_reached = alg_reverse->align_status.score;
     }
     // Fallback if possible
-    if (score_reached <= WF_BIALIGN_FALLBACK_MIN_SCORE) {
+    if (score_reached <= WF_BIALIGN_RECOVERY_MIN_SCORE) {
       return wavefront_bialign_base(wf_aligner,form,component_begin,component_end,align_level);
     } else {
       return WF_STATUS_END_UNREACHABLE; // To no avail
@@ -538,6 +540,13 @@ int wavefront_bialign_find_breakpoint_exception(
 /*
  * Bidirectional Alignment
  */
+void wavefront_biplot_coordinates(
+    wavefront_plot_t* const plot,
+    const int offset_v,
+    const int offset_h) {
+  plot->offset_v = offset_v;
+  plot->offset_h = offset_h;
+}
 void wavefront_bialign_init_half_0(
     alignment_form_t* const global_form,
     alignment_form_t* const half_form) {
@@ -619,10 +628,7 @@ int wavefront_bialign_alignment(
   if (wf_aligner->system.verbose >= 3) wavefront_bialign_debug(&breakpoint,align_level);
   // Align half_0
   alignment_form_t form_0;
-  if (plot) {
-    plot->offset_v = pattern_begin;
-    plot->offset_h = text_begin;
-  }
+  if (plot) wavefront_biplot_coordinates(plot,pattern_begin,text_begin);
   wavefront_bialigner_set_sequences_bounds(wf_aligner->bialigner,
       pattern_begin,pattern_begin+breakpoint_v,
       text_begin,text_begin+breakpoint_h);
@@ -633,10 +639,7 @@ int wavefront_bialign_alignment(
   if (align_status != WF_STATUS_OK) return align_status;
   // Align half_1
   alignment_form_t form_1;
-  if (plot) {
-    plot->offset_v = pattern_begin + breakpoint_v;
-    plot->offset_h = text_begin + breakpoint_h;
-  }
+  if (plot) wavefront_biplot_coordinates(plot,pattern_begin+breakpoint_v,text_begin+breakpoint_h);
   wavefront_bialigner_set_sequences_bounds(wf_aligner->bialigner,
       pattern_begin+breakpoint_v,pattern_end,
       text_begin+breakpoint_h,text_end);
