@@ -154,6 +154,7 @@ void wavefront_unialign_terminate(
   const int text_length = sequences->text_length;
   cigar_t* const cigar = wf_aligner->cigar;
   // Select alignment scope
+  align_status->score = score;
   if (wf_aligner->alignment_scope == compute_score) {
     // Set end-alignment position & score
     if (align_status->status == WF_STATUS_END_REACHED) {
@@ -167,6 +168,7 @@ void wavefront_unialign_terminate(
       cigar->end_v = WAVEFRONT_V(k,offset);
       cigar->end_h = WAVEFRONT_H(k,offset);
       cigar->score = wavefront_compute_classic_score(wf_aligner,cigar->end_v,cigar->end_h,score);
+      align_status->dropped = true;
       align_status->status = WF_STATUS_ALG_PARTIAL;
     }
   } else {
@@ -201,11 +203,13 @@ void wavefront_unialign_terminate(
      *
      *                   |     Alignment-Regular    |      Alignment-Extension         |
      *  |------------------------------------------------------------------------------|
-     *  |  END_REACHABLE |  NoTrim + ALG_COMPLETED  | Trim + ALG_PARTIAL/ALG_COMPLETED |
-     *  |END_UNREACHABLE |  NoTrim + ALG_PARTIAL    | Trim + ALG_PARTIAL               |
+     *  |  END_REACHABLE |  NoTrim + ALG_COMPLETED  | Trim + ALG_PARTIAL|ALG_COMPLETED |
+     *  |END_UNREACHABLE |  Trim + ALG_PARTIAL      | Trim + ALG_PARTIAL               |
      */
-    const bool do_extension = (wf_aligner->alignment_form.extension && wf_aligner->penalties.distance_metric > edit);
-    if (do_extension) {
+    const bool do_extension = wf_aligner->alignment_form.extension;
+    const bool unreachable = (align_status->status == WF_STATUS_END_UNREACHABLE);
+    align_status->dropped = unreachable;
+    if (do_extension || unreachable) {
       // Alignment extension (maximal score)
       const bool cigar_trimmed = wavefront_aligner_maxtrim_cigar(wf_aligner);
       if (cigar_trimmed) {
@@ -221,7 +225,7 @@ void wavefront_unialign_terminate(
       cigar->end_h = WAVEFRONT_H(k,offset);
       cigar->score = wavefront_compute_classic_score(wf_aligner,cigar->end_v,cigar->end_h,score);
       // Set status
-      if (align_status->status == WF_STATUS_END_UNREACHABLE) {
+      if (unreachable) {
         align_status->status = WF_STATUS_ALG_PARTIAL;
       } else {
         align_status->status = WF_STATUS_ALG_COMPLETED;

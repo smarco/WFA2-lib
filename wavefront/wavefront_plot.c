@@ -281,9 +281,7 @@ void wavefront_plot_print(
   // Alignment mode
   fprintf(stream,"# WFAMode ");
   wavefront_heuristic_t* const wf_heuristic = &wf_aligner->heuristic;
-  if (wf_heuristic->strategy != wf_heuristic_none) {
-    wavefront_heuristic_print(stream,wf_heuristic);
-  }
+  wavefront_heuristic_print(stream,wf_heuristic);
   fprintf(stream,"\n");
   // Wavefront components
   fprintf(stream,"# Heatmap M\n"); heatmap_print(stream,wf_plot->m_heatmap);

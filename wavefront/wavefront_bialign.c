@@ -660,7 +660,9 @@ int wavefront_bialign_alignment(
 int wavefront_bialign_compute_score(
     wavefront_aligner_t* const wf_aligner) {
   // Parameters
-  wavefront_sequences_t* const sequences = &wf_aligner->bialigner->alg_forward->sequences;
+  wavefront_aligner_t* const alg_forward = wf_aligner->bialigner->alg_forward;
+  wavefront_aligner_t* const alg_reverse = wf_aligner->bialigner->alg_reverse;
+  wavefront_sequences_t* const sequences = &alg_forward->sequences;
   const int text_length = sequences->text_length;
   const int pattern_length = sequences->pattern_length;
   // Clear cigar
@@ -672,16 +674,15 @@ int wavefront_bialign_compute_score(
       affine_matrix_M,affine_matrix_M,&breakpoint,0);
   // DEBUG
   if (wf_aligner->system.verbose >= 2) {
-    wavefront_debug_end(wf_aligner->bialigner->alg_forward);
-    wavefront_debug_end(wf_aligner->bialigner->alg_reverse);
+    wavefront_debug_end(alg_forward);
+    wavefront_debug_end(alg_reverse);
   }
   // Check status
   cigar_t* const cigar = wf_aligner->cigar;
   if (align_status == WF_STATUS_OK || align_status == WF_STATUS_END_REACHED) {
     if (align_status == WF_STATUS_END_REACHED) {
-      breakpoint.score = (align_status == WF_STATUS_END_REACHED) ?
-          wf_aligner->bialigner->alg_forward->align_status.score :
-          wf_aligner->bialigner->alg_reverse->align_status.score;
+      breakpoint.score = (alg_forward->align_status.status == WF_STATUS_END_REACHED) ?
+          alg_forward->align_status.score : alg_reverse->align_status.score;
     }
     // Set status & score
     cigar->score = wavefront_compute_classic_score(wf_aligner,pattern_length,text_length,breakpoint.score);

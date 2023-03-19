@@ -34,35 +34,6 @@
 
 #include "wavefront_aligner.h"
 
-
-/*
- * Inner-most extend kernel (blockwise comparisons)
- */
-FORCE_INLINE wf_offset_t wavefront_extend_matches_packed_kernel(
-    wavefront_aligner_t* const wf_aligner,
-    const int k,
-    wf_offset_t offset) {
-  // Fetch pattern/text blocks
-  uint64_t* pattern_blocks = (uint64_t*)(wf_aligner->sequences.pattern+WAVEFRONT_V(k,offset));
-  uint64_t* text_blocks = (uint64_t*)(wf_aligner->sequences.text+WAVEFRONT_H(k,offset));
-  // Compare 64-bits blocks
-  uint64_t cmp = *pattern_blocks ^ *text_blocks;
-  while (__builtin_expect(cmp==0,0)) {
-    // Increment offset (full block)
-    offset += 8;
-    // Next blocks
-    ++pattern_blocks;
-    ++text_blocks;
-    // Compare
-    cmp = *pattern_blocks ^ *text_blocks;
-  }
-  // Count equal characters
-  const int equal_right_bits = __builtin_ctzl(cmp);
-  const int equal_chars = DIV_FLOOR(equal_right_bits,8);
-  offset += equal_chars;
-  // Return extended offset
-  return offset;
-}
 /*
  * Wavefront-Extend Inner Kernels
  */

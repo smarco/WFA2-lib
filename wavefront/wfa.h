@@ -65,6 +65,7 @@ typedef struct {
   // Status
   int status;                                                     // Status code
   int score;                                                      // Current WF-alignment score
+  bool dropped;                                                   // Heuristically dropped
   int num_null_steps;                                             // Total contiguous null-steps performed
   uint64_t memory_used;                                           // Total memory used
   // Wavefront alignment functions

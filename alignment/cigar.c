@@ -280,7 +280,7 @@ int cigar_score_gap_affine(
   }
   return score;
 }
-int cigar_score_gap_affine2p_get_operations_score(
+int cigar_score_gap_affine2p_score_op(
     const char operation,
     const int length,
     affine2p_penalties_t* const penalties) {
@@ -309,14 +309,14 @@ int cigar_score_gap_affine2p(
   for (i=cigar->begin_offset;i<cigar->end_offset;++i) {
     // Account for operation
     if (cigar->operations[i] != last_op && last_op != '\0') {
-      score -= cigar_score_gap_affine2p_get_operations_score(last_op,op_length,penalties);
+      score -= cigar_score_gap_affine2p_score_op(last_op,op_length,penalties);
       op_length = 0;
     }
     last_op = cigar->operations[i];
     ++op_length;
   }
   // Account for last operation
-  score -= cigar_score_gap_affine2p_get_operations_score(last_op,op_length,penalties);
+  score -= cigar_score_gap_affine2p_score_op(last_op,op_length,penalties);
   return score;
 }
 /*
@@ -402,6 +402,7 @@ bool cigar_maxtrim_gap_linear(
   const char* const operations = cigar->operations;
   const int begin_offset = cigar->begin_offset;
   const int end_offset = cigar->end_offset;
+  const int match_score = (penalties->match!=0) ? penalties->match : -1;
   // Max-score
   int max_score = 0, max_score_offset = begin_offset, max_end_v = 0, max_end_h = 0;
   // Traverse all cigar
@@ -410,7 +411,7 @@ bool cigar_maxtrim_gap_linear(
     // Update score
     switch (operations[i]) {
       case 'M':
-        score -= penalties->match;
+        score -= match_score;
         ++end_v; ++end_h;
         break;
       case 'X':
@@ -436,7 +437,7 @@ bool cigar_maxtrim_gap_linear(
   }
   // Keep the max-scoring part of the cigar
   const bool cigar_trimmed = (max_score_offset != end_offset-1);
-  if (max_score_offset == begin_offset) {
+  if (max_score == 0) {
     cigar_clear(cigar);
   } else {
     cigar->operations[max_score_offset+1] = '\0';
@@ -455,6 +456,7 @@ bool cigar_maxtrim_gap_affine(
   const char* const operations = cigar->operations;
   const int begin_offset = cigar->begin_offset;
   const int end_offset = cigar->end_offset;
+  const int match_score = (penalties->match!=0) ? penalties->match : -1;
   // Max-score
   int max_score = 0, max_score_offset = begin_offset, max_end_v = 0, max_end_h = 0;
   // Traverse all cigar
@@ -464,7 +466,7 @@ bool cigar_maxtrim_gap_affine(
     // Update score
     switch (operations[i]) {
       case 'M':
-        score -= penalties->match;
+        score -= match_score;
         ++end_v; ++end_h;
         break;
       case 'X':
@@ -491,7 +493,7 @@ bool cigar_maxtrim_gap_affine(
   }
   // Keep the max-scoring part of the cigar
   const bool cigar_trimmed = (max_score_offset != end_offset-1);
-  if (max_score_offset == begin_offset) {
+  if (max_score == 0) {
     cigar_clear(cigar);
   } else {
     cigar->operations[max_score_offset+1] = '\0';
@@ -502,6 +504,38 @@ bool cigar_maxtrim_gap_affine(
   }
   // Return
   return cigar_trimmed;
+}
+int cigar_maxtrim_gap_affine2p_score_op(
+    const char operation,
+    const int length,
+    affine2p_penalties_t* const penalties,
+    int* const end_v,
+    int* const end_h) {
+  switch (operation) {
+    case 'M': {
+      *end_v += length; *end_h += length;
+      const int match_score = (penalties->match!=0) ? penalties->match : -1;
+      return match_score*length;
+    }
+    case 'X':
+      *end_v += length; *end_h += length;
+      return penalties->mismatch*length;
+    case 'D': {
+      *end_v += length;
+      const int score1 = penalties->gap_opening1 + penalties->gap_extension1*length;
+      const int score2 = penalties->gap_opening2 + penalties->gap_extension2*length;
+      return MIN(score1,score2);
+    }
+    case 'I': {
+      *end_h += length;
+      const int score1 = penalties->gap_opening1 + penalties->gap_extension1*length;
+      const int score2 = penalties->gap_opening2 + penalties->gap_extension2*length;
+      return MIN(score1,score2);
+    }
+    default:
+      fprintf(stderr,"[CIGAR] Computing CIGAR score: Unknown operation\n");
+      exit(1);
+  }
 }
 bool cigar_maxtrim_gap_affine2p(
     cigar_t* const cigar,
@@ -520,27 +554,21 @@ bool cigar_maxtrim_gap_affine2p(
     // Account for operation
     const char operation = operations[i];
     if (operation != last_op && last_op != '\0') {
-      score -= cigar_score_gap_affine2p_get_operations_score(last_op,op_length,penalties);
+      score -= cigar_maxtrim_gap_affine2p_score_op(last_op,op_length,penalties,&end_v,&end_h);
       op_length = 0;
+      // Compare max
+      if (max_score < score) {
+        max_score = score;
+        max_score_offset = i - 1;
+        max_end_v = end_v;
+        max_end_h = end_h;
+      }
     }
     last_op = operation;
     ++op_length;
-    // Update alignment-end
-    switch (operation) {
-      case 'M': case 'X': ++end_v; ++end_h; break;
-      case 'I': ++end_h; break;
-      case 'D': ++end_v; break;
-    }
-    // Compare max
-    if (max_score < score) {
-      max_score = score;
-      max_score_offset = i;
-      max_end_v = end_v;
-      max_end_h = end_h;
-    }
   }
   // Account for last operation
-  score -= cigar_score_gap_affine2p_get_operations_score(last_op,op_length,penalties);
+  score -= cigar_maxtrim_gap_affine2p_score_op(last_op,op_length,penalties,&end_v,&end_h);
   if (max_score < score) {
     max_score = score;
     max_score_offset = end_offset - 1;
@@ -549,7 +577,7 @@ bool cigar_maxtrim_gap_affine2p(
   }
   // Keep the max-scoring part of the cigar
   const bool cigar_trimmed = (max_score_offset != end_offset-1);
-  if (max_score_offset == begin_offset) {
+  if (max_score == 0) {
     cigar_clear(cigar);
   } else {
     cigar->operations[max_score_offset+1] = '\0';

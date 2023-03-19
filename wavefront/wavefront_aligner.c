@@ -102,6 +102,7 @@ void wavefront_aligner_init_status(
     wavefront_aligner_t* const wf_aligner) {
   wf_aligner->align_status.status = WF_STATUS_OK;
   wf_aligner->align_status.score = 0;
+  wf_aligner->align_status.dropped = false;
 }
 void wavefront_aligner_init_system(
     wavefront_aligner_t* const wf_aligner) {

@@ -124,6 +124,7 @@ set(wfa2lib_SOURCE
   wavefront/wavefront_slab.c
   wavefront/wavefront_unialign.c
   wavefront/wavefront_termination.c
+  wavefront/wavefront_extend_kernels_avx.c
   wavefront/wavefront_extend_kernels.c
   system/mm_stack.c
   system/mm_allocator.c

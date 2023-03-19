@@ -304,7 +304,7 @@ void wf_heuristic_compute_sw_scores(
     wf_offset_t* const max_offset) {
   // Parameters
   const int wf_match = wf_aligner->penalties.match;
-  const int swg_match = -(wf_aligner->penalties.match);
+  const int swg_match = (wf_match!=0) ? -(wf_aligner->penalties.match) : -1;
   // Compute min-distance
   const wf_offset_t* const offsets = wavefront->offsets;
   int k, cmax_sw_score = INT_MIN, cmax_k = 0, cmax_offset = 0;
@@ -314,9 +314,7 @@ void wf_heuristic_compute_sw_scores(
     if (offset < 0) continue;
     const int v = WAVEFRONT_V(k,offset);
     const int h = WAVEFRONT_H(k,offset);
-    const int sw_score = (wf_match==0) ?
-        ((v+h) - wf_score) : // if (match-score==0) then use match-score=1
-        WF_SCORE_TO_SW_SCORE(swg_match,v,h,wf_score);
+    const int sw_score = WF_SCORE_TO_SW_SCORE(swg_match,v,h,wf_score);
     sw_scores[k] = sw_score;
     if (cmax_sw_score < sw_score) {
       cmax_sw_score = sw_score;
@@ -431,13 +429,7 @@ bool wavefront_heuristic_zdrop(
       wf_heuristic->max_sw_score_offset = cmax_offset;
     } else {
       // Test Z-drop
-      const int gap_score = wf_zdrop_gap_score(wf_aligner,max_offset,max_k,cmax_offset,cmax_k);
-      //      fprintf(stderr,"[Z-DROP] (max=%d at (%d,%d),current=%d at (%d,%d)) diff=%d leeway=%d\n",
-      //          max_sw_score,WAVEFRONT_V(max_k,max_offset),WAVEFRONT_H(max_k,max_offset),
-      //          cmax_sw_score,WAVEFRONT_V(cmax_k,cmax_offset),WAVEFRONT_H(cmax_k,cmax_offset),
-      //          max_sw_score - cmax_sw_score,
-      //          zdrop + gap_score);
-      if (max_sw_score - (int)cmax_sw_score > zdrop + gap_score) {
+      if (max_sw_score - (int)cmax_sw_score > zdrop) {
         wf_aligner->alignment_end_pos.score = wf_heuristic->max_wf_score;
         wf_aligner->alignment_end_pos.k = max_k;
         wf_aligner->alignment_end_pos.offset = max_offset;
