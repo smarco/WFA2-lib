@@ -540,13 +540,6 @@ int wavefront_bialign_find_breakpoint_exception(
 /*
  * Bidirectional Alignment
  */
-void wavefront_biplot_coordinates(
-    wavefront_plot_t* const plot,
-    const int offset_v,
-    const int offset_h) {
-  plot->offset_v = offset_v;
-  plot->offset_h = offset_h;
-}
 void wavefront_bialign_init_half_0(
     alignment_form_t* const global_form,
     alignment_form_t* const half_form) {
@@ -592,7 +585,6 @@ int wavefront_bialign_alignment(
   const int text_end = sequences->text_begin + sequences->text_length;
   const int pattern_length = pattern_end - pattern_begin;
   const int text_length = text_end - text_begin;
-  wavefront_plot_t* const plot = wf_aligner->plot;
   // Trivial cases
   if (text_length == 0) {
     cigar_append_deletion(wf_aligner->cigar,pattern_length);
@@ -628,7 +620,6 @@ int wavefront_bialign_alignment(
   if (wf_aligner->system.verbose >= 3) wavefront_bialign_debug(&breakpoint,align_level);
   // Align half_0
   alignment_form_t form_0;
-  if (plot) wavefront_biplot_coordinates(plot,pattern_begin,text_begin);
   wavefront_bialigner_set_sequences_bounds(wf_aligner->bialigner,
       pattern_begin,pattern_begin+breakpoint_v,
       text_begin,text_begin+breakpoint_h);
@@ -639,7 +630,6 @@ int wavefront_bialign_alignment(
   if (align_status != WF_STATUS_OK) return align_status;
   // Align half_1
   alignment_form_t form_1;
-  if (plot) wavefront_biplot_coordinates(plot,pattern_begin+breakpoint_v,text_begin+breakpoint_h);
   wavefront_bialigner_set_sequences_bounds(wf_aligner->bialigner,
       pattern_begin+breakpoint_v,pattern_end,
       text_begin+breakpoint_h,text_end);

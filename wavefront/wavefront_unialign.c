@@ -176,26 +176,28 @@ void wavefront_unialign_terminate(
     wavefront_components_t* const wf_components = &wf_aligner->wf_components;
     const int alignment_end_k = wf_aligner->alignment_end_pos.k;
     const wf_offset_t alignment_end_offset = wf_aligner->alignment_end_pos.offset;
-    if (wf_components->bt_piggyback) {
-      // Fetch wavefront
-      const bool memory_modular = wf_aligner->wf_components.memory_modular;
-      const int max_score_scope = wf_aligner->wf_components.max_score_scope;
-      const int score_mod = (memory_modular) ? score % max_score_scope : score;
-      wavefront_t* const mwavefront = wf_components->mwavefronts[score_mod];
-      // Backtrace alignment from buffer (unpacking pcigar)
-      wavefront_backtrace_pcigar(
-          wf_aligner,alignment_end_k,alignment_end_offset,
-          mwavefront->bt_pcigar[alignment_end_k],
-          mwavefront->bt_prev[alignment_end_k]);
-    } else {
-      // Backtrace alignment
-      if (wf_aligner->penalties.distance_metric <= gap_linear) {
-        wavefront_backtrace_linear(wf_aligner,
-            score,alignment_end_k,alignment_end_offset);
+    if (alignment_end_offset != WAVEFRONT_OFFSET_NULL) {
+      if (wf_components->bt_piggyback) {
+        // Fetch wavefront
+        const bool memory_modular = wf_aligner->wf_components.memory_modular;
+        const int max_score_scope = wf_aligner->wf_components.max_score_scope;
+        const int score_mod = (memory_modular) ? score % max_score_scope : score;
+        wavefront_t* const mwavefront = wf_components->mwavefronts[score_mod];
+        // Backtrace alignment from buffer (unpacking pcigar)
+        wavefront_backtrace_pcigar(
+            wf_aligner,alignment_end_k,alignment_end_offset,
+            mwavefront->bt_pcigar[alignment_end_k],
+            mwavefront->bt_prev[alignment_end_k]);
       } else {
-        wavefront_backtrace_affine(wf_aligner,
-            wf_aligner->component_begin,wf_aligner->component_end,
-            score,alignment_end_k,alignment_end_offset);
+        // Backtrace alignment
+        if (wf_aligner->penalties.distance_metric <= gap_linear) {
+          wavefront_backtrace_linear(wf_aligner,
+              score,alignment_end_k,alignment_end_offset);
+        } else {
+          wavefront_backtrace_affine(wf_aligner,
+              wf_aligner->component_begin,wf_aligner->component_end,
+              score,alignment_end_k,alignment_end_offset);
+        }
       }
     }
     /*

@@ -99,9 +99,6 @@ wavefront_plot_t* wavefront_plot_new(
   wf_plot->max_h = -1;
   // Allocate and configure
   wavefront_plot_heatmaps_allocate(wf_plot,pattern_length,text_length);
-  // Clear offsets
-  wf_plot->offset_h = 0;
-  wf_plot->offset_v = 0;
   // Return
   return wf_plot;
 }
@@ -113,9 +110,6 @@ void wavefront_plot_resize(
   wavefront_plot_heatmaps_free(wf_plot);
   // Allocate new heatmaps
   wavefront_plot_heatmaps_allocate(wf_plot,pattern_length,text_length);
-  // Clear offsets
-  wf_plot->offset_h = 0;
-  wf_plot->offset_v = 0;
 }
 void wavefront_plot_delete(
     wavefront_plot_t* const wf_plot) {

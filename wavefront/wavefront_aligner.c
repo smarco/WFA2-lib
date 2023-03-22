@@ -410,6 +410,7 @@ void wavefront_aligner_init(
   wf_aligner->align_status.num_null_steps = 0; // Zero null steps
   wf_aligner->alignment_end_pos.score = -1;    // Not aligned
   wf_aligner->alignment_end_pos.k = DPMATRIX_DIAGONAL_NULL;
+  wf_aligner->alignment_end_pos.offset = WAVEFRONT_OFFSET_NULL;
   wavefront_aligner_init_wf(wf_aligner);
   // Plot (WF_0)
   if (wf_aligner->plot != NULL) wavefront_plot(wf_aligner,0,align_level);

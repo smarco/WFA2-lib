@@ -122,10 +122,11 @@ bool wavefront_check_alignment(
  */
 void wavefront_report_lite(
     FILE* const stream,
-    wavefront_aligner_t* const wf_aligner) {
+    wavefront_aligner_t* const wf_aligner,
+    const bool alignment_completed) {
   // Parameters
   wavefront_sequences_t* const sequences = (wf_aligner->bialigner==NULL) ?
-      &wf_aligner->sequences : &wf_aligner->bialigner->alg_subsidiary->sequences;
+      &wf_aligner->sequences : &wf_aligner->bialigner->alg_forward->sequences;
   const char* const pattern = sequences->pattern;
   const int pattern_length = sequences->pattern_length;
   const char* const text = sequences->text;
@@ -133,12 +134,20 @@ void wavefront_report_lite(
   const int status = wf_aligner->align_status.status;
   const uint64_t memory_used = wf_aligner->align_status.memory_used;
   // BANNER (#0)
-  fprintf(stream,"[WFA::Debug]");
+  if (alignment_completed) {
+    fprintf(stream,"[WFA::Debug]");
+  } else {
+    fprintf(stream,"[WFA::Debug::BEGIN]");
+  }
   // SCORE (#1)
   //  const int score = wavefront_compute_classic_score(
   //      wf_aligner,pattern_length,text_length,wf_aligner->cigar->score);
-  const int score = wf_aligner->cigar->score;
-  fprintf(stream,"\t%d",(score==INT32_MIN) ? -1 : score);
+  if (alignment_completed) {
+    const int score = wf_aligner->cigar->score;
+    fprintf(stream,"\t%d",(score==INT32_MIN) ? -1 : score);
+  } else {
+    fprintf(stream,"\t-");
+  }
   // PATTERN_LENGTH (#2)
   fprintf(stream,"\t%d",pattern_length);
   // TEXT_LENGTH (#3)
@@ -146,9 +155,17 @@ void wavefront_report_lite(
   // STATUS (#4)
   fprintf(stream,"\t%s",wavefront_align_strerror_short(status));
   // TIME (#5)
-  fprintf(stream,"\t%2.3f",TIMER_GET_TOTAL_MS(&wf_aligner->system.timer));
+  if (alignment_completed) {
+    fprintf(stream,"\t%2.3f",TIMER_GET_TOTAL_MS(&wf_aligner->system.timer));
+  } else {
+    fprintf(stream,"\t-");
+  }
   // MEMORY (#6)
-  fprintf(stream,"\t%luMB\t",CONVERT_B_TO_MB(memory_used));
+  if (alignment_completed) {
+    fprintf(stream,"\t%luMB\t",CONVERT_B_TO_MB(memory_used));
+  } else {
+    fprintf(stream,"\t-\t");
+  }
   // ATTRIBUTES (#7)
   fprintf(stream,"[");
   fprintf(stream,"%d",wf_aligner->align_status.status);
@@ -169,7 +186,7 @@ void wavefront_report_lite(
       wf_aligner->wf_components.historic_max_hi);
   fprintf(stream,"]\t");
   // CIGAR (#8)
-  if (cigar_is_null(wf_aligner->cigar)) {
+  if (!alignment_completed || cigar_is_null(wf_aligner->cigar)) {
     fprintf(stream,"-");
   } else {
     cigar_print(stream,wf_aligner->cigar,true);
@@ -191,6 +208,9 @@ void wavefront_debug_begin(
   if (wf_aligner->system.verbose >= 1) {
     timer_reset(&wf_aligner->system.timer);
     timer_start(&wf_aligner->system.timer);
+    if (wf_aligner->system.verbose >= 4) {
+      wavefront_report_lite(stderr,wf_aligner,false);
+    }
   }
 }
 void wavefront_debug_end(
@@ -198,7 +218,7 @@ void wavefront_debug_end(
   // Print Summary
   if (wf_aligner->system.verbose >= 1) {
     timer_stop(&wf_aligner->system.timer);
-    wavefront_report_lite(stderr,wf_aligner);
+    wavefront_report_lite(stderr,wf_aligner,true);
   }
 }
 /*
