@@ -142,9 +142,9 @@ void wavefront_report_lite(
   // SCORE (#1)
   //  const int score = wavefront_compute_classic_score(
   //      wf_aligner,pattern_length,text_length,wf_aligner->cigar->score);
-  if (alignment_completed) {
-    const int score = wf_aligner->cigar->score;
-    fprintf(stream,"\t%d",(score==INT32_MIN) ? -1 : score);
+  const int score = wf_aligner->cigar->score;
+  if (alignment_completed && score!=INT32_MIN) {
+    fprintf(stream,"\t%d",score);
   } else {
     fprintf(stream,"\t-");
   }
@@ -168,8 +168,6 @@ void wavefront_report_lite(
   }
   // ATTRIBUTES (#7)
   fprintf(stream,"[");
-  fprintf(stream,"%d",wf_aligner->align_status.status);
-  fprintf(stream,";");
   wavefront_aligner_print_mode(stream,wf_aligner);
   fprintf(stream,";");
   wavefront_aligner_print_scope(stream,wf_aligner);

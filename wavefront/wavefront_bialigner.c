@@ -65,9 +65,12 @@ wavefront_bialigner_t* wavefront_bialigner_new(
   wf_bialigner->alg_reverse->plot = plot;
   // Allocate subsidiary aligner
   subsidiary_attr.alignment_scope = compute_alignment;
-  wf_bialigner->alg_subsidiary = wavefront_aligner_new(&subsidiary_attr);
-  wf_bialigner->alg_subsidiary->align_mode = wf_align_biwfa_subsidiary;
-  wf_bialigner->alg_subsidiary->plot = plot;
+  wf_bialigner->wf_forward_base = wavefront_aligner_new(&subsidiary_attr);
+  wf_bialigner->wf_forward_base->align_mode = wf_align_biwfa_subsidiary;
+  wf_bialigner->wf_forward_base->plot = plot;
+  wf_bialigner->wf_reverse_base = wavefront_aligner_new(&subsidiary_attr);
+  wf_bialigner->wf_reverse_base->align_mode = wf_align_biwfa_subsidiary;
+  wf_bialigner->wf_reverse_base->plot = plot;
   // Return
   return wf_bialigner;
 }
@@ -75,13 +78,15 @@ void wavefront_bialigner_reap(
     wavefront_bialigner_t* const wf_bialigner) {
   wavefront_aligner_reap(wf_bialigner->alg_forward);
   wavefront_aligner_reap(wf_bialigner->alg_reverse);
-  wavefront_aligner_reap(wf_bialigner->alg_subsidiary);
+  wavefront_aligner_reap(wf_bialigner->wf_forward_base);
+  wavefront_aligner_reap(wf_bialigner->wf_reverse_base);
 }
 void wavefront_bialigner_delete(
     wavefront_bialigner_t* const wf_bialigner) {
   wavefront_aligner_delete(wf_bialigner->alg_forward);
   wavefront_aligner_delete(wf_bialigner->alg_reverse);
-  wavefront_aligner_delete(wf_bialigner->alg_subsidiary);
+  wavefront_aligner_delete(wf_bialigner->wf_forward_base);
+  wavefront_aligner_delete(wf_bialigner->wf_reverse_base);
   free(wf_bialigner);
 }
 /*
@@ -100,8 +105,11 @@ void wavefront_bialigner_set_sequences_ascii(
       &wf_bialigner->alg_reverse->sequences,
       pattern,pattern_length,text,text_length,true);
   wavefront_sequences_init_ascii(
-      &wf_bialigner->alg_subsidiary->sequences,
+      &wf_bialigner->wf_forward_base->sequences,
       pattern,pattern_length,text,text_length,false);
+  wavefront_sequences_init_ascii(
+      &wf_bialigner->wf_reverse_base->sequences,
+      pattern,pattern_length,text,text_length,true);
 }
 void wavefront_bialigner_set_sequences_lambda(
     wavefront_bialigner_t* const wf_bialigner,
@@ -113,8 +121,10 @@ void wavefront_bialigner_set_sequences_lambda(
       match_funct,match_funct_arguments,pattern_length,text_length,false);
   wavefront_sequences_init_lambda(&wf_bialigner->alg_reverse->sequences,
       match_funct,match_funct_arguments,pattern_length,text_length,true);
-  wavefront_sequences_init_lambda(&wf_bialigner->alg_subsidiary->sequences,
+  wavefront_sequences_init_lambda(&wf_bialigner->wf_forward_base->sequences,
       match_funct,match_funct_arguments,pattern_length,text_length,false);
+  wavefront_sequences_init_lambda(&wf_bialigner->wf_reverse_base->sequences,
+      match_funct,match_funct_arguments,pattern_length,text_length,true);
 }
 void wavefront_bialigner_set_sequences_packed2bits(
     wavefront_bialigner_t* const wf_bialigner,
@@ -129,8 +139,11 @@ void wavefront_bialigner_set_sequences_packed2bits(
       &wf_bialigner->alg_reverse->sequences,
       pattern,pattern_length,text,text_length,true);
   wavefront_sequences_init_packed2bits(
-      &wf_bialigner->alg_subsidiary->sequences,
+      &wf_bialigner->wf_forward_base->sequences,
       pattern,pattern_length,text,text_length,false);
+  wavefront_sequences_init_packed2bits(
+      &wf_bialigner->wf_reverse_base->sequences,
+      pattern,pattern_length,text,text_length,true);
 }
 void wavefront_bialigner_set_sequences_bounds(
     wavefront_bialigner_t* const wf_bialigner,
@@ -145,7 +158,10 @@ void wavefront_bialigner_set_sequences_bounds(
       &wf_bialigner->alg_reverse->sequences,
       pattern_begin,pattern_end,text_begin,text_end);
   wavefront_sequences_set_bounds(
-      &wf_bialigner->alg_subsidiary->sequences,
+      &wf_bialigner->wf_forward_base->sequences,
+      pattern_begin,pattern_end,text_begin,text_end);
+  wavefront_sequences_set_bounds(
+      &wf_bialigner->wf_reverse_base->sequences,
       pattern_begin,pattern_end,text_begin,text_end);
 }
 /*
@@ -155,21 +171,24 @@ uint64_t wavefront_bialigner_get_size(
     wavefront_bialigner_t* const wf_bialigner) {
   return wavefront_aligner_get_size(wf_bialigner->alg_forward) +
       wavefront_aligner_get_size(wf_bialigner->alg_reverse) +
-      wavefront_aligner_get_size(wf_bialigner->alg_subsidiary);
+      wavefront_aligner_get_size(wf_bialigner->wf_forward_base) +
+      wavefront_aligner_get_size(wf_bialigner->wf_reverse_base);
 }
 void wavefront_bialigner_set_heuristic(
     wavefront_bialigner_t* const wf_bialigner,
     wavefront_heuristic_t* const heuristic) {
   wf_bialigner->alg_forward->heuristic = *heuristic;
   wf_bialigner->alg_reverse->heuristic = *heuristic;
-  wf_bialigner->alg_subsidiary->heuristic = *heuristic;
+  wf_bialigner->wf_forward_base->heuristic = *heuristic;
+  wf_bialigner->wf_reverse_base->heuristic = *heuristic;
 }
 void wavefront_bialigner_set_max_alignment_steps(
     wavefront_bialigner_t* const wf_bialigner,
     const int max_alignment_steps) {
   wf_bialigner->alg_forward->system.max_alignment_steps = max_alignment_steps;
   wf_bialigner->alg_reverse->system.max_alignment_steps = max_alignment_steps;
-  wf_bialigner->alg_subsidiary->system.max_alignment_steps = max_alignment_steps;
+  wf_bialigner->wf_forward_base->system.max_alignment_steps = max_alignment_steps;
+  wf_bialigner->wf_reverse_base->system.max_alignment_steps = max_alignment_steps;
 }
 void wavefront_bialigner_set_max_memory(
     wavefront_bialigner_t* const wf_bialigner,
@@ -179,20 +198,24 @@ void wavefront_bialigner_set_max_memory(
   wf_bialigner->alg_forward->system.max_memory_abort = max_memory_abort;
   wf_bialigner->alg_reverse->system.max_memory_resident = max_memory_resident;
   wf_bialigner->alg_reverse->system.max_memory_abort = max_memory_abort;
-  wf_bialigner->alg_subsidiary->system.max_memory_resident = max_memory_resident;
-  wf_bialigner->alg_subsidiary->system.max_memory_abort = max_memory_abort;
+  wf_bialigner->wf_forward_base->system.max_memory_resident = max_memory_resident;
+  wf_bialigner->wf_forward_base->system.max_memory_abort = max_memory_abort;
+  wf_bialigner->wf_reverse_base->system.max_memory_resident = max_memory_resident;
+  wf_bialigner->wf_reverse_base->system.max_memory_abort = max_memory_abort;
 }
 void wavefront_bialigner_set_max_num_threads(
     wavefront_bialigner_t* const wf_bialigner,
     const int max_num_threads) {
   wf_bialigner->alg_forward->system.max_num_threads = max_num_threads;
   wf_bialigner->alg_reverse->system.max_num_threads = max_num_threads;
-  wf_bialigner->alg_subsidiary->system.max_num_threads = max_num_threads;
+  wf_bialigner->wf_forward_base->system.max_num_threads = max_num_threads;
+  wf_bialigner->wf_reverse_base->system.max_num_threads = max_num_threads;
 }
 void wavefront_bialigner_set_min_offsets_per_thread(
     wavefront_bialigner_t* const wf_bialigner,
     const int min_offsets_per_thread) {
   wf_bialigner->alg_forward->system.min_offsets_per_thread = min_offsets_per_thread;
   wf_bialigner->alg_reverse->system.min_offsets_per_thread = min_offsets_per_thread;
-  wf_bialigner->alg_subsidiary->system.min_offsets_per_thread = min_offsets_per_thread;
+  wf_bialigner->wf_forward_base->system.min_offsets_per_thread = min_offsets_per_thread;
+  wf_bialigner->wf_reverse_base->system.min_offsets_per_thread = min_offsets_per_thread;
 }

@@ -157,27 +157,40 @@ int wavefront_bialign_base(
     alignment_form_t* const form,
     const affine2p_matrix_type component_begin,
     const affine2p_matrix_type component_end,
+    const bool align_reverse,
     const int align_level) {
   // Parameters
-  wavefront_aligner_t* const alg_subsidiary = wf_aligner->bialigner->alg_subsidiary;
+  wavefront_aligner_t* const wf_base = (align_reverse) ?
+      wf_aligner->bialigner->wf_reverse_base:
+      wf_aligner->bialigner->wf_forward_base;
   const int verbose = wf_aligner->system.verbose;
   // Configure
-  alg_subsidiary->alignment_form = *form;
-  wavefront_unialign_init(alg_subsidiary,component_begin,component_end);
+  if (align_reverse) {
+    wf_base->alignment_form = *form;
+    SWAP(wf_base->alignment_form.pattern_begin_free,wf_base->alignment_form.pattern_end_free);
+    SWAP(wf_base->alignment_form.text_begin_free,wf_base->alignment_form.text_end_free);
+    wavefront_unialign_init(wf_base,component_end,component_begin);
+  } else {
+    wf_base->alignment_form = *form;
+    wavefront_unialign_init(wf_base,component_begin,component_end);
+  }
   // DEBUG
-  if (verbose >= 2) wavefront_debug_begin(alg_subsidiary);
+  if (verbose >= 2) wavefront_debug_begin(wf_base);
   // Wavefront align sequences
-  wavefront_unialign(alg_subsidiary);
+  wavefront_unialign(wf_base);
   // DEBUG
   if (verbose >= 2) {
-    wavefront_debug_end(alg_subsidiary);
-    wavefront_debug_check_correct(wf_aligner);
+    wavefront_debug_end(wf_base);
+    wavefront_debug_check_correct(wf_base);
   }
   // Append CIGAR
-  cigar_append(wf_aligner->cigar,alg_subsidiary->cigar);
-  if (align_level == 0) wf_aligner->cigar->score = alg_subsidiary->cigar->score;
+  if (align_reverse) {
+    cigar_append_reverse(wf_aligner->cigar,wf_base->cigar);
+  } else {
+    cigar_append_forward(wf_aligner->cigar,wf_base->cigar);
+  }
   // Set status and return
-  const int align_status = alg_subsidiary->align_status.status;
+  const int align_status = wf_base->align_status.status;
   if (align_status == WF_STATUS_ALG_COMPLETED) {
     return WF_STATUS_OK;
   } else {
@@ -529,7 +542,7 @@ int wavefront_bialign_find_breakpoint_exception(
     }
     // Fallback if possible
     if (score_reached <= WF_BIALIGN_RECOVERY_MIN_SCORE) {
-      return wavefront_bialign_base(wf_aligner,form,component_begin,component_end,align_level);
+      return wavefront_bialign_base(wf_aligner,form,component_begin,component_end,false,align_level);
     } else {
       return WF_STATUS_END_UNREACHABLE; // To no avail
     }
@@ -576,6 +589,7 @@ int wavefront_bialign_alignment(
     const affine2p_matrix_type component_begin,
     const affine2p_matrix_type component_end,
     const int score_remaining,
+    const int align_reverse,
     const int align_level) {
   // Parameters
   wavefront_sequences_t* const sequences = &wf_aligner->bialigner->alg_forward->sequences;
@@ -594,7 +608,8 @@ int wavefront_bialign_alignment(
     return WF_STATUS_OK;
   } else if (score_remaining <= WF_BIALIGN_FALLBACK_MIN_SCORE) {
     // Fall back to regular WFA
-    return wavefront_bialign_base(wf_aligner,form,component_begin,component_end,align_level);
+    return wavefront_bialign_base(wf_aligner,form,
+        component_begin,component_end,align_reverse,align_level);
   }
   // Find breakpoint in the alignment
   wf_bialign_breakpoint_t breakpoint;
@@ -626,7 +641,7 @@ int wavefront_bialign_alignment(
   wavefront_bialign_init_half_0(form,&form_0);
   align_status = wavefront_bialign_alignment(wf_aligner,
       &form_0,component_begin,breakpoint.component,
-      breakpoint.score_forward,align_level+1);
+      breakpoint.score_forward,false,align_level+1);
   if (align_status != WF_STATUS_OK) return align_status;
   // Align half_1
   alignment_form_t form_1;
@@ -636,7 +651,7 @@ int wavefront_bialign_alignment(
   wavefront_bialign_init_half_1(form,&form_1);
   align_status = wavefront_bialign_alignment(wf_aligner,
       &form_1,breakpoint.component,component_end,
-      breakpoint.score_reverse,align_level+1);
+      breakpoint.score_reverse,true,align_level+1);
   if (align_status != WF_STATUS_OK) return align_status;
   // Set score (Strictly speaking, only needed at level-0)
   if (align_level == 0) {
@@ -708,7 +723,7 @@ void wavefront_bialign(
     align_status = wavefront_bialign_alignment(wf_aligner,
         &wf_aligner->alignment_form,
         affine_matrix_M,affine_matrix_M,
-        min_length ? 0 : INT_MAX,0);
+        min_length ? 0 : INT_MAX,false,0);
   }
   // Check status
   if (align_status == WF_STATUS_OK) {

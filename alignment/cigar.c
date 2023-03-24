@@ -119,14 +119,32 @@ int cigar_count_matches(
   }
   return num_matches;
 }
-void cigar_append(
+void cigar_append_forward(
     cigar_t* const cigar_dst,
     cigar_t* const cigar_src) {
-  // Append
+  // Parameters
   const int cigar_length = cigar_src->end_offset - cigar_src->begin_offset;
   char* const operations_src = cigar_src->operations + cigar_src->begin_offset;
   char* const operations_dst = cigar_dst->operations + cigar_dst->end_offset;
+  // Append forward
   memcpy(operations_dst,operations_src,cigar_length);
+  // Update offset
+  cigar_dst->end_offset += cigar_length;
+}
+void cigar_append_reverse(
+    cigar_t* const cigar_dst,
+    cigar_t* const cigar_src) {
+  // Parameters
+  const int begin_offset = cigar_src->begin_offset;
+  const int end_offset = cigar_src->end_offset;
+  const int cigar_length = end_offset - begin_offset;
+  char* const operations_src = cigar_src->operations + begin_offset;
+  char* const operations_dst = cigar_dst->operations + cigar_dst->end_offset;
+  // Append reverse
+  int i;
+  for (i=0;i<cigar_length;++i) {
+    operations_dst[i] = operations_src[cigar_length-1-i];
+  }
   // Update offset
   cigar_dst->end_offset += cigar_length;
 }

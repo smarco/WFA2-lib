@@ -78,9 +78,13 @@ bool cigar_is_null(
 int cigar_count_matches(
     cigar_t* const cigar);
 
-void cigar_append(
+void cigar_append_forward(
     cigar_t* const cigar_dst,
     cigar_t* const cigar_src);
+void cigar_append_reverse(
+    cigar_t* const cigar_dst,
+    cigar_t* const cigar_src);
+
 void cigar_append_deletion(
     cigar_t* const cigar,
     const int length);

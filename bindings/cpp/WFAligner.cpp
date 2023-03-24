@@ -336,7 +336,8 @@ void WFAligner::debugTag(
   if (wfAligner->bialigner != NULL) {
     wfAligner->bialigner->alg_forward->align_mode_tag = debugTag;
     wfAligner->bialigner->alg_reverse->align_mode_tag = debugTag;
-    wfAligner->bialigner->alg_subsidiary->align_mode_tag = debugTag;
+    wfAligner->bialigner->wf_forward_base->align_mode_tag = debugTag;
+    wfAligner->bialigner->wf_reverse_base->align_mode_tag = debugTag;
   }
 }
 /*
