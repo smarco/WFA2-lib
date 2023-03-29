@@ -49,7 +49,7 @@
 // OK
 #define WF_STATUS_ALG_COMPLETED_MSG           "[WFA] Alignment completed successfully"
 #define WF_STATUS_ALG_PARTIAL_MSG             "[WFA] Alignment extension computed (partial alignment)"
-#define WF_STATUS_ALG_COMPLETED_MSG_SHORT     "OK.Completed"
+#define WF_STATUS_ALG_COMPLETED_MSG_SHORT     "OK.Full"
 #define WF_STATUS_ALG_PARTIAL_MSG_SHORT       "OK.Partial"
 // FAILED
 #define WF_STATUS_MAX_STEPS_REACHED_MSG       "[WFA] Alignment failed. Maximum WFA-steps limit reached"

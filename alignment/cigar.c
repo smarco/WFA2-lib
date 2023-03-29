@@ -562,6 +562,7 @@ bool cigar_maxtrim_gap_affine2p(
   const char* const operations = cigar->operations;
   const int begin_offset = cigar->begin_offset;
   const int end_offset = cigar->end_offset;
+  if (begin_offset >= end_offset) return false;
   // Max-score
   int max_score = 0, max_score_offset = begin_offset, max_end_v = 0, max_end_h = 0;
   // Traverse all cigar

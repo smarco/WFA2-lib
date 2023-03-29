@@ -334,10 +334,9 @@ void WFAligner::debugTag(
     char* const debugTag) {
   wfAligner->align_mode_tag = debugTag;
   if (wfAligner->bialigner != NULL) {
-    wfAligner->bialigner->alg_forward->align_mode_tag = debugTag;
-    wfAligner->bialigner->alg_reverse->align_mode_tag = debugTag;
-    wfAligner->bialigner->wf_forward_base->align_mode_tag = debugTag;
-    wfAligner->bialigner->wf_reverse_base->align_mode_tag = debugTag;
+    wfAligner->bialigner->wf_forward->align_mode_tag = debugTag;
+    wfAligner->bialigner->wf_reverse->align_mode_tag = debugTag;
+    wfAligner->bialigner->wf_base->align_mode_tag = debugTag;
   }
 }
 /*

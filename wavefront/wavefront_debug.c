@@ -42,7 +42,7 @@ bool wavefront_check_alignment(
     wavefront_aligner_t* const wf_aligner) {
   // Parameters
   wavefront_sequences_t* const sequences = (wf_aligner->bialigner==NULL) ?
-      &wf_aligner->sequences : &wf_aligner->bialigner->alg_forward->sequences;
+      &wf_aligner->sequences : &wf_aligner->bialigner->wf_forward->sequences;
   const char* const pattern = sequences->pattern_buffer;
   const int pattern_length = sequences->pattern_buffer_length;
   const char* const text = sequences->text_buffer;
@@ -126,7 +126,7 @@ void wavefront_report_lite(
     const bool alignment_completed) {
   // Parameters
   wavefront_sequences_t* const sequences = (wf_aligner->bialigner==NULL) ?
-      &wf_aligner->sequences : &wf_aligner->bialigner->alg_forward->sequences;
+      &wf_aligner->sequences : &wf_aligner->bialigner->wf_forward->sequences;
   const char* const pattern = sequences->pattern;
   const int pattern_length = sequences->pattern_length;
   const char* const text = sequences->text;
@@ -146,7 +146,7 @@ void wavefront_report_lite(
   if (alignment_completed && score!=INT32_MIN) {
     fprintf(stream,"\t%d",score);
   } else {
-    fprintf(stream,"\t-");
+    fprintf(stream,"\t*");
   }
   // PATTERN_LENGTH (#2)
   fprintf(stream,"\t%d",pattern_length);

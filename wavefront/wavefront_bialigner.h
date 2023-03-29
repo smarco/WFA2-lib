@@ -55,10 +55,9 @@ typedef struct {
 
 typedef struct {
   // Wavefronts
-  wavefront_aligner_t* alg_forward;     // Breakpoint Forward aligner
-  wavefront_aligner_t* alg_reverse;     // Breakpoint Reverse aligner
-  wavefront_aligner_t* wf_forward_base; // Base/Subsidiary aligner (Forward)
-  wavefront_aligner_t* wf_reverse_base; // Base/Subsidiary aligner (Reverse)
+  wavefront_aligner_t* wf_forward;  // Breakpoint Forward aligner
+  wavefront_aligner_t* wf_reverse;  // Breakpoint Reverse aligner
+  wavefront_aligner_t* wf_base;     // Base/Subsidiary aligner
   // Operators
   void (*wf_align_compute)(wavefront_aligner_t* const,const int);
 } wavefront_bialigner_t;

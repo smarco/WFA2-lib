@@ -253,7 +253,7 @@ void wavefront_plot_print(
   if (wf_aligner->bialigner == NULL) {
     sequences = &wf_aligner->sequences;
   } else {
-    sequences = &wf_aligner->bialigner->alg_forward->sequences;
+    sequences = &wf_aligner->bialigner->wf_forward->sequences;
     wavefront_sequences_set_bounds(sequences,
         0,sequences->pattern_buffer_length,
         0,sequences->text_buffer_length);
