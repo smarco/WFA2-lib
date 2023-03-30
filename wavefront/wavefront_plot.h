@@ -62,9 +62,6 @@ typedef struct {
   heatmap_t* i2_heatmap;
   heatmap_t* d2_heatmap;
   heatmap_t* behavior_heatmap;
-  // Offsets
-  int offset_h;
-  int offset_v;
 } wavefront_plot_t;
 
 /*

@@ -47,6 +47,8 @@ void benchmark_align_input_clear(
   align_input->text_begin_free = 0;
   align_input->pattern_end_free = 0;
   align_input->text_end_free = 0;
+  align_input->wfa_match_funct = NULL;
+  align_input->wfa_match_funct_arguments = NULL;
   // Output
   align_input->output_file = NULL;
   align_input->output_full = false;
@@ -84,10 +86,9 @@ void benchmark_print_alignment(
     fprintf(stream,"\n");
   }
   if (cigar_computed != NULL) {
-    cigar_print_pretty(stream,
+    cigar_print_pretty(stream,cigar_computed,
         align_input->pattern,align_input->pattern_length,
-        align_input->text,align_input->text_length,
-        cigar_computed,align_input->mm_allocator);
+        align_input->text,align_input->text_length);
   }
   if (cigar_correct != NULL && score_correct != -1) {
     fprintf(stream,"    CORRECT \tscore=%d\t",score_correct);
@@ -95,10 +96,9 @@ void benchmark_print_alignment(
     fprintf(stream,"\n");
   }
   if (cigar_correct != NULL) {
-    cigar_print_pretty(stream,
+    cigar_print_pretty(stream,cigar_correct,
         align_input->pattern,align_input->pattern_length,
-        align_input->text,align_input->text_length,
-        cigar_correct,align_input->mm_allocator);
+        align_input->text,align_input->text_length);
   }
 }
 void benchmark_print_output_lite(
@@ -151,7 +151,7 @@ void benchmark_print_output(
     int score = -1;
     if (score_only) {
       score = cigar->score;
-    } else {
+    } else if (cigar->begin_offset < cigar->end_offset) {
       switch (distance_metric) {
         case indel:
         case edit:
@@ -189,14 +189,22 @@ void benchmark_print_stats(
   fprintf(stream,"[Accuracy]\n");
   fprintf(stream," => Alignments.Correct     ");
   counter_print(stream,&align_input->align_correct,&align_input->align,"alg       ",true);
-  fprintf(stream," => Score.Correct          ");
-  counter_print(stream,&align_input->align_score,&align_input->align,"alg       ",true);
-  fprintf(stream,"   => Score.Total          ");
-  counter_print(stream,&align_input->align_score_total,NULL,"score uds.",true);
-  fprintf(stream,"     => Score.Diff         ");
-  counter_print(stream,&align_input->align_score_diff,&align_input->align_score_total,"score uds.",true);
-  fprintf(stream," => CIGAR.Correct          ");
-  counter_print(stream,&align_input->align_cigar,&align_input->align,"alg       ",true);
+  // Score check
+  if (align_input->debug_flags & ALIGN_DEBUG_CHECK_SCORE) {
+    fprintf(stream," => Score.Correct          ");
+    counter_print(stream,&align_input->align_score,&align_input->align,"alg       ",true);
+    fprintf(stream,"   => Score.Total          ");
+    counter_print(stream,&align_input->align_score_total,NULL,"score uds.",true);
+    fprintf(stream,"     => Score.Diff         ");
+    counter_print(stream,&align_input->align_score_diff,&align_input->align_score_total,"score uds.",true);
+  }
+  // Alignment check
+  if (align_input->debug_flags & ALIGN_DEBUG_CHECK_ALIGNMENT) {
+    fprintf(stream," => CIGAR.Correct          ");
+    counter_print(stream,&align_input->align_cigar,&align_input->align,"alg       ",true);
+  }
+  // CIGAR stats
+  fprintf(stream," => CIGAR.Breakdown        \n");
   fprintf(stream,"   => CIGAR.Matches        ");
   counter_print(stream,&align_input->align_matches,&align_input->align_bases,"bases     ",true);
   fprintf(stream,"   => CIGAR.Mismatches     ");

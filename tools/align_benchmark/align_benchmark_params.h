@@ -61,17 +61,6 @@ typedef enum {
 } alignment_algorithm_type;
 
 /*
- * Match function
- */
-typedef struct {
-  char* pattern;
-  int pattern_length;
-  char* text;
-  int text_length;
-} match_function_params_t;
-extern match_function_params_t match_function_params;
-
-/*
  * Align-benchmark Parameters
  */
 typedef struct {
@@ -105,11 +94,10 @@ typedef struct {
   int wfa_heuristic_p2;
   int wfa_heuristic_p3;
   wavefront_memory_t wfa_memory_mode;
-  alignment_match_funct_t wfa_match_funct;
-  void* wfa_match_funct_arguments;
   uint64_t wfa_max_memory;
-  int wfa_max_score;
+  int wfa_max_steps;
   int wfa_max_threads;
+  bool wfa_lambda;
   // Other algorithms parameters
   int bandwidth;
   // Misc

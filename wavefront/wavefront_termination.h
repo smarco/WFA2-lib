@@ -26,48 +26,32 @@
  *
  * PROJECT: Wavefront Alignment Algorithms
  * AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
- * DESCRIPTION: Padded string module to avoid handling corner conditions
+ * DESCRIPTION: WFA module to check for the termination of an alignment
  */
 
-#ifndef STRING_PADDED_H_
-#define STRING_PADDED_H_
+#ifndef WAVEFRONT_TERMINATION_H_
+#define WAVEFRONT_TERMINATION_H_
+
+#include "wavefront_aligner.h"
 
 /*
- * Strings Padded
+ * Necessary condition for ends-free termination
  */
-typedef struct {
-  // Dimensions
-  int pattern_length;
-  int text_length;
-  // Padded strings
-  char* pattern_padded;
-  char* text_padded;
-  // MM
-  char* pattern_padded_buffer;
-  char* text_padded_buffer;
-  mm_allocator_t* mm_allocator;
-} strings_padded_t;
+#define WF_TERMINATION_ENDSFREE(h,v) ((h >= text_length) || (v >= pattern_length))
 
 /*
- * Strings (text/pattern) padded
+ * Detect alignment termination (end of alignment)
  */
-strings_padded_t* strings_padded_new(
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
-    const int padding_length,
-    const bool reverse_sequences,
-    mm_allocator_t* const mm_allocator);
-strings_padded_t* strings_padded_new_rhomb(
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
-    const int padding_length,
-    const bool reverse_sequences,
-    mm_allocator_t* const mm_allocator);
-void strings_padded_delete(
-    strings_padded_t* const strings_padded);
+bool wavefront_termination_end2end(
+    wavefront_aligner_t* const wf_aligner,
+    wavefront_t* const mwavefront,
+    const int score,
+    const int score_mod);
+bool wavefront_termination_endsfree(
+    wavefront_aligner_t* const wf_aligner,
+    wavefront_t* const mwavefront,
+    const int score,
+    const int k,
+    const wf_offset_t offset);
 
-#endif /* STRING_PADDED_H_ */
+#endif /* WAVEFRONT_TERMINATION_H_ */

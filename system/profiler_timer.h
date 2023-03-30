@@ -33,6 +33,7 @@
 #ifndef PROFILER_TIMER_H
 #define PROFILER_TIMER_H
 
+#include <sys/time.h>
 #include "profiler_counter.h"
 
 /*

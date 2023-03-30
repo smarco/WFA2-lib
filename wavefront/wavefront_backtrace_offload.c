@@ -31,7 +31,6 @@
 
 #include "utils/commons.h"
 #include "wfa.h"
-#include "utils/string_padded.h"
 #include "wavefront_backtrace_offload.h"
 
 /*

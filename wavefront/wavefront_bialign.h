@@ -37,10 +37,6 @@
  * Bidirectional WFA
  */
 void wavefront_bialign(
-    wavefront_aligner_t* const wf_aligner,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length);
+    wavefront_aligner_t* const wf_aligner);
 
 #endif /* WAVEFRONT_BIALIGN_H_ */

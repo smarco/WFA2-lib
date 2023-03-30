@@ -47,8 +47,7 @@ void benchmark_gap_affine_swg(
       &affine_matrix,align_input->pattern_length+1,
       align_input->text_length+1,align_input->mm_allocator);
   cigar_t* const cigar = cigar_new(
-      align_input->pattern_length+align_input->text_length,
-      align_input->mm_allocator);
+      align_input->pattern_length+align_input->text_length);
   // Align
   timer_start(&align_input->timer);
   swg_align(&affine_matrix,penalties,
@@ -76,8 +75,7 @@ void benchmark_gap_affine_swg_endsfree(
       &affine_matrix,align_input->pattern_length+1,
       align_input->text_length+1,align_input->mm_allocator);
   cigar_t* const cigar = cigar_new(
-      align_input->pattern_length+align_input->text_length,
-      align_input->mm_allocator);
+      align_input->pattern_length+align_input->text_length);
   // Align
   timer_start(&align_input->timer);
   swg_align_endsfree(&affine_matrix,penalties,
@@ -108,8 +106,7 @@ void benchmark_gap_affine_swg_banded(
       &affine_matrix,align_input->pattern_length+1,
       align_input->text_length+1,align_input->mm_allocator);
   cigar_t* const cigar = cigar_new(
-      align_input->pattern_length+align_input->text_length,
-      align_input->mm_allocator);
+      align_input->pattern_length+align_input->text_length);
   // Align
   timer_start(&align_input->timer);
   swg_align_banded(&affine_matrix,penalties,
@@ -135,9 +132,15 @@ void benchmark_gap_affine_wavefront(
   wavefront_aligner_t* const wf_aligner = align_input->wf_aligner;
   // Align
   timer_start(&align_input->timer);
-  wavefront_align(wf_aligner,
-      align_input->pattern,align_input->pattern_length,
-      align_input->text,align_input->text_length);
+  if (align_input->wfa_match_funct == NULL) {
+    wavefront_align(wf_aligner,
+        align_input->pattern,align_input->pattern_length,
+        align_input->text,align_input->text_length);
+  } else {
+    wavefront_align_lambda(wf_aligner,
+        align_input->wfa_match_funct,align_input->wfa_match_funct_arguments,
+        align_input->pattern_length,align_input->text_length);
+  }
   timer_stop(&align_input->timer);
   // DEBUG
   if (align_input->debug_flags) {

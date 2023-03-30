@@ -16,7 +16,7 @@ The WFA2 library implements the WFA algorithm for different distance metrics and
 
 ### 1.3 Getting started
 
-Git clone and compile the library, tools, and examples. By default use cmake:
+Git clone and compile the library, tools, and examples (by default, use cmake).
 
 ```
 git clone https://github.com/smarco/WFA2-lib
@@ -27,25 +27,28 @@ cmake --build . --verbose
 ctest . --verbose
 ```
 
-There are some flags that can be used:
+There are some flags that can be used. For instance:
 
 ```
 cmake .. -DOPENMP=TRUE
+cmake .. -DCMAKE_BUILD_TYPE=Release -DEXTRA_FLAGS="-ftree-vectorizer-verbose=5"
 ```
 
-To add vector optimization try
-
-```
-cmake .. -DCMAKE_BUILD_TYPE=Release -DEXTRA_FLAGS="-ftree-vectorize -msse2 -mfpmath=sse -ftree-vectorizer-verbose=5"
-```
-
-To build a shared library (static is the default)
+To build a shared library (static is the default).
 
 ```
 cmake -DBUILD_SHARED_LIBS=ON
 ```
 
-It is possible to build WFA2-lib in a GNU Guix container, for more information see [guix.scm](./guix.scm).
+Alternatively, the Makefile build system can be used.
+
+```
+$> git clone https://github.com/smarco/WFA2-lib
+$> cd WFA2-lib
+$> make clean all
+```
+
+Also, it is possible to build WFA2-lib in a GNU Guix container, for more information see [guix.scm](./guix.scm).
 
 ### 1.4 Contents (where to go from here)
 
@@ -417,7 +420,7 @@ The WFA2 library implements various memory modes: `wavefront_memory_high`, `wave
 
 ```C
   wavefront_aligner_attr_t attributes = wavefront_aligner_attr_default;
-  attributes.memory_mode = wavefront_memory_med;
+  attributes.memory_mode = wavefront_memory_ultralow;
 ```
 
 ### <a name="wfa2.heuristics"></a> 3.5 Heuristic modes
@@ -480,7 +483,7 @@ WFA2's heuristics are classified into the following categories: ['wf-adaptive'](
   attributes.heuristic.steps_between_cutoffs = 100;
 ```
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Z-drop** implements the Z-drop heuristic (as described in Minimap2). This heuristic halts the alignment process if the score drops too fast in the diagonal direction. Let $sw_{max}$ be the maximum observed score so far, computed at cell ($i'$,$j'$). Then, let $sw$ be the maximum score found in the last computed wavefront, computed at cell ($i$,$j$). The Z-drop heuristic stops the alignment process if $sw_{max} - sw > zdrop + gap_e·|(i-i')-(j-j')|$, being $gap_e$ the gap-extension penalty and $zdrop$ a parameter of the heuristic.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Z-drop** implements the Z-drop heuristic (as described in Minimap2). This heuristic halts the alignment process if the score drops too fast in the diagonal direction. Let $sw_{max}$ be the maximum observed score so far, computed at cell $(i',j')$. Then, let $sw$ be the maximum score found in the last computed wavefront, computed at cell $(i,j)$. The Z-drop heuristic stops the alignment process if $sw_{max} - sw > zdrop + gap_e·|(i-i')-(j-j')|$, being $gap_e$ the gap-extension penalty and $zdrop$ a parameter of the heuristic.
 
 
 ```C
@@ -497,7 +500,7 @@ WFA2's heuristics are classified into the following categories: ['wf-adaptive'](
   <tr>
     <td><p align="center">None</p></td>
     <td><p align="center">X-drop(200,1)</p></td>
-    <td><p align="center">Y-drop(200,1)</p></td>
+    <td><p align="center">Z-drop(200,1)</p></td>
   </tr>
   <tr>
     <td><img src="img/heuristics.drop.none.png" align="center" width="300px"></td>
@@ -555,11 +558,16 @@ WFA2's heuristics are classified into the following categories: ['wf-adaptive'](
 
 ### <a name="wfa2.other.notes"></a> 3.6 Some technical notes
 
-- Thanks to Eizenga's formulation, WFA2-lib can operate with any match score. Although, in practice, M=0 is still the most efficient choice.
+- Thanks to Eizenga's formulation, WFA2-lib can operate with any match score. In practice, M=0 is often the most efficient choice.
 
-- Note that edit and LCS are distance metrics and, thus, the score computed is always positive. However, weighted distances, like gap-linear and gap-affine, have the sign of the computed alignment evaluated under the selected penalties. If WFA2-lib is executed using $M=0$, the final score is expected to be negative.
 
-- All WFA2-lib algorithms/variants are stable. That is, for alignments having the same score, the library always resolves ties (between M, X, I,and D) using the same criteria: M (highest prio) > X > D > I (lowest prio). Nevertheless, the memory mode `ultralow` (BiWFA) is optimal (always reports the best alignment) but not stable.
+- Note that edit and LCS are distance metrics and, thus, the score computed is always positive. However, using weighted distances (e.g., gap-linear and gap-affine) the alignment score is computed using the selected penalties (i.e., the alignment score can be positive or negative). For instance, if WFA2-lib is executed using $M=0$, the final score is expected to be negative.
+
+
+- All WFA2-lib algorithms/variants are stable. That is, for alignments having the same score, the all alignment modes always resolve ties (between M, X, I,and D) using the same criteria: M (highest prio) > X > D > I (lowest prio). Only the memory mode `ultralow` (BiWFA) resolves ties differently (although the results are still optimal).
+
+
+- WFA2lib follows the convention that describes how to transform the (1) Pattern/Query into the (2) Text/Database/Reference used in classic pattern matching papers. However, the SAM CIGAR specification describes the transformation from (2) Reference to (1) Query. If you want CIGAR-compliant alignments, swap the pattern and text sequences argument when calling the WFA2lib's align functions (to convert all the Ds into Is and vice-versa).
 
 ## <a name="wfa2.complains"></a> 4. REPORTING BUGS AND FEATURE REQUEST
 
@@ -592,6 +600,6 @@ Miquel Moretó has contributed with fruitful technical discussions and tireless 
 
 ## <a name="wfa2.cite"></a> 8. CITATION
 
-**Santiago Marco-Sola, Juan Carlos Moure, Miquel Moreto, Antonio Espinosa**. ["Fast gap-affine pairwise alignment using the wavefront algorithm."](https://doi.org/10.1093/bioinformatics/btaa777) Bioinformatics, 2020.
+**Santiago Marco-Sola, Juan Carlos Moure, Miquel Moreto, Antonio Espinosa**. ["Fast gap-affine pairwise alignment using the wavefront algorithm."](https://doi.org/10.1093/bioinformatics/btaa777). Bioinformatics, 2020.
 
-**Santiago Marco-Sola, Jordan M Eizenga, Andrea Guarracino, Benedict Paten, Erik Garrison, Miquel Moreto**. Optimal gap-affine alignment in O(s) space.  _bioRxiv_  (2022). DOI [2022.04.14.488380](https://doi.org/10.1101/2022.04.14.488380)
+**Santiago Marco-Sola, Jordan M Eizenga, Andrea Guarracino, Benedict Paten, Erik Garrison, Miquel Moreto**. ["Optimal gap-affine alignment in O(s) space"](https://doi.org/10.1093/bioinformatics/btad074). Bioinformatics, 2023.

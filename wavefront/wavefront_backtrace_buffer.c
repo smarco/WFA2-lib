@@ -31,6 +31,7 @@
 
 #include "utils/commons.h"
 #include "wavefront_backtrace_buffer.h"
+#include "wavefront_sequences.h"
 
 /*
  * Config
@@ -266,21 +267,18 @@ bt_block_t* wf_backtrace_buffer_traceback_pcigar(
 }
 void wf_backtrace_buffer_unpack_cigar_linear(
     wf_backtrace_buffer_t* const bt_buffer,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
-    alignment_match_funct_t const match_funct,
-    void* const match_funct_arguments,
+    wavefront_sequences_t* const sequences,
     const int begin_v,
     const int begin_h,
     const int end_v,
     const int end_h,
     cigar_t* const cigar) {
-  // Clear cigar
-  char* cigar_buffer = cigar->operations;
-  cigar->begin_offset = 0;
+  // Parameters
+  const int pattern_length = sequences->pattern_length;
+  const int text_length = sequences->text_length;
   // Add init insertions/deletions
+  cigar_clear(cigar);
+  char* cigar_buffer = cigar->operations;
   int i;
   int v = begin_v;
   int h = begin_h;
@@ -293,9 +291,7 @@ void wf_backtrace_buffer_unpack_cigar_linear(
     // Unpack block
     int cigar_block_length = 0;
     pcigar_unpack_linear(
-        palignment_blocks[i],
-        pattern,pattern_length,text,text_length,
-        match_funct,match_funct_arguments,&v,&h,
+        palignment_blocks[i],sequences,&v,&h,
         cigar_buffer,&cigar_block_length);
     // Update CIGAR
     cigar_buffer += cigar_block_length;
@@ -314,21 +310,18 @@ void wf_backtrace_buffer_unpack_cigar_linear(
 }
 void wf_backtrace_buffer_unpack_cigar_affine(
     wf_backtrace_buffer_t* const bt_buffer,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
-    alignment_match_funct_t const match_funct,
-    void* const match_funct_arguments,
+    wavefront_sequences_t* const sequences,
     const int begin_v,
     const int begin_h,
     const int end_v,
     const int end_h,
     cigar_t* const cigar) {
-  // Clear cigar
-  char* cigar_buffer = cigar->operations;
-  cigar->begin_offset = 0;
+  // Parameters
+  const int pattern_length = sequences->pattern_length;
+  const int text_length = sequences->text_length;
   // Add init insertions/deletions
+  cigar_clear(cigar);
+  char* cigar_buffer = cigar->operations;
   int i;
   int v = begin_v;
   int h = begin_h;
@@ -342,9 +335,7 @@ void wf_backtrace_buffer_unpack_cigar_affine(
     // Unpack block
     int cigar_block_length = 0;
     pcigar_unpack_affine(
-        palignment_blocks[i],
-        pattern,pattern_length,text,text_length,
-        match_funct,match_funct_arguments,&v,&h,
+        palignment_blocks[i],sequences,&v,&h,
         cigar_buffer,&cigar_block_length,&current_matrix_type);
     // Update CIGAR
     cigar_buffer += cigar_block_length;

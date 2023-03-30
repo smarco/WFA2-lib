@@ -41,14 +41,12 @@ wavefront_aligner_attr_t wavefront_aligner_attr_default = {
     .alignment_scope = compute_alignment,
     .alignment_form = {
         .span = alignment_end2end,
+        .extension = false,
         .pattern_begin_free = 0,
         .pattern_end_free = 0,
         .text_begin_free = 0,
         .text_end_free = 0,
     },
-    // Custom matching functions
-    .match_funct = NULL,           // Use default match-compare function
-    .match_funct_arguments = NULL, // No arguments
     // Penalties
     .linear_penalties = {
         .match = 0,
@@ -88,7 +86,7 @@ wavefront_aligner_attr_t wavefront_aligner_attr_default = {
     },
     // System
     .system = {
-        .max_alignment_score = INT_MAX, // Unlimited
+        .max_alignment_steps = INT_MAX, // Unlimited
         .probe_interval_global = 3000,
         .probe_interval_compact = 6000,
         .max_memory_compact = -1,  // Automatically set based on memory-mode

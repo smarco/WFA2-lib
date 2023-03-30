@@ -42,5 +42,15 @@ int wavefront_align(
     const int pattern_length,
     const char* const text,
     const int text_length);
-int wavefront_align_resume(
-    wavefront_aligner_t* const wf_aligner);
+int wavefront_align_lambda(
+    wavefront_aligner_t* const wf_aligner,
+    alignment_match_funct_t const match_funct,
+    void* match_funct_arguments,
+    const int pattern_length,
+    const int text_length);
+int wavefront_align_packed2bits(
+    wavefront_aligner_t* const wf_aligner,
+    const uint8_t* const pattern,
+    const int pattern_length,
+    const uint8_t* const text,
+    const int text_length);

@@ -31,7 +31,6 @@
 
 #include "utils/commons.h"
 #include "system/mm_allocator.h"
-#include "utils/string_padded.h"
 #include "alignment/affine2p_penalties.h"
 #include "wavefront_compute.h"
 
@@ -128,9 +127,11 @@ bool wavefront_compute_endsfree_required(
   // Parameters
   alignment_form_t* const alg_form = &wf_aligner->alignment_form;
   wavefront_penalties_t* const penalties = &wf_aligner->penalties;
-  // Return is ends-free initialization is required
+  // Return if ends-free initialization is required
   if (penalties->match == 0) return false;
   if (alg_form->span != alignment_endsfree) return false;
+  if (alg_form->text_begin_free == 0 &&
+      alg_form->pattern_begin_free == 0) return false;
   if (score % (-penalties->match) != 0) return false;
   // Ok
   return true;
@@ -571,8 +572,9 @@ void wavefront_compute_trim_ends(
     wavefront_aligner_t* const wf_aligner,
     wavefront_t* const wavefront) {
   // Parameters
-  const int pattern_length = wf_aligner->pattern_length;
-  const int text_length = wf_aligner->text_length;
+  wavefront_sequences_t* const sequences = &wf_aligner->sequences;
+  const int pattern_length = sequences->pattern_length;
+  const int text_length = sequences->text_length;
   wf_offset_t* const offsets = wavefront->offsets;
   // Trim from hi
   int k;
@@ -651,3 +653,4 @@ void wavefront_compute_thread_limits(
   *thread_hi = t_hi;
 }
 #endif
+

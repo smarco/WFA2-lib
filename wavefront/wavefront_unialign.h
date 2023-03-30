@@ -34,29 +34,10 @@
 #include "wavefront_aligner.h"
 
 /*
- * Resize
- */
-void wavefront_unialign_resize(
-    wavefront_aligner_t* const wf_aligner,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
-    const bool reverse_sequences);
-
-/*
  * Initialize alignment
  */
-void wavefront_unialign_initialize_wavefronts(
-    wavefront_aligner_t* const wf_aligner,
-    const int pattern_length,
-    const int text_length);
 void wavefront_unialign_init(
     wavefront_aligner_t* const wf_aligner,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
     const affine2p_matrix_type component_begin,
     const affine2p_matrix_type component_end);
 

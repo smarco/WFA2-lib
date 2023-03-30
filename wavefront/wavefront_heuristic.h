@@ -62,7 +62,8 @@ typedef struct {
   int zdrop;                          // Z-drop parameter
   // Internals
   int steps_wait;                     // Score-steps until next cut-off
-  int max_sw_score;                   // Maximum score observed (for x/z drops)
+  int max_sw_score;                   // Maximum swg-score observed (for x/z drops)
+  int max_wf_score;                   // Corresponding wf-score (to max_sw_score)
   int max_sw_score_offset;            // Offset of the maximum score observed
   int max_sw_score_k;                 // Diagonal of the maximum score observed
 } wavefront_heuristic_t;
@@ -109,7 +110,7 @@ void wavefront_heuristic_clear(
 /*
  * Wavefront heuristic cut-off
  */
-void wavefront_heuristic_cufoff(
+bool wavefront_heuristic_cufoff(
     wavefront_aligner_t* const wf_aligner,
     const int score,
     const int score_mod);

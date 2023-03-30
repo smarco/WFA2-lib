@@ -32,28 +32,30 @@
 #pragma once
 
 #include "system/mm_allocator.h"
-#include "utils/string_padded.h"
-#include "wavefront_attributes.h"
-#include "wavefront_components.h"
 #include "wavefront_slab.h"
 #include "wavefront_penalties.h"
+#include "wavefront_attributes.h"
+#include "wavefront_components.h"
+#include "wavefront_sequences.h"
 #include "wavefront_bialigner.h"
-
 
 /*
  * Error codes & messages
  */
-// Success
-#define WF_STATUS_SUCCESSFUL               0
-// Errors
-#define WF_STATUS_UNFEASIBLE              -1
-#define WF_STATUS_MAX_SCORE_REACHED       -2
-#define WF_STATUS_OOM                     -3
-// Internal
-#define WF_STATUS_END_REACHED              1
+// [OK]
+#define WF_STATUS_ALG_COMPLETED            0  // Success (Complete alignment found)
+#define WF_STATUS_ALG_PARTIAL              1  // Success (Partial alignment found)
+// [FAIL]
+#define WF_STATUS_MAX_STEPS_REACHED     -100  // Maximum number of WFA-steps reached
+#define WF_STATUS_OOM                   -200  // Maximum memory limit reached
+#define WF_STATUS_UNATTAINABLE          -300  // Alignment unattainable under configured heuristics
+// [INTERNAL]
+#define WF_STATUS_OK                      -1  // Computing alignment (in progress)
+#define WF_STATUS_END_REACHED             -2  // Alignment end reached
+#define WF_STATUS_END_UNREACHABLE         -3  // Alignment end unreachable under current configuration (eg Z-drop)
 // Error messages
-extern char* wf_error_msg[5];
 char* wavefront_align_strerror(const int error_code);
+char* wavefront_align_strerror_short(const int error_code);
 
 /*
  * Alignment status
@@ -63,6 +65,7 @@ typedef struct {
   // Status
   int status;                                                     // Status code
   int score;                                                      // Current WF-alignment score
+  bool dropped;                                                   // Heuristically dropped
   int num_null_steps;                                             // Total contiguous null-steps performed
   uint64_t memory_used;                                           // Total memory used
   // Wavefront alignment functions
@@ -90,14 +93,7 @@ typedef struct _wavefront_aligner_t {
   char* align_mode_tag;                       // WFA mode tag
   wavefront_align_status_t align_status;      // Current alignment status
   // Sequences
-  strings_padded_t* sequences;                // Padded sequences
-  char* pattern;                              // Pattern sequence (padded)
-  int pattern_length;                         // Pattern length
-  char* text;                                 // Text sequence (padded)
-  int text_length;                            // Text length
-  // Custom function to compare sequences
-  alignment_match_funct_t match_funct;        // Custom matching function (match(v,h,args))
-  void* match_funct_arguments;                // Generic arguments passed to matching function (args)
+  wavefront_sequences_t sequences;            // Input sequences
   // Alignment Attributes
   alignment_scope_t alignment_scope;          // Alignment scope (score only or full-CIGAR)
   alignment_form_t alignment_form;            // Alignment form (end-to-end/ends-free)
@@ -144,6 +140,8 @@ void wavefront_aligner_set_alignment_free_ends(
     const int pattern_end_free,
     const int text_begin_free,
     const int text_end_free);
+void wavefront_aligner_set_alignment_extension(
+    wavefront_aligner_t* const wf_aligner);
 
 /*
  * Heuristic configuration
@@ -179,57 +177,40 @@ void wavefront_aligner_set_heuristic_banded_adaptive(
     const int score_steps);
 
 /*
- * Match-funct configuration
- */
-void wavefront_aligner_set_match_funct(
-    wavefront_aligner_t* const wf_aligner,
-    int (*match_funct)(int,int,void*),
-    void* const match_funct_arguments);
-
-/*
  * System configuration
  */
-void wavefront_aligner_set_max_alignment_score(
+void wavefront_aligner_set_max_alignment_steps(
     wavefront_aligner_t* const wf_aligner,
-    const int max_alignment_score);
+    const int max_alignment_steps);
 void wavefront_aligner_set_max_memory(
     wavefront_aligner_t* const wf_aligner,
     const uint64_t max_memory_resident,
     const uint64_t max_memory_abort);
 void wavefront_aligner_set_max_num_threads(
-        wavefront_aligner_t* const wf_aligner,
-        const int max_num_threads);
+    wavefront_aligner_t* const wf_aligner,
+    const int max_num_threads);
 void wavefront_aligner_set_min_offsets_per_thread(
-        wavefront_aligner_t* const wf_aligner,
-        const int min_offsets_per_thread);
-/*
- * Utils
- */
-uint64_t wavefront_aligner_get_size(
-    wavefront_aligner_t* const wf_aligner);
+    wavefront_aligner_t* const wf_aligner,
+    const int min_offsets_per_thread);
 
 /*
- * Display
+ * Wavefront Align
  */
-void wavefront_aligner_print_type(
-    FILE* const stream,
-    wavefront_aligner_t* const wf_aligner);
-void wavefront_aligner_print_scope(
-    FILE* const stream,
-    wavefront_aligner_t* const wf_aligner);
-void wavefront_aligner_print_mode(
-    FILE* const stream,
-    wavefront_aligner_t* const wf_aligner);
-
-/*
- * Wavefront Alignment
- */
-
 int wavefront_align(
     wavefront_aligner_t* const wf_aligner,
     const char* const pattern,
     const int pattern_length,
     const char* const text,
     const int text_length);
-int wavefront_align_resume(
-    wavefront_aligner_t* const wf_aligner);
+int wavefront_align_lambda(
+    wavefront_aligner_t* const wf_aligner,
+    alignment_match_funct_t const match_funct,
+    void* match_funct_arguments,
+    const int pattern_length,
+    const int text_length);
+int wavefront_align_packed2bits(
+    wavefront_aligner_t* const wf_aligner,
+    const uint8_t* const pattern,
+    const int pattern_length,
+    const uint8_t* const text,
+    const int text_length);

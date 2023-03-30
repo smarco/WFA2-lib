@@ -26,45 +26,22 @@
  *
  * PROJECT: Wavefront Alignment Algorithms
  * AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
- * DESCRIPTION: WaveFront aligner data structure
+ * DESCRIPTION: WaveFront-Alignment module for the "extension" of exact matches
  */
 
-#pragma once
+#ifndef WAVEFRONT_EXTEND_AVX_H_
+#define WAVEFRONT_EXTEND_AVX_H_
 
-#include "utils/heatmap.h"
-#include "system/profiler_counter.h"
-#include "system/profiler_timer.h"
-#include "system/mm_stack.h"
-#include "alignment/cigar.h"
-#include "wfa.h"
+#if __AVX2__
 
-/*
- * Initialize Aligner (to perform a new alignment)
- */
-void wavefront_aligner_init(
+#include "wavefront_aligner.h"
+
+void wavefront_extend_matches_packed_end2end_avx2(
     wavefront_aligner_t* const wf_aligner,
-    const int align_level);
+    wavefront_t* const mwavefront,
+    const int lo,
+    const int hi);
 
-/*
- * Utils
- */
-uint64_t wavefront_aligner_get_size(
-    wavefront_aligner_t* const wf_aligner);
+#endif // AVX2
 
-bool wavefront_aligner_maxtrim_cigar(
-    wavefront_aligner_t* const wf_aligner);
-
-/*
- * Display
- */
-void wavefront_aligner_print_mode(
-    FILE* const stream,
-    wavefront_aligner_t* const wf_aligner);
-void wavefront_aligner_print_scope(
-    FILE* const stream,
-    wavefront_aligner_t* const wf_aligner);
-void wavefront_aligner_print_conf(
-    FILE* const stream,
-    wavefront_aligner_t* const wf_aligner);
-
-
+#endif /* WAVEFRONT_EXTEND_AVX_H_ */

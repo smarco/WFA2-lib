@@ -26,45 +26,44 @@
  *
  * PROJECT: Wavefront Alignment Algorithms
  * AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
- * DESCRIPTION: WaveFront aligner data structure
+ * DESCRIPTION: WFA module for the "extension" of exact matches
  */
 
-#pragma once
+#ifndef WAVEFRONT_EXTEND_KERNELS_H_
+#define WAVEFRONT_EXTEND_KERNELS_H_
 
-#include "utils/heatmap.h"
-#include "system/profiler_counter.h"
-#include "system/profiler_timer.h"
-#include "system/mm_stack.h"
-#include "alignment/cigar.h"
-#include "wfa.h"
+#include "wavefront_aligner.h"
 
 /*
- * Initialize Aligner (to perform a new alignment)
+ * Wavefront-Extend Inner Kernels
  */
-void wavefront_aligner_init(
+void wavefront_extend_matches_packed_end2end(
     wavefront_aligner_t* const wf_aligner,
-    const int align_level);
+    wavefront_t* const mwavefront,
+    const int lo,
+    const int hi);
+wf_offset_t wavefront_extend_matches_packed_end2end_max(
+    wavefront_aligner_t* const wf_aligner,
+    wavefront_t* const mwavefront,
+    const int lo,
+    const int hi);
+bool wavefront_extend_matches_packed_endsfree(
+    wavefront_aligner_t* const wf_aligner,
+    wavefront_t* const mwavefront,
+    const int score,
+    const int lo,
+    const int hi);
 
 /*
- * Utils
+ * Wavefront-Extend Inner Kernel (Custom match function)
  */
-uint64_t wavefront_aligner_get_size(
-    wavefront_aligner_t* const wf_aligner);
+bool wavefront_extend_matches_custom(
+    wavefront_aligner_t* const wf_aligner,
+    wavefront_t* const mwavefront,
+    const int score,
+    const int lo,
+    const int hi,
+    const bool endsfree,
+    wf_offset_t* const max_antidiag);
 
-bool wavefront_aligner_maxtrim_cigar(
-    wavefront_aligner_t* const wf_aligner);
-
-/*
- * Display
- */
-void wavefront_aligner_print_mode(
-    FILE* const stream,
-    wavefront_aligner_t* const wf_aligner);
-void wavefront_aligner_print_scope(
-    FILE* const stream,
-    wavefront_aligner_t* const wf_aligner);
-void wavefront_aligner_print_conf(
-    FILE* const stream,
-    wavefront_aligner_t* const wf_aligner);
-
-
+#endif /* WAVEFRONT_EXTEND_KERNELS_H_ */

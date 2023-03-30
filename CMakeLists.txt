@@ -120,8 +120,12 @@ set(wfa2lib_SOURCE
   wavefront/wavefront_pcigar.c
   wavefront/wavefront_penalties.c
   wavefront/wavefront_plot.c
+  wavefront/wavefront_sequences.c
   wavefront/wavefront_slab.c
   wavefront/wavefront_unialign.c
+  wavefront/wavefront_termination.c
+  wavefront/wavefront_extend_kernels_avx.c
+  wavefront/wavefront_extend_kernels.c
   system/mm_stack.c
   system/mm_allocator.c
   system/profiler_counter.c
@@ -132,7 +136,6 @@ set(wfa2lib_SOURCE
   utils/vector.c
   utils/commons.c
   utils/heatmap.c
-  utils/string_padded.c
   alignment/affine2p_penalties.c
   alignment/affine_penalties.c
   alignment/cigar.c

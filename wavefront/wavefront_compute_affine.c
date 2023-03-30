@@ -31,7 +31,6 @@
 
 #include "utils/commons.h"
 #include "system/mm_allocator.h"
-#include "utils/string_padded.h"
 #include "wavefront_compute.h"
 #include "wavefront_backtrace_offload.h"
 
@@ -48,8 +47,9 @@ void wavefront_compute_affine_idm(
     const int lo,
     const int hi) {
   // Parameters
-  const int pattern_length = wf_aligner->pattern_length;
-  const int text_length = wf_aligner->text_length;
+  wavefront_sequences_t* const sequences = &wf_aligner->sequences;
+  const int pattern_length = sequences->pattern_length;
+  const int text_length = sequences->text_length;
   // In Offsets
   const wf_offset_t* const m_misms = wavefront_set->in_mwavefront_misms->offsets;
   const wf_offset_t* const m_open1 = wavefront_set->in_mwavefront_open1->offsets;
@@ -93,8 +93,9 @@ void wavefront_compute_affine_idm_piggyback(
     const int lo,
     const int hi) {
   // Parameters
-  const int pattern_length = wf_aligner->pattern_length;
-  const int text_length = wf_aligner->text_length;
+  wavefront_sequences_t* const sequences = &wf_aligner->sequences;
+  const int pattern_length = sequences->pattern_length;
+  const int text_length = sequences->text_length;
   // In Offsets
   const wf_offset_t* const m_misms = wavefront_set->in_mwavefront_misms->offsets;
   const wf_offset_t* const m_open1 = wavefront_set->in_mwavefront_open1->offsets;
@@ -257,3 +258,5 @@ void wavefront_compute_affine(
   // Process wavefront ends
   wavefront_compute_process_ends(wf_aligner,&wavefront_set,score);
 }
+
+

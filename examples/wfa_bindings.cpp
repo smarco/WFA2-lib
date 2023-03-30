@@ -48,7 +48,7 @@ int main(int argc,char* argv[]) {
   cout << "WFA-Alignment returns score " << aligner.getAlignmentScore() << endl;
 
   // Print CIGAR
-  string cigar = aligner.getAlignmentCigar();
+  string cigar = aligner.getAlignment();
   cout << "PATTERN: " << pattern  << endl;
   cout << "TEXT: " << text  << endl;
   cout << "CIGAR: " << cigar  << endl;
