@@ -77,8 +77,8 @@ WFAligner::AlignmentStatus WFAligner::alignEnd2End(
       wfAligner,pattern,patternLength,text,textLength);
 }
 WFAligner::AlignmentStatus WFAligner::alignEnd2End(
-    std::string& pattern,
-    std::string& text) {
+    const std::string& pattern,
+    const std::string& text) {
   // Delegate
   return alignEnd2End(pattern.c_str(),pattern.length(),text.c_str(),text.length());
 }
@@ -125,10 +125,10 @@ WFAligner::AlignmentStatus WFAligner::alignEndsFree(
       wfAligner,pattern,patternLength,text,textLength);
 }
 WFAligner::AlignmentStatus WFAligner::alignEndsFree(
-    std::string& pattern,
+    const std::string& pattern,
     const int patternBeginFree,
     const int patternEndFree,
-    std::string& text,
+    const std::string& text,
     const int textBeginFree,
     const int textEndFree) {
   // Delegate

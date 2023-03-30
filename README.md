@@ -21,7 +21,7 @@ Git clone and compile the library, tools, and examples (by default, use cmake).
 ```
 git clone https://github.com/smarco/WFA2-lib
 cd WFA2-lib
-mkdir build
+mkdir build && cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 cmake --build . --verbose
 ctest . --verbose

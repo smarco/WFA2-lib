@@ -72,8 +72,8 @@ public:
       const char* const text,
       const int textLength);
   AlignmentStatus alignEnd2End( // String ASCII Sequences
-      std::string& pattern,
-      std::string& text);
+      const std::string& pattern,
+      const std::string& text);
   AlignmentStatus alignEnd2End( // 2bits-Packed Sequences
       const uint8_t* const pattern,
       const int patternLength,
@@ -95,10 +95,10 @@ public:
       const int textBeginFree,
       const int textEndFree);
   AlignmentStatus alignEndsFree( // String ASCII Sequences
-      std::string& pattern,
+      const std::string& pattern,
       const int patternBeginFree,
       const int patternEndFree,
-      std::string& text,
+      const std::string& text,
       const int textBeginFree,
       const int textEndFree);
   AlignmentStatus alignEndsFree( // 2bits-Packed Sequences
