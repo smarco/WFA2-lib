@@ -73,8 +73,8 @@ public:
       const char* const text,
       const int textLength);
   AlignmentStatus alignEnd2End(
-      std::string& pattern,
-      std::string& text);
+      const std::string& pattern,
+      const std::string& text);
   // Align Ends-free
   AlignmentStatus alignEndsFreeLambda(
       const int patternLength,
@@ -93,10 +93,10 @@ public:
       const int textBeginFree,
       const int textEndFree);
   AlignmentStatus alignEndsFree(
-      std::string& pattern,
+      const std::string& pattern,
       const int patternBeginFree,
       const int patternEndFree,
-      std::string& text,
+      const std::string& text,
       const int textBeginFree,
       const int textEndFree);
   // Alignment resume
