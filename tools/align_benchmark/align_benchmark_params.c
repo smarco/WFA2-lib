@@ -156,6 +156,8 @@ void usage() {
       "              parasail-nw-scan     (Gap-affine)                         \n"
       "              parasail-nw-diag     (Gap-affine)                         \n"
       "              parasail-nw-banded   (Gap-affine)[score-only]             \n"
+      "            [External/Scrooge]                                          \n"
+      "              scrooge              (Edit)                               \n"
       "            [External/SeqAn]                                            \n"
       "              seqan-edit           (Edit)                               \n"
       "              seqan-edit-bpm       (Edit)[score-only]                   \n"
@@ -357,6 +359,9 @@ void parse_arguments(
         parameters.algorithm = alignment_parasail_nw_diag;
       } else if (strcmp(optarg,"parasail-nw-banded")==0) {
         parameters.algorithm = alignment_parasail_nw_banded;
+      // External (Scrooge)
+      } else if (strcmp(optarg,"scrooge")==0) {
+        parameters.algorithm = alignment_scrooge;
       // External (SeqAn)
       } else if (strcmp(optarg,"seqan-edit")==0) {
         parameters.algorithm = alignment_seqan_edit;

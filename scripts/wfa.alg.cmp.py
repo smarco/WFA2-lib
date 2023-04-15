@@ -112,7 +112,7 @@ def plot_score_distribution(stats,input_path1,input_path2):
   matplotlib.use('Agg')
   # Draw length histogram
   fig,ax1 = plt.subplots()
-  ax1.set_xlabel('Score')
+  ax1.set_xlabel('Score/Distance')
   ax1.set_ylabel('Total Count')
   #   ax1.xaxis.grid(True)
   #   ax1.yaxis.grid(True)
@@ -132,11 +132,39 @@ def plot_score_distribution(stats,input_path1,input_path2):
   fig.savefig("wfaCmpAlg." + input_path1 + "." + input_path2 + ".png",
               format='png',dpi=100,bbox_inches='tight')
   #plt.show()
+  
+def plot_score_cumulative(stats,input_path1,input_path2):
+  # Plot
+  matplotlib.use('Agg')
+  # Draw length histogram
+  n_bins = 50
+  fig, ax = plt.subplots(figsize=(8, 4))
+  
+  # plot the cumulative histogram
+  range_min = min(min(stats.scores1),min(stats.scores2))
+  range_max = max(max(stats.scores1),max(stats.scores2))
+  n, bins, patches = ax.hist(stats.scores1,50,density=True,histtype='step',cumulative=True,range=[range_min,range_max],
+                             color="royalblue",label='Empirical',alpha=0.5,fill=True)
+  n, bins, patches = ax.hist(stats.scores2,50,density=True,histtype='step',cumulative=True,range=[range_min,range_max],
+                             color="darkorange",label='Empirical',alpha=0.5,fill=True)
+  
+  # Tidy up the figure
+  ax.grid(True)
+  ax.legend(loc='right')
+  ax.set_title('Cumulative error distribution')
+  ax.set_xlabel('Score/Distance')
+  ax.set_ylabel('Cumulative Count')
+  
+  # Plot
+  plt.title("Score distribution for '%s' and '%s'" % (input_path1,input_path2))
+  fig.savefig("wfaCmpAlg." + input_path1 + "." + input_path2 + ".png",
+              format='png',dpi=100,bbox_inches='tight')
+  #plt.show()
 
 ################################################################################
 # Compare both files
 ################################################################################
-def compare_alignments(input_path1,input_path2,penalties,use_score,ignore_misms,verbose):
+def compare_alignments(input_path1,input_path2,penalties,use_score,ignore_misms,edit,verbose):
   # Alignment stats
   stats = AlignmentStats()  
   # Read both files and compare  
@@ -172,10 +200,17 @@ def compare_alignments(input_path1,input_path2,penalties,use_score,ignore_misms,
       stats.scores2.append(score2)
       if score1 == score2:
         stats.score_same += 1
-      elif score1 > score2:
-        stats.score_best1 += 1
       else:
-        stats.score_best2 += 1
+        if edit:
+          if score1 < score2:
+            stats.score_best1 += 1
+          else:
+            stats.score_best2 += 1
+        else:
+          if score1 > score2 :
+            stats.score_best1 += 1
+          else:
+            stats.score_best2 += 1
       # Verbose
       if verbose and score1 != score2:
         print(">Failed::%d" % line_no)
@@ -260,11 +295,14 @@ if penalties.mismatch < 0 or \
 # Compare alignments from both files
 stats = compare_alignments(
   args.input1,args.input2,penalties,
-  args.use_score,args.ignore_misms,args.verbose)
+  args.use_score,args.ignore_misms,
+  args.edit is not None,
+  args.verbose)
 print(stats) # Display stats
 
 # Plot score distribution
 if args.plot:
-  plot_score_distribution(stats,args.input1,args.input2)
+  #plot_score_distribution(stats,args.input1,args.input2)
+  plot_score_cumulative(stats,args.input1,args.input2)
   
   

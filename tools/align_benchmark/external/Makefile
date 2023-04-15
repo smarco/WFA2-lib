@@ -7,7 +7,8 @@ BUILD_RULES=bitpal_build \
             edlib_build \
             ksw2_build \
             gaba_build \
-            parasail_build
+            parasail_build \
+            scrooge_build
             
 CLEAN_RULES=blockaligner_clean \
             edlib_clean \
@@ -48,6 +49,9 @@ gaba_build:
 
 parasail_build:
 	-cd parasail; ./build.sh
+	
+scrooge_build:
+	-$(MAKE) --directory=scrooge all
 
 ###############################################################################
 # Clean rules

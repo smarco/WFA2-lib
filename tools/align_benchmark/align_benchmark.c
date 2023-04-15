@@ -60,6 +60,7 @@
 #include "benchmark/external/benchmark_ksw2.h"
 #include "benchmark/external/benchmark_lv89.h"
 #include "benchmark/external/benchmark_parasail.h"
+#include "benchmark/external/benchmark_scrooge.h"
 #include "benchmark/external/benchmark_seqan.h"
 #include "benchmark/external/benchmark_wfalm.h"
 #endif
@@ -499,6 +500,9 @@ void align_benchmark_run_algorithm(
         break;
       case alignment_parasail_nw_banded:
         benchmark_parasail_nw_banded(align_input,&parameters.affine_penalties,parameters.bandwidth);
+        break;
+      case alignment_scrooge:
+        benchmark_scrooge(align_input);
         break;
       case alignment_seqan_edit:
         benchmark_seqan_global_edit(align_input);

@@ -51,7 +51,6 @@ typedef struct {
   int end_v;               // Alignment-end vertical coordinate (pattern characters aligned)
   int end_h;               // Alignment-end horizontal coordinate (text characters aligned)
   // CIGAR (SAM compliant)
-  bool has_misms;          // Show 'X' and '=', instead of  just 'M'
   uint32_t* cigar_buffer;  // CIGAR-operations (max_operations length)
   int cigar_length;        // Total CIGAR-operations
 } cigar_t;

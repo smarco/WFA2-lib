@@ -46,7 +46,7 @@ typedef typename Iterator<typename Row<TAlign>::Type const, Standard>::Type TIte
 /*
  * Benchmark SeqAn Adapt CIGAR
  */
-void benchmark_edlib_parse_cigar(
+void benchmark_seqan_parse_cigar(
     char* const pattern,
     const int pattern_length,
     char* const text,
@@ -97,7 +97,7 @@ extern "C" void benchmark_seqan_bridge_global_edit(
   assignSource(row(align,1),seq2);
   globalAlignment(align,Score<int,Simple>(0,-1,-1));
   // Adapt alignment CIGAR
-  benchmark_edlib_parse_cigar(
+  benchmark_seqan_parse_cigar(
       pattern,pattern_length,text,text_length,
       align,edit_operations,num_edit_operations);
 }
@@ -134,7 +134,7 @@ extern "C" void benchmark_seqan_bridge_global_lineal(
   globalAlignment(align,
       Score<int,Simple>(-match,-mismatch,-insertion,-deletion),LinearGaps());
   // Adapt alignment CIGAR
-  benchmark_edlib_parse_cigar(
+  benchmark_seqan_parse_cigar(
       pattern,pattern_length,text,text_length,
       align,edit_operations,num_edit_operations);
 }
@@ -159,7 +159,7 @@ extern "C" void benchmark_seqan_bridge_global_affine(
   globalAlignment(align,
       Score<int,Simple>(-match,-mismatch,-gap_extension,-gap_opening-gap_extension),AffineGaps());
   // Adapt alignment CIGAR
-  benchmark_edlib_parse_cigar(
+  benchmark_seqan_parse_cigar(
       pattern,pattern_length,text,text_length,
       align,edit_operations,num_edit_operations);
 }

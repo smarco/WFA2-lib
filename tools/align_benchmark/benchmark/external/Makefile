@@ -17,6 +17,8 @@ MODULES=benchmark_bitpal \
         benchmark_ksw2 \
         benchmark_lv89 \
         benchmark_parasail \
+        benchmark_scrooge_bindings \
+        benchmark_scrooge \
         benchmark_seqan_bindings \
         benchmark_seqan \
         benchmark_wfalm_bindings \
@@ -37,6 +39,9 @@ $(FOLDER_BUILD)/benchmark_diffutils.o : benchmark_diffutils.c
 
 $(FOLDER_BUILD)/benchmark_gaba.o : benchmark_gaba.c
 	$(CC) -march=native $(CC_FLAGS) $(LI_FLAGS) -c $< -o $@
+
+$(FOLDER_BUILD)/benchmark_scrooge_bindings.o : benchmark_scrooge_bindings.cpp
+	$(CPP) -std=c++14 $(CC_FLAGS) $(LI_FLAGS) -I$(FOLDER_ROOT)/external/ -c $< -o $@
 
 $(FOLDER_BUILD)/benchmark_seqan_bindings.o : benchmark_seqan_bindings.cpp
 	$(CPP) -std=c++14 $(CC_FLAGS) $(LI_FLAGS) -I$(FOLDER_ROOT)/external/seqan/include/ -c $< -o $@

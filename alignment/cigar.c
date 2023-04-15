@@ -68,7 +68,10 @@ cigar_t* cigar_new(
   cigar->begin_offset = 0;
   cigar->end_offset = 0;
   cigar->score = INT32_MIN;
+  cigar->end_v = -1;
+  cigar->end_h = -1;
   // CIGAR
+  cigar->cigar_length = 0;
   cigar->cigar_buffer = calloc(max_operations,sizeof(uint32_t));
   // Return
   return cigar;
@@ -179,7 +182,7 @@ void cigar_compute_CIGAR(
     cigar_t* const cigar,
     const bool show_mismatches) {
   // Prepare CIGAR (SAM compliant)
-  if (cigar->cigar_length==0 || cigar->has_misms!=show_mismatches) {
+  if (cigar->cigar_length == 0) {
     const char* const operations = cigar->operations;
     const int begin_offset = cigar->begin_offset;
     const int end_offset = cigar->end_offset;
@@ -220,7 +223,6 @@ void cigar_compute_CIGAR(
       cigar_buffer[cigar_length++] = (last_op_len << 4) | ((uint32_t)sam_cigar_lut[(int)last_op]);
     }
     // Set as ready
-    cigar->has_misms = show_mismatches;
     cigar->cigar_length = cigar_length;
   }
 }
@@ -758,9 +760,15 @@ int cigar_sprint_SAM_CIGAR(
   // Print CIGAR-operations
   int i, cursor = 0;
   for (i=0;i<cigar_length;++i) {
-    cursor += sprintf(buffer+cursor,"%d%c",
-        cigar_buffer[i]>>4,
-        "MIDN---=X"[cigar_buffer[i]&0xf]);
+    const int op_idx = cigar_buffer[i] & 0xf;
+    if (op_idx <= 8) {
+      cursor += sprintf(buffer+cursor,"%d%c",
+          cigar_buffer[i]>>4,
+          "MIDN---=X"[cigar_buffer[i]&0xf]);
+    } else {
+      cursor += sprintf(buffer+cursor,"%d%c",
+          cigar_buffer[i]>>4,'?');
+    }
   }
   // Return
   buffer[cursor] = '\0';

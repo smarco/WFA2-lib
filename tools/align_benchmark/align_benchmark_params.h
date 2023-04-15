@@ -77,6 +77,7 @@ typedef enum {
   alignment_parasail_nw_scan,
   alignment_parasail_nw_diag,
   alignment_parasail_nw_banded,
+  alignment_scrooge,
   alignment_seqan_edit,
   alignment_seqan_edit_bpm,
   alignment_seqan_lineal,
