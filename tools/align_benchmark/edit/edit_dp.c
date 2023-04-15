@@ -29,6 +29,8 @@
  * DESCRIPTION: Dynamic-programming algorithm to compute Levenshtein alignment (edit)
  */
 
+#include "utils/commons.h"
+#include "system/mm_allocator.h"
 #include "edit_dp.h"
 
 /*
@@ -70,7 +72,7 @@ void edit_dp_traceback(
   while (v>0) {operations[op_sentinel--] = 'D'; --v;}
   cigar->begin_offset = op_sentinel + 1;
 }
-void edit_dp_compute(
+void edit_dp_align(
     score_matrix_t* const score_matrix,
     const char* const pattern,
     const int pattern_length,
@@ -100,7 +102,7 @@ void edit_dp_compute(
 /*
  * Edit distance computation using dynamic-programming matrix (banded)
  */
-void edit_dp_compute_banded(
+void edit_dp_align_banded(
     score_matrix_t* const score_matrix,
     const char* const pattern,
     const int pattern_length,

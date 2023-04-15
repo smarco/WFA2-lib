@@ -33,7 +33,6 @@
 #define WAVEFRONT_BACKTRACE_BUFFER_H_
 
 #include "alignment/cigar.h"
-#include "utils/commons.h"
 #include "utils/vector.h"
 #include "utils/bitmap.h"
 #include "system/mm_allocator.h"
@@ -120,12 +119,7 @@ bt_block_t* wf_backtrace_buffer_traceback_pcigar(
     bt_block_t* bt_block);
 void wf_backtrace_buffer_unpack_cigar_linear(
     wf_backtrace_buffer_t* const bt_buffer,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
-    alignment_match_funct_t const match_funct,
-    void* const match_funct_arguments,
+    wavefront_sequences_t* const sequences,
     const int begin_v,
     const int begin_h,
     const int end_v,
@@ -133,12 +127,7 @@ void wf_backtrace_buffer_unpack_cigar_linear(
     cigar_t* const cigar);
 void wf_backtrace_buffer_unpack_cigar_affine(
     wf_backtrace_buffer_t* const bt_buffer,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
-    alignment_match_funct_t const match_funct,
-    void* const match_funct_arguments,
+    wavefront_sequences_t* const sequences,
     const int begin_v,
     const int begin_h,
     const int end_v,
@@ -162,7 +151,7 @@ void wf_backtrace_buffer_mark_backtrace_batch(
 bt_block_idx_t wf_backtrace_buffer_compact_marked(
     wf_backtrace_buffer_t* const bt_buffer,
     bitmap_t* const bitmap,
-    const bool verbose);
+    const int verbose);
 
 /*
  * Utils

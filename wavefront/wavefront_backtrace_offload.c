@@ -29,7 +29,8 @@
  * DESCRIPTION: WaveFront alignment module for offloading partial backtraces
  */
 
-#include "utils/string_padded.h"
+#include "utils/commons.h"
+#include "wfa.h"
 #include "wavefront_backtrace_offload.h"
 
 /*
@@ -285,4 +286,3 @@ void wavefront_backtrace_offload_affine(
             wf_aligner,out_d2,out_d2_bt_pcigar,out_d2_bt_prev,lo,hi);
   }
 }
-

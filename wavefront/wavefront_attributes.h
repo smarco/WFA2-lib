@@ -49,8 +49,8 @@
  * Alignment scope
  */
 typedef enum {
-  compute_score,          // Only distance/score
-  compute_alignment,      // Full alignment CIGAR
+  compute_score,           // Only distance/score
+  compute_alignment,       // Full alignment CIGAR
 } alignment_scope_t;
 typedef enum {
   alignment_end2end,       // End-to-end alignment (aka global)
@@ -59,41 +59,21 @@ typedef enum {
 typedef struct {
   // Mode
   alignment_span_t span;   // Alignment form (End-to-end/Ends-free)
+  // Extension
+  bool extension;          // Activate extension-like alignment
   // Ends-free
   int pattern_begin_free;  // Allow free-gap at the beginning of the pattern
   int pattern_end_free;    // Allow free-gap at the end of the pattern
   int text_begin_free;     // Allow free-gap at the beginning of the text
   int text_end_free;       // Allow free-gap at the end of the text
-  // Limits
-  int max_alignment_score; // Maximum score allowed before quit
 } alignment_form_t;
-
-/*
- * Custom extend-match function, e.g.:
- *
- *   typedef struct {
- *     char* pattern;
- *     int pattern_length;
- *     char* text;
- *     int text_length;
- *   } match_function_params_t;
- *
- *   int match_function(int v,int h,void* arguments) {
- *     // Extract parameters
- *     match_function_params_t* match_arguments = (match_function_params_t*)arguments;
- *     // Check match
- *     if (v > match_arguments->pattern_length || h > match_arguments->text_length) return 0;
- *     return (match_arguments->pattern[v] == match_arguments->text[h]);
- *   }
- */
-typedef int (*alignment_match_funct_t)(int,int,void*);
 
 /*
  * Alignment system configuration
  */
 typedef struct {
-  // Debug
-  bool check_alignment_correct;  // Verify that the alignment CIGAR output is correct
+  // Limits
+  int max_alignment_steps;       // Maximum WFA-steps allowed before quit
   // Probing intervals
   int probe_interval_global;     // Score-ticks interval to check any limits
   int probe_interval_compact;    // Score-ticks interval to check BT-buffer compacting
@@ -104,21 +84,28 @@ typedef struct {
   uint64_t max_memory_abort;     // Maximum memory allowed to be used before aborting alignment
   // Verbose
   //  0 - Quiet
-  //  1 - Report WFA progress and heavy tasks
-  //  2 - Report each sequence aligned (brief)
-  //  3 - Report each sequence aligned (very verbose)
+  //  1 - Report each sequence aligned                      (brief)
+  //  2 - Report each sequence/subsequence aligned          (brief)
+  //  3 - Report WFA progress (heavy tasks)                 (verbose)
+  //  4 - Full report of each sequence/subsequence aligned  (very verbose)
   int verbose;                   // Verbose (regulates messages during alignment)
+  // Debug
+  bool check_alignment_correct;  // Verify that the alignment CIGAR output is correct
   // Profile
   profiler_timer_t timer;        // Time alignment
+  // OS
+  int max_num_threads;           // Maximum number of threads to use to compute/extend WFs
+  int min_offsets_per_thread;    // Minimum amount of offsets to spawn a thread
 } alignment_system_t;
 
 /*
  * Low-memory modes
  */
 typedef enum {
-  wavefront_memory_high = 0,     // High-memore mode (fastest, stores all WFs explicitly)
-  wavefront_memory_med = 1,      // Succing-memory mode (medium, offloads half-full BT-blocks)
-  wavefront_memory_low = 2,      // Succing-memory mode (slow, offloads only full BT-blocks)
+  wavefront_memory_high     = 0, // High-memore mode (fastest, stores all WFs explicitly)
+  wavefront_memory_med      = 1, // Succing-memory mode piggyback-based (medium, offloads half-full BT-blocks)
+  wavefront_memory_low      = 2, // Succing-memory mode piggyback-based (slow, offloads only full BT-blocks)
+  wavefront_memory_ultralow = 3, // Bidirectional WFA
 } wavefront_memory_t;
 
 /*
@@ -137,13 +124,10 @@ typedef struct {
   wavefront_heuristic_t heuristic;         // Wavefront heuristic
   // Memory model
   wavefront_memory_t memory_mode;          // Wavefront memory strategy (modular wavefronts and piggyback)
-  // Custom function to compare sequences
-  alignment_match_funct_t match_funct;     // Custom matching function (match(v,h,args))
-  void* match_funct_arguments;             // Generic arguments passed to matching function (args)
   // External MM (instead of allocating one inside)
   mm_allocator_t* mm_allocator;            // MM-Allocator
   // Display
-  wavefront_plot_params_t plot_params;     // Wavefront plot
+  wavefront_plot_attr_t plot;              // Plot wavefront
   // System
   alignment_system_t system;               // System related parameters
 } wavefront_aligner_attr_t;

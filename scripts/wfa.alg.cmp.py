@@ -29,24 +29,24 @@ class Penalties:
     def __init__(self):
       self.distance = Distance.edit
       self.match = 0
-      self.mismatch = 1
-      self.indel = 1
-      self.gap_open1 = -1
-      self.gap_extend1 = -1
-      self.gap_open2 = -1
-      self.gap_extend2 = -1
+      self.mismatch = 0
+      self.indel = 0
+      self.gap_open1 = 0
+      self.gap_extend1 = 0
+      self.gap_open2 = 0
+      self.gap_extend2 = 0
       
 def cigar_compute_score_edit(cigar_vector,penalties,ignore_misms):
   score = 0
   for op in cigar_vector:
-    if op[1] in "DI": score -= int(op[0])
-    if op[1] in "X" and not ignore_misms: score -= int(op[0])
+    if op[1] in "DI": score += int(op[0])
+    if op[1] in "X" and not ignore_misms: score += int(op[0])
   return score
 
 def cigar_compute_score_linear(cigar_vector,penalties,ignore_misms):
   score = 0
   for op in cigar_vector:
-    if op[1] == "M": score += int(op[0]) * penalties.match
+    if op[1] == "M": score -= int(op[0]) * penalties.match
     if op[1] == "X" and not ignore_misms: score -= int(op[0]) * penalties.mismatch
     if op[1] in "DI": score -= int(op[0]) * penalties.indel
   return score
@@ -54,7 +54,7 @@ def cigar_compute_score_linear(cigar_vector,penalties,ignore_misms):
 def cigar_compute_score_affine(cigar_vector,penalties,ignore_misms):
   score = 0
   for op in cigar_vector:
-    if op[1] == "M": score += int(op[0]) * penalties.match
+    if op[1] == "M": score -= int(op[0]) * penalties.match
     if op[1] == "X" and not ignore_misms: score -= int(op[0]) * penalties.mismatch
     if op[1] in "DI": score -= penalties.gap_open1 + int(op[0]) * penalties.gap_extend1
   return score
@@ -62,7 +62,7 @@ def cigar_compute_score_affine(cigar_vector,penalties,ignore_misms):
 def cigar_compute_score_affine_2p(cigar_vector,penalties,ignore_misms):
   score = 0
   for op in cigar_vector:
-    if op[1] == "M": score += int(op[0]) * penalties.match
+    if op[1] == "M": score -= int(op[0]) * penalties.match
     if op[1] == "X" and not ignore_misms: score -= int(op[0]) * penalties.mismatch
     if op[1] in "DI": 
       score1 = penalties.gap_open1 + int(op[0]) * penalties.gap_extend1
@@ -117,8 +117,12 @@ def plot_score_distribution(stats,input_path1,input_path2):
   #   ax1.xaxis.grid(True)
   #   ax1.yaxis.grid(True)
   # Plot score histogram
-  ax1.hist(stats.scores1,color="royalblue",edgecolor = 'black',alpha=0.75)
-  ax1.hist(stats.scores2,color="darkorange",edgecolor = 'black',alpha=0.75)
+  range_min = min(min(stats.scores1),min(stats.scores2))
+  range_max = max(max(stats.scores1),max(stats.scores2))
+  n, bins, patches = ax1.hist(stats.scores1,50,range=[range_min,range_max],color="royalblue",edgecolor='black',alpha=0.5) 
+  n, bins, patches = ax1.hist(stats.scores2,50,range=[range_min,range_max],color="darkorange",edgecolor='black',alpha=0.5)
+  start, end = ax1.get_xlim()
+  ax1.set_xticks(np.arange(start,end,(end-start)/5))
   # Leyend
   handles = [Rectangle((0,0),1,1,color=c,ec="k") for c in ["royalblue","darkorange"]]
   labels= [input_path1,input_path2]
@@ -155,11 +159,11 @@ def compare_alignments(input_path1,input_path2,penalties,use_score,ignore_misms,
       if use_score:
         cigar1 = None
         cigar2 = None
-        score1 = fields1[0] if len(fields1)==2 else fields1[2]
-        score2 = fields2[0] if len(fields2)==2 else fields2[2]
+        score1 = int(fields1[0]) if len(fields1)<=2 else int(fields1[2])
+        score2 = int(fields2[0]) if len(fields2)<=2 else int(fields2[2])
       else:
-        cigar1 = fields1[1] if len(fields1)==2 else fields1[5]
-        cigar2 = fields2[1] if len(fields2)==2 else fields2[5]
+        cigar1 = fields1[1] if len(fields1)<=2 else fields1[5]
+        cigar2 = fields2[1] if len(fields2)<=2 else fields2[5]
         # Evaluate CIGAR's score
         score1 = cigar_compute_score(cigar1,penalties,ignore_misms)
         score2 = cigar_compute_score(cigar2,penalties,ignore_misms)
@@ -197,7 +201,7 @@ parser.add_argument('-l','--gap-linear',
 parser.add_argument('-g','--gap-affine',
                     help='Score alignments using gap-affine distance (--gap-affine=M,X,O,E)')
 parser.add_argument('-G','--gap-affine-2p',
-                    help='Score alignments using gap-affine-2p distance (--gap-affine=M,X,O1,E1,O2,E2)')
+                    help='Score alignments using gap-affine-2p distance (--gap-affine-2p=M,X,O1,E1,O2,E2)')
 parser.add_argument('--use-score', action='store_true',default=False,
                     help='Compares the score provided in the file (default=use-cigar)')
 parser.add_argument('--ignore-misms', action='store_true',default=False,
@@ -238,7 +242,20 @@ elif args.gap_affine_2p is not None:
   penalties.gap_open2 = int(values[4])
   penalties.gap_extend2 = int(values[5])
 else:
-  print("[WFACompareAlignments] No distance provided. Using edit-distance (default)");
+  print("[WFACompareAlignments] No distance provided. Using edit-distance (default)")
+  
+# Check penalties
+if penalties.match > 0: 
+  print("[WFACompareAlignments] Match penalty must be negative or zero")
+  exit(-1)
+if penalties.mismatch < 0 or \
+   penalties.mismatch < 0 or \
+   penalties.gap_open1 < 0 or \
+   penalties.gap_extend1 < 0 or \
+   penalties.gap_open2 < 0 or \
+   penalties.gap_extend2 < 0:
+  print("[WFACompareAlignments] Penalties must be positive or zero")
+  exit(-1)
   
 # Compare alignments from both files
 stats = compare_alignments(

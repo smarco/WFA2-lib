@@ -41,7 +41,7 @@ all: LD_FLAGS+=-lstdc++ # SeqAn
 all: align_benchmark
 
 align_benchmark: */*.c */*.h align_benchmark.c $(LIB_WFA)
-	$(CC) $(CC_FLAGS) $(LI_FLAGS) $(OBJS) align_benchmark.c -o $(BIN) $(LD_FLAGS) -lwfa -lm -fopenmp
+	$(CC) $(CC_FLAGS) $(LI_FLAGS) $(OBJS) align_benchmark_params.c align_benchmark.c -o $(BIN) $(LD_FLAGS) -lwfa -lm -fopenmp
 	
 setup:
 	@mkdir -p $(FOLDER_BUILD)

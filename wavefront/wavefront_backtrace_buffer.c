@@ -29,7 +29,9 @@
  * DESCRIPTION: WaveFront backtrace buffer to store bactrace-blocks
  */
 
+#include "utils/commons.h"
 #include "wavefront_backtrace_buffer.h"
+#include "wavefront_sequences.h"
 
 /*
  * Config
@@ -265,21 +267,18 @@ bt_block_t* wf_backtrace_buffer_traceback_pcigar(
 }
 void wf_backtrace_buffer_unpack_cigar_linear(
     wf_backtrace_buffer_t* const bt_buffer,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
-    alignment_match_funct_t const match_funct,
-    void* const match_funct_arguments,
+    wavefront_sequences_t* const sequences,
     const int begin_v,
     const int begin_h,
     const int end_v,
     const int end_h,
     cigar_t* const cigar) {
-  // Clear cigar
-  char* cigar_buffer = cigar->operations;
-  cigar->begin_offset = 0;
+  // Parameters
+  const int pattern_length = sequences->pattern_length;
+  const int text_length = sequences->text_length;
   // Add init insertions/deletions
+  cigar_clear(cigar);
+  char* cigar_buffer = cigar->operations;
   int i;
   int v = begin_v;
   int h = begin_h;
@@ -292,9 +291,7 @@ void wf_backtrace_buffer_unpack_cigar_linear(
     // Unpack block
     int cigar_block_length = 0;
     pcigar_unpack_linear(
-        palignment_blocks[i],
-        pattern,pattern_length,text,text_length,
-        match_funct,match_funct_arguments,&v,&h,
+        palignment_blocks[i],sequences,&v,&h,
         cigar_buffer,&cigar_block_length);
     // Update CIGAR
     cigar_buffer += cigar_block_length;
@@ -313,21 +310,18 @@ void wf_backtrace_buffer_unpack_cigar_linear(
 }
 void wf_backtrace_buffer_unpack_cigar_affine(
     wf_backtrace_buffer_t* const bt_buffer,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
-    alignment_match_funct_t const match_funct,
-    void* const match_funct_arguments,
+    wavefront_sequences_t* const sequences,
     const int begin_v,
     const int begin_h,
     const int end_v,
     const int end_h,
     cigar_t* const cigar) {
-  // Clear cigar
-  char* cigar_buffer = cigar->operations;
-  cigar->begin_offset = 0;
+  // Parameters
+  const int pattern_length = sequences->pattern_length;
+  const int text_length = sequences->text_length;
   // Add init insertions/deletions
+  cigar_clear(cigar);
+  char* cigar_buffer = cigar->operations;
   int i;
   int v = begin_v;
   int h = begin_h;
@@ -341,9 +335,7 @@ void wf_backtrace_buffer_unpack_cigar_affine(
     // Unpack block
     int cigar_block_length = 0;
     pcigar_unpack_affine(
-        palignment_blocks[i],
-        pattern,pattern_length,text,text_length,
-        match_funct,match_funct_arguments,&v,&h,
+        palignment_blocks[i],sequences,&v,&h,
         cigar_buffer,&cigar_block_length,&current_matrix_type);
     // Update CIGAR
     cigar_buffer += cigar_block_length;
@@ -398,7 +390,7 @@ void wf_backtrace_buffer_mark_backtrace_batch(
   while (active_blocks < max_batch_size && next_idx < num_block_idxs) {
     // Check NULL
     const bt_block_idx_t block_idx = bt_block_idxs[next_idx];
-    if (offsets[next_idx] >= 0 && 
+    if (offsets[next_idx] >= 0 &&
         block_idx >= num_compacted_blocks) { // NOTE block_idx != BT_BLOCK_IDX_NULL
       // Prefetch (bt-block and bt_block)
       BITMAP_PREFETCH_BLOCK(bitmap,block_idx);
@@ -465,7 +457,7 @@ void wf_backtrace_buffer_mark_backtrace_batch(
 bt_block_idx_t wf_backtrace_buffer_compact_marked(
     wf_backtrace_buffer_t* const bt_buffer,
     bitmap_t* const bitmap,
-    const bool verbose) {
+    const int verbose) {
   // Parameters
   const int num_segments = vector_get_used(bt_buffer->segments);
   bt_block_t** const segments = vector_get_mem(bt_buffer->segments,bt_block_t*);
@@ -517,7 +509,7 @@ bt_block_idx_t wf_backtrace_buffer_compact_marked(
   bt_buffer->block_next = write_block;
   bt_buffer->num_compactions++;
   // DEBUG
-  if (verbose) {
+  if (verbose >= 3) {
     fprintf(stderr,"[WFA::BacktraceBuffer] Compacted from %lu MB to %lu MB (%2.2f%%)",
         CONVERT_B_TO_MB(read_global_pos*sizeof(bt_block_t)),
         CONVERT_B_TO_MB(write_global_pos*sizeof(bt_block_t)),
@@ -526,6 +518,3 @@ bt_block_idx_t wf_backtrace_buffer_compact_marked(
   // Return last index
   return write_global_pos - 1;
 }
-
-
-

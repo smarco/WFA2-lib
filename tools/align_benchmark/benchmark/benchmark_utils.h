@@ -62,6 +62,8 @@ typedef struct {
   int pattern_length;
   char* text;
   int text_length;
+  alignment_match_funct_t wfa_match_funct;
+  void* wfa_match_funct_arguments;
   // Penalties
   linear_penalties_t linear_penalties;
   affine_penalties_t affine_penalties;

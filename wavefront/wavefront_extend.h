@@ -26,7 +26,7 @@
  *
  * PROJECT: Wavefront Alignment Algorithms
  * AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
- * DESCRIPTION: WaveFront-Alignment module for the "extension" of exact matches
+ * DESCRIPTION: WFA module for the "extension" of exact matches
  */
 
 #ifndef WAVEFRONT_EXTEND_H_
@@ -35,16 +35,18 @@
 #include "wavefront_aligner.h"
 
 /*
- * Wavefront exact "extension"
+ * Wavefront extension
  */
-bool wavefront_extend_end2end(
+int wavefront_extend_end2end(
     wavefront_aligner_t* const wf_aligner,
-    int score);
-bool wavefront_extend_endsfree(
+    const int score);
+int wavefront_extend_end2end_max(
     wavefront_aligner_t* const wf_aligner,
-    int score);
-bool wavefront_extend_custom(
+    const int score,
+    int* const max_antidiagonal);
+
+int wavefront_extend_endsfree(
     wavefront_aligner_t* const wf_aligner,
-    int score);
+    const int score);
 
 #endif /* WAVEFRONT_EXTEND_H_ */

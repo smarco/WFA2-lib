@@ -29,6 +29,7 @@
  * DESCRIPTION: WFA Sample-Code
  */
 
+#include "utils/commons.h"
 #include "wavefront/wavefront_align.h"
 
 int main(int argc,char* argv[]) {
@@ -51,10 +52,10 @@ int main(int argc,char* argv[]) {
   wavefront_aligner_t* const wf_aligner = wavefront_aligner_new(&attributes);
   // Align
   wavefront_align(wf_aligner,pattern,strlen(pattern),text,strlen(text));
-  fprintf(stderr,"WFA-Alignment returns score %d\n",wf_aligner->cigar.score);
+  fprintf(stderr,"WFA-Alignment returns score %d\n",wf_aligner->cigar->score);
   // Count mismatches, deletions, and insertions
   int i, misms=0, ins=0, del=0;
-  cigar_t* const cigar = &wf_aligner->cigar;
+  cigar_t* const cigar = wf_aligner->cigar;
   for (i=cigar->begin_offset;i<cigar->end_offset;++i) {
     switch (cigar->operations[i]) {
       case 'M': break;

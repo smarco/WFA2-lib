@@ -29,10 +29,15 @@
  * DESCRIPTION: WaveFront alignment module for computing wavefronts (gap-affine-2p)
  */
 
-#include "utils/string_padded.h"
+#include "utils/commons.h"
+#include "system/mm_allocator.h"
 #include "wavefront_compute.h"
 #include "wavefront_compute_affine.h"
 #include "wavefront_backtrace_offload.h"
+
+#ifdef WFA_PARALLEL
+#include <omp.h>
+#endif
 
 /*
  * Compute Kernels
@@ -43,8 +48,9 @@ void wavefront_compute_affine2p_idm(
     const int lo,
     const int hi) {
   // Parameters
-  const int pattern_length = wf_aligner->pattern_length;
-  const int text_length = wf_aligner->text_length;
+  wavefront_sequences_t* const sequences = &wf_aligner->sequences;
+  const int pattern_length = sequences->pattern_length;
+  const int text_length = sequences->text_length;
   // In Offsets
   const wf_offset_t* const m_misms = wavefront_set->in_mwavefront_misms->offsets;
   const wf_offset_t* const m_open1 = wavefront_set->in_mwavefront_open1->offsets;
@@ -107,8 +113,9 @@ void wavefront_compute_affine2p_idm_piggyback(
     const int lo,
     const int hi) {
   // Parameters
-  const int pattern_length = wf_aligner->pattern_length;
-  const int text_length = wf_aligner->text_length;
+  wavefront_sequences_t* const sequences = &wf_aligner->sequences;
+  const int pattern_length = sequences->pattern_length;
+  const int text_length = sequences->text_length;
   // In Offsets
   const wf_offset_t* const m_misms   = wavefront_set->in_mwavefront_misms->offsets;
   const wf_offset_t* const m_open1 = wavefront_set->in_mwavefront_open1->offsets;
@@ -272,12 +279,58 @@ void wavefront_compute_affine2p_idm_piggyback(
     if (v > pattern_length) max = WAVEFRONT_OFFSET_NULL;
     out_m[k] = max;
   }
-  // Offload backtrace
-  wavefront_backtrace_offload_affine(wf_aligner,wavefront_set,lo,hi);
 }
 /*
- * Compute next wavefront
+ * Compute wavefronts
  */
+void wavefront_compute_affine2p_dispatcher(
+    wavefront_aligner_t* const wf_aligner,
+    wavefront_set_t* const wavefront_set,
+    const int lo,
+    const int hi) {
+  if (wavefront_set->in_mwavefront_open2->null &&
+      wavefront_set->in_i2wavefront_ext->null &&
+      wavefront_set->in_d2wavefront_ext->null) {
+    // Delegate to regular gap-affine
+    if (wf_aligner->wf_components.bt_piggyback) {
+      wavefront_compute_affine_idm_piggyback(wf_aligner,wavefront_set,lo,hi);
+    } else {
+      wavefront_compute_affine_idm(wf_aligner,wavefront_set,lo,hi);
+    }
+  } else {
+    // Full gap-affine-2p
+    if (wf_aligner->wf_components.bt_piggyback) {
+      wavefront_compute_affine2p_idm_piggyback(wf_aligner,wavefront_set,lo,hi);
+    } else {
+      wavefront_compute_affine2p_idm(wf_aligner,wavefront_set,lo,hi);
+    }
+  }
+}
+void wavefront_compute_affine2p_dispatcher_omp(
+    wavefront_aligner_t* const wf_aligner,
+    wavefront_set_t* const wavefront_set,
+    const int lo,
+    const int hi) {
+  // Parameters
+  const int num_threads = wavefront_compute_num_threads(wf_aligner,lo,hi);
+  // Multithreading dispatcher
+  if (num_threads == 1) {
+    // Compute next wavefront
+    wavefront_compute_affine2p_dispatcher(wf_aligner,wavefront_set,lo,hi);
+  } else {
+#ifdef WFA_PARALLEL
+    // Compute next wavefront in parallel
+    #pragma omp parallel num_threads(num_threads)
+    {
+      int t_lo, t_hi;
+      const int thread_id = omp_get_thread_num();
+      const int thread_num = omp_get_num_threads();
+      wavefront_compute_thread_limits(thread_id,thread_num,lo,hi,&t_lo,&t_hi);
+      wavefront_compute_affine2p_dispatcher(wf_aligner,wavefront_set,t_lo,t_hi);
+    }
+#endif
+  }
+}
 void wavefront_compute_affine2p(
     wavefront_aligner_t* const wf_aligner,
     const int score) {
@@ -292,37 +345,25 @@ void wavefront_compute_affine2p(
       wavefront_set.in_i2wavefront_ext->null &&
       wavefront_set.in_d1wavefront_ext->null &&
       wavefront_set.in_d2wavefront_ext->null) {
+    wf_aligner->align_status.num_null_steps++; // Increment null-steps
     wavefront_compute_allocate_output_null(wf_aligner,score); // Null s-wavefront
     return;
   }
+  wf_aligner->align_status.num_null_steps = 0;
   // Set limits
   int hi, lo;
-  wavefront_compute_limits(wf_aligner,&wavefront_set,&lo,&hi);
+  wavefront_compute_limits_input(wf_aligner,&wavefront_set,&lo,&hi);
   // Allocate wavefronts
   wavefront_compute_allocate_output(wf_aligner,&wavefront_set,score,lo,hi);
   // Init wavefront ends
   wavefront_compute_init_ends(wf_aligner,&wavefront_set,lo,hi);
-  // Compute next wavefront
-  if (wavefront_set.in_mwavefront_open2->null &&
-      wavefront_set.in_i2wavefront_ext->null &&
-      wavefront_set.in_d2wavefront_ext->null) {
-    // Derive to regular gap-affine
-    if (wf_aligner->wf_components.bt_piggyback) {
-      wavefront_compute_affine_idm_piggyback(wf_aligner,&wavefront_set,lo,hi);
-    } else {
-      wavefront_compute_affine_idm(wf_aligner,&wavefront_set,lo,hi);
-    }
-  } else {
-    // Full gap-affine-2p
-    if (wf_aligner->wf_components.bt_piggyback) {
-      wavefront_compute_affine2p_idm_piggyback(wf_aligner,&wavefront_set,lo,hi);
-    } else {
-      wavefront_compute_affine2p_idm(wf_aligner,&wavefront_set,lo,hi);
-    }
+  // Compute wavefronts
+  wavefront_compute_affine2p_dispatcher_omp(wf_aligner,&wavefront_set,lo,hi);
+  // Offload backtrace (if necessary)
+  if (wf_aligner->wf_components.bt_piggyback) {
+    wavefront_backtrace_offload_affine(wf_aligner,&wavefront_set,lo,hi);
   }
-  // Trim wavefront ends
-  wavefront_compute_trim_ends_set(wf_aligner,&wavefront_set);
+  // Process wavefront ends
+  wavefront_compute_process_ends(wf_aligner,&wavefront_set,score);
 }
-
-
 

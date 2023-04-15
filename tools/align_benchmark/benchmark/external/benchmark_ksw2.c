@@ -54,7 +54,7 @@ void benchmark_ksw2_adapt_cigar(
   }
   cigar->operations[cigar->end_offset] = '\0';
   // Add mismatches
-  cigar_add_mismatches(
+  cigar_discover_mismatches(
       align_input->pattern,align_input->pattern_length,
       align_input->text,align_input->text_length,cigar);
 }

@@ -5,11 +5,12 @@ FOLDER_BIN=bin
 FOLDER_BUILD=build
 FOLDER_BUILD_CPP=build/cpp
 FOLDER_LIB=lib
+FOLDER_TESTS=tests
 
 UNAME=$(shell uname)
 
-CC=gcc
-CPP=g++
+CC:=$(CC)
+CPP:=$(CXX)
 
 CC_FLAGS=-Wall -g
 
@@ -19,10 +20,13 @@ AR_FLAGS=-rsc
 ifndef BUILD_EXAMPLES 
 BUILD_EXAMPLES=1
 endif
-
 ifndef BUILD_TOOLS 
 BUILD_TOOLS=1
 endif
+ifndef BUILD_WFA_PARALLEL
+BUILD_WFA_PARALLEL=0
+endif
+
 ###############################################################################
 # Configuration rules
 ###############################################################################
@@ -41,16 +45,17 @@ ifeq ($(BUILD_EXAMPLES),1)
     APPS+=examples
 endif
 
-release: CC_FLAGS+=-O3 -march=native -flto
-release: build
-
-all: CC_FLAGS+=-O3 -march=native
+all: CC_FLAGS+=-O3 -march=native -flto
 all: build
 
 debug: build
 
+ASAN_OPT=-fsanitize=address -fsanitize=undefined -fsanitize=shift -fsanitize=alignment
+ASAN_OPT+=-fsanitize=signed-integer-overflow -fsanitize=bool -fsanitize=enum
+ASAN_OPT+=-fsanitize=pointer-compare -fsanitize=pointer-overflow -fsanitize=builtin
+
 # ASAN: ASAN_OPTIONS=detect_leaks=1:symbolize=1 LSAN_OPTIONS=verbosity=2:log_threads=1
-asan: CC_FLAGS+=-fsanitize=address -fno-omit-frame-pointer -fno-common
+asan: CC_FLAGS+=$(ASAN_OPT) -fno-omit-frame-pointer -fno-common
 asan: build
 
 ###############################################################################
@@ -73,9 +78,10 @@ lib_wfa: $(SUBDIRS)
 	$(AR) $(AR_FLAGS) $(LIB_WFA_CPP) $(FOLDER_BUILD)/*.o $(FOLDER_BUILD_CPP)/*.o 2> /dev/null
 
 clean:
-	rm -rf $(FOLDER_BIN) $(FOLDER_BUILD) $(FOLDER_LIB)
+	rm -rf $(FOLDER_BIN) $(FOLDER_BUILD) $(FOLDER_LIB) 2> /dev/null
 	$(MAKE) --directory=tools/align_benchmark clean
 	$(MAKE) --directory=examples clean
+	rm -rf $(FOLDER_TESTS)/*.alg $(FOLDER_TESTS)/*.log* 2> /dev/null
 	
 ###############################################################################
 # Build external libs (for align-benchmark)

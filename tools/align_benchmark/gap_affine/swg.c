@@ -30,6 +30,8 @@
  *   pairwise alignment (Smith-Waterman-Gotoh - SWG)
  */
 
+#include "utils/commons.h"
+#include "system/mm_allocator.h"
 #include "gap_affine/swg.h"
 
 /*
@@ -102,7 +104,7 @@ void swg_traceback(
 /*
  * SWG alignment
  */
-void swg_compute(
+void swg_align(
     affine_matrix_t* const affine_matrix,
     affine_penalties_t* const penalties,
     const char* const pattern,
@@ -156,7 +158,7 @@ void swg_compute(
 /*
  * SWG alignment (ends-free)
  */
-void swg_compute_endsfree(
+void swg_align_endsfree(
     affine_matrix_t* const affine_matrix,
     affine_penalties_t* const penalties,
     const char* const pattern,
@@ -237,7 +239,7 @@ void swg_compute_endsfree(
 /*
  * SWG alignment (banded)
  */
-void swg_compute_banded(
+void swg_align_banded(
     affine_matrix_t* const affine_matrix,
     affine_penalties_t* const penalties,
     const char* const pattern,

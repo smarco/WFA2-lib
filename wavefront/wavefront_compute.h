@@ -37,11 +37,26 @@
 /*
  * Compute limits
  */
-void wavefront_compute_limits(
+void wavefront_compute_limits_input(
     wavefront_aligner_t* const wf_aligner,
     const wavefront_set_t* const wavefront_set,
     int* const lo,
     int* const hi);
+void wavefront_compute_limits_output(
+    wavefront_aligner_t* const wf_aligner,
+    const int lo,
+    const int hi,
+    int* const effective_lo,
+    int* const effective_hi);
+
+/*
+ * Score translation
+ */
+int wavefront_compute_classic_score(
+    wavefront_aligner_t* const wf_aligner,
+    const int pattern_length,
+    const int text_length,
+    const int wf_score);
 
 /*
  * Input wavefronts (fetch)
@@ -56,11 +71,11 @@ void wavefront_compute_fetch_input(
  */
 void wavefront_compute_allocate_output_null(
     wavefront_aligner_t* const wf_aligner,
-    int score);
+    const int score);
 void wavefront_compute_allocate_output(
     wavefront_aligner_t* const wf_aligner,
     wavefront_set_t* const wavefront_set,
-    int score,
+    const int score,
     const int lo,
     const int hi);
 
@@ -74,13 +89,33 @@ void wavefront_compute_init_ends(
     const int hi);
 
 /*
- * Trim wavefronts ends
+ * Process wavefronts ends
  */
 void wavefront_compute_trim_ends(
     wavefront_aligner_t* const wf_aligner,
     wavefront_t* const wavefront);
-void wavefront_compute_trim_ends_set(
+void wavefront_compute_process_ends(
     wavefront_aligner_t* const wf_aligner,
-    wavefront_set_t* const wavefront_set);
+    wavefront_set_t* const wavefront_set,
+    const int score);
+
+/*
+ * Multithread dispatcher
+ */
+#ifdef WFA_PARALLEL
+int wavefront_compute_num_threads(
+    wavefront_aligner_t* const wf_aligner,
+    const int lo,
+    const int hi);
+void wavefront_compute_thread_limits(
+    const int thread_id,
+    const int num_theads,
+    const int lo,
+    const int hi,
+    int* const thread_lo,
+    int* const thread_hi);
+#else
+#define wavefront_compute_num_threads(wf_aligner,lo,hi) 1
+#endif
 
 #endif /* WAVEFRONT_COMPUTE_H_ */

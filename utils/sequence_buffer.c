@@ -29,6 +29,7 @@
  * DESCRIPTION: Simple linear vector for generic type elements
  */
 
+#include "utils/commons.h"
 #include "utils/sequence_buffer.h"
 
 /*
@@ -131,4 +132,3 @@ void sequence_buffer_add_pair(
   sequence_buffer->max_pattern_length = MAX(sequence_buffer->max_pattern_length,pattern_length);
   sequence_buffer->max_text_length = MAX(sequence_buffer->max_text_length,text_length);
 }
-

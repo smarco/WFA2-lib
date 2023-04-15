@@ -29,6 +29,8 @@
  * DESCRIPTION: Packed CIGAR (Alignment operations in 2-bits)
  */
 
+#include "utils/commons.h"
+#include "system/mm_allocator.h"
 #include "wavefront_pcigar.h"
 
 /*
@@ -150,17 +152,16 @@ int pcigar_unpack_extend_custom(
  */
 void pcigar_unpack_linear(
     pcigar_t pcigar,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
-    alignment_match_funct_t const match_funct,
-    void* const match_funct_arguments,
+    wavefront_sequences_t* const sequences,
     int* const v_pos,
     int* const h_pos,
     char* cigar_buffer,
     int* const cigar_length) {
   // Parameters
+  char* const pattern = sequences->pattern;
+  const int pattern_length = sequences->pattern_length;
+  char* const text = sequences->text;
+  const int text_length = sequences->text_length;
   char* const cigar_buffer_base = cigar_buffer;
   // Compute pcigar length and shift to the end of the word
   int pcigar_length = PCIGAR_MAX_LENGTH;
@@ -174,10 +175,10 @@ void pcigar_unpack_linear(
   for (i=0;i<pcigar_length;++i) {
     // Extend exact-matches
     int num_matches;
-    if (match_funct != NULL) { // Custom extend-match function
+    if (sequences->mode == wf_sequences_lambda) { // Custom extend-match function
       num_matches = pcigar_unpack_extend_custom(
-          pattern_length,text_length,
-          match_funct,match_funct_arguments,v,h,cigar_buffer);
+          pattern_length,text_length,sequences->match_funct,
+          sequences->match_funct_arguments,v,h,cigar_buffer);
     } else {
       num_matches = pcigar_unpack_extend(
           pattern,pattern_length,text,text_length,v,h,cigar_buffer);
@@ -202,18 +203,17 @@ void pcigar_unpack_linear(
 }
 void pcigar_unpack_affine(
     pcigar_t pcigar,
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
-    alignment_match_funct_t const match_funct,
-    void* const match_funct_arguments,
+    wavefront_sequences_t* const sequences,
     int* const v_pos,
     int* const h_pos,
     char* cigar_buffer,
     int* const cigar_length,
     affine_matrix_type* const current_matrix_type) {
   // Parameters
+  char* const pattern = sequences->pattern;
+  const int pattern_length = sequences->pattern_length;
+  char* const text = sequences->text;
+  const int text_length = sequences->text_length;
   char* const cigar_buffer_base = cigar_buffer;
   // Compute pcigar length and shift to the end of the word
   int pcigar_length = PCIGAR_MAX_LENGTH;
@@ -229,10 +229,10 @@ void pcigar_unpack_affine(
     // Extend exact-matches
     if (matrix_type == affine_matrix_M) { // Extend only on the M-wavefront
       int num_matches;
-      if (match_funct != NULL) { // Custom extend-match function
+      if (sequences->mode == wf_sequences_lambda) { // Custom extend-match function
         num_matches = pcigar_unpack_extend_custom(
-            pattern_length,text_length,
-            match_funct,match_funct_arguments,v,h,cigar_buffer);
+            pattern_length,text_length,sequences->match_funct,
+            sequences->match_funct_arguments,v,h,cigar_buffer);
       } else {
         num_matches = pcigar_unpack_extend(
             pattern,pattern_length,text,text_length,v,h,cigar_buffer);

@@ -124,7 +124,7 @@ void benchmark_gaba_aband(
   gaba_print_cigar_forward(printer,(void *)(&cigar),alignment->path,0,alignment->plen);
   timer_stop(&align_input->timer);
   // Adapt CIGAR (Add mismatches)
-  cigar_add_mismatches(
+  cigar_discover_mismatches(
       align_input->pattern,align_input->pattern_length,
       align_input->text,align_input->text_length,&cigar);
   // DEBUG

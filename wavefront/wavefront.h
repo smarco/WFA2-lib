@@ -32,10 +32,18 @@
 #ifndef WAVEFRONT_H_
 #define WAVEFRONT_H_
 
-#include "utils/commons.h"
 #include "system/mm_allocator.h"
 #include "wavefront_offset.h"
 #include "wavefront_backtrace_buffer.h"
+
+/*
+ * Alignment position
+ */
+typedef struct {
+  int score;          // Score
+  int k;              // Diagonal
+  wf_offset_t offset; // Offset
+} wavefront_pos_t;
 
 /*
  * Wavefront
@@ -50,16 +58,15 @@ typedef struct {
   bool null;                           // Is null interval?
   int lo;                              // Lowest diagonal (inclusive)
   int hi;                              // Highest diagonal (inclusive)
-  int k_alignment_end;                 // Mark WF's diagonal that reached the end of the alignment (semi-global)
-  int bt_occupancy_max;                // Maximum number of pcigar-ops stored on the Backtrace-block
   // Wavefront elements
   wf_offset_t* offsets;                // Offsets (k-centered)
+  wf_offset_t* offsets_mem;            // Offsets base memory (Internal)
+  // Piggyback backtrace
+  int bt_occupancy_max;                // Maximum number of pcigar-ops stored on the Backtrace-block
   pcigar_t* bt_pcigar;                 // Backtrace-block pcigar (k-centered)
   bt_block_idx_t* bt_prev;             // Backtrace-block previous-index (k-centered)
-  // Memory internals
-  wf_offset_t* offsets_mem;            // Offsets base memory
-  pcigar_t* bt_pcigar_mem;             // Backtrace-block (base memory)
-  bt_block_idx_t* bt_prev_mem;         // Backtrace-block previous-index (base memory)
+  pcigar_t* bt_pcigar_mem;             // Backtrace-block (base memory - Internal)
+  bt_block_idx_t* bt_prev_mem;         // Backtrace-block previous-index (base memory - Internal)
   // Slab internals
   wavefront_status_type status;        // Wavefront status (memory state)
   int wf_elements_allocated;           // Total wf-elements allocated (max. wf. size)

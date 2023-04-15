@@ -30,6 +30,7 @@
  * DESCRIPTION: Simple linear vector (generic type elements)
  */
 
+#include "utils/commons.h"
 #include "vector.h"
 
 /*
@@ -122,4 +123,3 @@ vector_t* vector_dup(
   memcpy(vector_cpy->memory,vector_src->memory,vector_src->used*vector_src->element_size);
   return vector_cpy;
 }
-

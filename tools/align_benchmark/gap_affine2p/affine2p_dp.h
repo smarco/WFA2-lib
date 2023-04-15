@@ -40,7 +40,7 @@
 /*
  * Gap-affine 2-piece alignment computation using dynamic-programming matrix
  */
-void affine2p_dp_compute(
+void affine2p_dp_align(
     affine2p_matrix_t* const matrix,
     affine2p_penalties_t* const penalties,
     const char* const pattern,
