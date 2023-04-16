@@ -2,18 +2,32 @@
 
 use std::fmt;
 
-/// A match/mistmatch, insertion, or deletion operation.
+/// A match/mismatch, insertion, or deletion operation.
+///
+/// When aligning `q` against `r`, this represents the edit operations to get from `r` to `q`.
 #[derive(Debug, PartialEq, Copy, Clone)]
 #[repr(u8)]
 pub enum Operation {
     /// Placeholder variant.
     Sentinel = 0u8,
     /// Match or mismatch.
+    ///
+    /// This is a diagonal transition in the DP matrix with `|q| + 1` rows and `|r| + 1` columns.
     M = 1u8,
+    /// Match.
+    Eq = 2u8,
+    /// Mismatch.
+    X = 3u8,
     /// Insertion.
-    I = 2u8,
+    ///
+    /// When aligning sequences `q` against `r`, this is a gap in `r`.
+    /// This is a row transition in the DP matrix with `|q| + 1` rows and `|r| + 1` columns.
+    I = 4u8,
     /// Deletion.
-    D = 3u8
+    ///
+    /// When aligning sequences `q` against `r`, this is a gap in `q`.
+    /// This is a column transition in the DP matrix with `|q| + 1` rows and `|r| + 1` columns.
+    D = 5u8
 }
 
 /// An operation and how many times that operation is repeated.
@@ -25,9 +39,6 @@ pub struct OpLen {
 }
 
 /// A CIGAR string that holds a list of operations.
-///
-/// Note that the traceback does not distinguish between
-/// match and mismatch operations.
 pub struct Cigar {
     s: Vec<OpLen>,
     idx: usize
@@ -86,7 +97,7 @@ impl Cigar {
 
         for &op_len in self.s[1..self.idx].iter().rev() {
             match op_len.op {
-                Operation::M => {
+                Operation::M | Operation::Eq | Operation::X => {
                     for _k in 0..op_len.len {
                         a.push(q[i] as char);
                         b.push(r[j] as char);
@@ -134,6 +145,8 @@ impl fmt::Display for Cigar {
         for &op_len in self.s[1..self.idx].iter().rev() {
             let c = match op_len.op {
                 Operation::M => 'M',
+                Operation::Eq => '=',
+                Operation::X => 'X',
                 Operation::I => 'I',
                 Operation::D => 'D',
                 _ => continue

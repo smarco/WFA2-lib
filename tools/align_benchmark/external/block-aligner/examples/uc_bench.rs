@@ -1,6 +1,4 @@
-#![feature(bench_black_box)]
-
-#[cfg(not(feature = "simd_wasm"))]
+#[cfg(not(any(feature = "simd_wasm", feature = "simd_neon")))]
 use parasailors::{Matrix, *};
 
 use block_aligner::scan_block::*;
@@ -61,7 +59,7 @@ fn get_data(file_names: &[&str]) -> Vec<(Vec<u8>, Vec<u8>)> {
     res
 }
 
-#[cfg(not(feature = "simd_wasm"))]
+#[cfg(not(any(feature = "simd_wasm", feature = "simd_neon")))]
 fn bench_parasailors_aa_core(idx: usize, _trace: bool, _min_size: usize, _max_size: usize) -> (i32, Duration) {
     let file_data = get_data(&FILE_NAMES[idx]);
     let matrix = Matrix::new(MatrixType::Blosum62);
@@ -149,7 +147,7 @@ fn main() {
     let uc30_95_time = d.as_secs_f64();
     println!("ours (trace), uc30 0.95, 32-256, {}", uc30_95_time);
 
-    #[cfg(not(feature = "simd_wasm"))]
+    #[cfg(not(any(feature = "simd_wasm", feature = "simd_neon")))]
     {
         let d = time(bench_parasailors_aa_core, 0, false, 0, 0);
         let uc30_time = d.as_secs_f64();

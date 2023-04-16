@@ -32,32 +32,43 @@ let res = a.res();
 assert_eq!(res, AlignResult { score: 7, query_idx: 24, reference_idx: 21 });
 
 let mut cigar = Cigar::new(res.query_idx, res.reference_idx);
-a.trace().cigar(res.query_idx, res.reference_idx, &mut cigar);
+a.trace().cigar_eq(&q, &r, res.query_idx, res.reference_idx, &mut cigar);
 
-assert_eq!(cigar.to_string(), "2M6I16M3D");
+assert_eq!(cigar.to_string(), "2=6I16=3D");
 ```
 
 ## Algorithm
-Pairwise alignment (weighted edit distance) involves computing the scores for each cell of a
-2D dynamic programming matrix to find out how two strings can optimally align.
-However, often it is possible to obtain accurate alignment scores without computing
-the entire DP matrix, through banding or other means.
-
-Block aligner provides a new efficient way to compute alignments on proteins, DNA sequences,
-and byte strings.
-Scores are calculated in a small square block that is shifted down or right in a greedy
+Block aligner provides a new efficient way to compute pairwise alignments on proteins, DNA sequences,
+and byte strings with dynamic programming.
+Block aligner also supports aligning sequences to profiles, which are position-specific
+scoring matrices and position-specific gap open costs.
+It works by calculating scores in a small square block that is shifted down or right in a greedy
 manner, based on the scores at the edges of the block.
-This dynamic approach results in a much smaller calculated block area, at the expense of
-some accuracy.
-To address problems with handling large gaps, we detect gaps by keeping track of the number
-of iterations without seeing score increases. We call this "Y-drop", where Y is the threshold
-number of iterations.
-When the Y-drop condition is met, the block goes "back in time" to the previous best
-checkpoint, and the size of the block dynamically increases to attempt to span the large gap.
+This dynamic approach results in a much smaller calculated block area compared to previous approaches,
+though at the expense of some accuracy.
+The block can also go back to a previous best checkpoint and grow larger, to handle difficult regions
+with large gaps.
+The block size can also dynamically shrink when it detects that a large block is not needed.
+Both block growing and shrinking are based on heuristics.
 
-Block aligner is built to exploit SIMD parallelism on modern CPUs.
-Currently, AVX2 (256-bit vectors) and WASM SIMD (128-bit vectors) are supported.
+By trading off some accuracy for speed, block aligner is able to efficiently handle a variety of scoring matrices and
+adapt to sequences of varying sequence identities. In practice, it is still very accurate on a variety of protein and
+nucleotide sequences.
+
+Block aligner is designed to exploit SIMD parallelism on modern CPUs.
+Currently, SSE2 (128-bit vectors), AVX2 (256-bit vectors), Neon (128-bit vectors), and WASM SIMD (128-bit vectors) are supported.
 For score calculations, 16-bit score values (lanes) and 32-bit per block offsets are used.
+
+Block aligner behaves similarly to an (adaptive) banded aligner when the minimum and maximum block size is set to
+the same value.
+
+## Tuning block sizes
+
+For long, noisy Nanopore reads, a min block size of ~1% sequence length and a max block size
+of ~10% sequence length performs well (tested with reads up to ~50kbps).
+For proteins, a min block size of 32 and a max block size of 256 performs well.
+Using a minimum block size of 32 is recommended for most applications.
+Let me know how block aligner performs on your data!
 
 ## Install
 This library can be used on both stable and nightly Rust channels.
@@ -67,11 +78,13 @@ and benchmarks need to run on Linux or MacOS.
 To use this as a crate in your Rust project, add the following to your `Cargo.toml`:
 ```
 [dependencies]
-block-aligner = { version = "^0.2.0", features = ["simd_avx2"] }
+block-aligner = { version = "^0.3.0", features = ["simd_avx2"] }
 ```
-Use the `simd_wasm` feature flag for WASM SIMD support. It is your responsibility to ensure
-the correct feature to be enabled and supported by the platform that runs the code
-because this library does not automatically detect the supported SIMD instruction set.
+Use the `simd_sse2`, `simd_neon`, or `simd_wasm` feature flag for x86 SSE2, ARM Neon, or WASM SIMD support, respectively.
+It is your responsibility to ensure the correct feature to be enabled and supported by the
+platform that runs the code because this library does not automatically detect the supported
+SIMD instruction set. More information on specifying different features for different platforms
+with the same dependency [here](https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#platform-specific-dependencies).
 
 For developing, testing, or using the C API, you should clone this repo
 and use Rust nightly. In general, when building, you need to specify the
@@ -82,6 +95,16 @@ For x86 AVX2:
 cargo build --features simd_avx2 --release
 ```
 
+For x86 SSE2:
+```
+cargo build --features simd_sse2 --release
+```
+
+For ARM Neon:
+```
+cargo build --target=aarch64-unknown-linux-gnu --features simd_neon --release
+```
+
 For WASM SIMD:
 ```
 cargo build --target=wasm32-wasi --features simd_wasm --release
@@ -90,7 +113,7 @@ cargo build --target=wasm32-wasi --features simd_wasm --release
 Most of the instructions below are for benchmarking and testing block aligner.
 
 ## Data
-Some Illumina/Nanopore (DNA) and Uniclust30 (protein) data are used in some tests and benchmarks.
+Some Illumina/Nanopore (DNA), Uniclust30 (protein), and SCOP (protein profile) data are used in some tests and benchmarks.
 You will need to download them by following the instructions in the [data readme](data/README.md).
 
 ## Test
@@ -161,11 +184,6 @@ the [C readme](c/README.md).
 ## Data analysis and visualizations
 Use the Jupyter notebook in the `vis/` directory to gather data and plot them. An easier way
 to run the whole notebook is to run the `vis/run_vis.sh` script.
-
-## Other SIMD instruction sets
-* [ ] SSE4.1 (Depends on demand)
-* [ ] AVX-512 (I don't have a machine to test)
-* [ ] NEON (I don't have a machine to test)
 
 ## Old ideas and history
 See the [ideas](ideas.md) file.

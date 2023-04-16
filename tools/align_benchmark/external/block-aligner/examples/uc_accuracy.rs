@@ -8,10 +8,10 @@ use block_aligner::cigar::*;
 
 use std::{env, cmp};
 use std::fs::File;
-use std::io::{BufRead, BufReader};
+use std::io::{BufRead, Write, BufReader, BufWriter};
 use std::usize;
 
-fn test(file_name: &str, min_size: usize, max_size: usize, verbose: bool, wrong: &mut [usize], wrong_avg: &mut [f64], count: &mut [usize]) -> (f64, usize, usize, f64) {
+fn test(file_name: &str, min_size: usize, max_size: usize, string: &str, verbose: bool, wrong: &mut [usize], wrong_avg: &mut [f64], count: &mut [usize], writer: &mut impl Write) -> (f64, usize, usize, f64) {
     let reader = BufReader::new(File::open(file_name).unwrap());
     let mut length_sum = 0f64;
     let mut length_min = usize::MAX;
@@ -41,6 +41,19 @@ fn test(file_name: &str, min_size: usize, max_size: usize, verbose: bool, wrong:
         block_aligner.align(&q_padded, &r_padded, &BLOSUM62, run_gaps, min_size..=max_size, 0);
         let scan_res = block_aligner.res();
         let scan_score = scan_res.score;
+
+        write!(
+            writer,
+            "{}, {}-{}, {}, {}, {}, {}, {}\n",
+            string,
+            min_size,
+            max_size,
+            q.len(),
+            r.len(),
+            seq_identity,
+            scan_score,
+            bio_score
+        ).unwrap();
 
         if bio_score != scan_score {
             wrong[id_idx] += 1;
@@ -140,6 +153,10 @@ fn main() {
     let min_sizes = [32, 32, 256];
     let max_sizes = [32, 256, 256];
 
+    let out_file_name = "data/uc_accuracy.csv";
+    let mut writer = BufWriter::new(File::create(out_file_name).unwrap());
+    write!(writer, "dataset, size, query len, reference len, seq id, pred score, true score\n").unwrap();
+
     println!("# seq identity is lower bound (inclusive)");
     println!("dataset, size, seq identity, count, wrong, wrong % error");
 
@@ -154,7 +171,7 @@ fn main() {
             let mut dp_fraction = 0f64;
 
             for file_name in file_names {
-                let (len_sum, len_min, len_max, dp_fract) = test(file_name, min_size, max_size, verbose, &mut wrong, &mut wrong_avg, &mut count);
+                let (len_sum, len_min, len_max, dp_fract) = test(file_name, min_size, max_size, string, verbose, &mut wrong, &mut wrong_avg, &mut count, &mut writer);
                 length_avg += len_sum;
                 length_min = cmp::min(length_min, len_min);
                 length_max = cmp::max(length_max, len_max);

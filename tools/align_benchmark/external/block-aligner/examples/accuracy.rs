@@ -1,5 +1,3 @@
-use rand::prelude::*;
-
 //use parasailors::{Matrix, *};
 
 use bio::alignment::pairwise::*;
@@ -7,7 +5,7 @@ use bio::scores::blosum62;
 
 use block_aligner::scan_block::*;
 use block_aligner::scores::*;
-use block_aligner::simulate::*;
+use simulate_seqs::*;
 
 use std::{env, str, cmp};
 

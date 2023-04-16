@@ -1,12 +1,13 @@
 CC=clang
-CFLAGS=-L../target/release -lblock_aligner -I.
+CFLAGS=-Ltarget/release -lblock_aligner_c -I.
 
 .PHONY: all block_aligner example
 
 all: example
 
 block_aligner:
-	BLOCK_ALIGNER_C= cargo build --release --features simd_avx2
+	cargo build --release --features simd_avx2 --offline
+	cbindgen --config cbindgen.toml --crate block-aligner-c --output block_aligner.h --quiet .
 
 example: block_aligner example.c
 	$(CC) $(CFLAGS) example.c

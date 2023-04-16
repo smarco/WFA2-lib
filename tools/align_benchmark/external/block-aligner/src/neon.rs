@@ -1,64 +1,64 @@
-use std::arch::wasm32::*;
+use std::arch::aarch64::*;
 
-pub type Simd = v128;
-// no v64 type, so HalfSimd is just v128 with upper half ignored
-pub type HalfSimd = v128;
-pub type LutSimd = v128;
+pub type Simd = int16x8_t;
+pub type HalfSimd = int8x8_t;
+pub type LutSimd = int8x16_t;
 pub type TraceType = i16;
 /// Number of 16-bit lanes in a SIMD vector.
 pub const L: usize = 8;
 pub const L_BYTES: usize = L * 2;
-pub const HALFSIMD_MUL: usize = 2;
+pub const HALFSIMD_MUL: usize = 1;
 // using min = 0 is faster, but restricts range of scores (and restricts the max block size)
 pub const ZERO: i16 = 1 << 14;
 pub const MIN: i16 = 0;
 
-// Note: SIMD vectors treated as little-endian
-
-// No non-temporal store in WASM
-#[target_feature(enable = "simd128")]
+// No non-temporal store in Neon
+#[target_feature(enable = "neon")]
 #[inline]
 pub unsafe fn store_trace(ptr: *mut TraceType, trace: TraceType) { *ptr = trace; }
 
-#[target_feature(enable = "simd128")]
+#[target_feature(enable = "neon")]
 #[inline]
-pub unsafe fn simd_adds_i16(a: Simd, b: Simd) -> Simd { i16x8_add_sat(a, b) }
+pub unsafe fn simd_adds_i16(a: Simd, b: Simd) -> Simd { vqaddq_s16(a, b) }
 
-#[target_feature(enable = "simd128")]
+#[target_feature(enable = "neon")]
 #[inline]
-pub unsafe fn simd_subs_i16(a: Simd, b: Simd) -> Simd { i16x8_sub_sat(a, b) }
+pub unsafe fn simd_subs_i16(a: Simd, b: Simd) -> Simd { vqsubq_s16(a, b) }
 
-#[target_feature(enable = "simd128")]
+#[target_feature(enable = "neon")]
 #[inline]
-pub unsafe fn simd_max_i16(a: Simd, b: Simd) -> Simd { i16x8_max(a, b) }
+pub unsafe fn simd_max_i16(a: Simd, b: Simd) -> Simd { vmaxq_s16(a, b) }
 
-#[target_feature(enable = "simd128")]
+#[target_feature(enable = "neon")]
 #[inline]
-pub unsafe fn simd_cmpeq_i16(a: Simd, b: Simd) -> Simd { i16x8_eq(a, b) }
+pub unsafe fn simd_cmpeq_i16(a: Simd, b: Simd) -> Simd { vreinterpretq_s16_u16(vceqq_s16(a, b)) }
 
-#[target_feature(enable = "simd128")]
+#[target_feature(enable = "neon")]
 #[inline]
-pub unsafe fn simd_cmpgt_i16(a: Simd, b: Simd) -> Simd { i16x8_gt(a, b) }
+pub unsafe fn simd_cmpgt_i16(a: Simd, b: Simd) -> Simd { vreinterpretq_s16_u16(vcgtq_s16(a, b)) }
 
-#[target_feature(enable = "simd128")]
+#[target_feature(enable = "neon")]
 #[inline]
-pub unsafe fn simd_blend_i8(a: Simd, b: Simd, mask: Simd) -> Simd { v128_bitselect(b, a, mask) }
+pub unsafe fn simd_blend_i8(a: Simd, b: Simd, mask: Simd) -> Simd {
+    // assume that each element in mask is either 0 or -1
+    vbslq_s16(vreinterpretq_u16_s16(mask), b, a)
+}
 
-#[target_feature(enable = "simd128")]
+#[target_feature(enable = "neon")]
 #[inline]
-pub unsafe fn simd_load(ptr: *const Simd) -> Simd { v128_load(ptr) }
+pub unsafe fn simd_load(ptr: *const Simd) -> Simd { vld1q_s16(ptr as *const i16) }
 
-#[target_feature(enable = "simd128")]
+#[target_feature(enable = "neon")]
 #[inline]
-pub unsafe fn simd_loadu(ptr: *const Simd) -> Simd { v128_load(ptr) }
+pub unsafe fn simd_loadu(ptr: *const Simd) -> Simd { vld1q_s16(ptr as *const i16) }
 
-#[target_feature(enable = "simd128")]
+#[target_feature(enable = "neon")]
 #[inline]
-pub unsafe fn simd_store(ptr: *mut Simd, a: Simd) { v128_store(ptr, a) }
+pub unsafe fn simd_store(ptr: *mut Simd, a: Simd) { vst1q_s16(ptr as *mut i16, a) }
 
-#[target_feature(enable = "simd128")]
+#[target_feature(enable = "neon")]
 #[inline]
-pub unsafe fn simd_set1_i16(v: i16) -> Simd { i16x8_splat(v) }
+pub unsafe fn simd_set1_i16(v: i16) -> Simd { vdupq_n_s16(v) }
 
 #[macro_export]
 #[doc(hidden)]
@@ -66,8 +66,9 @@ macro_rules! simd_extract_i16 {
     ($a:expr, $num:expr) => {
         {
             debug_assert!($num < L);
-            use std::arch::wasm32::*;
-            i16x8_extract_lane::<{ $num }>($a)
+            #[cfg(target_arch = "aarch64")]
+            use std::arch::aarch64::*;
+            vgetq_lane_s16($a, $num as i32)
         }
     };
 }
@@ -78,32 +79,26 @@ macro_rules! simd_insert_i16 {
     ($a:expr, $v:expr, $num:expr) => {
         {
             debug_assert!($num < L);
-            use std::arch::wasm32::*;
-            i16x8_replace_lane::<{ $num }>($a, $v)
+            #[cfg(target_arch = "aarch64")]
+            use std::arch::aarch64::*;
+            vsetq_lane_s16($v, $a, $num as i32)
         }
     };
 }
 
-#[target_feature(enable = "simd128")]
+#[target_feature(enable = "neon")]
 #[inline]
 pub unsafe fn simd_movemask_i8(a: Simd) -> u16 {
-    i8x16_bitmask(a) as u16
-    /*const MUL: i64 = {
-        let mut m = 0u64;
-        m |= 1u64 << (0 - 0);
-        m |= 1u64 << (8 - 1);
-        m |= 1u64 << (16 - 2);
-        m |= 1u64 << (24 - 3);
-        m |= 1u64 << (32 - 4);
-        m |= 1u64 << (40 - 5);
-        m |= 1u64 << (48 - 6);
-        m |= 1u64 << (56 - 7);
-        m as i64
-    };
-    let b = i64x2_mul(v128_and(a, i8x16_splat(0b10000000u8 as i8)), i64x2_splat(MUL));
-    let res1 = i8x16_extract_lane::<{ L * 2 - 1 }>(b) as u32;
-    let res2 = i8x16_extract_lane::<{ L - 1 }>(b) as u32;
-    (res1 << 8) | res2*/
+    // assume that each byte is either 0 or -1
+    static POW2: [u8; 16] = [
+        1 << 0, 1 << 1, 1 << 2, 1 << 3, 1 << 4, 1 << 5, 1 << 6, 1 << 7,
+        1 << 0, 1 << 1, 1 << 2, 1 << 3, 1 << 4, 1 << 5, 1 << 6, 1 << 7
+    ];
+    let mask = vld1q_u8(POW2.as_ptr());
+    let masked = vandq_u8(vreinterpretq_u8_s16(a), mask);
+    let lo = vaddv_u8(vget_low_u8(masked)) as u16;
+    let hi = vaddv_u8(vget_high_u8(masked)) as u16;
+    (hi << 8) | lo
 }
 
 #[macro_export]
@@ -112,8 +107,9 @@ macro_rules! simd_sl_i16 {
     ($a:expr, $b:expr, $num:expr) => {
         {
             debug_assert!($num <= L);
-            use std::arch::wasm32::*;
-            i16x8_shuffle::<{ 8 - $num }, { 9 - $num }, { 10 - $num }, { 11 - $num }, { 12 - $num }, { 13 - $num }, { 14 - $num }, { 15 - $num }>($b, $a)
+            #[cfg(target_arch = "aarch64")]
+            use std::arch::aarch64::*;
+            vextq_s16($b, $a, (L - $num) as i32)
         }
     };
 }
@@ -124,8 +120,9 @@ macro_rules! simd_sr_i16 {
     ($a:expr, $b:expr, $num:expr) => {
         {
             debug_assert!($num <= L);
-            use std::arch::wasm32::*;
-            i16x8_shuffle::<{ 0 + $num }, { 1 + $num }, { 2 + $num }, { 3 + $num }, { 4 + $num }, { 5 + $num }, { 6 + $num }, { 7 + $num }>($b, $a)
+            #[cfg(target_arch = "aarch64")]
+            use std::arch::aarch64::*;
+            vextq_s16($b, $a, $num as i32)
         }
     };
 }
@@ -138,13 +135,13 @@ macro_rules! simd_sllz_i16 {
     };
 }
 
-#[target_feature(enable = "simd128")]
+#[target_feature(enable = "neon")]
 #[inline]
 pub unsafe fn simd_broadcasthi_i16(v: Simd) -> Simd {
-    i16x8_shuffle::<7, 7, 7, 7, 7, 7, 7, 7>(v, v)
+    vdupq_laneq_s16(v, 7)
 }
 
-#[target_feature(enable = "simd128")]
+#[target_feature(enable = "neon")]
 #[inline]
 pub unsafe fn simd_slow_extract_i16(v: Simd, i: usize) -> i16 {
     debug_assert!(i < L);
@@ -157,14 +154,9 @@ pub unsafe fn simd_slow_extract_i16(v: Simd, i: usize) -> i16 {
     *a.0.as_ptr().add(i)
 }
 
-#[target_feature(enable = "simd128")]
+#[target_feature(enable = "neon")]
 #[inline]
-pub unsafe fn simd_hmax_i16(v: Simd) -> i16 {
-    let mut v2 = i16x8_max(v, simd_sr_i16!(v, v, 1));
-    v2 = i16x8_max(v2, simd_sr_i16!(v2, v2, 2));
-    v2 = i16x8_max(v2, simd_sr_i16!(v2, v2, 4));
-    simd_extract_i16!(v2, 0)
-}
+pub unsafe fn simd_hmax_i16(v: Simd) -> i16 { vmaxvq_s16(v) }
 
 #[macro_export]
 #[doc(hidden)]
@@ -172,16 +164,15 @@ macro_rules! simd_prefix_hadd_i16 {
     ($a:expr, $num:expr) => {
         {
             debug_assert!($num <= L);
-            use std::arch::wasm32::*;
-            let mut v = i16x8_sub_sat($a, i16x8_splat(ZERO));
+            let mut v = simd_subs_i16($a, simd_set1_i16(ZERO));
             if $num > 4 {
-                v = i16x8_add_sat(v, simd_sr_i16!(v, v, 4));
+                v = simd_adds_i16(v, simd_sr_i16!(v, v, 4));
             }
             if $num > 2 {
-                v = i16x8_add_sat(v, simd_sr_i16!(v, v, 2));
+                v = simd_adds_i16(v, simd_sr_i16!(v, v, 2));
             }
             if $num > 1 {
-                v = i16x8_add_sat(v, simd_sr_i16!(v, v, 1));
+                v = simd_adds_i16(v, simd_sr_i16!(v, v, 1));
             }
             simd_extract_i16!(v, 0)
         }
@@ -194,16 +185,15 @@ macro_rules! simd_prefix_hmax_i16 {
     ($a:expr, $num:expr) => {
         {
             debug_assert!($num <= L);
-            use std::arch::wasm32::*;
             let mut v = $a;
             if $num > 4 {
-                v = i16x8_max(v, simd_sr_i16!(v, v, 4));
+                v = simd_max_i16(v, simd_sr_i16!(v, v, 4));
             }
             if $num > 2 {
-                v = i16x8_max(v, simd_sr_i16!(v, v, 2));
+                v = simd_max_i16(v, simd_sr_i16!(v, v, 2));
             }
             if $num > 1 {
-                v = i16x8_max(v, simd_sr_i16!(v, v, 1));
+                v = simd_max_i16(v, simd_sr_i16!(v, v, 1));
             }
             simd_extract_i16!(v, 0)
         }
@@ -216,30 +206,29 @@ macro_rules! simd_suffix_hmax_i16 {
     ($a:expr, $num:expr) => {
         {
             debug_assert!($num <= L);
-            use std::arch::wasm32::*;
             let mut v = $a;
             if $num > 4 {
-                v = i16x8_max(v, simd_sl_i16!(v, v, 4));
+                v = simd_max_i16(v, simd_sl_i16!(v, v, 4));
             }
             if $num > 2 {
-                v = i16x8_max(v, simd_sl_i16!(v, v, 2));
+                v = simd_max_i16(v, simd_sl_i16!(v, v, 2));
             }
             if $num > 1 {
-                v = i16x8_max(v, simd_sl_i16!(v, v, 1));
+                v = simd_max_i16(v, simd_sl_i16!(v, v, 1));
             }
             simd_extract_i16!(v, 7)
         }
     };
 }
 
-#[target_feature(enable = "simd128")]
+#[target_feature(enable = "neon")]
 #[inline]
 pub unsafe fn simd_hargmax_i16(v: Simd, max: i16) -> usize {
-    let v2 = i16x8_eq(v, i16x8_splat(max));
+    let v2 = simd_cmpeq_i16(v, simd_set1_i16(max));
     (simd_movemask_i8(v2).trailing_zeros() as usize) / 2
 }
 
-#[target_feature(enable = "simd128")]
+#[target_feature(enable = "neon")]
 #[inline]
 #[allow(non_snake_case)]
 #[allow(dead_code)]
@@ -249,8 +238,8 @@ pub unsafe fn simd_naive_prefix_scan_i16(R_max: Simd, gap_cost: Simd, _gap_cost_
     for _i in 0..(L - 1) {
         let prev = curr;
         curr = simd_sllz_i16!(curr, 1);
-        curr = i16x8_add_sat(curr, gap_cost);
-        curr = i16x8_max(curr, prev);
+        curr = simd_adds_i16(curr, gap_cost);
+        curr = simd_max_i16(curr, prev);
     }
 
     curr
@@ -258,95 +247,91 @@ pub unsafe fn simd_naive_prefix_scan_i16(R_max: Simd, gap_cost: Simd, _gap_cost_
 
 pub type PrefixScanConsts = ();
 
-#[target_feature(enable = "simd128")]
+#[target_feature(enable = "neon")]
 #[inline]
 pub unsafe fn get_prefix_scan_consts(gap: Simd) -> (Simd, PrefixScanConsts) {
     let mut shift1 = simd_sllz_i16!(gap, 1);
-    shift1 = i16x8_add_sat(shift1, gap);
+    shift1 = simd_adds_i16(shift1, gap);
     let mut shift2 = simd_sllz_i16!(shift1, 2);
-    shift2 = i16x8_add_sat(shift2, shift1);
+    shift2 = simd_adds_i16(shift2, shift1);
     let mut shift4 = simd_sllz_i16!(shift2, 4);
-    shift4 = i16x8_add_sat(shift4, shift2);
+    shift4 = simd_adds_i16(shift4, shift2);
 
     (shift4, ())
 }
 
-#[target_feature(enable = "simd128")]
+#[target_feature(enable = "neon")]
 #[inline]
 #[allow(non_snake_case)]
 pub unsafe fn simd_prefix_scan_i16(R_max: Simd, gap_cost: Simd, _gap_cost_lane: PrefixScanConsts) -> Simd {
     let mut shift1 = simd_sllz_i16!(R_max, 1);
-    shift1 = i16x8_add_sat(shift1, gap_cost);
-    shift1 = i16x8_max(shift1, R_max);
+    shift1 = simd_adds_i16(shift1, gap_cost);
+    shift1 = simd_max_i16(shift1, R_max);
     let mut shift2 = simd_sllz_i16!(shift1, 2);
-    shift2 = i16x8_add_sat(shift2, i16x8_shl(gap_cost, 1));
-    shift2 = i16x8_max(shift1, shift2);
+    shift2 = simd_adds_i16(shift2, vshlq_n_s16(gap_cost, 1));
+    shift2 = simd_max_i16(shift1, shift2);
     let mut shift4 = simd_sllz_i16!(shift2, 4);
-    shift4 = i16x8_add_sat(shift4, i16x8_shl(gap_cost, 2));
-    shift4 = i16x8_max(shift2, shift4);
+    shift4 = simd_adds_i16(shift4, vshlq_n_s16(gap_cost, 2));
+    shift4 = simd_max_i16(shift2, shift4);
 
     shift4
 }
 
-#[target_feature(enable = "simd128")]
+#[target_feature(enable = "neon")]
 #[inline]
 pub unsafe fn halfsimd_lookup2_i16(lut1: LutSimd, lut2: LutSimd, v: HalfSimd) -> Simd {
-    // must use a mask to avoid zeroing lanes that are too large
-    let mask = i8x16_splat(0b1111);
-    let v_mask = v128_and(v, mask);
-    let a = i8x16_swizzle(lut1, v_mask);
-    let b = i8x16_swizzle(lut2, v_mask);
-    let lut_mask = i8x16_gt(v, mask);
-    let c = v128_bitselect(b, a, lut_mask);
-    i16x8_extend_low_i8x16(c)
+    let v2 = vcombine_u8(vreinterpret_u8_s8(v), vdup_n_u8(0));
+    let c = vget_low_s8(vqtbl2q_s8(int8x16x2_t(lut1, lut2), v2));
+    vmovl_s8(c)
 }
 
-#[target_feature(enable = "simd128")]
+#[target_feature(enable = "neon")]
 #[inline]
 pub unsafe fn halfsimd_lookup1_i16(lut: LutSimd, v: HalfSimd) -> Simd {
-    i16x8_extend_low_i8x16(i8x16_swizzle(lut, v128_and(v, i8x16_splat(0b1111))))
+    let v2 = vcombine_u8(vand_u8(vreinterpret_u8_s8(v), vdup_n_u8(0b1111)), vdup_n_u8(0));
+    let c = vget_low_s8(vqtbl1q_s8(lut, v2));
+    vmovl_s8(c)
 }
 
-#[target_feature(enable = "simd128")]
+#[target_feature(enable = "neon")]
 #[inline]
 pub unsafe fn halfsimd_lookup_bytes_i16(match_scores: HalfSimd, mismatch_scores: HalfSimd, a: HalfSimd, b: HalfSimd) -> Simd {
-    let mask = i8x16_eq(a, b);
-    let c = v128_bitselect(match_scores, mismatch_scores, mask);
-    i16x8_extend_low_i8x16(c)
+    let mask = vceq_s8(a, b);
+    let c = vbsl_s8(mask, match_scores, mismatch_scores);
+    vmovl_s8(c)
 }
 
-#[target_feature(enable = "simd128")]
+#[target_feature(enable = "neon")]
 #[inline]
-pub unsafe fn halfsimd_load(ptr: *const HalfSimd) -> HalfSimd { v128_load(ptr) }
+pub unsafe fn halfsimd_load(ptr: *const HalfSimd) -> HalfSimd { vld1_s8(ptr as *const i8) }
 
-#[target_feature(enable = "simd128")]
+#[target_feature(enable = "neon")]
 #[inline]
-pub unsafe fn halfsimd_loadu(ptr: *const HalfSimd) -> HalfSimd { v128_load(ptr) }
+pub unsafe fn halfsimd_loadu(ptr: *const HalfSimd) -> HalfSimd { vld1_s8(ptr as *const i8) }
 
-#[target_feature(enable = "simd128")]
+#[target_feature(enable = "neon")]
 #[inline]
-pub unsafe fn lutsimd_load(ptr: *const LutSimd) -> LutSimd { v128_load(ptr) }
+pub unsafe fn lutsimd_load(ptr: *const LutSimd) -> LutSimd { vld1q_s8(ptr as *const i8) }
 
-#[target_feature(enable = "simd128")]
+#[target_feature(enable = "neon")]
 #[inline]
-pub unsafe fn lutsimd_loadu(ptr: *const LutSimd) -> LutSimd { v128_load(ptr) }
+pub unsafe fn lutsimd_loadu(ptr: *const LutSimd) -> LutSimd { vld1q_s8(ptr as *const i8) }
 
-#[target_feature(enable = "simd128")]
+#[target_feature(enable = "neon")]
 #[inline]
-pub unsafe fn halfsimd_store(ptr: *mut HalfSimd, a: HalfSimd) { v128_store(ptr, a) }
+pub unsafe fn halfsimd_store(ptr: *mut HalfSimd, a: HalfSimd) { vst1_s8(ptr as *mut i8, a) }
 
-#[target_feature(enable = "simd128")]
+#[target_feature(enable = "neon")]
 #[inline]
-pub unsafe fn halfsimd_sub_i8(a: HalfSimd, b: HalfSimd) -> HalfSimd { i8x16_sub(a, b) }
+pub unsafe fn halfsimd_sub_i8(a: HalfSimd, b: HalfSimd) -> HalfSimd { vsub_s8(a, b) }
 
-#[target_feature(enable = "simd128")]
+#[target_feature(enable = "neon")]
 #[inline]
-pub unsafe fn halfsimd_set1_i8(v: i8) -> HalfSimd { i8x16_splat(v) }
+pub unsafe fn halfsimd_set1_i8(v: i8) -> HalfSimd { vdup_n_s8(v) }
 
-// only the low 8 bytes are out of each v128 for halfsimd
-#[target_feature(enable = "simd128")]
+#[target_feature(enable = "neon")]
 #[inline]
-pub unsafe fn halfsimd_get_idx(i: usize) -> usize { i + i / L * L }
+pub unsafe fn halfsimd_get_idx(i: usize) -> usize { i }
 
 #[macro_export]
 #[doc(hidden)]
@@ -354,20 +339,14 @@ macro_rules! halfsimd_sr_i8 {
     ($a:expr, $b:expr, $num:expr) => {
         {
             debug_assert!($num <= L);
-            use std::arch::wasm32::*;
-            // special indexing to skip over the high 8 bytes that are unused
-            const fn get_idx(i: usize) -> usize { if i >= L { i + L } else { i } }
-            i8x16_shuffle::<
-                { get_idx(0 + $num) }, { get_idx(1 + $num) }, { get_idx(2 + $num) }, { get_idx(3 + $num) },
-                { get_idx(4 + $num) }, { get_idx(5 + $num) }, { get_idx(6 + $num) }, { get_idx(7 + $num) },
-                8, 9, 10, 11,
-                12, 13, 14, 15
-            >($b, $a)
+            #[cfg(target_arch = "aarch64")]
+            use std::arch::aarch64::*;
+            vext_s8($b, $a, $num as i32)
         }
     };
 }
 
-#[target_feature(enable = "simd128")]
+#[target_feature(enable = "neon")]
 #[allow(dead_code)]
 pub unsafe fn simd_dbg_i16(v: Simd) {
     #[repr(align(16))]
@@ -382,13 +361,13 @@ pub unsafe fn simd_dbg_i16(v: Simd) {
     println!();
 }
 
-#[target_feature(enable = "simd128")]
+#[target_feature(enable = "neon")]
 #[allow(dead_code)]
 pub unsafe fn halfsimd_dbg_i8(v: HalfSimd) {
-    #[repr(align(16))]
-    struct A([i8; L * HALFSIMD_MUL]);
+    #[repr(align(8))]
+    struct A([i8; L]);
 
-    let mut a = A([0i8; L * HALFSIMD_MUL]);
+    let mut a = A([0i8; L]);
     halfsimd_store(a.0.as_mut_ptr() as *mut HalfSimd, v);
 
     for i in (0..a.0.len()).rev() {
@@ -397,7 +376,7 @@ pub unsafe fn halfsimd_dbg_i8(v: HalfSimd) {
     println!();
 }
 
-#[target_feature(enable = "simd128")]
+#[target_feature(enable = "neon")]
 #[allow(dead_code)]
 pub unsafe fn simd_assert_vec_eq(a: Simd, b: [i16; L]) {
     #[repr(align(16))]
@@ -408,15 +387,15 @@ pub unsafe fn simd_assert_vec_eq(a: Simd, b: [i16; L]) {
     assert_eq!(arr.0, b);
 }
 
-#[target_feature(enable = "simd128")]
+#[target_feature(enable = "neon")]
 #[allow(dead_code)]
 pub unsafe fn halfsimd_assert_vec_eq(a: HalfSimd, b: [i8; L]) {
-    #[repr(align(16))]
-    struct A([i8; L * HALFSIMD_MUL]);
+    #[repr(align(8))]
+    struct A([i8; L]);
 
-    let mut arr = A([0i8; L * HALFSIMD_MUL]);
+    let mut arr = A([0i8; L]);
     halfsimd_store(arr.0.as_mut_ptr() as *mut HalfSimd, a);
-    assert_eq!(&arr.0[..L], b);
+    assert_eq!(arr.0, b);
 }
 
 #[cfg(test)]
@@ -425,7 +404,7 @@ mod tests {
 
     #[test]
     fn test_smoke() {
-        #[target_feature(enable = "simd128")]
+        #[target_feature(enable = "neon")]
         unsafe fn inner() {
             #[repr(align(16))]
             struct A([i16; L]);
@@ -502,40 +481,8 @@ mod tests {
     }
 
     #[test]
-    fn test_endianness() {
-        #[target_feature(enable = "simd128")]
-        unsafe fn inner() {
-            #[repr(align(16))]
-            struct A([i16; L]);
-
-            let vec = A([1, 2, 3, 4, 5, 6, 7, 8]);
-            let vec = simd_load(vec.0.as_ptr() as *const Simd);
-            let res = simd_sl_i16!(vec, vec, 1);
-            simd_assert_vec_eq(res, [8, 1, 2, 3, 4, 5, 6, 7]);
-
-            let vec = A([1, 2, 3, 4, 5, 6, 7, 8]);
-            let vec = simd_load(vec.0.as_ptr() as *const Simd);
-            let res = simd_sr_i16!(vec, vec, 1);
-            simd_assert_vec_eq(res, [2, 3, 4, 5, 6, 7, 8, 1]);
-
-            #[repr(align(16))]
-            struct B([i8; L * HALFSIMD_MUL]);
-
-            let vec = B([1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0, 0, 0, 0, 0, 0]);
-            let vec = halfsimd_load(vec.0.as_ptr() as *const HalfSimd);
-            let res = halfsimd_sr_i8!(vec, vec, 1);
-            halfsimd_assert_vec_eq(res, [2, 3, 4, 5, 6, 7, 8, 1]);
-
-            simd_assert_vec_eq(simd_adds_i16(simd_set1_i16(i16::MIN), simd_set1_i16(i16::MIN)), [i16::MIN; 8]);
-            simd_assert_vec_eq(simd_adds_i16(simd_set1_i16(i16::MAX), simd_set1_i16(i16::MIN)), [-1; 8]);
-            simd_assert_vec_eq(simd_subs_i16(simd_set1_i16(i16::MAX), simd_set1_i16(i16::MIN)), [i16::MAX; 8]);
-        }
-        unsafe { inner(); }
-    }
-
-    #[test]
     fn test_prefix_scan() {
-        #[target_feature(enable = "simd128")]
+        #[target_feature(enable = "neon")]
         unsafe fn inner() {
             #[repr(align(16))]
             struct A([i16; L]);

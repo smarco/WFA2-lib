@@ -144,9 +144,9 @@ def plot_score_cumulative(stats,input_path1,input_path2):
   range_min = min(min(stats.scores1),min(stats.scores2))
   range_max = max(max(stats.scores1),max(stats.scores2))
   n, bins, patches = ax.hist(stats.scores1,50,density=True,histtype='step',cumulative=True,range=[range_min,range_max],
-                             color="royalblue",label='Empirical',alpha=0.5,fill=True)
+                             color="royalblue",label=input_path1,alpha=0.5,fill=True)
   n, bins, patches = ax.hist(stats.scores2,50,density=True,histtype='step',cumulative=True,range=[range_min,range_max],
-                             color="darkorange",label='Empirical',alpha=0.5,fill=True)
+                             color="darkorange",label=input_path2,alpha=0.5,fill=True)
   
   # Tidy up the figure
   ax.grid(True)
@@ -164,7 +164,7 @@ def plot_score_cumulative(stats,input_path1,input_path2):
 ################################################################################
 # Compare both files
 ################################################################################
-def compare_alignments(input_path1,input_path2,penalties,use_score,ignore_misms,edit,verbose):
+def compare_alignments(input_path1,input_path2,penalties,use_score,ignore_misms,is_edit,verbose):
   # Alignment stats
   stats = AlignmentStats()  
   # Read both files and compare  
@@ -201,7 +201,7 @@ def compare_alignments(input_path1,input_path2,penalties,use_score,ignore_misms,
       if score1 == score2:
         stats.score_same += 1
       else:
-        if edit:
+        if is_edit:
           if score1 < score2:
             stats.score_best1 += 1
           else:
@@ -251,8 +251,10 @@ parser.add_argument('-H',action='store_true',dest="human_readable",default=False
 args = parser.parse_args()
 
 # Select distance
+is_edit = False
 penalties = Penalties()
 if args.edit is not None:
+  is_edit = True
   pass # Default
 elif args.gap_linear is not None:
   values = args.gap_linear.split(',')
@@ -277,6 +279,7 @@ elif args.gap_affine_2p is not None:
   penalties.gap_open2 = int(values[4])
   penalties.gap_extend2 = int(values[5])
 else:
+  is_edit = True
   print("[WFACompareAlignments] No distance provided. Using edit-distance (default)")
   
 # Check penalties
@@ -296,8 +299,7 @@ if penalties.mismatch < 0 or \
 stats = compare_alignments(
   args.input1,args.input2,penalties,
   args.use_score,args.ignore_misms,
-  args.edit is not None,
-  args.verbose)
+  is_edit,args.verbose)
 print(stats) # Display stats
 
 # Plot score distribution

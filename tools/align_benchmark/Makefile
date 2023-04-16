@@ -13,7 +13,7 @@ endif
 
 LI_FLAGS=-L$(FOLDER_LIB) -I$(FOLDER_ROOT) -I$(FOLDER_WFA) -I.
 LIB_WFA=$(FOLDER_LIB)/libwfa.a
-#LIB_BLOCKALIGNER=external/block-aligner/target/release/
+LIB_BLOCKALIGNER=external/block-aligner/c/target/release/
 LIB_EDLIB=external/edlib/build/lib/
 LIB_GABA=external/libgaba/libgaba.a
 LIB_PARASAIL=external/parasail/build/libparasail.a
@@ -32,7 +32,7 @@ all: setup
 all: $(SUBDIRS)
 all: OBJS+=$(FOLDER_BUILD)/*.o
 all: OBJS+=external/build/*.o
-#all: LD_FLAGS+=-L$(LIB_BLOCKALIGNER) -Wl,-rpath=$(PWD)/tools/align_benchmark/$(LIB_BLOCKALIGNER) -lblock_aligner # BlockAligner
+all: LD_FLAGS+=-L$(LIB_BLOCKALIGNER) -Wl,-rpath=$(PWD)/tools/align_benchmark/$(LIB_BLOCKALIGNER) -lblock_aligner_c # BlockAligner
 all: LD_FLAGS+=-L$(LIB_EDLIB) -Wl,-rpath=$(PWD)/tools/align_benchmark/$(LIB_EDLIB) -ledlib # Edlib
 all: LD_FLAGS+=$(LIB_GABA) # Gaba
 all: LD_FLAGS+=$(LIB_PARASAIL) # Parasail

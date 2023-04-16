@@ -88,7 +88,7 @@ void benchmark_scrooge_adapt_cigar(
 }
 
 /*
- * Benchmark SeqAn
+ * Benchmark Scrooge
  */
 extern "C" void benchmark_scrooge_bridge(
     char* const pattern,

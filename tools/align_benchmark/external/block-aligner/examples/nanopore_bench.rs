@@ -1,9 +1,5 @@
-#![feature(bench_black_box)]
-
-#[cfg(not(feature = "simd_wasm"))]
+#[cfg(not(any(feature = "simd_wasm", feature = "simd_neon")))]
 use parasailors::{Matrix, *};
-
-use rand::prelude::*;
 
 use block_aligner::scan_block::*;
 use block_aligner::scores::*;
@@ -14,7 +10,7 @@ use std::time::{Instant, Duration};
 use std::hint::black_box;
 use std::iter;
 
-use block_aligner::simulate::*;
+use simulate_seqs::*;
 
 static FILE_NAME: &str = "data/sequences.txt";
 const ITER: usize = 10000;
@@ -54,7 +50,7 @@ fn get_data(file_name: Option<&str>) -> Vec<(Vec<u8>, Vec<u8>)> {
     }
 }
 
-#[cfg(not(feature = "simd_wasm"))]
+#[cfg(not(any(feature = "simd_wasm", feature = "simd_neon")))]
 #[allow(dead_code)]
 fn bench_parasailors_nuc_core(file: bool, _trace: bool, _max_size: usize) -> (i32, Duration) {
     let file_data = get_data(if file { Some(&FILE_NAME) } else { None });

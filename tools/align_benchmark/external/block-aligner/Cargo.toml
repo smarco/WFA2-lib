@@ -1,6 +1,6 @@
 [package]
 name = "block-aligner"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["c0deb0t <daniel.liu02@gmail.com>"]
 edition = "2018"
 license = "MIT"
@@ -15,14 +15,15 @@ exclude = ["vis/*", "!vis/block_img1.png"]
 [package.metadata.docs.rs]
 features = ["simd_avx2"]
 
-[lib]
-crate-type = ["lib", "cdylib"]
-
 [features]
+# Enable SSE2
+simd_sse2 = []
 # Enable AVX2
 simd_avx2 = []
 # Enable WASM SIMD
 simd_wasm = []
+# Enable Neon
+simd_neon = []
 
 # Print lots of debug information
 debug = ["debug_size"]
@@ -40,17 +41,16 @@ panic = "abort"
 debug-assertions = false
 lto = "thin"
 
-[dependencies]
-#wee_alloc = "^0.4"
-rand = { version = "^0.8", default-features = false, features = ["std_rng", "alloc"] }
-
 [dev-dependencies]
 bio = "^0.33"
+simulate-seqs = { git = "https://github.com/Daniel-Liu-c0deb0t/simulate-seqs" }
 
-[build-dependencies]
-cbindgen = "^0.20.0"
-
-[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
-parasailors = "^0.3.1"
+[target.'cfg(not(any(target_arch = "wasm32", target_arch = "aarch64")))'.dev-dependencies]
+parasailors = { git = "https://github.com/Daniel-Liu-c0deb0t/parasailors-new" }
 image = "^0.23.14"
 imageproc = "^0.22.0"
+# Includes small changes that ensures wfa2 code autovectorizes and other updates
+rust-wfa2 = { git = "https://github.com/pairwise-alignment/rust-wfa2" }
+# Removed logging and extra dependencies
+edlib_rs = { git = "https://github.com/Daniel-Liu-c0deb0t/edlib-rs" }
+ksw2-sys = { git = "https://github.com/pairwise-alignment/ksw2-sys" }

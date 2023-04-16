@@ -3,20 +3,23 @@ use std::arch::x86::*;
 #[cfg(target_arch = "x86_64")]
 use std::arch::x86_64::*;
 
-pub type Simd = __m256i;
-pub type HalfSimd = __m128i;
+pub type Simd = __m256i; // use for storing DP scores
+pub type HalfSimd = __m128i; // used for storing bytes (sequence or scoring matrix)
+pub type LutSimd = __m128i; // used for storing a row in a scoring matrix (always 128 bits)
 pub type TraceType = i32;
 /// Number of 16-bit lanes in a SIMD vector.
 pub const L: usize = 16;
 pub const L_BYTES: usize = L * 2;
 pub const HALFSIMD_MUL: usize = 1;
+// using min = 0 is faster, but restricts range of scores (and restricts the max block size)
 pub const ZERO: i16 = 1 << 14;
 pub const MIN: i16 = 0;
 
 // Non-temporal store to avoid cluttering cache with traces
+// Actually, non-temporal stores are slower in benchmarks!
 #[target_feature(enable = "avx2")]
 #[inline]
-pub unsafe fn store_trace(ptr: *mut TraceType, trace: TraceType) { _mm_stream_si32(ptr, trace); }
+pub unsafe fn store_trace(ptr: *mut TraceType, trace: TraceType) { *ptr = trace; } // _mm_stream_si32(ptr, trace);
 
 #[target_feature(enable = "avx2")]
 #[inline]
@@ -136,6 +139,7 @@ unsafe fn simd_sl_i128(a: Simd, b: Simd) -> Simd {
     _mm256_permute2x128_si256(a, b, 0x03)
 }
 
+// shift in zeros
 macro_rules! simd_sllz_i16 {
     ($a:expr, $num:expr) => {
         {
@@ -149,6 +153,7 @@ macro_rules! simd_sllz_i16 {
     };
 }
 
+// broadcast last 16-bit element to the whole vector
 #[target_feature(enable = "avx2")]
 #[inline]
 pub unsafe fn simd_broadcasthi_i16(v: Simd) -> Simd {
@@ -306,6 +311,7 @@ pub unsafe fn simd_prefix_scan_i16(R_max: Simd, gap_cost: Simd, gap_cost_lane: P
     // Also, make sure to use as little registers as possible to avoid
     // memory loads (latencies really matter since this is critical path).
     // Keep the CPU busy with instructions!
+    // Note: relies on min score = 0 for speed!
     let mut shift1 = simd_sllz_i16!(R_max, 1);
     shift1 = _mm256_adds_epi16(shift1, gap_cost);
     shift1 = _mm256_max_epi16(R_max, shift1);
@@ -324,11 +330,13 @@ pub unsafe fn simd_prefix_scan_i16(R_max: Simd, gap_cost: Simd, gap_cost_lane: P
     _mm256_max_epi16(shift4, correct1)
 }
 
+// lookup two 128-bit tables
 #[target_feature(enable = "avx2")]
 #[inline]
-pub unsafe fn halfsimd_lookup2_i16(lut1: HalfSimd, lut2: HalfSimd, v: HalfSimd) -> Simd {
+pub unsafe fn halfsimd_lookup2_i16(lut1: LutSimd, lut2: LutSimd, v: HalfSimd) -> Simd {
     let a = _mm_shuffle_epi8(lut1, v);
     let b = _mm_shuffle_epi8(lut2, v);
+    // only the most significant bit of each byte matters for blendv
     let mask = _mm_slli_epi16(v, 3);
     let c = _mm_blendv_epi8(a, b, mask);
     _mm256_cvtepi8_epi16(c)
@@ -336,7 +344,7 @@ pub unsafe fn halfsimd_lookup2_i16(lut1: HalfSimd, lut2: HalfSimd, v: HalfSimd) 
 
 #[target_feature(enable = "avx2")]
 #[inline]
-pub unsafe fn halfsimd_lookup1_i16(lut: HalfSimd, v: HalfSimd) -> Simd {
+pub unsafe fn halfsimd_lookup1_i16(lut: LutSimd, v: HalfSimd) -> Simd {
     _mm256_cvtepi8_epi16(_mm_shuffle_epi8(lut, v))
 }
 
@@ -355,6 +363,14 @@ pub unsafe fn halfsimd_load(ptr: *const HalfSimd) -> HalfSimd { _mm_load_si128(p
 #[target_feature(enable = "avx2")]
 #[inline]
 pub unsafe fn halfsimd_loadu(ptr: *const HalfSimd) -> HalfSimd { _mm_loadu_si128(ptr) }
+
+#[target_feature(enable = "avx2")]
+#[inline]
+pub unsafe fn lutsimd_load(ptr: *const LutSimd) -> LutSimd { _mm_load_si128(ptr) }
+
+#[target_feature(enable = "avx2")]
+#[inline]
+pub unsafe fn lutsimd_loadu(ptr: *const LutSimd) -> LutSimd { _mm_loadu_si128(ptr) }
 
 #[target_feature(enable = "avx2")]
 #[inline]
