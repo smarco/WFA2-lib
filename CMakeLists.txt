@@ -84,10 +84,6 @@ endif(GPROF)
 
 # ---- Include files
 
-include_directories(wavefront)
-include_directories(utils)
-include_directories(.)
-
 file(GLOB INCLUDES
   wavefront/*.h*
   )
@@ -149,12 +145,37 @@ add_library(wfa2_static
 add_library(wfa2 SHARED ${wfa2lib_SOURCE})
 set_target_properties(wfa2_static PROPERTIES OUTPUT_NAME wfa2)
 set_target_properties(wfa2 PROPERTIES SOVERSION 0)
+target_include_directories(wfa2 PUBLIC . wavefront utils)
+target_include_directories(wfa2_static PUBLIC . wavefront utils)
+add_library(wfa2::wfa2 ALIAS wfa2)
+add_library(wfa2::wfa2_static ALIAS wfa2_static)
 
 if(OPENMP)
   target_link_libraries(wfa2_static OpenMP::OpenMP_C)
   target_link_libraries(wfa2 OpenMP::OpenMP_C)
 endif(OPENMP)
 
+# ---- C++ binding library
+
+set(wfa2cpp_SOURCE
+  bindings/cpp/WFAligner.cpp
+)
+file(GLOB CPP_INCLUDES
+  bindings/cpp/*.h*
+  )
+add_library(wfa2cpp_static STATIC ${wfa2cpp_SOURCE})
+add_library(wfa2cpp SHARED ${wfa2cpp_SOURCE})
+set_target_properties(wfa2cpp PROPERTIES SOVERSION 0)
+set_target_properties(wfa2cpp_static PROPERTIES OUTPUT_NAME wfa2cpp)
+target_link_libraries(wfa2cpp PUBLIC wfa2)
+target_link_libraries(wfa2cpp_static PUBLIC wfa2_static)
+add_library(wfa2::wfa2cpp ALIAS wfa2cpp)
+add_library(wfa2::wfa2cpp_static ALIAS wfa2cpp_static)
+
+if(OPENMP)
+  target_link_libraries(wfa2cpp_static OpenMP::OpenMP_CXX)
+  target_link_libraries(wfa2cpp OpenMP::OpenMP_CXX)
+endif(OPENMP)
 
 # ---- Get version
 
@@ -186,10 +207,17 @@ add_wfa_test()
 
 # ---- Install
 
-install(TARGETS wfa2_static ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} )
-install(TARGETS wfa2 ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} )
+# Do not install anything when used with FetchContent
+if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+  install(TARGETS wfa2_static ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} )
+  install(TARGETS wfa2 ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} )
 
-install(FILES ${INCLUDES} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/wfa2lib/wavefront)
-install(FILES ${UTILS_INCLUDES} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/wfa2lib/utils)
-install(FILES ${ALIGNMENT_INCLUDES} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/wfa2lib/alignment)
-install(FILES ${SYSTEM_INCLUDES} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/wfa2lib/system)
+  install(FILES ${INCLUDES} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/wfa2lib/wavefront)
+  install(FILES ${UTILS_INCLUDES} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/wfa2lib/utils)
+  install(FILES ${ALIGNMENT_INCLUDES} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/wfa2lib/alignment)
+  install(FILES ${SYSTEM_INCLUDES} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/wfa2lib/system)
+
+  install(TARGETS wfa2cpp ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+  install(TARGETS wfa2cpp_static ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+  install(FILES ${CPP_INCLUDES} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/wfa2lib/bindings/cpp)
+endif()
