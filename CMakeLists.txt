@@ -59,8 +59,8 @@ if (${CMAKE_BUILD_TYPE} MATCHES Release)
 endif()
 
 if ((${CMAKE_BUILD_TYPE} MATCHES Release) OR (${CMAKE_BUILD_TYPE} MATCHES RelWithDebInfo))
-  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} ${OPTIMIZE_FLAGS}")
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} ${OPTIMIZE_FLAGS}")
+  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OPTIMIZE_FLAGS}")
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OPTIMIZE_FLAGS}")
 endif ()
 
 if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
@@ -149,6 +149,11 @@ add_library(wfa2_static
 add_library(wfa2 SHARED ${wfa2lib_SOURCE})
 set_target_properties(wfa2_static PROPERTIES OUTPUT_NAME wfa2)
 set_target_properties(wfa2 PROPERTIES SOVERSION 0)
+
+if(OPENMP)
+  target_link_libraries(wfa2_static OpenMP::OpenMP_C)
+  target_link_libraries(wfa2 OpenMP::OpenMP_C)
+endif(OPENMP)
 
 
 # ---- Get version
