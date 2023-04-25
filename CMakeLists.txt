@@ -153,7 +153,7 @@ set_target_properties(wfa2 PROPERTIES SOVERSION 0)
 
 # ---- Get version
 
-file (STRINGS "VERSION" BUILD_NUMBER)
+file (STRINGS "VERSION.txt" BUILD_NUMBER)
 add_definitions(-DWFA2LIB_VERSION="${BUILD_NUMBER}")
 add_definitions(-DVERSION="${BUILD_NUMBER}")
 
