@@ -169,7 +169,7 @@ add_library(wfa2::wfa2cpp_static ALIAS wfa2cpp_static)
 
 # ---- Get version
 
-file (STRINGS "VERSION" BUILD_NUMBER)
+file (STRINGS "VERSION.txt" BUILD_NUMBER)
 add_definitions(-DWFA2LIB_VERSION="${BUILD_NUMBER}")
 add_definitions(-DVERSION="${BUILD_NUMBER}")
 
