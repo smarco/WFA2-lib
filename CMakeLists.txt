@@ -151,8 +151,8 @@ add_library(wfa2::wfa2 ALIAS wfa2)
 add_library(wfa2::wfa2_static ALIAS wfa2_static)
 
 if(OPENMP)
-  target_link_libraries(wfa2_static OpenMP::OpenMP_C)
-  target_link_libraries(wfa2 OpenMP::OpenMP_C)
+  target_link_libraries(wfa2_static PRIVATE OpenMP::OpenMP_C)
+  target_link_libraries(wfa2 PRIVATE OpenMP::OpenMP_C)
 endif(OPENMP)
 
 # ---- C++ binding library
@@ -173,8 +173,8 @@ add_library(wfa2::wfa2cpp ALIAS wfa2cpp)
 add_library(wfa2::wfa2cpp_static ALIAS wfa2cpp_static)
 
 if(OPENMP)
-  target_link_libraries(wfa2cpp_static OpenMP::OpenMP_CXX)
-  target_link_libraries(wfa2cpp OpenMP::OpenMP_CXX)
+  target_link_libraries(wfa2cpp_static PRIVATE OpenMP::OpenMP_CXX)
+  target_link_libraries(wfa2cpp PRIVATE OpenMP::OpenMP_CXX)
 endif(OPENMP)
 
 # ---- Get version
