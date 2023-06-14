@@ -33,6 +33,7 @@
 #define BINDINGS_CPP_WFALIGNER_HPP_
 
 #include <string>
+#include <cstdint>
 
 #include "../../wavefront/wfa.hpp"
 
