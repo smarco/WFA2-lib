@@ -174,13 +174,16 @@ public:
   // Accessors
   int getAlignmentStatus();
   int getAlignmentScore();
+  void getAlignment(
+      char** const cigarOperations,
+      int* cigarLength);
   std::string getAlignment();
   void getCIGAR(
-      const bool show_mismatches,
-      uint32_t** const cigar_ops,
-      int* const num_cigar_ops);
+      const bool showMismatches,
+      uint32_t** const cigarOperations,
+      int* const numCigarOperations);
   std::string getCIGAR(
-      const bool show_mismatches);
+      const bool showMismatches);
   // Display
   void printPretty(
       FILE* const stream,

@@ -285,6 +285,12 @@ int WFAligner::getAlignmentStatus() {
 int WFAligner::getAlignmentScore() {
   return wfAligner->cigar->score;
 }
+void WFAligner::getAlignment(
+    char** const cigarOperations,
+    int* cigarLength) {
+ *cigarOperations = wfAligner->cigar->operations + wfAligner->cigar->begin_offset;
+ *cigarLength = wfAligner->cigar->end_offset - wfAligner->cigar->begin_offset;
+}
 std::string WFAligner::getAlignment() {
   // Fetch Alignment
   char* const buffer = wfAligner->cigar->operations + wfAligner->cigar->begin_offset;
@@ -293,21 +299,21 @@ std::string WFAligner::getAlignment() {
   return std::string(buffer,length);
 }
 void WFAligner::getCIGAR(
-    const bool show_mismatches,
-    uint32_t** const cigar_buffer,
-    int* const cigar_length) {
-  cigar_get_CIGAR(wfAligner->cigar,show_mismatches,cigar_buffer,cigar_length);
+    const bool showMismatches,
+    uint32_t** const cigarOperations,
+    int* const numCigarOperations) {
+  cigar_get_CIGAR(wfAligner->cigar,showMismatches,cigarOperations,numCigarOperations);
 }
 std::string WFAligner::getCIGAR(
-    const bool show_mismatches) {
+    const bool showMismatches) {
   // Check length
-  const int alignment_length = wfAligner->cigar->end_offset - wfAligner->cigar->begin_offset;
-  if (alignment_length <= 0) return std::string();
+  const int alignmentLength = wfAligner->cigar->end_offset - wfAligner->cigar->begin_offset;
+  if (alignmentLength <= 0) return std::string();
   // Allocate
-  char* const buffer = new char[2*alignment_length];
-  const int buffer_length = cigar_sprint_SAM_CIGAR(buffer,wfAligner->cigar,show_mismatches);
+  char* const buffer = new char[2*alignmentLength];
+  const int bufferLength = cigar_sprint_SAM_CIGAR(buffer,wfAligner->cigar,showMismatches);
   // Create string
-  std::string cigarString = std::string(buffer,buffer_length);
+  std::string cigarString = std::string(buffer,bufferLength);
   // Free & return
   delete[] buffer;
   return cigarString;
