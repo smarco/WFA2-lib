@@ -494,10 +494,10 @@ void cigar_print_pretty(
   }
   // Print alignment pretty
   fprintf(stream,"      ALIGNMENT\t");
-  cigar_print(stderr,cigar,true);
+  cigar_print(stream,cigar,true);
   fprintf(stream,"\n");
   fprintf(stream,"      ALIGNMENT.COMPACT\t");
-  cigar_print(stderr,cigar,false);
+  cigar_print(stream,cigar,false);
   fprintf(stream,"\n");
   fprintf(stream,"      PATTERN    %s\n",pattern_alg);
   fprintf(stream,"                 %s\n",ops_alg);
