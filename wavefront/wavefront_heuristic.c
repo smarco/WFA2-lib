@@ -519,6 +519,9 @@ bool wavefront_heuristic_cufoff(
   if (mwavefront == NULL || mwavefront->lo > mwavefront->hi) return false; // Not Dropped
   // Decrease wait steps
   --(wf_heuristic->steps_wait);
+  // Save lo/hi base
+  const int hi_base = mwavefront->hi;
+  const int lo_base = mwavefront->lo;
   // Select heuristic (WF-Adaptive)
   if (wf_heuristic->strategy & wf_heuristic_wfadaptive) {
     wavefront_heuristic_wfadaptive(wf_aligner,mwavefront,false);
@@ -538,6 +541,7 @@ bool wavefront_heuristic_cufoff(
     wavefront_heuristic_banded_adaptive(wf_aligner,mwavefront);
   }
   // Check wavefront length
+  if (lo_base == mwavefront->lo && hi_base == mwavefront->hi) return; // No wavefronts pruned
   if (mwavefront->lo > mwavefront->hi) mwavefront->null = true;
   // DEBUG
   // const int wf_length_base = hi_base-lo_base+1;

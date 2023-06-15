@@ -12,7 +12,7 @@ The wavefront alignment (WFA) algorithm is an **exact** gap-affine algorithm tha
 
 ### 1.2 What is WFA2-lib?
 
-The WFA2 library implements the WFA algorithm for different distance metrics and alignment modes. It supports various [distance functions](#wfa2.distances): indel, edit, gap-lineal, gap-affine, and dual-gap gap-affine distances. The library allows computing only the score or the complete alignment (i.e., CIGAR) (see [Alignment Scope](#wfa2.scope)). Also, the WFA2 library supports computing end-to-end alignments (a.k.a. global-alignment) and ends-free alignments (including semi-global, glocal, and extension alignment) (see [Alignment Span](#wfa2.span)). In the case of long and noisy alignments, the library provides different [low-memory modes](#wfa2.mem) that significantly reduce the memory usage of the naive WFA algorithm implementation. Beyond the exact-alignment modes, the WFA2 library implements [heuristic modes](#wfa2.heuristics) that dramatically accelerate the alignment computation. Additionally, the library provides many other support functions to display and verify alignment results, control the overall memory usage, and more.
+The WFA2 library implements the WFA algorithm for different distance metrics and alignment modes. It supports various [distance functions](#wfa2.distances): indel, edit, gap-linear, gap-affine, and dual-gap gap-affine distances. The library allows computing only the score or the complete alignment (i.e., CIGAR) (see [Alignment Scope](#wfa2.scope)). Also, the WFA2 library supports computing end-to-end alignments (a.k.a. global-alignment) and ends-free alignments (including semi-global, glocal, and extension alignment) (see [Alignment Span](#wfa2.span)). In the case of long and noisy alignments, the library provides different [low-memory modes](#wfa2.mem) that significantly reduce the memory usage of the naive WFA algorithm implementation. Beyond the exact-alignment modes, the WFA2 library implements [heuristic modes](#wfa2.heuristics) that dramatically accelerate the alignment computation. Additionally, the library provides many other support functions to display and verify alignment results, control the overall memory usage, and more.
 
 ### 1.3 Getting started
 
@@ -176,7 +176,7 @@ An example of how to use them is [here](./bindings/rust/example.rs).
 ## <a name="wfa2.features"></a> 3. WFA2-LIB FEATURES
 
 * **Exact alignment** method that computes the optimal **alignment score** and/or **alignment CIGAR**.
-* Supports **multiple distance metrics** (i.e., indel, edit, gap-lineal, gap-affine, and dual-gap gap-affine).
+* Supports **multiple distance metrics** (i.e., indel, edit, gap-linear, gap-affine, and dual-gap gap-affine).
 * Allows performing **end-to-end** (a.k.a. global) and **ends-free** (e.g., semi-global, extension, overlap) alignment.
 * Implements **low-memory modes** to reduce and control memory consumption (down to `O(s)` using the `ultralow` mode).
 * Supports various **heuristic strategies** to use on top of the core WFA algorithm.
