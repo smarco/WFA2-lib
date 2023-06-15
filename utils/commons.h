@@ -37,7 +37,6 @@
 #include <unistd.h>
 
 #include <stdbool.h>
-#include <stdint.h>
 #include <float.h>
 #include <inttypes.h>
 #include <ctype.h>
