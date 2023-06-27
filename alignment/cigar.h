@@ -72,9 +72,9 @@ void cigar_free(
 int cigar_get_matches(
     cigar_t* const cigar);
 void cigar_add_mismatches(
-    char* const pattern,
+    const char* const pattern,
     const int pattern_length,
-    char* const text,
+    const char* const text,
     const int text_length,
     cigar_t* const cigar);
 
