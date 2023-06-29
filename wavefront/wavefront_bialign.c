@@ -220,9 +220,13 @@ void wavefront_bialign_breakpoint_indel2indel(
     const int dh_0 = WAVEFRONT_H(k_0,doffset_0);
     const int dh_1 = WAVEFRONT_H(k_1,doffset_1);
     // Check breakpoint d2d
-    if (dh_0 + dh_1 >= text_length && score_0 + score_1 - gap_open < breakpoint->score &&
-        dh_0 <= text_length && dh_1 <= text_length) {
+    if (dh_0 + dh_1 >= text_length && score_0 + score_1 - gap_open < breakpoint->score) {
       if (breakpoint_forward) {
+        // Check out-of-bounds coordinates
+        const int v = WAVEFRONT_V(k_0,dh_0);
+        const int h = WAVEFRONT_H(k_0,dh_0);
+        if (v > pattern_length || h > text_length) continue;
+        // Set breakpoint
         breakpoint->score_forward = score_0;
         breakpoint->score_reverse = score_1;
         breakpoint->k_forward = k_0;
@@ -230,6 +234,11 @@ void wavefront_bialign_breakpoint_indel2indel(
         breakpoint->offset_forward = dh_0;
         breakpoint->offset_reverse = dh_1;
       } else {
+        // Check out-of-bounds coordinates
+        const int v = WAVEFRONT_V(k_1,dh_1);
+        const int h = WAVEFRONT_H(k_1,dh_1);
+        if (v > pattern_length || h > text_length) continue;
+        // Set breakpoint
         breakpoint->score_forward = score_1;
         breakpoint->score_reverse = score_0;
         breakpoint->k_forward = k_1;

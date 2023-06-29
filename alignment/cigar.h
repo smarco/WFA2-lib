@@ -127,9 +127,9 @@ void cigar_copy(
     cigar_t* const cigar_src);
 
 void cigar_discover_mismatches(
-    char* const pattern,
+    const char* const pattern,
     const int pattern_length,
-    char* const text,
+    const char* const text,
     const int text_length,
     cigar_t* const cigar);
 

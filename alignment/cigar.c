@@ -68,7 +68,10 @@ cigar_t* cigar_new(
   cigar->begin_offset = 0;
   cigar->end_offset = 0;
   cigar->score = INT32_MIN;
+  cigar->end_v = -1;
+  cigar->end_h = -1;
   // CIGAR
+  cigar->cigar_length = 0;
   cigar->cigar_buffer = calloc(max_operations,sizeof(uint32_t));
   // Return
   return cigar;
@@ -371,7 +374,7 @@ void cigar_copy(
          cigar_src->end_offset-cigar_src->begin_offset);
 }
 void cigar_discover_mismatches(
-    char* const pattern,
+    const char* const pattern,
     const int pattern_length,
     const char* const text,
     const int text_length,
@@ -758,9 +761,15 @@ int cigar_sprint_SAM_CIGAR(
   // Print CIGAR-operations
   int i, cursor = 0;
   for (i=0;i<cigar_length;++i) {
-    cursor += sprintf(buffer+cursor,"%d%c",
-        cigar_buffer[i]>>4,
-        "MIDN---=X"[cigar_buffer[i]&0xf]);
+    const int op_idx = cigar_buffer[i] & 0xf;
+    if (op_idx <= 8) {
+      cursor += sprintf(buffer+cursor,"%d%c",
+          cigar_buffer[i]>>4,
+          "MIDN---=X"[cigar_buffer[i]&0xf]);
+    } else {
+      cursor += sprintf(buffer+cursor,"%d%c",
+          cigar_buffer[i]>>4,'?');
+    }
   }
   // Return
   buffer[cursor] = '\0';
