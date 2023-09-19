@@ -34,6 +34,7 @@
 #define VECTOR_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 
 /*
  * Checkers

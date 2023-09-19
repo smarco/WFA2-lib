@@ -32,6 +32,7 @@
 #ifndef CIGAR_H_
 #define CIGAR_H_
 
+#include <stdbool.h>
 #include "system/mm_allocator.h"
 #include "alignment/linear_penalties.h"
 #include "alignment/affine_penalties.h"
