@@ -90,9 +90,9 @@ grep "Time.Alignment" $LOG | awk '{if ($4 != "ms") print $3" "$4}' | sort -n > $
 grep "Maximum resident set size" $LOG | awk '{print $6}' | sort -n > $LOG.mem
 
 # Display performance
-echo ">>> Performance Time (s): "
+echo ">>> Performance Time (s) [base vs new]: "
 paste <(tail -n 4 $OUTPUT/wfa.utest.check/wfa.utest.log.time) <(tail -n 4 $OUTPUT/wfa.utest.log.time) 
-echo ">>> Performance Mem (KB): "
+echo ">>> Performance Mem (KB) [base vs new]: "
 paste <(tail -n 4 $OUTPUT/wfa.utest.check/wfa.utest.log.mem) <(tail -n 4 $OUTPUT/wfa.utest.log.mem) 
 
 # Display correct

@@ -217,7 +217,16 @@ wavefront_aligner_t* align_input_configure_wavefront(
       break;
   }
   // Select alignment form
-  attributes.alignment_form.span = (parameters.endsfree) ? alignment_endsfree : alignment_end2end;
+  if (parameters.align_span_extension) {
+    attributes.alignment_form.span = alignment_endsfree;
+    attributes.alignment_form.extension = true;
+  } else if (parameters.align_span_endsfree) {
+    attributes.alignment_form.span = alignment_endsfree;
+    attributes.alignment_form.extension = false;
+  } else { // Global
+    attributes.alignment_form.span = alignment_end2end;
+    attributes.alignment_form.extension = false;
+  }
   // Misc
   attributes.plot.enabled = (parameters.plot != 0);
   attributes.plot.align_level = (parameters.plot < 0) ? -1 : parameters.plot - 1;
@@ -236,8 +245,6 @@ void align_input_configure_global(
   align_input->linear_penalties = parameters.linear_penalties;
   align_input->affine_penalties = parameters.affine_penalties;
   align_input->affine2p_penalties = parameters.affine2p_penalties;
-  // Alignment form
-  align_input->ends_free = parameters.endsfree;
   // Output
   align_input->output_file = parameters.output_file;
   align_input->output_full = parameters.output_full;
@@ -271,7 +278,7 @@ void align_input_configure_global(
 void align_input_configure_local(
     align_input_t* const align_input) {
   // Ends-free configuration
-  if (parameters.endsfree) {
+  if (parameters.align_span_endsfree) {
     const int plen = align_input->pattern_length;
     const int tlen = align_input->text_length;
     align_input->pattern_begin_free = nominal_prop_u32(plen,parameters.pattern_begin_free);
