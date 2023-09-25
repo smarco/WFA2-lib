@@ -238,6 +238,7 @@ void wavefront_unialign_terminate(
 /*
  * Classic WF-Alignment (Unidirectional)
  */
+#define WFA_UNIALIGN_DEBUG() wavefront_aligner_print(stderr,wf_aligner,0,score,7,0)
 int wavefront_unialign(
     wavefront_aligner_t* const wf_aligner) {
   // Parameters
@@ -246,12 +247,12 @@ int wavefront_unialign(
   int (*wf_align_extend)(wavefront_aligner_t* const,const int) = align_status->wf_align_extend;
   // Compute wavefronts of increasing score
   int score = align_status->score;
+  // WFA_UNIALIGN_DEBUG(); // DEBUG
   while (true) {
     // Exact extend s-wavefront
     const int finished = (*wf_align_extend)(wf_aligner,score);
     if (finished) {
-      // DEBUG
-      // wavefront_aligner_print(stderr,wf_aligner,0,score,7,0);
+      // WFA_UNIALIGN_DEBUG(); // DEBUG
       if (align_status->status == WF_STATUS_END_REACHED ||
           align_status->status == WF_STATUS_END_UNREACHABLE) {
         wavefront_unialign_terminate(wf_aligner,score);
@@ -265,8 +266,7 @@ int wavefront_unialign(
     if (wavefront_unialign_reached_limits(wf_aligner,score)) return align_status->status;
     // Plot
     if (wf_aligner->plot != NULL) wavefront_plot(wf_aligner,score,0);
-    // DEBUG
-    //wavefront_aligner_print(stderr,wf_aligner,score,score,7,0);
+    // WFA_UNIALIGN_DEBUG(); // DEBUG
   }
   // Unreachable code
   return WF_STATUS_OK;
