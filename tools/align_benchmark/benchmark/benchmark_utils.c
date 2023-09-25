@@ -42,7 +42,6 @@
 void benchmark_align_input_clear(
     align_input_t* const align_input) {
   // Alignment form
-  align_input->ends_free = false;
   align_input->pattern_begin_free = 0;
   align_input->text_begin_free = 0;
   align_input->pattern_end_free = 0;

@@ -90,25 +90,6 @@ void wavefront_penalties_set_affine2p(
     affine2p_penalties_t* const affine2p_penalties);
 
 /*
- * Score conversion
- */
-int wavefront_penalties_get_score_indel(
-    wavefront_penalties_t* const wf_penalties,
-    const int score);
-int wavefront_penalties_get_score_edit(
-    wavefront_penalties_t* const wf_penalties,
-    const int score);
-int wavefront_penalties_get_score_linear(
-    wavefront_penalties_t* const wf_penalties,
-    const int score);
-int wavefront_penalties_get_score_affine(
-    wavefront_penalties_t* const wf_penalties,
-    const int score);
-int wavefront_penalties_get_score_affine2p(
-    wavefront_penalties_t* const wf_penalties,
-    const int score);
-
-/*
  * Display
  */
 void wavefront_penalties_print(
