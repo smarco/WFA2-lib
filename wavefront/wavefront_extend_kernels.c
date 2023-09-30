@@ -29,11 +29,11 @@
  * DESCRIPTION: WFA module for the "extension" of exact matches
  */
 
-#ifdef __APPLE__ || defined(__FreeBSD__)
- #include <machine/endian.h>  // __BYTE_ORDER
- #else
- #include <endian.h>  // __BYTE_ORDER
- #endif
+#if defined(__APPLE__) || defined(__FreeBSD__)
+#include <machine/endian.h>  // __BYTE_ORDER
+#else
+#include <endian.h>  // __BYTE_ORDER
+#endif
 
 #include "wavefront_extend_kernels.h"
 #include "wavefront_termination.h"
