@@ -132,7 +132,7 @@ void usage() {
       "          --input|i PATH                                                \n"
       "          --output|o PATH                                               \n"
       "          --output-full PATH                                            \n"
-      "        [Penalties & Span]                                              \n"
+      "        [Penalties]                                                     \n"
       "          --linear-penalties|p M,X,I                                    \n"
       "          --affine-penalties|g M,X,O,E                                  \n"
       "          --affine2p-penalties M,X,O1,E1,O2,E2                          \n"
