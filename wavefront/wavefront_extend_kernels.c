@@ -29,12 +29,8 @@
  * DESCRIPTION: WFA module for the "extension" of exact matches
  */
 
-//#if defined(__APPLE__) || defined(__FreeBSD__)
-//#include <machine/endian.h>  // __BYTE_ORDER
-//#else
-//#include <endian.h>  // __BYTE_ORDER
-//#endif
 
+// Use cross-platform header
 #include <sys/types.h>
 
 #include "wavefront_extend_kernels.h"
