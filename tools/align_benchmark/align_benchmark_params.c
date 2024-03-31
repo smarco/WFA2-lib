@@ -340,8 +340,8 @@ void parse_arguments(
         parameters.align_span_global = false;
         parameters.align_span_extension = true;
         parameters.align_span_endsfree = false;
-      } else if (strcmp(optarg,"ends-free")==0 ||
-                 strcmp(optarg,"endsfree")==0) {
+      } else if (strncmp(optarg,"ends-free",9)==0 ||
+                 strncmp(optarg,"endsfree",8)==0) {
         parameters.align_span_global = false;
         parameters.align_span_extension = false;
         parameters.align_span_endsfree = true;
