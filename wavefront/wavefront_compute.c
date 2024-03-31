@@ -133,11 +133,11 @@ bool wavefront_compute_endsfree_required(
   if (alg_form->text_begin_free == 0 &&
       alg_form->pattern_begin_free == 0) return false;
   if (score % (-penalties->match) != 0) return false;
-  // TODO: Missing condition (not added for efficiency)
-  //  const int endsfree_k = score/(-penalties->match); // (h/v)-coordinate for boundary conditions
-  //  const bool text_begin_free = (alg_form->text_begin_free >= endsfree_k);
-  //  const bool pattern_begin_free = (alg_form->pattern_begin_free >= endsfree_k);
-  //  if (!text_begin_free && !pattern_begin_free) return false;
+  // Check boundary conditions for ends-free
+  const int endsfree_k = score/(-penalties->match); // (h/v)-coordinate for boundary conditions
+  const bool text_begin_free = (alg_form->text_begin_free >= endsfree_k);
+  const bool pattern_begin_free = (alg_form->pattern_begin_free >= endsfree_k);
+  if (!text_begin_free && !pattern_begin_free) return false;
   // Ok
   return true;
 }
@@ -254,6 +254,9 @@ wavefront_t* wavefront_compute_endsfree_allocate_null(
   }
   wavefront->lo = lo;
   wavefront->hi = hi;
+  // Set max/min init elements
+  wavefront->wf_elements_init_min = lo;
+  wavefront->wf_elements_init_max = hi;
   // Return
   return wavefront;
 }
