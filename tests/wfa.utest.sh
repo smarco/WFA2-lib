@@ -12,7 +12,8 @@ OUTPUT="$PREFIX"
 LOG="$PREFIX/wfa.utest.log"
 
 CMP_SCORE=$(readlink -f "$PREFIX/../scripts/wfa.alg.cmp.score.sh")
-BIN=$(readlink -f "$PREFIX/../build/bin/align_benchmark")
+
+BIN=$1/align_benchmark
 if [ ! -f "$BIN" ]
 then
     BIN=$(readlink -f "$PREFIX/../bin/align_benchmark")

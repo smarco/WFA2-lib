@@ -243,7 +243,7 @@ enable_testing()
 function(add_wfa_test)
   add_test(
     NAME wfa2lib
-    COMMAND ./tests/wfa.utest.sh
+    COMMAND ./tests/wfa.utest.sh ${CMAKE_CURRENT_BINARY_DIR}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     )
 endfunction()
