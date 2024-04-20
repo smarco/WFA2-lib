@@ -535,9 +535,11 @@ void align_benchmark_parallel() {
     if (seqs_batch == 0) break;
     // Parallel processing of the sequences batch
     timer_start(&parameters.timer_global); // PROFILE
+#ifdef WFA_PARALLEL
     #pragma omp parallel num_threads(parameters.num_threads)
     {
       int tid = omp_get_thread_num();
+
       #pragma omp for
       for (int seq_idx=0;seq_idx<seqs_batch;++seq_idx) {
         // Configure sequence
@@ -551,6 +553,7 @@ void align_benchmark_parallel() {
         align_benchmark_run_algorithm(align_input+tid);
       }
     }
+#endif
     timer_stop(&parameters.timer_global); // PROFILE
     // Update progress
     seqs_processed += seqs_batch;

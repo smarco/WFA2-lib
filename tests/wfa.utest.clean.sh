@@ -9,5 +9,5 @@
 OUTPUT="./tests"
 
 # Clear
-rm $OUTPUT/*.alg $OUTPUT/*.log* &> /dev/null
+rm -f $OUTPUT/*.alg $OUTPUT/*.log* &> /dev/null
 

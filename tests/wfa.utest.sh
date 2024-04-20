@@ -1,8 +1,8 @@
 #!/bin/bash
 # PROJECT: Wavefront Alignments Algorithms (Unitary Tests)
-# LICENCE: MIT License 
+# LICENCE: MIT License
 # AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
-# DESCRIPTION: WFA unitary tests (correcness)
+# DESCRIPTION: WFA unitary tests (correctness)
 # USAGE: ./wfa.utest.sh
 
 # Config
@@ -12,50 +12,55 @@ OUTPUT="$PREFIX"
 LOG="$PREFIX/wfa.utest.log"
 
 CMP_SCORE=$(readlink -f "$PREFIX/../scripts/wfa.alg.cmp.score.sh")
-BIN=$(readlink -f "$PREFIX/../build/bin/align_benchmark")
-if [ ! -f "$BIN" ] 
+
+BIN=$1/align_benchmark
+if [ ! -f "$BIN" ]
 then
     BIN=$(readlink -f "$PREFIX/../bin/align_benchmark")
     if [ ! -f "$BIN" ]
     then
-        echo "[Error] Binaries not built. Please run cmake or make"  
-        exit -1
-    fi 
+        BIN=$(readlink -f "$PREFIX/../build/align_benchmark") # cmake
+        if [ ! -f "$BIN" ]
+        then
+            echo "[Error] Binaries not built. Please run cmake or make"
+            exit -1
+        fi
+    fi
 fi
 
 # Clear
-rm $OUTPUT/*.alg $OUTPUT/*.log* &> /dev/null
+rm -f $OUTPUT/*.alg $OUTPUT/*.log* &> /dev/null
 
 # Run tests
 for opt in "--check=correct","test" \
            "--wfa-score-only","test.score" \
            "--wfa-memory-mode=med --check=correct","test.pb" \
            "--wfa-memory-mode=ultralow --check=correct","test.biwfa" \
-           "--wfa-memory-mode=ultralow --wfa-score-only","test.biwfa.score" 
-do 
+           "--wfa-memory-mode=ultralow --wfa-score-only","test.biwfa.score"
+do
     # Config
     IFS=','; set -- $opt
     IFS=' '; MODE="$1"; NAME="$2"
     echo ">>> Testing '$NAME' ($MODE)"
-    
+
     # Testing distance functions
-    \time -v $BIN -i $INPUT -o $OUTPUT/$NAME.indel.alg    -a indel-wfa        $MODE >> $LOG 2>&1 
-    \time -v $BIN -i $INPUT -o $OUTPUT/$NAME.edit.alg     -a edit-wfa         $MODE >> $LOG 2>&1        
-    \time -v $BIN -i $INPUT -o $OUTPUT/$NAME.affine.alg   -a gap-affine-wfa   $MODE >> $LOG 2>&1    
-    \time -v $BIN -i $INPUT -o $OUTPUT/$NAME.affine2p.alg -a gap-affine2p-wfa $MODE >> $LOG 2>&1 
-    
+    \time -v $BIN -i $INPUT -o $OUTPUT/$NAME.indel.alg    -a indel-wfa        $MODE >> $LOG 2>&1
+    \time -v $BIN -i $INPUT -o $OUTPUT/$NAME.edit.alg     -a edit-wfa         $MODE >> $LOG 2>&1
+    \time -v $BIN -i $INPUT -o $OUTPUT/$NAME.affine.alg   -a gap-affine-wfa   $MODE >> $LOG 2>&1
+    \time -v $BIN -i $INPUT -o $OUTPUT/$NAME.affine2p.alg -a gap-affine2p-wfa $MODE >> $LOG 2>&1
+
     # Testing penalty-scores
-    \time -v $BIN -i $INPUT -o $OUTPUT/$NAME.affine.p0.alg -a gap-affine-wfa $MODE --affine-penalties="0,1,2,1" >> $LOG 2>&1 
-    \time -v $BIN -i $INPUT -o $OUTPUT/$NAME.affine.p1.alg -a gap-affine-wfa $MODE --affine-penalties="0,3,1,4" >> $LOG 2>&1 
-    \time -v $BIN -i $INPUT -o $OUTPUT/$NAME.affine.p2.alg -a gap-affine-wfa $MODE --affine-penalties="0,5,3,2" >> $LOG 2>&1  
-    
-    \time -v $BIN -i $INPUT -o $OUTPUT/$NAME.affine.p3.alg -a gap-affine-wfa $MODE --affine-penalties="-5,1,2,1" >> $LOG 2>&1 
-    \time -v $BIN -i $INPUT -o $OUTPUT/$NAME.affine.p4.alg -a gap-affine-wfa $MODE --affine-penalties="-2,3,1,4" >> $LOG 2>&1 
-    \time -v $BIN -i $INPUT -o $OUTPUT/$NAME.affine.p5.alg -a gap-affine-wfa $MODE --affine-penalties="-3,5,3,2" >> $LOG 2>&1 
-    
+    \time -v $BIN -i $INPUT -o $OUTPUT/$NAME.affine.p0.alg -a gap-affine-wfa $MODE --affine-penalties="0,1,2,1" >> $LOG 2>&1
+    \time -v $BIN -i $INPUT -o $OUTPUT/$NAME.affine.p1.alg -a gap-affine-wfa $MODE --affine-penalties="0,3,1,4" >> $LOG 2>&1
+    \time -v $BIN -i $INPUT -o $OUTPUT/$NAME.affine.p2.alg -a gap-affine-wfa $MODE --affine-penalties="0,5,3,2" >> $LOG 2>&1
+
+    \time -v $BIN -i $INPUT -o $OUTPUT/$NAME.affine.p3.alg -a gap-affine-wfa $MODE --affine-penalties="-5,1,2,1" >> $LOG 2>&1
+    \time -v $BIN -i $INPUT -o $OUTPUT/$NAME.affine.p4.alg -a gap-affine-wfa $MODE --affine-penalties="-2,3,1,4" >> $LOG 2>&1
+    \time -v $BIN -i $INPUT -o $OUTPUT/$NAME.affine.p5.alg -a gap-affine-wfa $MODE --affine-penalties="-3,5,3,2" >> $LOG 2>&1
+
     # Heuristics
-    \time -v $BIN -i $INPUT -o $OUTPUT/$NAME.affine.wfapt0.alg -a gap-affine-wfa $MODE --wfa-heuristic=wfa-adaptive --wfa-heuristic-parameters=10,50,1 >> $LOG 2>&1 
-    \time -v $BIN -i $INPUT -o $OUTPUT/$NAME.affine.wfapt1.alg -a gap-affine-wfa $MODE --wfa-heuristic=wfa-adaptive --wfa-heuristic-parameters=10,50,10 >> $LOG 2>&1 
+    \time -v $BIN -i $INPUT -o $OUTPUT/$NAME.affine.wfapt0.alg -a gap-affine-wfa $MODE --wfa-heuristic=wfa-adaptive --wfa-heuristic-parameters=10,50,1 >> $LOG 2>&1
+    \time -v $BIN -i $INPUT -o $OUTPUT/$NAME.affine.wfapt1.alg -a gap-affine-wfa $MODE --wfa-heuristic=wfa-adaptive --wfa-heuristic-parameters=10,50,10 >> $LOG 2>&1
 done
 
 # Intra-tests
@@ -91,9 +96,9 @@ grep "Maximum resident set size" $LOG | awk '{print $6}' | sort -n > $LOG.mem
 
 # Display performance
 echo ">>> Performance Time (s) [base vs new]: "
-paste <(tail -n 4 $OUTPUT/wfa.utest.check/wfa.utest.log.time) <(tail -n 4 $OUTPUT/wfa.utest.log.time) 
+paste <(tail -n 4 $OUTPUT/wfa.utest.check/wfa.utest.log.time) <(tail -n 4 $OUTPUT/wfa.utest.log.time)
 echo ">>> Performance Mem (KB) [base vs new]: "
-paste <(tail -n 4 $OUTPUT/wfa.utest.check/wfa.utest.log.mem) <(tail -n 4 $OUTPUT/wfa.utest.log.mem) 
+paste <(tail -n 4 $OUTPUT/wfa.utest.check/wfa.utest.log.mem) <(tail -n 4 $OUTPUT/wfa.utest.log.mem)
 
 # Display correct
 ./tests/wfa.utest.cmp.sh $OUTPUT $OUTPUT/wfa.utest.check
@@ -110,4 +115,3 @@ else
   echo -e ">>>\n>>> ERROR\n>>>"
   exit -1
 fi
-

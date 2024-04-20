@@ -1,6 +1,6 @@
 ;; Set up build environment using GNU Guix packages
 ;;
-;; CC0 license, Pjotr Prins (c) 2022-2023
+;; CC0 license, Pjotr Prins (c) 2022-2024
 ;;
 ;; To use this file to build HEAD:
 ;;
@@ -44,6 +44,7 @@
   (gnu packages llvm)
   (gnu packages parallel)
   (gnu packages pkg-config)
+  (gnu packages time)
   (srfi srfi-1)
   (ice-9 popen)
   (ice-9 rdelim))
@@ -61,6 +62,7 @@
     (build-system cmake-build-system)
     (inputs
      `(("bash" ,bash)
+       ("time" ,time)
        ("gdb" ,gdb)))
     (native-inputs
      `(("pkg-config" ,pkg-config)))

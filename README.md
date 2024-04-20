@@ -16,7 +16,7 @@ The WFA2 library implements the WFA algorithm for different distance metrics and
 
 ### 1.3 Getting started
 
-Git clone and compile the library, tools, and examples (by default, use cmake).
+Git clone and compile the library, tools, and examples (by default, use cmake for the library and benchmark build).
 
 ```
 git clone https://github.com/smarco/WFA2-lib
@@ -34,13 +34,7 @@ cmake .. -DOPENMP=TRUE
 cmake .. -DCMAKE_BUILD_TYPE=Release -DEXTRA_FLAGS="-ftree-vectorizer-verbose=5"
 ```
 
-To build a shared library (static is the default).
-
-```
-cmake -DBUILD_SHARED_LIBS=ON
-```
-
-Alternatively, the Makefile build system can be used.
+Alternatively, the simple Makefile build system can be used.
 
 ```
 $> git clone https://github.com/smarco/WFA2-lib

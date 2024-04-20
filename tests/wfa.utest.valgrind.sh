@@ -12,7 +12,7 @@ OUTPUT="./tests"
 LOG="./tests/wfa.utest.log.valgrind"
 
 # Clear
-rm $OUTPUT/*.alg $LOG
+rm -f $OUTPUT/*.alg $LOG
 touch $LOG
 
 # Run tests
