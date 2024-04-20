@@ -14,7 +14,7 @@ LOWMEMORY="--wfa-memory-mode=med"
 BIWFA="--wfa-memory-mode=ultralow"
 
 # Clear
-rm $OUTPUT/*.log $OUTPUT/*.alg
+rm -f $OUTPUT/*.log $OUTPUT/*.alg
 
 # Utest for length=100
 \time -v ./bin/align_benchmark -a $ALGORITHM -i ../data/sim.l100.n100K.e2.seq -o $OUTPUT/sim.l100.e2.W.alg               &> $OUTPUT/sim.l100.e2.W.log
