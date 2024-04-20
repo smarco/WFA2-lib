@@ -18,8 +18,12 @@ then
     BIN=$(readlink -f "$PREFIX/../bin/align_benchmark")
     if [ ! -f "$BIN" ]
     then
-        echo "[Error] Binaries not built. Please run cmake or make"
-        exit -1
+        BIN=$(readlink -f "$PREFIX/../build/align_benchmark") # cmake
+        if [ ! -f "$BIN" ]
+        then
+            echo "[Error] Binaries not built. Please run cmake or make"
+            exit -1
+        fi
     fi
 fi
 
