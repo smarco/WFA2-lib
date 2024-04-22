@@ -143,7 +143,7 @@ void wavefront_penalties_set_affine2p(
              affine2p_penalties->gap_extension1 <= 0 ||
              affine2p_penalties->gap_opening2 < 0 ||
              affine2p_penalties->gap_extension2 <= 0) {
-    fprintf(stderr,"[WFA::Penalties] Penalties (X=%d,O1=%d,E1=%d,O2=%d,E2=%d) must be (X>0,O1>=0,E1>0,O1>=0,E1>0)\n",
+    fprintf(stderr,"[WFA::Penalties] Penalties (X=%d,O1=%d,E1=%d,O2=%d,E2=%d) must be (X>0,O1>=0,E1>0,O2>=0,E2>0)\n",
         affine2p_penalties->mismatch,
         affine2p_penalties->gap_opening1,
         affine2p_penalties->gap_extension1,
