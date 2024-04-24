@@ -696,7 +696,8 @@ void cigar_print(
   // Check null
   if (cigar_is_null(cigar)) return;
   // Generate and print operations
-  char* const buffer = malloc(2*(cigar->end_offset-cigar->begin_offset)+10);
+  const int buffer_length = 2*(cigar->end_offset-cigar->begin_offset)+20;
+  char* const buffer = malloc(buffer_length);
   cigar_sprint(buffer,cigar,print_matches);
   fprintf(stream,"%s",buffer); // Print
   // Free
@@ -744,7 +745,8 @@ void cigar_print_SAM_CIGAR(
   // Check null
   if (cigar_is_null(cigar)) return;
   // Generate and print operations
-  char* const buffer = malloc(2*(cigar->end_offset-cigar->begin_offset));
+  const int buffer_length = 4*(cigar->end_offset-cigar->begin_offset)+20;
+  char* const buffer = malloc(buffer_length);
   cigar_sprint_SAM_CIGAR(buffer,cigar,show_mismatches);
   fprintf(stream,"%s",buffer); // Print
   // Free
