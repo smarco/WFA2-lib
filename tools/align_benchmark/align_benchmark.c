@@ -29,7 +29,10 @@
  * DESCRIPTION: Wavefront Alignment Algorithms benchmarking tool
  */
 
+
+#ifdef WFA_PARALLEL
 #include <omp.h>
+#endif
 
 #include "align_benchmark_params.h"
 
