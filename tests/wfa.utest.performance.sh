@@ -2,7 +2,7 @@
 # PROJECT: Wavefront Alignments Algorithms (Unitary Tests)
 # LICENCE: MIT License 
 # AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
-# DESCRIPTION: WFA unitary tests (performance & correcness)
+# DESCRIPTION: WFA unitary tests (performance & correctness)
 # USAGE: ./wfa.utest.performance.sh
 
 # Config

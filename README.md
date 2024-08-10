@@ -4,7 +4,7 @@
 
 ### 1.1 What is WFA?
 
-The wavefront alignment (WFA) algorithm is an **exact** gap-affine algorithm that takes advantage of homologous regions between the sequences to accelerate the alignment process. Unlike to traditional dynamic programming algorithms that run in quadratic time, the WFA runs in time `O(ns+s^2)`, proportional to the sequence length `n` and the alignment score `s`, using `O(s^2)` memory (or `O(s)` using the ultralow/BiWFA mode). Moreover, the WFA algorithm exhibits simple computational patterns that the modern compilers can automatically vectorize for different architectures without adapting the code. To intuitively illustrate why the WFA algorithm is so interesting, look at the following figure. The left panel shows the cells computed by a classical dynamic programming based algorithm (like Smith-Waterman or Needleman Wunsch). In contrast, the right panel shows the cells computed by the WFA algorithm to obtain the same result (i.e., the optimal alignment).
+The wavefront alignment (WFA) algorithm is an **exact** gap-affine algorithm that takes advantage of homologous regions between the sequences to accelerate the alignment process. Unlike traditional dynamic programming algorithms that run in quadratic time complexity, the WFA runs in time `O(ns+s^2)`, proportional to the sequence length `n` and the alignment score `s`, using `O(s^2)` memory (or `O(s)` using the ultralow/BiWFA mode). Moreover, the WFA algorithm exhibits simple computational patterns that the modern compilers can automatically vectorize for different architectures without adapting the code. To intuitively illustrate why the WFA algorithm is so interesting, look at the following figure. The left panel shows the cells computed by a classical dynamic programming based algorithm (like Smith-Waterman or Needleman Wunsch). In contrast, the right panel shows the cells computed by the WFA algorithm to obtain the same result (i.e., the optimal alignment).
 
 <p align = "center">
 <img src = "img/wfa.vs.swg.png" width="750px">
@@ -12,11 +12,11 @@ The wavefront alignment (WFA) algorithm is an **exact** gap-affine algorithm tha
 
 ### 1.2 What is WFA2-lib?
 
-The WFA2 library implements the WFA algorithm for different distance metrics and alignment modes. It supports various [distance functions](#wfa2.distances): indel, edit, gap-linear, gap-affine, and dual-gap gap-affine distances. The library allows computing only the score or the complete alignment (i.e., CIGAR) (see [Alignment Scope](#wfa2.scope)). Also, the WFA2 library supports computing end-to-end alignments (a.k.a. global-alignment) and ends-free alignments (including semi-global, glocal, and extension alignment) (see [Alignment Span](#wfa2.span)). In the case of long and noisy alignments, the library provides different [low-memory modes](#wfa2.mem) that significantly reduce the memory usage of the naive WFA algorithm implementation. Beyond the exact-alignment modes, the WFA2 library implements [heuristic modes](#wfa2.heuristics) that dramatically accelerate the alignment computation. Additionally, the library provides many other support functions to display and verify alignment results, control the overall memory usage, and more.
+The WFA2 library implements the WFA algorithm for different distance metrics and alignment modes. It supports various [distance functions](#wfa2.distances) (e.g., indel, edit, gap-linear, gap-affine, and dual-gap gap-affine). The library allows computing only the score or the complete alignment (i.e., CIGAR) (see [Alignment Scope](#wfa2.scope)). Also, the WFA2 library supports computing end-to-end alignments (a.k.a. global-alignment) and ends-free alignments (including semi-global, glocal, and extension alignment) (see [Alignment Span](#wfa2.span)). In the case of long and noisy alignments, the library provides different [low-memory modes](#wfa2.mem) that significantly reduce the memory usage of the naive WFA algorithm implementation. Beyond the exact-alignment modes, the WFA2 library implements [heuristic modes](#wfa2.heuristics) that dramatically accelerate the alignment computation. Additionally, the library provides many other support functions to display and verify alignment results, control the overall memory usage, and more.
 
 ### 1.3 Getting started
 
-Git clone and compile the library, tools, and examples (by default, use cmake for the library and benchmark build).
+Git clone and compile the library, tools, and examples (by default, use `cmake` for the library and benchmark build).
 
 ```
 git clone https://github.com/smarco/WFA2-lib
@@ -37,16 +37,16 @@ cmake .. -DCMAKE_BUILD_TYPE=Release -DEXTRA_FLAGS="-ftree-vectorizer-verbose=5"
 Alternatively, the simple Makefile build system can be used.
 
 ```
-$> git clone https://github.com/smarco/WFA2-lib
-$> cd WFA2-lib
-$> make clean all
+git clone https://github.com/smarco/WFA2-lib
+cd WFA2-lib
+make clean all
 ```
 
-Also, it is possible to build WFA2-lib in a GNU Guix container, for more information see [guix.scm](./guix.scm).
+Also, it is possible to build WFA2-lib in a GNU Guix container, for more information, see [guix.scm](./guix.scm).
 
 ### 1.4 Contents (where to go from here)
 
-Section [WFA2-lib features](#wfa2.features) explores the most relevant options and features of the library. Then, the folder [tools/](tools/README.md) contains tools that can be used to execute and understand the WFA2 library capabilities. Additionally, the folder [examples/](examples/README.md) contains simple examples illustrating how to integrate the WFA2 code into any tool.
+Section [WFA2-lib features](#wfa2.features) explores the most relevant options and features of the library. Then, the folder [tools/](tools/README.md) contains tools for executing and understanding the WFA2 library capabilities. Additionally, the folder [examples/](examples/README.md) contains simple examples illustrating how to integrate the WFA2 code into any tool.
 
 * [Using WFA2-lib in your project](#wfa2.programming)
     * [Simple C example](#wfa2.programming.c)
@@ -64,13 +64,13 @@ Section [WFA2-lib features](#wfa2.features) explores the most relevant options a
 
 ### 1.5 Important notes and clarifications
 
-- The WFA algorithm is an **exact algorithm**. If no heuristic is applied (e.g., band or adaptive pruning), the core algorithm guarantees to always find the optimal solution (i.e., best alignment score). Since its first release, some authors have referenced the WFA as approximated or heuristic, which is NOT the case.
+- The WFA algorithm is an **exact algorithm**. If no heuristic is applied (e.g., band or adaptive pruning), the core algorithm guarantees to always find the optimal solution (i.e., best alignment score). Since its first release, some authors have incorrectly referred to the WFA as approximated or heuristic; this is not the case.
 
 
-- Given two sequences of length `n`, traditional dynamic-programming (DP) based methods (like Smith-Waterman or Needleman-Wunsch) compute the optimal alignment in `O(n^2)` time, using `O(n^2)` memory. In contrast, the WFA algorithm requires `O(ns+s^2)` time and `O(s^2)` memory (being `s` the optimal alignment score). Therefore, **the memory consumption of the WFA algorithm is not intrinsically higher than that of other methods**. Most DP-based methods can use heuristics (like banded, X-drop, or Z-drop) to reduce the execution time and the memory usage at the expense of losing accuracy. Likewise, **the WFA algorithm can also use heuristics to reduce the execution time and memory usage**. Moreover, the memory mode `ultralow` uses the BiWFA algorithm to execute in `O(ns+s^2)` time and linear `O(s)` memory.
+- Given two sequences of length `n`, traditional dynamic-programming (DP) based methods (like Smith-Waterman or Needleman-Wunsch) compute the optimal alignment in `O(n^2)` time, using `O(n^2)` memory. In contrast, the WFA algorithm requires `O(ns+s^2)` time and `O(s^2)` memory (with `s` the optimal alignment score). Therefore, **the memory consumption of the WFA algorithm is not intrinsically higher than that of other methods**. Most DP-based methods can use heuristics (like banded, X-drop, or Z-drop) to reduce the execution time and the memory usage at the expense of losing accuracy. Likewise, **the WFA algorithm can also use heuristics to reduce the execution time and memory usage**. Moreover, the memory mode `ultralow` uses the BiWFA algorithm to execute in `O(ns+s^2)` time and linear `O(s)` memory.
 
 
-- **A note for the fierce competitors.** I can understand that science and publishing have become a fierce competition these days. Many researchers want their methods to be successful and popular, seeking funding, tenure, or even fame. If you are going to benchmark the WFA using the least favourable configuration, careless programming, and a disadvantageous setup, please, go ahead. But remember, researchers like you have put a lot of effort into developing the WFA. We all joined this "competition" because we sought to find better methods that could truly help other researchers. So, try to be nice, tone down the marketing, and produce fair evaluations and honest publications.
+- **A note for the fierce competitors.** I can understand that science and publishing have become a fierce competition these days. Many researchers want their methods to be successful and popular, seeking funding, tenure, or even fame. If you are going to benchmark the WFA using the least favourable configuration, careless programming, and a disadvantageous setup, please, go ahead. But remember, researchers like you have put a lot of effort into developing the WFA. We all sought to find better methods that could truly help other researchers. So, try to be nice, tone down the marketing, and produce fair evaluations and honest publications.
 
 ## <a name="wfa2.programming"></a> 2. USING WFA2-LIB IN YOUR PROJECT
 
@@ -410,7 +410,9 @@ The WFA2 library allows computing alignments with different spans or shapes. Alt
 
 ### <a name="wfa2.mem"></a> 3.4 Memory modes
 
-The WFA2 library implements various memory modes: `wavefront_memory_high`, `wavefront_memory_med`, `wavefront_memory_low`, and , `wavefront_memory_ultralow`. These modes allow regulating the overall memory consumption at the expense of execution time. The standard WFA algorithm, which stores explicitly all wavefronts in memory, correspond to the mode `wavefront_memory_high`. The other methods progressively reduce memory usage at the expense of slightly larger alignment times. These memory modes can be used transparently with other alignment options and generate identical results. Note that this option does not affect the score-only alignment mode (it already uses a minimal memory footprint of `O(s)`).
+The WFA2 library implements various memory modes: `wavefront_memory_high`, `wavefront_memory_med`, `wavefront_memory_low`, and `wavefront_memory_ultralow`. These modes allow regulating the overall memory consumption. The standard WFA algorithm, which stores explicitly all wavefronts in memory, correspond to the mode `wavefront_memory_high`. Memory modes `wavefront_memory_med` and `wavefront_memory_low` progressively reduce memory usage at the expense of slightly larger alignment times. Memory mode `wavefront_memory_ultralow` utilizes the BiWFA algorithm using a minimal memory footprint of `O(s)` and the same `O(ns+s^2)` time complexity as the original WFA. In practice, `wavefront_memory_ultralow` can outperform `wavefront_memory_high` because the latter experiences memory slowdowns when aligning long and noisy sequences.
+
+Memory modes can be used transparently with other alignment options and generate identical results. Note that this option does not affect the score-only alignment mode, which always uses a minimal memory footprint of `O(s)`).
 
 ```C
   wavefront_aligner_attr_t attributes = wavefront_aligner_attr_default;
@@ -421,7 +423,7 @@ The WFA2 library implements various memory modes: `wavefront_memory_high`, `wave
 
 The WFA algorithm can be used combined with many heuristics to reduce the alignment time and memory used. As it happens to other alignment methods, heuristics can result in suboptimal solutions and loss of accuracy. Moreover, some heuristics may drop the alignment if the sequences exceed certain divergence thresholds (i.e., x-drop/z-drop). Due to the popularity and efficiency of these methods, the WFA2 library implements many of these heuristics. Note, **it is not about how little DP-matrix you compute, but about how good/accurate the resulting alignments are.**
 
-WFA2's heuristics are classified into the following categories: ['wf-adaptive'](#wfa2.wfadaptive), ['drops'](#wfa2.drops), and ['bands'](#wfa2.bands). It is possible to combine a maximum of one heuristic from each category (OR-ing the strategy values or using the API). In the case of using multiple heuristics, these will applied in cascade, starting with 'wf-adaptive', then 'drops', and finally 'bands'.
+WFA2's heuristics are classified into the following categories: ['wf-adaptive'](#wfa2.wfadaptive), ['drops'](#wfa2.drops), and ['bands'](#wfa2.bands). It is possible to combine a maximum of one heuristic from each category (OR-ing the strategy values or using the API). In the case of using multiple heuristics, these will be applied in cascade, starting with 'wf-adaptive', then 'drops', and finally 'bands'.
 
 - **None (for comparison)**. If no heuristic is used, the WFA behaves exploring cells of the DP-matrix in increasing score order (increasing scores correspond to colours from blue to red).
 
@@ -558,12 +560,12 @@ WFA2's heuristics are classified into the following categories: ['wf-adaptive'](
 - Note that edit and LCS are distance metrics and, thus, the score computed is always positive. However, using weighted distances (e.g., gap-linear and gap-affine) the alignment score is computed using the selected penalties (i.e., the alignment score can be positive or negative). For instance, if WFA2-lib is executed using $M=0$, the final score is expected to be negative.
 
 
-- All WFA2-lib algorithms/variants are stable. That is, for alignments having the same score, the all alignment modes always resolve ties (between M, X, I,and D) using the same criteria: M (highest prio) > X > D > I (lowest prio). Only the memory mode `ultralow` (BiWFA) resolves ties differently (although the results are still optimal).
+- All WFA2-lib algorithms/variants are stable. That is, for alignments with the same score, all alignment modes always resolve ties (between M, X, I,and D) using the same criteria: M (highest prio) > X > D > I (lowest prio). Only the memory mode `ultralow` (BiWFA) resolves ties differently (although the results are still optimal).
 
 
 - WFA2lib follows the convention that describes how to transform the (1) Pattern/Query into the (2) Text/Database/Reference used in classic pattern matching papers. However, the SAM CIGAR specification describes the transformation from (2) Reference to (1) Query. If you want CIGAR-compliant alignments, swap the pattern and text sequences argument when calling the WFA2lib's align functions (to convert all the Ds into Is and vice-versa).
 
-## <a name="wfa2.complains"></a> 4. REPORTING BUGS AND FEATURE REQUEST
+## <a name="wfa2.bugs"></a> 4. REPORTING BUGS AND FEATURE REQUEST
 
 Feedback and bug reporting is highly appreciated. Please report any issue or suggestion on github or email to the main developer (santiagomsola@gmail.com). Don't hesitate to contact us
 if:
@@ -576,7 +578,7 @@ if:
 
 WFA2-lib is distributed under MIT licence.
 
-## <a name="wfa2.complains"></a> 6. AUTHORS
+## <a name="wfa2.authors"></a> 6. AUTHORS
 
 [Santiago Marco-Sola](https://github.com/smarco) (santiagomsola@gmail.com) is the main developer and the person you should address your complaints.
 
@@ -586,7 +588,7 @@ WFA2-lib is distributed under MIT licence.
 
 Miquel Moretó has contributed with fruitful technical discussions and tireless efforts seeking funding, so we could keep working on this project.
 
-## <a name="wfa2.complains"></a> 7. ACKNOWLEDGEMENTS
+## <a name="wfa2.ack"></a> 7. ACKNOWLEDGEMENTS
 
 - Baoxing Song and Buckler's lab for their interest and help promoting the WFA and pushing for the inclusion of new features.
 
