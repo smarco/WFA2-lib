@@ -91,7 +91,7 @@ FORCE_INLINE  __m256i avx2_lzcnt_epi32(__m256i v) {
 /*
  * Wavefront-Extend Inner Kernel (SIMD AVX2/AVX512)
  */
-FORCE_INLINE void wavefront_extend_matches_packed_end2end_avx2(
+FORCE_NO_INLINE void wavefront_extend_matches_packed_end2end_avx2(
     wavefront_aligner_t* const wf_aligner,
     wavefront_t* const mwavefront,
     const int lo,
@@ -170,7 +170,7 @@ FORCE_INLINE void wavefront_extend_matches_packed_end2end_avx2(
 }
 
 
-wf_offset_t wavefront_extend_matches_packed_end2end_max_avx2(
+FORCE_NO_INLINE wf_offset_t wavefront_extend_matches_packed_end2end_max_avx2(
     wavefront_aligner_t* const wf_aligner,
     wavefront_t* const mwavefront,
     const int lo,
@@ -200,12 +200,14 @@ wf_offset_t wavefront_extend_matches_packed_end2end_max_avx2(
  
 
   for (k=k_min;k<k_min+loop_peeling_iters;k++) {
-    const wf_offset_t offset = offsets[k];
+    wf_offset_t offset = offsets[k];
     if (offset < 0) continue;
-    offsets[k] = wavefront_extend_matches_packed_kernel(wf_aligner,k,offset);   
-    const wf_offset_t antidiag = WAVEFRONT_ANTIDIAGONAL(k,offsets[k]);
+    offset     =  wavefront_extend_matches_packed_kernel(wf_aligner,k,offset);  
+    offsets[k] = offset;
+    const wf_offset_t antidiag = WAVEFRONT_ANTIDIAGONAL(k,offset);
     if (max_antidiag < antidiag) max_antidiag = antidiag;
   }
+
   if (num_of_diagonals < elems_per_register) return max_antidiag;
 
   k_min += loop_peeling_iters;
@@ -235,20 +237,20 @@ wf_offset_t wavefront_extend_matches_packed_end2end_max_avx2(
     __m256i clz_vector        = avx2_lzcnt_epi32(xor_result_vector);
 
     __m256i equal_chars = _mm256_srli_epi32(clz_vector,3);
-    offsets_vector      = _mm256_add_epi32 (offsets_vector,equal_chars);
-   
+    offsets_vector      = _mm256_add_epi32 (offsets_vector, equal_chars);
+
     _mm256_storeu_si256((__m256i*)&offsets[k],offsets_vector);
-    
+
+    __m256i offset_max = _mm256_and_si256(null_mask, offsets_vector);
+    offset_max         = _mm256_slli_epi32(offset_max, 1); 
+    offset_max         = _mm256_sub_epi32(offset_max, ks);
+    max_antidiag_v     = _mm256_max_epi32(max_antidiag_v, offset_max);
+    ks                 = _mm256_add_epi32(ks, eights);
+
     //(2*(offset)-(k))
-    if(mask == 0) 
+    if(mask != 0) 
     {
-      __m256i offset_max = _mm256_slli_epi32(offsets_vector, 1); 
-      offset_max         = _mm256_sub_epi32(offset_max, ks);
-      max_antidiag_v     = _mm256_max_epi32(max_antidiag_v, offset_max);
-    }
-    else
-    {
-      wf_offset_t max_antidiagonal_buffer[8]; 
+      const wf_offset_t max_antidiagonal_buffer[8]; 
       _mm256_storeu_si256((__m256i*)&max_antidiagonal_buffer[0], max_antidiag_v);
       
       for (int i = 0; i < 8; i++)
@@ -261,11 +263,12 @@ wf_offset_t wavefront_extend_matches_packed_end2end_max_avx2(
       {
         int tz = __builtin_ctz(mask);
         int curr_k = k + (tz/4);
-        const wf_offset_t offset = offsets[curr_k];
+        wf_offset_t offset = offsets[curr_k];
         // Extend offset
         if (offset >= 0) {
-          offsets[curr_k] = wavefront_extend_matches_packed_kernel(wf_aligner,curr_k,offset);
-          const wf_offset_t antidiag = WAVEFRONT_ANTIDIAGONAL(curr_k,offsets[curr_k]);
+          offset          = wavefront_extend_matches_packed_kernel(wf_aligner,curr_k,offset);
+          offsets[curr_k] = offset;
+          const wf_offset_t antidiag = WAVEFRONT_ANTIDIAGONAL(curr_k, offset);
           if (max_antidiag < antidiag) max_antidiag = antidiag;
         } else {
           offsets[curr_k] = WAVEFRONT_OFFSET_NULL;
@@ -274,10 +277,9 @@ wf_offset_t wavefront_extend_matches_packed_end2end_max_avx2(
       }
       max_antidiag_v = _mm256_set1_epi32(max_antidiag);
     }
-    ks = _mm256_add_epi32(ks, eights);
   }
 
-  wf_offset_t max_antidiagonal_buffer[8]; 
+  const wf_offset_t max_antidiagonal_buffer[8]; 
   _mm256_storeu_si256((__m256i*)&max_antidiagonal_buffer[0], max_antidiag_v);
   for (int i = 0; i < 8; i++)
   {
@@ -288,7 +290,7 @@ wf_offset_t wavefront_extend_matches_packed_end2end_max_avx2(
 }
 
 
-FORCE_INLINE bool wavefront_extend_matches_packed_endsfree_avx2(
+FORCE_NO_INLINE bool wavefront_extend_matches_packed_endsfree_avx2(
     wavefront_aligner_t* const wf_aligner,
     wavefront_t* const mwavefront,
     const int score,
@@ -317,18 +319,19 @@ FORCE_INLINE bool wavefront_extend_matches_packed_endsfree_avx2(
                                               4 , 5, 6, 7, 0, 1, 2 ,3);
   
   for (k=k_min;k<k_min+loop_peeling_iters;k++) {
-    const wf_offset_t offset = offsets[k];
+    wf_offset_t offset = offsets[k];
     if (offset < 0) continue;
-    offsets[k] = wavefront_extend_matches_packed_kernel(wf_aligner,k,offset);   
+    offset = wavefront_extend_matches_packed_kernel(wf_aligner,k,offset);  
+    offsets[k] = offset; 
     // Check ends-free reaching boundaries
     if (wavefront_termination_endsfree(wf_aligner,mwavefront,score,k,offset)) {
       return true; // Quit (we are done)
     }
   }
 
-  // Alignment not finished
-  if (num_of_diagonals < elems_per_register) return false;;
+  if (num_of_diagonals < elems_per_register) return false;
 
+  // Alignment not finished
   k_min += loop_peeling_iters;
   __m256i ks = _mm256_set_epi32 (
       k_min+7,k_min+6,k_min+5,k_min+4,
@@ -354,12 +357,11 @@ FORCE_INLINE bool wavefront_extend_matches_packed_endsfree_avx2(
     xor_result_vector         = _mm256_shuffle_epi8(xor_result_vector, vecShuffle);
     __m256i clz_vector        = avx2_lzcnt_epi32(xor_result_vector);
 
-    __m256i equal_chars = _mm256_srli_epi32(clz_vector,3);
+    __m256i equal_chars = _mm256_srli_epi32(clz_vector, 3);
     offsets_vector      = _mm256_add_epi32 (offsets_vector,equal_chars);
     ks                  = _mm256_add_epi32(ks, eights);
     _mm256_storeu_si256((__m256i*)&offsets[k],offsets_vector);
     
-    //(2*(offset)-(k))
     if(mask == 0) continue; 
 
     while (mask != 0) 
@@ -370,6 +372,9 @@ FORCE_INLINE bool wavefront_extend_matches_packed_endsfree_avx2(
       // Extend offset
       if (offset >= 0) {
         offsets[curr_k] = wavefront_extend_matches_packed_kernel(wf_aligner,curr_k,offset);
+        if (wavefront_termination_endsfree(wf_aligner,mwavefront,score,curr_k,offsets[curr_k])) {
+          return true; // Quit (we are done)
+        }
       } else {
         offsets[curr_k] = WAVEFRONT_OFFSET_NULL;
       }
@@ -377,8 +382,8 @@ FORCE_INLINE bool wavefront_extend_matches_packed_endsfree_avx2(
     }
   }
   for (k=k_min; k <= k_max; k++) {
-    wf_offset_t offset = offsets[k];
-    if (offset == WAVEFRONT_OFFSET_NULL) continue;
+    const wf_offset_t offset = offsets[k];
+    if (offset < 0) continue;
     // Check ends-free reaching boundaries
     if (wavefront_termination_endsfree(wf_aligner,mwavefront,score,k,offset)) {
       return true; // Quit (we are done)
