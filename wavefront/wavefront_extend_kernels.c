@@ -149,9 +149,9 @@ FORCE_NO_INLINE bool wavefront_extend_matches_packed_endsfree(
     const int score,
     const int lo,
     const int hi) {
- // #if __AVX2__ &&  __BYTE_ORDER == __LITTLE_ENDIAN
-  //  return wavefront_extend_matches_packed_end2end_max_avx2(wf_aligner, mwavefront, lo, hi);
-  //#else
+  #if __AVX2__ &&  __BYTE_ORDER == __LITTLE_ENDIAN
+     return wavefront_extend_matches_packed_endsfree_avx2(wf_aligner, mwavefront, score, lo, hi);
+  #else
   // Parameters
   wf_offset_t* const offsets = mwavefront->offsets;
   int k;
@@ -178,7 +178,7 @@ FORCE_NO_INLINE bool wavefront_extend_matches_packed_endsfree(
   }
   // Alignment not finished
   return false;
-  //#endif
+  #endif
 }
 /*
  * Wavefront-Extend Inner Kernel (Custom match function)

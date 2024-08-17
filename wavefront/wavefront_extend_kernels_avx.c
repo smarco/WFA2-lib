@@ -35,6 +35,7 @@
 #include "wavefront_heuristic.h"
 #include "wavefront_extend_kernels.h"
 #include "wavefront_extend_kernels_avx.h"
+#include "wavefront_termination.h"
 
 #if __AVX2__
 #include <immintrin.h>
@@ -90,7 +91,7 @@ FORCE_INLINE  __m256i avx2_lzcnt_epi32(__m256i v) {
 /*
  * Wavefront-Extend Inner Kernel (SIMD AVX2/AVX512)
  */
-FORCE_NO_INLINE void wavefront_extend_matches_packed_end2end_avx2(
+FORCE_INLINE void wavefront_extend_matches_packed_end2end_avx2(
     wavefront_aligner_t* const wf_aligner,
     wavefront_t* const mwavefront,
     const int lo,
@@ -169,7 +170,7 @@ FORCE_NO_INLINE void wavefront_extend_matches_packed_end2end_avx2(
 }
 
 
-FORCE_NO_INLINE wf_offset_t wavefront_extend_matches_packed_end2end_max_avx2(
+wf_offset_t wavefront_extend_matches_packed_end2end_max_avx2(
     wavefront_aligner_t* const wf_aligner,
     wavefront_t* const mwavefront,
     const int lo,
@@ -284,6 +285,106 @@ FORCE_NO_INLINE wf_offset_t wavefront_extend_matches_packed_end2end_max_avx2(
     if (max_antidiag < antidiag) max_antidiag = antidiag;
   }
   return max_antidiag; 
+}
+
+
+FORCE_INLINE bool wavefront_extend_matches_packed_endsfree_avx2(
+    wavefront_aligner_t* const wf_aligner,
+    wavefront_t* const mwavefront,
+    const int score,
+    const int lo,
+    const int hi) {
+  // Parameters
+
+  const int elems_per_register = 8;
+  const char* pattern = wf_aligner->sequences.pattern;
+  const char* text    = wf_aligner->sequences.text;
+  
+  wf_offset_t* const offsets = mwavefront->offsets;
+  
+  int k_min = lo;
+  int k_max = hi;
+ 
+  int num_of_diagonals   = k_max - k_min + 1;
+  int loop_peeling_iters = num_of_diagonals % elems_per_register;
+  int k;
+  
+  const __m256i vector_null = _mm256_set1_epi32(-1);
+  const __m256i eights      = _mm256_set1_epi32(8);
+  const __m256i vecShuffle  = _mm256_set_epi8(28,29,30,31,24,25,26,27,
+                                              20,21,22,23,16,17,18,19,
+                                              12,13,14,15, 8, 9,10,11,
+                                              4 , 5, 6, 7, 0, 1, 2 ,3);
+  
+  for (k=k_min;k<k_min+loop_peeling_iters;k++) {
+    const wf_offset_t offset = offsets[k];
+    if (offset < 0) continue;
+    offsets[k] = wavefront_extend_matches_packed_kernel(wf_aligner,k,offset);   
+    // Check ends-free reaching boundaries
+    if (wavefront_termination_endsfree(wf_aligner,mwavefront,score,k,offset)) {
+      return true; // Quit (we are done)
+    }
+  }
+
+  // Alignment not finished
+  if (num_of_diagonals < elems_per_register) return false;;
+
+  k_min += loop_peeling_iters;
+  __m256i ks = _mm256_set_epi32 (
+      k_min+7,k_min+6,k_min+5,k_min+4,
+      k_min+3,k_min+2,k_min+1,k_min);
+
+
+  for (k=k_min; k<=k_max; k+=elems_per_register) {
+    __m256i offsets_vector = _mm256_lddqu_si256 ((__m256i*)&offsets[k]);
+    __m256i h_vector       = offsets_vector;
+    __m256i v_vector       = _mm256_sub_epi32(offsets_vector,ks);
+    
+    // NULL offsets will read at index 0 (avoid segfaults)
+    __m256i null_mask = _mm256_cmpgt_epi32(offsets_vector, vector_null);
+    v_vector = _mm256_and_si256(null_mask, v_vector);
+    h_vector = _mm256_and_si256(null_mask, h_vector);
+    
+    __m256i pattern_vector = _mm256_i32gather_epi32((int const*)&pattern[0],v_vector,1);
+    __m256i text_vector    = _mm256_i32gather_epi32((int const*)&text[0],h_vector,1);
+    __m256i vector_mask    = _mm256_cmpeq_epi32(text_vector, pattern_vector);
+    int mask               = _mm256_movemask_epi8(vector_mask);
+
+    __m256i xor_result_vector = _mm256_xor_si256(pattern_vector,text_vector);
+    xor_result_vector         = _mm256_shuffle_epi8(xor_result_vector, vecShuffle);
+    __m256i clz_vector        = avx2_lzcnt_epi32(xor_result_vector);
+
+    __m256i equal_chars = _mm256_srli_epi32(clz_vector,3);
+    offsets_vector      = _mm256_add_epi32 (offsets_vector,equal_chars);
+    ks                  = _mm256_add_epi32(ks, eights);
+    _mm256_storeu_si256((__m256i*)&offsets[k],offsets_vector);
+    
+    //(2*(offset)-(k))
+    if(mask == 0) continue; 
+
+    while (mask != 0) 
+    {
+      int tz = __builtin_ctz(mask);
+      int curr_k = k + (tz/4);
+      const wf_offset_t offset = offsets[curr_k];
+      // Extend offset
+      if (offset >= 0) {
+        offsets[curr_k] = wavefront_extend_matches_packed_kernel(wf_aligner,curr_k,offset);
+      } else {
+        offsets[curr_k] = WAVEFRONT_OFFSET_NULL;
+      }
+      mask &= (0xfffffff0 << tz);
+    }
+  }
+  for (k=k_min; k <= k_max; k++) {
+    wf_offset_t offset = offsets[k];
+    if (offset == WAVEFRONT_OFFSET_NULL) continue;
+    // Check ends-free reaching boundaries
+    if (wavefront_termination_endsfree(wf_aligner,mwavefront,score,k,offset)) {
+      return true; // Quit (we are done)
+    }
+  }
+  return false;  
 }
 
 #endif // AVX2
