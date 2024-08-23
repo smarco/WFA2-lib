@@ -104,7 +104,11 @@ FORCE_NO_INLINE void wavefront_extend_matches_packed_end2end(
     const int lo,
     const int hi) {
   #if __AVX2__ &&  __BYTE_ORDER == __LITTLE_ENDIAN
-    wavefront_extend_matches_packed_end2end_avx2(wf_aligner, mwavefront, lo, hi);
+    #if __AVX512CD__ && __AVX512VL__
+      wavefront_extend_matches_packed_end2end_avx512(wf_aligner, mwavefront, lo, hi);
+    #else
+      wavefront_extend_matches_packed_end2end_avx2(wf_aligner, mwavefront, lo, hi);
+    #endif
   #else
     wf_offset_t* const offsets = mwavefront->offsets;
     int k;
@@ -124,7 +128,11 @@ FORCE_NO_INLINE wf_offset_t wavefront_extend_matches_packed_end2end_max(
     const int lo,
     const int hi) {
   #if __AVX2__ &&  __BYTE_ORDER == __LITTLE_ENDIAN
-    return wavefront_extend_matches_packed_end2end_max_avx2(wf_aligner, mwavefront, lo, hi);
+    #if __AVX512CD__ && __AVX512VL__
+      return wavefront_extend_matches_packed_end2end_max_avx512(wf_aligner, mwavefront, lo, hi);
+    #else
+      return wavefront_extend_matches_packed_end2end_max_avx2(wf_aligner, mwavefront, lo, hi);
+    #endif
   #else
     wf_offset_t* const offsets = mwavefront->offsets;
     wf_offset_t max_antidiag = 0;
@@ -150,7 +158,11 @@ FORCE_NO_INLINE bool wavefront_extend_matches_packed_endsfree(
     const int lo,
     const int hi) {
   #if __AVX2__ &&  __BYTE_ORDER == __LITTLE_ENDIAN
-     return wavefront_extend_matches_packed_endsfree_avx2(wf_aligner, mwavefront, score, lo, hi);
+    #if __AVX512CD__ && __AVX512VL__
+      return wavefront_extend_matches_packed_endsfree_avx512(wf_aligner, mwavefront, score, lo, hi);
+    #else
+      return wavefront_extend_matches_packed_endsfree_avx2(wf_aligner, mwavefront, score, lo, hi);
+    #endif
   #else
   // Parameters
   wf_offset_t* const offsets = mwavefront->offsets;
