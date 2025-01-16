@@ -42,6 +42,39 @@ void wavefront_extend_matches_packed_end2end_avx2(
     const int lo,
     const int hi);
 
+wf_offset_t wavefront_extend_matches_packed_end2end_max_avx2(
+    wavefront_aligner_t* const wf_aligner,
+    wavefront_t* const mwavefront,
+    const int lo,
+    const int hi);
+
+bool wavefront_extend_matches_packed_endsfree_avx2(
+    wavefront_aligner_t* const wf_aligner,
+    wavefront_t* const mwavefront,
+    const int score,
+    const int lo,
+    const int hi);
+
+#if __AVX512CD__ && __AVX512VL__
+void wavefront_extend_matches_packed_end2end_avx512(
+    wavefront_aligner_t* const wf_aligner,
+    wavefront_t* const mwavefront,
+    const int lo,
+    const int hi);
+
+wf_offset_t wavefront_extend_matches_packed_end2end_max_avx512(
+    wavefront_aligner_t* const wf_aligner,
+    wavefront_t* const mwavefront,
+    const int lo,
+    const int hi);
+
+bool wavefront_extend_matches_packed_endsfree_avx512(
+    wavefront_aligner_t* const wf_aligner,
+    wavefront_t* const mwavefront,
+    const int score,
+    const int lo,
+    const int hi);
+#endif
 #endif // AVX2
 
 #endif /* WAVEFRONT_EXTEND_AVX_H_ */
