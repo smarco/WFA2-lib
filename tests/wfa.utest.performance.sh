@@ -10,8 +10,8 @@ OUTPUT=./tests
 
 ALGORITHM="gap-affine-wfa"  
 REDUCTION="--wfa-heuristic=wfa-adaptive --wfa-heuristic-parameters 10,50,1"
-LOWMEMORY="--wfa-memory-mode=med"
-BIWFA="--wfa-memory-mode=ultralow"
+LOWMEMORY="--wfa-memory=med"
+BIWFA="--wfa-memory=ultralow"
 
 # Clear
 rm -f $OUTPUT/*.log $OUTPUT/*.alg
