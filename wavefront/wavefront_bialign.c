@@ -235,8 +235,13 @@ void wavefront_bialign_breakpoint_indel2indel(
     const int dh_0 = WAVEFRONT_H(k_0,doffset_0);
     const int dh_1 = WAVEFRONT_H(k_1,doffset_1);
     // Check breakpoint d2d
-    if (dh_0 + dh_1 >= text_length && dh_0 <= text_length && dh_1 <= text_length) {
+    if (dh_0 + dh_1 >= text_length) {
       if (breakpoint_forward) {
+        // Check out-of-bounds coordinates
+        const int v = WAVEFRONT_V(k_0,dh_0);
+        const int h = WAVEFRONT_H(k_0,dh_0);
+        if (v > pattern_length || h > text_length) continue;
+        // Set breakpoint
         breakpoint->score_forward = score_0;
         breakpoint->score_reverse = score_1;
         breakpoint->k_forward = k_0;
@@ -244,6 +249,11 @@ void wavefront_bialign_breakpoint_indel2indel(
         breakpoint->offset_forward = dh_0;
         breakpoint->offset_reverse = dh_1;
       } else {
+        // Check out-of-bounds coordinates
+        const int v = WAVEFRONT_V(k_1,dh_1);
+        const int h = WAVEFRONT_H(k_1,dh_1);
+        if (v > pattern_length || h > text_length) continue;
+        // Set breakpoint
         breakpoint->score_forward = score_1;
         breakpoint->score_reverse = score_0;
         breakpoint->k_forward = k_1;
@@ -259,13 +269,8 @@ void wavefront_bialign_breakpoint_indel2indel(
     }
   }
   // Finish the remaining iterations in a vectorized manner
-  const __m512i sixteens = _mm512_set1_epi32(16);
   const __m512i tlens = _mm512_set1_epi32(text_length);
-  const __m512i rev = _mm512_setr_epi32(15,14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0);
-  const __m512i min_hi_vector = _mm512_set1_epi32(min_hi);
-  __m512i ks = _mm512_set_epi32 (
-    k_0+15,k_0+14,k_0+13,k_0+12,k_0+11,k_0+10,k_0+9,k_0+8,
-    k_0+7,k_0+6,k_0+5,k_0+4,k_0+3,k_0+2,k_0+1,k_0);
+  const __m512i rev   = _mm512_setr_epi32(15,14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0);
   for (;k_0<=min_hi;k_0+=elems_per_register) {
     const int k_1 = WAVEFRONT_K_INVERSE(k_0,pattern_length,text_length);
     // Fetch offsets
@@ -273,52 +278,55 @@ void wavefront_bialign_breakpoint_indel2indel(
     __m512i doffsets_1 = _mm512_loadu_si512((__m512i*)&dwf_1->offsets[k_1-elems_per_register+1]);
     // doffsets_1 are in reverse order, so we need to reverse them
     doffsets_1 = _mm512_permutexvar_epi32(rev, doffsets_1);
-    __m512i dh_0s = doffsets_0;
-    __m512i dh_1s = doffsets_1;
-    __mmask16 bp_found_mask =_mm512_cmpge_epi32_mask(_mm512_add_epi32(dh_0s, dh_1s), tlens);
-    bp_found_mask = _mm512_mask_cmple_epi32_mask(bp_found_mask, ks, min_hi_vector);
-    bp_found_mask = _mm512_mask_cmple_epi32_mask(bp_found_mask, dh_0s, tlens);
-    bp_found_mask = _mm512_mask_cmple_epi32_mask(bp_found_mask, dh_1s, tlens);
-
-    if (bp_found_mask) {
-      // A breakpoint has been found! Check in which exact diagonal it is
-      // This can be done directly from the mask and vector registers, for now,
-      // it is implemented like the scalar implementation. This only happens
-      // when a BP is found, so it should not be a bottleneck.
-      int initial_k0 = k_0;
-      for (;k_0<initial_k0+elems_per_register;k_0++) {
-        const int k_1 = WAVEFRONT_K_INVERSE(k_0,pattern_length,text_length);
-        const wf_offset_t doffset_0 = dwf_0->offsets[k_0];
-        const wf_offset_t doffset_1 = dwf_1->offsets[k_1];
-        const int dh_0 = WAVEFRONT_H(k_0,doffset_0);
-        const int dh_1 = WAVEFRONT_H(k_1,doffset_1);
-        // Check breakpoint d2d
-        if (dh_0 + dh_1 >= text_length && dh_0 <= text_length && dh_1 <= text_length) {
-          if (breakpoint_forward) {
-            breakpoint->score_forward = score_0;
-            breakpoint->score_reverse = score_1;
-            breakpoint->k_forward = k_0;
-            breakpoint->k_reverse = k_1;
-            breakpoint->offset_forward = dh_0;
-            breakpoint->offset_reverse = dh_1;
-          } else {
-            breakpoint->score_forward = score_1;
-            breakpoint->score_reverse = score_0;
-            breakpoint->k_forward = k_1;
-            breakpoint->k_reverse = k_0;
-            breakpoint->offset_forward = dh_1;
-            breakpoint->offset_reverse = dh_0;
-          }
+    __mmask16 bp_found_mask =_mm512_cmpge_epi32_mask(_mm512_add_epi32(doffsets_0, doffsets_1), tlens);
+    if (__builtin_expect(bp_found_mask == 0, 1)) continue;
+    // A breakpoint has been found! Check in which exact diagonal it is
+    // This can be done directly from the mask and vector registers, for now,
+    // it is implemented like the scalar implementation. This only happens
+    // when a BP is found, so it should not be a bottleneck.
+    int initial_k0 = k_0;
+    for (;k_0<initial_k0+elems_per_register;k_0++) {
+      const int k_1 = WAVEFRONT_K_INVERSE(k_0,pattern_length,text_length);
+      const wf_offset_t doffset_0 = dwf_0->offsets[k_0];
+      const wf_offset_t doffset_1 = dwf_1->offsets[k_1];
+      const int dh_0 = WAVEFRONT_H(k_0,doffset_0);
+      const int dh_1 = WAVEFRONT_H(k_1,doffset_1);
+      // Check breakpoint d2d
+      if (dh_0 + dh_1 >= text_length) {
+        if (breakpoint_forward) {
+          // Check out-of-bounds coordinates
+          const int v = WAVEFRONT_V(k_0,dh_0);
+          const int h = WAVEFRONT_H(k_0,dh_0);
+          if (v > pattern_length || h > text_length) continue;
+          // Set breakpoint
+          breakpoint->score_forward = score_0;
+          breakpoint->score_reverse = score_1;
+          breakpoint->k_forward = k_0;
+          breakpoint->k_reverse = k_1;
+          breakpoint->offset_forward = dh_0;
+          breakpoint->offset_reverse = dh_1;
           breakpoint->score = score_0 + score_1 - gap_open;
           breakpoint->component = component;
-          // wavefront_bialign_debug(breakpoint,-1); // DEBUG
-          // No need to keep searching
+          return;
+        } else {
+          // Check out-of-bounds coordinates
+          const int v = WAVEFRONT_V(k_1,dh_1);
+          const int h = WAVEFRONT_H(k_1,dh_1);
+          if (v > pattern_length || h > text_length) continue;
+          // Set breakpoint
+          breakpoint->score_forward = score_1;
+          breakpoint->score_reverse = score_0;
+          breakpoint->k_forward = k_1;
+          breakpoint->k_reverse = k_0;
+          breakpoint->offset_forward = dh_1;
+          breakpoint->offset_reverse = dh_0;
+          breakpoint->score = score_0 + score_1 - gap_open;
+          breakpoint->component = component;
           return;
         }
       }
     }
-    // Update ks for the next iteration
-    ks = _mm512_add_epi32(ks, sixteens);
+    k_0 = initial_k0;
   }
 #else // Scalar implementation of the bialign_breakpoint_indel2indel
   // Parameters
@@ -452,13 +460,8 @@ void wavefront_bialign_breakpoint_m2m(
     }
   }
   // Finish the remaining iterations in a vectorized manner
-  const __m512i sixteens = _mm512_set1_epi32(16);
   const __m512i tlens = _mm512_set1_epi32(text_length);
-  const __m512i rev = _mm512_setr_epi32(15,14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0);
-  const __m512i min_hi_vector = _mm512_set1_epi32(min_hi);
-  __m512i ks = _mm512_set_epi32 (
-    k_0+15,k_0+14,k_0+13,k_0+12,k_0+11,k_0+10,k_0+9,k_0+8,
-    k_0+7,k_0+6,k_0+5,k_0+4,k_0+3,k_0+2,k_0+1,k_0);
+  const __m512i rev   = _mm512_setr_epi32(15,14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0);
   for (;k_0<=min_hi;k_0+=elems_per_register) {
     const int k_1 = WAVEFRONT_K_INVERSE(k_0,pattern_length,text_length);
     // Fetch offsets
@@ -508,8 +511,6 @@ void wavefront_bialign_breakpoint_m2m(
         }
       }
     }
-    // Update ks for the next iteration
-    ks = _mm512_add_epi32(ks, sixteens);
   }
 #else // Scalar implementation of the bialign_breakpoint_indel2indel
   wavefront_sequences_t* const sequences = &wf_aligner->sequences;
