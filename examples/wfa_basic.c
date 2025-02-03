@@ -29,13 +29,20 @@
  * DESCRIPTION: WFA Sample-Code
  */
 
-#include "utils/commons.h"
 #include "wavefront/wavefront_align.h"
+#include "wavefront/wavefront_plot.h"
 
-int main(int argc,char* argv[]) {
-  // Patter & Text
-  char* pattern = "TCTTTACTCGCGCGTTGGAGAAATACAATAGT";
-  char* text    = "TCTATACTGCGCGTTTGGAGAAATAAAATAGT";
+int main(int argc, char* argv[]) {
+    // Check if pattern and text are provided as command-line arguments
+    if (argc != 3) {
+        fprintf(stderr, "Usage: %s <pattern> <text>\n", argv[0]);
+        return 1;
+    }
+
+    // Pattern & Text from command-line arguments
+    char* pattern = argv[1];
+    char* text = argv[2];
+    
   // Configure alignment attributes
   wavefront_aligner_attr_t attributes = wavefront_aligner_attr_default;
   attributes.distance_metric = gap_affine;
@@ -43,6 +50,11 @@ int main(int argc,char* argv[]) {
   attributes.affine_penalties.mismatch = 4;
   attributes.affine_penalties.gap_opening = 6;
   attributes.affine_penalties.gap_extension = 2;
+    // attributes.memory_mode = wavefront_memory_ultralow;
+
+    attributes.plot.enabled = 1;
+    attributes.plot.resolution_points = 2000;
+    attributes.plot.align_level = 0;
   // Initialize Wavefront Aligner
   wavefront_aligner_t* const wf_aligner = wavefront_aligner_new(&attributes);
   // Align
@@ -55,6 +67,8 @@ int main(int argc,char* argv[]) {
       cigar_score_gap_affine(wf_aligner->cigar,&attributes.affine_penalties));
   cigar_print_pretty(stderr,wf_aligner->cigar,
       pattern,strlen(pattern),text,strlen(text));
+    
+  wavefront_plot_print(stderr, wf_aligner);
   // Free
   wavefront_aligner_delete(wf_aligner);
 }

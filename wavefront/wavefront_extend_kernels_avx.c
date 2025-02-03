@@ -16,7 +16,7 @@
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS Oavx_wavefront_extensionR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
@@ -39,6 +39,9 @@
 
 #if __AVX2__
 #include <immintrin.h>
+
+extern void avx_wavefront_extension_iteration(__m512i* offsets, __m512i* ks, const __m512i* sixteens, __mmask16* mask, const char* pattern, const char* text);
+
 /*
  * Wavefront-Extend Inner Kernel (Scalar)
  */
@@ -389,7 +392,19 @@ FORCE_NO_INLINE bool wavefront_extend_matches_packed_endsfree_avx2(
       return true; // Quit (we are done)
     }
   }
-  return false;  
+  return false;
+}
+
+void print_m512i(__m512i vec) {
+    // Use an array to store the vector's content for printing
+    int32_t values[16]; // __m512i contains 16 32-bit integers
+    _mm512_storeu_si512((__m512i*)values, vec); // Store the vector into the array
+
+    printf("Vector contents: ");
+    for (int i = 0; i < 16; i++) {
+        printf("%d ", values[i]);
+    }
+    printf("\n");
 }
 
 
@@ -436,26 +451,31 @@ FORCE_NO_INLINE void wavefront_extend_matches_packed_end2end_avx512(
       k_min+15,k_min+14,k_min+13,k_min+12,k_min+11,k_min+10,k_min+9,k_min+8,
       k_min+7,k_min+6,k_min+5,k_min+4,k_min+3,k_min+2,k_min+1,k_min);
 
-
   for (k=k_min; k<=k_max; k+=elems_per_register) {
     __m512i offsets_vector = _mm512_loadu_si512 ((__m512i*)&offsets[k]);
-    __m512i h_vector       = offsets_vector;
-    __m512i v_vector       = _mm512_sub_epi32(offsets_vector, ks);
-    
+    // __m512i h_vector       = offsets_vector;
+    //__m512i v_vector       = _mm512_sub_epi32(offsets_vector, ks);
+    //ks                  = _mm512_add_epi32 (ks, sixteens);
+
+    __mmask16 mask;
+      print_m512i(offsets_vector);
+    avx_wavefront_extension_iteration(&offsets_vector, &ks, &sixteens, &mask, pattern, text);
+      
+      print_m512i(offsets_vector);
+      
     // NULL offsets will read at index 0 (avoid segfaults)
-    __mmask16 null_mask    = _mm512_cmpgt_epi32_mask(offsets_vector, vector_null);
-    __m512i pattern_vector = _mm512_mask_i32gather_epi32(zero_vector, null_mask, v_vector, &pattern[0], 1);
-    __m512i text_vector    = _mm512_mask_i32gather_epi32(zero_vector, null_mask, h_vector, &text[0],    1);
-    __mmask16 mask         = _mm512_mask_cmpeq_epi32_mask(null_mask, pattern_vector, text_vector);
+    // __mmask16 null_mask    = _mm512_cmpgt_epi32_mask(offsets_vector, vector_null);
+    // __m512i pattern_vector = _mm512_mask_i32gather_epi32(zero_vector, null_mask, v_vector, &pattern[0], 1);
+    // __m512i text_vector    = _mm512_mask_i32gather_epi32(zero_vector, null_mask, h_vector, &text[0],    1);
+    // __mmask16 mask         = _mm512_mask_cmpeq_epi32_mask(null_mask, pattern_vector, text_vector);
 
-    __m512i xor_result_vector = _mm512_xor_si512(pattern_vector,text_vector);
-    xor_result_vector         = _mm512_shuffle_epi8(xor_result_vector, vecShuffle);
-    __m512i clz_vector        = _mm512_maskz_lzcnt_epi32(null_mask, xor_result_vector);
+    // __m512i xor_result_vector = _mm512_xor_si512(pattern_vector,text_vector);
+    // xor_result_vector         = _mm512_shuffle_epi8(xor_result_vector, vecShuffle);
+    // __m512i clz_vector        = _mm512_maskz_lzcnt_epi32(null_mask, xor_result_vector);
 
-    __m512i equal_chars = _mm512_srli_epi32(clz_vector, 3);
-    offsets_vector      = _mm512_maskz_add_epi32(null_mask, offsets_vector, equal_chars);
-    ks                  = _mm512_add_epi32 (ks, sixteens);
-
+    // __m512i equal_chars = _mm512_srli_epi32(clz_vector, 3);
+    // offsets_vector      = _mm512_maskz_add_epi32(null_mask, offsets_vector, equal_chars);
+    
     _mm512_storeu_si512((__m512*)&offsets[k],offsets_vector);
     
     if(mask == 0) continue;
@@ -483,7 +503,6 @@ FORCE_NO_INLINE wf_offset_t wavefront_extend_matches_packed_end2end_max_avx512(
     const int lo,
     const int hi) {
   // Parameters
-  
   const int elems_per_register = 16;
   const char* pattern = wf_aligner->sequences.pattern;
   const char* text    = wf_aligner->sequences.text;
@@ -588,7 +607,7 @@ FORCE_NO_INLINE bool wavefront_extend_matches_packed_endsfree_avx512(
     const int score,
     const int lo,
     const int hi) {
-  
+
     // Parameters
   wf_offset_t* const offsets = mwavefront->offsets;
   int k_min = lo;
