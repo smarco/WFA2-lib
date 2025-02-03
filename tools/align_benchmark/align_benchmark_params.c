@@ -30,6 +30,8 @@
 
 #include "align_benchmark_params.h"
 
+#define CHECK_SENTINEL(sent, errmsg) if ((sent)==NULL) { fprintf(stderr, "Error: " errmsg); exit(1); }
+
 /*
  * Default parameters
  */
@@ -291,36 +293,49 @@ void parse_arguments(
      */
     case 'p': { // --linear-penalties M,X,I
       char* sentinel = strtok(optarg,",");
+      CHECK_SENTINEL(sentinel, "Invalid --linear-penalties\n");
       parameters.linear_penalties.match = atoi(sentinel);
       sentinel = strtok(NULL,",");
+      CHECK_SENTINEL(sentinel, "Invalid --linear-penalties\n");
       parameters.linear_penalties.mismatch = atoi(sentinel);
       sentinel = strtok(NULL,",");
+      CHECK_SENTINEL(sentinel, "Invalid --linear-penalties\n");
       parameters.linear_penalties.indel = atoi(sentinel);
       break;
     }
     case 'g': { // --affine-penalties M,X,O,E
       char* sentinel = strtok(optarg,",");
+      CHECK_SENTINEL(sentinel, "Invalid --affine-penalties\n");
       parameters.affine_penalties.match = atoi(sentinel);
       sentinel = strtok(NULL,",");
+      CHECK_SENTINEL(sentinel, "Invalid --affine-penalties\n");
       parameters.affine_penalties.mismatch = atoi(sentinel);
       sentinel = strtok(NULL,",");
+      CHECK_SENTINEL(sentinel, "Invalid --affine-penalties\n");
       parameters.affine_penalties.gap_opening = atoi(sentinel);
       sentinel = strtok(NULL,",");
+      CHECK_SENTINEL(sentinel, "Invalid --affine-penalties\n");
       parameters.affine_penalties.gap_extension = atoi(sentinel);
       break;
     }
     case 900: { // --affine2p-penalties M,X,O1,E1,O2,E2
       char* sentinel = strtok(optarg,",");
+      CHECK_SENTINEL(sentinel, "Invalid --affine2p-penalties\n");
       parameters.affine2p_penalties.match = atoi(sentinel);
       sentinel = strtok(NULL,",");
+      CHECK_SENTINEL(sentinel, "Invalid --affine2p-penalties\n");
       parameters.affine2p_penalties.mismatch = atoi(sentinel);
       sentinel = strtok(NULL,",");
+      CHECK_SENTINEL(sentinel, "Invalid --affine2p-penalties\n");
       parameters.affine2p_penalties.gap_opening1 = atoi(sentinel);
       sentinel = strtok(NULL,",");
+      CHECK_SENTINEL(sentinel, "Invalid --affine2p-penalties\n");
       parameters.affine2p_penalties.gap_extension1 = atoi(sentinel);
       sentinel = strtok(NULL,",");
+      CHECK_SENTINEL(sentinel, "Invalid --affine2p-penalties\n");
       parameters.affine2p_penalties.gap_opening2 = atoi(sentinel);
       sentinel = strtok(NULL,",");
+      CHECK_SENTINEL(sentinel, "Invalid --affine2p-penalties\n");
       parameters.affine2p_penalties.gap_extension2 = atoi(sentinel);
       break;
     }
@@ -347,13 +362,18 @@ void parse_arguments(
         parameters.align_span_endsfree = true;
         // Parse arguments
         char* sentinel = strtok(optarg,",");
+        CHECK_SENTINEL(sentinel, "Invalid --wfa-span\n");
         sentinel = strtok(NULL,","); // Skip span-keyword
+        CHECK_SENTINEL(sentinel, "Invalid --wfa-span\n");
         parameters.pattern_begin_free = atof(sentinel);
         sentinel = strtok(NULL,",");
+        CHECK_SENTINEL(sentinel, "Invalid --wfa-span\n");
         parameters.pattern_end_free = atof(sentinel);
         sentinel = strtok(NULL,",");
+        CHECK_SENTINEL(sentinel, "Invalid --wfa-span\n");
         parameters.text_begin_free = atof(sentinel);
         sentinel = strtok(NULL,",");
+        CHECK_SENTINEL(sentinel, "Invalid --wfa-span\n");
         parameters.text_end_free = atof(sentinel);
       } else {
         fprintf(stderr,"Option '--wfa-span' must be in {'global','extension','ends-free'}\n");
@@ -395,12 +415,15 @@ void parse_arguments(
       break;
     case 1004: { // --wfa-heuristic-parameters  <P1>,<P2>[,<P3>]
       char* sentinel = strtok(optarg,",");
+      CHECK_SENTINEL(sentinel, "Invalid --wfa-heuristic-parameters\n");
       const int p1 = atoi(sentinel);
       parameters.wfa_heuristic_p1 = p1;
       sentinel = strtok(NULL,",");
+      CHECK_SENTINEL(sentinel, "Invalid --wfa-heuristic-parameters\n");
       const int p2 = atoi(sentinel);
       parameters.wfa_heuristic_p2 = p2;
       sentinel = strtok(NULL,",");
+      CHECK_SENTINEL(sentinel, "Invalid --wfa-heuristic-parameters\n");
       if (sentinel != NULL) {
         const int p3 = atoi(sentinel);
         parameters.wfa_heuristic_p3 = p3;
