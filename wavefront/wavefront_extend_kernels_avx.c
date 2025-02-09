@@ -40,7 +40,7 @@
 #if __AVX2__
 #include <immintrin.h>
 
-extern void avx_wavefront_extension_iteration(__m512i* offsets, __m512i* ks, const __m512i* sixteens, __mmask16* mask, const char* pattern, const char* text);
+extern void avx_wavefront_extension_iteration(__m512i* offsets, __m512i* ks, __mmask16* mask, const char* pattern, const char* text, __m512i* debug);
 
 /*
  * Wavefront-Extend Inner Kernel (Scalar)
@@ -407,6 +407,14 @@ void print_m512i(__m512i vec) {
     printf("\n");
 }
 
+void print_mask(__mmask16 mask) {
+    printf("Mask: ");
+    for (int i = 15; i >= 0; i--) { // Print from MSB to LSB
+        printf("%d", (mask >> i) & 1);
+    }
+    printf("\n");
+}
+
 
 #if __AVX512CD__ && __AVX512VL__
 /*
@@ -451,31 +459,48 @@ FORCE_NO_INLINE void wavefront_extend_matches_packed_end2end_avx512(
       k_min+15,k_min+14,k_min+13,k_min+12,k_min+11,k_min+10,k_min+9,k_min+8,
       k_min+7,k_min+6,k_min+5,k_min+4,k_min+3,k_min+2,k_min+1,k_min);
 
+    int yes = 0;
+
   for (k=k_min; k<=k_max; k+=elems_per_register) {
-    __m512i offsets_vector = _mm512_loadu_si512 ((__m512i*)&offsets[k]);
-    // __m512i h_vector       = offsets_vector;
-    //__m512i v_vector       = _mm512_sub_epi32(offsets_vector, ks);
-    //ks                  = _mm512_add_epi32 (ks, sixteens);
-
-    __mmask16 mask;
-      print_m512i(offsets_vector);
-    avx_wavefront_extension_iteration(&offsets_vector, &ks, &sixteens, &mask, pattern, text);
-      
-      print_m512i(offsets_vector);
-      
-    // NULL offsets will read at index 0 (avoid segfaults)
-    // __mmask16 null_mask    = _mm512_cmpgt_epi32_mask(offsets_vector, vector_null);
-    // __m512i pattern_vector = _mm512_mask_i32gather_epi32(zero_vector, null_mask, v_vector, &pattern[0], 1);
-    // __m512i text_vector    = _mm512_mask_i32gather_epi32(zero_vector, null_mask, h_vector, &text[0],    1);
-    // __mmask16 mask         = _mm512_mask_cmpeq_epi32_mask(null_mask, pattern_vector, text_vector);
-
-    // __m512i xor_result_vector = _mm512_xor_si512(pattern_vector,text_vector);
-    // xor_result_vector         = _mm512_shuffle_epi8(xor_result_vector, vecShuffle);
-    // __m512i clz_vector        = _mm512_maskz_lzcnt_epi32(null_mask, xor_result_vector);
-
-    // __m512i equal_chars = _mm512_srli_epi32(clz_vector, 3);
-    // offsets_vector      = _mm512_maskz_add_epi32(null_mask, offsets_vector, equal_chars);
+      __m512i offsets_vector = _mm512_loadu_si512 ((__m512i*)&offsets[k]);
+      __mmask16 mask;
+      __mmask16 null_mask = mask;
+      __m512i debug;
+      if (k_min >= -20) {
+              // fprintf(stderr, "%d %d %d: ", k_min, k, k_max);
+              // print_m512i(offsets_vector);
+              // print_mask(null_mask);
+        }
+      if (yes) {
+        avx_wavefront_extension_iteration(&offsets_vector, &ks, &mask, pattern, text, &debug);
+        null_mask = mask;
+      }
+      else {
+        __m512i h_vector       = offsets_vector;
+        __m512i v_vector       = _mm512_sub_epi32(offsets_vector, ks);
+          
+          // NULL offsets will read at index 0 (avoid segfaults)
+        null_mask    = _mm512_cmpgt_epi32_mask(offsets_vector, vector_null);
+        __m512i pattern_vector = _mm512_mask_i32gather_epi32(zero_vector, null_mask, v_vector, &pattern[0], 1);
+        __m512i text_vector    = _mm512_mask_i32gather_epi32(zero_vector, null_mask, h_vector, &text[0],    1);
+        mask         = _mm512_mask_cmpeq_epi32_mask(null_mask, pattern_vector, text_vector);
     
+        __m512i xor_result_vector = _mm512_xor_si512(pattern_vector,text_vector);
+        xor_result_vector         = _mm512_shuffle_epi8(xor_result_vector, vecShuffle);
+           debug = xor_result_vector;
+        __m512i clz_vector        = _mm512_maskz_lzcnt_epi32(null_mask, xor_result_vector);
+    
+        __m512i equal_chars = _mm512_srli_epi32(clz_vector, 3);
+        offsets_vector      = _mm512_maskz_add_epi32(null_mask, offsets_vector, equal_chars);
+    
+         ks                  = _mm512_add_epi32 (ks, sixteens);
+      }
+      if (k_min >= -20) {
+              fprintf(stderr, "%d %d %d: ", k_min, k, k_max);
+              print_m512i(debug);
+              // print_mask(mask);
+        }
+      
     _mm512_storeu_si512((__m512*)&offsets[k],offsets_vector);
     
     if(mask == 0) continue;

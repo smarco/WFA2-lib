@@ -10,104 +10,50 @@ avx_wavefront_extension_iteration:
     xor rax, rax
 
     vpxord zmm6, zmm6, zmm6
-    vpandnd zmm5, zmm6, zmm6
+    vpternlogd zmm5, zmm6, zmm6, 0xFF
     vmovdqu8 zmm10, [vecShuffle]
 
     vmovdqu32 zmm0, [rdi]
     vmovdqu32 zmm1, zmm0
     vmovdqu32 zmm2, [rsi]
-    vmovdqu32 zmm3, [rdx]
     vpsubd zmm4, zmm0, zmm2
 
-    vmovdqu32 [rcx], zmm4
-    vpaddd zmm4, zmm2, zmm3
+    vpcmpgtd k1, zmm0, zmm6
+    kmovd k3, k1
 
-    vmovdqu32 [rsi], zmm4
+    vpxord zmm7, zmm7, zmm7
+    vpgatherdd zmm7{k3}, [rcx+zmm4*1]
+    kmovd k3, k1
 
-    vpcmpgtd k1, zmm0, zmm5
+    vpxord zmm8, zmm8, zmm8
+    vpgatherdd zmm8{k3}, [r8+zmm1*1]
 
-    vpgatherdd zmm7{k1}, [r8+zmm4*1]
-    vpgatherdd zmm8{k1}, [r9+zmm1*1]
+    vpcmpeqd k2{k1}, zmm7, zmm8
 
-    vpcmpeqd k2, zmm7, zmm8
+    kmovd [rdx], k2
 
     vpxord zmm9, zmm7, zmm8
     vpshufb zmm9, zmm9, zmm10
 
+    vmovdqu32 [r9], zmm9
+
     vplzcntd zmm11{k1}{z}, zmm9
+    
     vpsrld zmm12, zmm11, 3
-    vpaddd zmm0{k1}{z}, zmm0, zmm12
 
-    vmovdqu32 [rdi], zmm0
+    vpaddd zmm12, zmm0, zmm12
+    vpxord zmm0, zmm0, zmm0
+    vmovdqa32 zmm0{k1}{z}, zmm12
 
-    ret
+    sub rsp, 16
+    mov rax, rsp
+    add rsp, 16
 
+    mov dword [rax], 0x10
+    vpbroadcastd zmm3, [rax]
+    vpaddd zmm4, zmm2, zmm3
+    vmovdqu32 [rsi], zmm4
 
-load_avx2_sequence:
-    ; assignment
-    vmovdqu ymm0, [rdi]
-    vmovdqu ymm1, [rsi]
-
-    ; compare sequences
-    vpcmpeqb ymm2, ymm0, ymm1
-
-    ; return to third parameter
-    vmovdqu [rdx], ymm2
-    vmovdqu [rsi], ymm0
-
-    vpcmpeqb ymm2, ymm0, ymm1
-
-
-
-    ; first pass
-    vextracti128 xmm3, ymm2, 0
-    vextracti128 xmm4, ymm2, 1
-    vpaddb xmm3, xmm3, xmm4
-
-    ; second pass
-    vpextrq r8, xmm3, 0
-    vpextrq r9, xmm3, 1
-    movq xmm4, r8
-    movq xmm5, r9
-    vpaddb xmm3, xmm4, xmm5
-
-    pxor xmm4, xmm4
-    pxor xmm5, xmm5
-
-    ; third pass
-    vpextrd rcx, xmm3, 0
-    vpextrd rdx, xmm3, 1
-    movq xmm4, rcx
-    movq xmm5, rdx
-    vpaddb xmm3, xmm4, xmm5
-
-    pxor xmm4, xmm4
-    pxor xmm5, xmm5
-    xor ecx, ecx
-    xor edx, edx
-
-    ; fourth pass
-    vpextrw rcx, xmm3, 0
-    vpextrw rdx, xmm3, 1
-    movq xmm4, rcx
-    movq xmm5, rdx
-    vpaddb xmm3, xmm4, xmm5
-
-    pxor xmm4, xmm4
-    pxor xmm5, xmm5
-    xor rcx, rcx
-    xor rdx, rdx
-
-    ; fifth pass
-    vpextrb rcx, xmm3, 0
-    vpextrb rdx, xmm3, 1
-    movq xmm4, rcx
-    movq xmm5, rdx
-    vpaddb xmm3, xmm4, xmm5
-
-    mov eax, 0xFF
-    vmovd ebx, xmm3
-    sub eax, ebx
-    add eax, 0x01
+    vmovdqu32 [rdi], zmm12
 
     ret

@@ -68,7 +68,7 @@ int main(int argc, char* argv[]) {
   cigar_print_pretty(stderr,wf_aligner->cigar,
       pattern,strlen(pattern),text,strlen(text));
     
-  wavefront_plot_print(stderr, wf_aligner);
+  // wavefront_plot_print(stderr, wf_aligner);
   // Free
   wavefront_aligner_delete(wf_aligner);
 }
