@@ -415,6 +415,18 @@ void print_mask(__mmask16 mask) {
     printf("\n");
 }
 
+void print_m512i_bytes(__m512i vec) {
+    // __m512i contains 64 bytes (512 bits)
+    uint8_t values[64];  
+    _mm512_storeu_si512((__m512i*)values, vec); // Store the vector into the array
+
+    printf("Vector contents (bytes): ");
+    for (int i = 0; i < 64; i++) {
+        printf("%02X ", values[i]);  // Print as two-digit hex values
+    }
+    printf("\n");
+}
+
 
 #if __AVX512CD__ && __AVX512VL__
 /*
@@ -459,7 +471,7 @@ FORCE_NO_INLINE void wavefront_extend_matches_packed_end2end_avx512(
       k_min+15,k_min+14,k_min+13,k_min+12,k_min+11,k_min+10,k_min+9,k_min+8,
       k_min+7,k_min+6,k_min+5,k_min+4,k_min+3,k_min+2,k_min+1,k_min);
 
-    int yes = 0;
+    int yes = 1;
 
   for (k=k_min; k<=k_max; k+=elems_per_register) {
       __m512i offsets_vector = _mm512_loadu_si512 ((__m512i*)&offsets[k]);
@@ -487,17 +499,18 @@ FORCE_NO_INLINE void wavefront_extend_matches_packed_end2end_avx512(
     
         __m512i xor_result_vector = _mm512_xor_si512(pattern_vector,text_vector);
         xor_result_vector         = _mm512_shuffle_epi8(xor_result_vector, vecShuffle);
-           debug = xor_result_vector;
         __m512i clz_vector        = _mm512_maskz_lzcnt_epi32(null_mask, xor_result_vector);
-    
+        debug = vecShuffle;
+          
         __m512i equal_chars = _mm512_srli_epi32(clz_vector, 3);
         offsets_vector      = _mm512_maskz_add_epi32(null_mask, offsets_vector, equal_chars);
     
          ks                  = _mm512_add_epi32 (ks, sixteens);
       }
       if (k_min >= -20) {
-              fprintf(stderr, "%d %d %d: ", k_min, k, k_max);
-              print_m512i(debug);
+              // fprintf(stderr, "%d %d %d: ", k_min, k, k_max);
+              // print_m512i_bytes(debug);
+              // print_m512i(debug);
               // print_mask(mask);
         }
       

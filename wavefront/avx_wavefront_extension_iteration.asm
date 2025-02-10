@@ -1,5 +1,6 @@
 section .data
-vecShuffle db 60,61,62,63,56,57,58,59,52,53,54,55,48,49,50,51,44,45,46,47,40,41,42,43,36,37,38,39,32,33,34,35,28,29,30,31,24,25,26,27,20,21,22,23,16,17,18,19,12,13,14,15,8,9,10,11,4,5,6,7,0,1,2,3
+vecShuffle db 3,2,1,0,7,6,5,4,11,10,9,8,15,14,13,12,19,18,17,16,23,22,21,20,27,26,25,24,31,30,29,28,35,34,33,32,39,38,37,36,43,42,41,40,47,46,45,44,51,50,49,48,55,54,53,52,59,58,57,56,63,62,61,60
+
 
 section .text
 global avx_wavefront_extension_iteration
@@ -35,9 +36,9 @@ avx_wavefront_extension_iteration:
     vpxord zmm9, zmm7, zmm8
     vpshufb zmm9, zmm9, zmm10
 
-    vmovdqu32 [r9], zmm9
-
     vplzcntd zmm11{k1}{z}, zmm9
+
+    vmovdqu32 [r9], zmm10
     
     vpsrld zmm12, zmm11, 3
 

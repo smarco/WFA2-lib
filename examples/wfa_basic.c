@@ -50,7 +50,7 @@ int main(int argc, char* argv[]) {
   attributes.affine_penalties.mismatch = 4;
   attributes.affine_penalties.gap_opening = 6;
   attributes.affine_penalties.gap_extension = 2;
-    // attributes.memory_mode = wavefront_memory_ultralow;
+    attributes.memory_mode = wavefront_memory_ultralow;
 
     attributes.plot.enabled = 1;
     attributes.plot.resolution_points = 2000;
@@ -68,7 +68,7 @@ int main(int argc, char* argv[]) {
   cigar_print_pretty(stderr,wf_aligner->cigar,
       pattern,strlen(pattern),text,strlen(text));
     
-  // wavefront_plot_print(stderr, wf_aligner);
+    wavefront_plot_print(stderr, wf_aligner);
   // Free
   wavefront_aligner_delete(wf_aligner);
 }
