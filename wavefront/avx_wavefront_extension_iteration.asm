@@ -37,8 +37,6 @@ avx_wavefront_extension_iteration:
     vpshufb zmm9, zmm9, zmm10
 
     vplzcntd zmm11{k1}{z}, zmm9
-
-    vmovdqu32 [r9], zmm10
     
     vpsrld zmm12, zmm11, 3
 
