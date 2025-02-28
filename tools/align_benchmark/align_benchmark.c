@@ -502,6 +502,10 @@ void align_benchmark_sequential() {
   free(parameters.line2);
 }
 void align_benchmark_parallel() {
+  #ifndef WFA_PARALLEL
+    fprintf(stderr,"Parallel execution not supported. Compile with BUILD_WFA_PARALLEL=1\n");
+    exit(1);
+  #endif
   // PROFILE
   timer_reset(&parameters.timer_global);
   // Open input file

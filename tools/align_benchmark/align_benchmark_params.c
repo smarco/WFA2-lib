@@ -170,7 +170,12 @@ void usage() {
       "          --check-bandwidth INT                                         \n"
       "          --plot                                                        \n"
       "        [System]                                                        \n"
+      #ifndef WFA_PARALLEL
+      "          --num-threads|t INT [n/a]  Compile with BUILD_WFA_PARALLEL=1  \n"
+      "                                     to be able to use this feature.    \n"
+      #else
       "          --num-threads|t INT                                           \n"
+      #endif
       "          --batch-size INT                                              \n"
     //"          --progress|P INT                                              \n"
       "          --verbose|v INT                                               \n"
