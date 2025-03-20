@@ -30,6 +30,7 @@
  */
 
 #include "utils/commons.h"
+#include "alignment/cigar_utils.h"
 #include "wavefront_aligner.h"
 #include "wavefront_components.h"
 #include "wavefront_heuristic.h"

@@ -10,6 +10,7 @@ FOLDER_BUILD=../build
 MODULES=affine_penalties \
         affine2p_penalties \
         cigar \
+        cigar_utils \
         score_matrix
         
 SRCS=$(addsuffix .c, $(MODULES))

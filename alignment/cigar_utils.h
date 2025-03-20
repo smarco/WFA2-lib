@@ -26,62 +26,55 @@
  *
  * PROJECT: Wavefront Alignment Algorithms
  * AUTHOR(S): Santiago Marco-Sola <santiagomsola@gmail.com>
- * DESCRIPTION: Gap-Affine 2-Pieces Matrix (for dynamic-programming methods)
  */
 
-#ifndef AFFINE2P_MATRIX_H_
-#define AFFINE2P_MATRIX_H_
+#ifndef CIGAR_UTILS_H_
+#define CIGAR_UTILS_H_
 
-#include "alignment/cigar.h"
-#include "system/mm_allocator.h"
-#include "utils/commons.h"
+#include "cigar.h"
 
 /*
- * Constants
+ * Compare & Copy
  */
-#define AFFINE2P_SCORE_MAX (10000000)
+int cigar_cmp(
+    const cigar_t* const cigar_a,
+    const cigar_t* const cigar_b);
+void cigar_copy(
+    cigar_t* const cigar_dst,
+    const cigar_t* const cigar_src);
 
 /*
- * Affine 2-piece Matrix
+ * Mismatch Discovery
  */
-typedef struct {
-  int M;  // Alignment matching/mismatching
-  int I1; // Alignment ends with a gap in the reference (insertion)
-  int D1; // Alignment ends with a gap in the read (deletion)
-  int I2; // Alignment ends with a gap in the reference (insertion)
-  int D2; // Alignment ends with a gap in the read (deletion)
-} affine2p_cell_t;
-typedef struct {
-  // Matrix
-  affine2p_cell_t** columns;
-  int num_rows;
-  int num_columns;
-} affine2p_matrix_t;
-
-/*
- * Gap-Affine Matrix Setup
- */
-void affine2p_matrix_allocate(
-    affine2p_matrix_t* const matrix,
-    const int num_rows,
-    const int num_columns,
-    mm_allocator_t* const mm_allocator);
-void affine2p_matrix_free(
-    affine2p_matrix_t* const matrix,
-    mm_allocator_t* const mm_allocator);
-
-/*
- * Display
- */
-void affine2p_matrix_print(
-    FILE* const stream,
-    const affine2p_matrix_t* const matrix,
+void cigar_discover_mismatches(
     const char* const pattern,
-    const char* const text);
-void affine2p_matrix_print_extended(
-    FILE* const stream,
-    const affine2p_matrix_t* const matrix,
-    const char* const pattern,
-    const char* const text);
+    const int pattern_length,
+    const char* const text,
+    const int text_length,
+    cigar_t* const cigar);
 
-#endif /* AFFINE2P_MATRIX_H_ */
+/*
+ * Maxtrim
+ *   Reduce the CIGAR to the maximal scoring sequence, starting from
+ *   the beginning, under a given distance function
+ */
+bool cigar_maxtrim_gap_linear(
+    cigar_t* const cigar,
+    const linear_penalties_t* const penalties);
+bool cigar_maxtrim_gap_affine(
+    cigar_t* const cigar,
+    const affine_penalties_t* const penalties);
+bool cigar_maxtrim_gap_affine2p(
+    cigar_t* const cigar,
+    const affine2p_penalties_t* const penalties);
+
+/*
+ * Local Alignment Extraction
+ */
+bool cigar_maxlocal_gap_affine2p(
+    cigar_t* const cigar,
+    const affine2p_penalties_t* const penalties,
+    const int pattern_length,
+    const int text_length);
+
+#endif /* CIGAR_UTILS_H_ */

@@ -33,7 +33,8 @@
 #define CIGAR_H_
 
 #include <stdbool.h>
-#include "system/mm_allocator.h"
+#include <stdio.h>
+#include <stdint.h>
 #include "alignment/linear_penalties.h"
 #include "alignment/affine_penalties.h"
 #include "alignment/affine2p_penalties.h"
@@ -115,33 +116,6 @@ int cigar_score_gap_affine(
     const affine_penalties_t* const penalties);
 int cigar_score_gap_affine2p(
     const cigar_t* const cigar,
-    const affine2p_penalties_t* const penalties);
-
-/*
- * Utils
- */
-int cigar_cmp(
-    const cigar_t* const cigar_a,
-    const cigar_t* const cigar_b);
-void cigar_copy(
-    cigar_t* const cigar_dst,
-    const cigar_t* const cigar_src);
-
-void cigar_discover_mismatches(
-    const char* const pattern,
-    const int pattern_length,
-    const char* const text,
-    const int text_length,
-    cigar_t* const cigar);
-
-bool cigar_maxtrim_gap_linear(
-    cigar_t* const cigar,
-    const linear_penalties_t* const penalties);
-bool cigar_maxtrim_gap_affine(
-    cigar_t* const cigar,
-    const affine_penalties_t* const penalties);
-bool cigar_maxtrim_gap_affine2p(
-    cigar_t* const cigar,
     const affine2p_penalties_t* const penalties);
 
 /*

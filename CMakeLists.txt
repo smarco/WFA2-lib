@@ -139,6 +139,7 @@ set(wfa2lib_SOURCE
   alignment/affine2p_penalties.c
   alignment/affine_penalties.c
   alignment/cigar.c
+  alignment/cigar_utils.c
   alignment/score_matrix.c
 )
 

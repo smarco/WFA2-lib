@@ -31,6 +31,7 @@
 
 #include "benchmark/benchmark_gap_affine2p.h"
 #include "benchmark/benchmark_check.h"
+#include "alignment/cigar_utils.h"
 #include "gap_affine2p/affine2p_matrix.h"
 #include "gap_affine2p/affine2p_dp.h"
 #include "wavefront/wavefront_align.h"
@@ -90,6 +91,16 @@ void benchmark_gap_affine2p_wavefront(
   // Output
   if (align_input->output_file) {
     const int score_only = (wf_aligner->alignment_scope == compute_score);
+
+    // Testing local-extraction
+    // Testing local-extraction
+    // Testing local-extraction
+//    cigar_maxlocal_gap_affine2p(wf_aligner->cigar,penalties,
+//        align_input->pattern_length,align_input->text_length);
+    // Testing local-extraction
+    // Testing local-extraction
+    // Testing local-extraction
+
     benchmark_print_output(align_input,gap_affine_2p,score_only,wf_aligner->cigar);
   }
 }

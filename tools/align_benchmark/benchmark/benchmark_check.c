@@ -31,6 +31,7 @@
 
 #include "benchmark_check.h"
 #include "alignment/score_matrix.h"
+#include "alignment/cigar_utils.h"
 #include "indel/indel_dp.h"
 #include "edit/edit_dp.h"
 #include "gap_linear/nw.h"
