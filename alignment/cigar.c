@@ -111,11 +111,11 @@ void cigar_free(
  * Accessors
  */
 bool cigar_is_null(
-    cigar_t* const cigar) {
+    const cigar_t* const cigar) {
   return (cigar->begin_offset >= cigar->end_offset);
 }
 int cigar_count_matches(
-    cigar_t* const cigar) {
+    const cigar_t* const cigar) {
   int i, num_matches=0;
   for (i=cigar->begin_offset;i<cigar->end_offset;++i) {
     num_matches += (cigar->operations[i]=='M');
@@ -124,7 +124,7 @@ int cigar_count_matches(
 }
 void cigar_append_forward(
     cigar_t* const cigar_dst,
-    cigar_t* const cigar_src) {
+    const cigar_t* const cigar_src) {
   // Parameters
   const int cigar_length = cigar_src->end_offset - cigar_src->begin_offset;
   char* const operations_src = cigar_src->operations + cigar_src->begin_offset;
@@ -136,7 +136,7 @@ void cigar_append_forward(
 }
 void cigar_append_reverse(
     cigar_t* const cigar_dst,
-    cigar_t* const cigar_src) {
+    const cigar_t* const cigar_src) {
   // Parameters
   const int begin_offset = cigar_src->begin_offset;
   const int end_offset = cigar_src->end_offset;
@@ -242,7 +242,7 @@ void cigar_get_CIGAR(
  * Score
  */
 int cigar_score_edit(
-    cigar_t* const cigar) {
+    const cigar_t* const cigar) {
   int score = 0, i;
   for (i=cigar->begin_offset;i<cigar->end_offset;++i) {
     switch (cigar->operations[i]) {
@@ -258,8 +258,8 @@ int cigar_score_edit(
   return score;
 }
 int cigar_score_gap_linear(
-    cigar_t* const cigar,
-    linear_penalties_t* const penalties) {
+    const cigar_t* const cigar,
+    const linear_penalties_t* const penalties) {
   int score = 0, i;
   for (i=cigar->begin_offset;i<cigar->end_offset;++i) {
     switch (cigar->operations[i]) {
@@ -275,8 +275,8 @@ int cigar_score_gap_linear(
   return score;
 }
 int cigar_score_gap_affine(
-    cigar_t* const cigar,
-    affine_penalties_t* const penalties) {
+    const cigar_t* const cigar,
+    const affine_penalties_t* const penalties) {
   char last_op = '\0';
   int score = 0, i;
   for (i=cigar->begin_offset;i<cigar->end_offset;++i) {
@@ -304,7 +304,7 @@ int cigar_score_gap_affine(
 int cigar_score_gap_affine2p_score_op(
     const char operation,
     const int length,
-    affine2p_penalties_t* const penalties) {
+    const affine2p_penalties_t* const penalties) {
   switch (operation) {
     case 'M':
       return penalties->match*length;
@@ -322,8 +322,8 @@ int cigar_score_gap_affine2p_score_op(
   }
 }
 int cigar_score_gap_affine2p(
-    cigar_t* const cigar,
-    affine2p_penalties_t* const penalties) {
+    const cigar_t* const cigar,
+    const affine2p_penalties_t* const penalties) {
   char last_op = '\0';
   int score = 0, op_length = 0;
   int i;
@@ -344,8 +344,8 @@ int cigar_score_gap_affine2p(
  * Utils
  */
 int cigar_cmp(
-    cigar_t* const cigar_a,
-    cigar_t* const cigar_b) {
+    const cigar_t* const cigar_a,
+    const cigar_t* const cigar_b) {
   // Compare lengths
   const int length_cigar_a = cigar_a->end_offset - cigar_a->begin_offset;
   const int length_cigar_b = cigar_b->end_offset - cigar_b->begin_offset;
@@ -364,7 +364,7 @@ int cigar_cmp(
 }
 void cigar_copy(
     cigar_t* const cigar_dst,
-    cigar_t* const cigar_src) {
+    const cigar_t* const cigar_src) {
   cigar_dst->max_operations = cigar_src->max_operations;
   cigar_dst->begin_offset = cigar_src->begin_offset;
   cigar_dst->end_offset = cigar_src->end_offset;
@@ -418,7 +418,7 @@ void cigar_discover_mismatches(
  */
 bool cigar_maxtrim_gap_linear(
     cigar_t* const cigar,
-    linear_penalties_t* const penalties) {
+    const linear_penalties_t* const penalties) {
   // Parameters
   const char* const operations = cigar->operations;
   const int begin_offset = cigar->begin_offset;
@@ -472,7 +472,7 @@ bool cigar_maxtrim_gap_linear(
 }
 bool cigar_maxtrim_gap_affine(
     cigar_t* const cigar,
-    affine_penalties_t* const penalties) {
+    const affine_penalties_t* const penalties) {
   // Parameters
   const char* const operations = cigar->operations;
   const int begin_offset = cigar->begin_offset;
@@ -529,7 +529,7 @@ bool cigar_maxtrim_gap_affine(
 int cigar_maxtrim_gap_affine2p_score_op(
     const char operation,
     const int length,
-    affine2p_penalties_t* const penalties,
+    const affine2p_penalties_t* const penalties,
     int* const end_v,
     int* const end_h) {
   switch (operation) {
@@ -560,7 +560,7 @@ int cigar_maxtrim_gap_affine2p_score_op(
 }
 bool cigar_maxtrim_gap_affine2p(
     cigar_t* const cigar,
-    affine2p_penalties_t* const penalties) {
+    const affine2p_penalties_t* const penalties) {
   // Parameters
   const char* const operations = cigar->operations;
   const int begin_offset = cigar->begin_offset;
@@ -620,7 +620,7 @@ bool cigar_check_alignment(
     const int pattern_length,
     const char* const text,
     const int text_length,
-    cigar_t* const cigar,
+    const cigar_t* const cigar,
     const bool verbose) {
   // Parameters
   char* const operations = cigar->operations;
@@ -691,7 +691,7 @@ bool cigar_check_alignment(
  */
 void cigar_print(
     FILE* const stream,
-    cigar_t* const cigar,
+    const cigar_t* const cigar,
     const bool print_matches) {
   // Check null
   if (cigar_is_null(cigar)) return;
@@ -705,7 +705,7 @@ void cigar_print(
 }
 int cigar_sprint(
     char* const buffer,
-    cigar_t* const cigar,
+    const cigar_t* const cigar,
     const bool print_matches) {
   // Check null
   if (cigar_is_null(cigar)) {

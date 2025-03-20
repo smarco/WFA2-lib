@@ -125,7 +125,8 @@ $> gcc -O3 wfa_example.c -o wfa_example -lwfa
 $> ./wfa_example
 ```
 
-**IMPORTANT.** Once an alignment object is created, **it is strongly recommended to reuse it to compute multiple alignments**. Creating and destroying the alignment object for every alignment computed can have a significant overhead. Reusing the alignment object allows repurposing internal data structures, minimising the cost of memory allocations, and avoiding multiple alignment setups and precomputations.
+> [!IMPORTANT]
+> Once an alignment object is created, **it is strongly recommended to reuse it to compute multiple alignments**. Creating and destroying the alignment object for every alignment computed can have a significant overhead. Reusing the alignment object allows repurposing internal data structures, minimising the cost of memory allocations, and avoiding multiple alignment setups and precomputations.
 
 ### <a name="wfa2.programming.cpp"></a> 2.2 Simple C++ example
 
@@ -154,13 +155,17 @@ aligner.alignEnd2End(pattern,text); // Align
 Display the result of the alignment.
 
 ```C++
-// Display CIGAR & score
-string cigar = aligner.getAlignmentCigar();
-cout << "CIGAR: " << cigar  << endl;
+// Display CIGAR in raw format (e.g. MMMDDDXD)
+string raw_cigar = aligner.getAlignment();
+cout << "Raw CIGAR: " << raw_cigar  << endl;
+// Display CIGAR in SAM format (e.g. 3M3D1X1D)
+string sam_cigar = aligner.getCIGAR(false);
+cout << "SAM CIGAR: " << sam_cigar  << endl;
 cout << "Alignment score " << aligner.getAlignmentScore() << endl;
 ```
 
-**IMPORTANT.** Once an alignment object is created, **it is strongly recommended to reuse it to compute multiple alignments**. Creating and destroying the alignment object for every alignment computed can have a significant overhead. Reusing the alignment object allows repurposing internal data structures, minimising the cost of memory allocations, and avoiding multiple alignment setups and precomputations.
+> [!IMPORTANT]
+> Once an alignment object is created, **it is strongly recommended to reuse it to compute multiple alignments**. Creating and destroying the alignment object for every alignment computed can have a significant overhead. Reusing the alignment object allows repurposing internal data structures, minimising the cost of memory allocations, and avoiding multiple alignment setups and precomputations.
 
 ### <a name="wfa2.programming.rust"></a> 2.3 Rust bindings
 
