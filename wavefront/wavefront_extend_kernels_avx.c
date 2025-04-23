@@ -103,7 +103,8 @@ FORCE_NO_INLINE void wavefront_extend_matches_packed_end2end_avx2(
   const char* pattern = wf_aligner->sequences.pattern;
   const char* text = wf_aligner->sequences.text;
   const __m256i vector_null = _mm256_set1_epi32(-1);
-  const __m256i eights = _mm256_set1_epi32(8);
+  const __m256i eights      = _mm256_set1_epi32(8);
+  const __m256i offsets_null= _mm256_set1_epi32(WAVEFRONT_OFFSET_NULL);  
   const __m256i vecShuffle = _mm256_set_epi8(28,29,30,31,24,25,26,27,
                                              20,21,22,23,16,17,18,19,
                                              12,13,14,15, 8, 9,10,11,
@@ -146,8 +147,8 @@ FORCE_NO_INLINE void wavefront_extend_matches_packed_end2end_avx2(
     __m256i clz_vector        = avx2_lzcnt_epi32(xor_result_vector);
 
     __m256i equal_chars = _mm256_srli_epi32(clz_vector,3);
-    //equal_chars         = _mm256_and_si256(null_mask, equal_chars);
     offsets_vector      = _mm256_add_epi32 (offsets_vector,equal_chars);
+    offsets_vector      = _mm256_blendv_epi8(offsets_null, offsets_vector, null_mask);
     ks                  = _mm256_add_epi32 (ks, eights);
 
     _mm256_storeu_si256((__m256i*)&offsets[k],offsets_vector);
@@ -193,6 +194,7 @@ FORCE_NO_INLINE wf_offset_t wavefront_extend_matches_packed_end2end_max_avx2(
   
   const __m256i vector_null = _mm256_set1_epi32(-1);
   const __m256i eights      = _mm256_set1_epi32(8);
+  const __m256i offsets_null= _mm256_set1_epi32(WAVEFRONT_OFFSET_NULL); 
   const __m256i vecShuffle  = _mm256_set_epi8(28,29,30,31,24,25,26,27,
                                               20,21,22,23,16,17,18,19,
                                               12,13,14,15, 8, 9,10,11,
@@ -238,6 +240,7 @@ FORCE_NO_INLINE wf_offset_t wavefront_extend_matches_packed_end2end_max_avx2(
 
     __m256i equal_chars = _mm256_srli_epi32(clz_vector,3);
     offsets_vector      = _mm256_add_epi32 (offsets_vector, equal_chars);
+    offsets_vector      = _mm256_blendv_epi8(offsets_null, offsets_vector, null_mask);
 
     _mm256_storeu_si256((__m256i*)&offsets[k],offsets_vector);
 
@@ -313,6 +316,7 @@ FORCE_NO_INLINE bool wavefront_extend_matches_packed_endsfree_avx2(
   
   const __m256i vector_null = _mm256_set1_epi32(-1);
   const __m256i eights      = _mm256_set1_epi32(8);
+  const __m256i offsets_null= _mm256_set1_epi32(WAVEFRONT_OFFSET_NULL);
   const __m256i vecShuffle  = _mm256_set_epi8(28,29,30,31,24,25,26,27,
                                               20,21,22,23,16,17,18,19,
                                               12,13,14,15, 8, 9,10,11,
@@ -359,6 +363,7 @@ FORCE_NO_INLINE bool wavefront_extend_matches_packed_endsfree_avx2(
 
     __m256i equal_chars = _mm256_srli_epi32(clz_vector, 3);
     offsets_vector      = _mm256_add_epi32 (offsets_vector,equal_chars);
+    offsets_vector      = _mm256_blendv_epi8(offsets_null, offsets_vector, null_mask);
     ks                  = _mm256_add_epi32(ks, eights);
     _mm256_storeu_si256((__m256i*)&offsets[k],offsets_vector);
     
@@ -410,6 +415,7 @@ FORCE_NO_INLINE void wavefront_extend_matches_packed_end2end_avx512(
   const char* text = wf_aligner->sequences.text;
   const __m512i zero_vector = _mm512_setzero_si512();
   const __m512i vector_null = _mm512_set1_epi32(-1);
+  const __m512i offsets_null= _mm512_set1_epi32(WAVEFRONT_OFFSET_NULL);
   const __m512i sixteens    = _mm512_set1_epi32(16);
   const __m512i vecShuffle  = _mm512_set_epi8(60,61,62,63,56,57,58,59,
                                              52,53,54,55,48,49,50,51,
@@ -454,6 +460,7 @@ FORCE_NO_INLINE void wavefront_extend_matches_packed_end2end_avx512(
 
     __m512i equal_chars = _mm512_srli_epi32(clz_vector, 3);
     offsets_vector      = _mm512_maskz_add_epi32(null_mask, offsets_vector, equal_chars);
+    offsets_vector      = _mm512_mask_blend_epi32(null_mask, offsets_null, offsets_vector);
     ks                  = _mm512_add_epi32 (ks, sixteens);
 
     _mm512_storeu_si512((__m512*)&offsets[k],offsets_vector);
@@ -500,6 +507,7 @@ FORCE_NO_INLINE wf_offset_t wavefront_extend_matches_packed_end2end_max_avx512(
 
   const __m512i zero_vector = _mm512_setzero_si512();
   const __m512i vector_null = _mm512_set1_epi32(-1);
+  const __m512i offsets_null= _mm512_set1_epi32(WAVEFRONT_OFFSET_NULL);
   const __m512i sixteens    = _mm512_set1_epi32(16);
   const __m512i vecShuffle  = _mm512_set_epi8(60,61,62,63,56,57,58,59,
                                              52,53,54,55,48,49,50,51,
@@ -544,6 +552,7 @@ FORCE_NO_INLINE wf_offset_t wavefront_extend_matches_packed_end2end_max_avx512(
 
     __m512i equal_chars = _mm512_srli_epi32(clz_vector, 3);
     offsets_vector      = _mm512_maskz_add_epi32(null_mask, offsets_vector, equal_chars);
+    offsets_vector      = _mm512_mask_blend_epi32(null_mask, offsets_null, offsets_vector);
 
     _mm512_storeu_si512((__m512*)&offsets[k], offsets_vector);
 
@@ -597,6 +606,7 @@ FORCE_NO_INLINE bool wavefront_extend_matches_packed_endsfree_avx512(
   const char* text = wf_aligner->sequences.text;
   const __m512i zero_vector = _mm512_setzero_si512();
   const __m512i vector_null = _mm512_set1_epi32(-1);
+  const __m512i offsets_null= _mm512_set1_epi32(WAVEFRONT_OFFSET_NULL);
   const __m512i sixteens    = _mm512_set1_epi32(16);
   const __m512i vecShuffle  = _mm512_set_epi8(60,61,62,63,56,57,58,59,
                                              52,53,54,55,48,49,50,51,
@@ -647,6 +657,7 @@ FORCE_NO_INLINE bool wavefront_extend_matches_packed_endsfree_avx512(
 
     __m512i equal_chars = _mm512_srli_epi32(clz_vector, 3);
     offsets_vector      = _mm512_maskz_add_epi32(null_mask, offsets_vector, equal_chars);
+    offsets_vector      = _mm512_mask_blend_epi32(null_mask, offsets_null, offsets_vector);
     ks                  = _mm512_add_epi32 (ks, sixteens);
 
     _mm512_storeu_si512((__m512*)&offsets[k],offsets_vector);
