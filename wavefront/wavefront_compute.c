@@ -622,15 +622,13 @@ void wavefront_compute_process_ends(
     wavefront_compute_endsfree_init(wf_aligner,wavefront_set->out_mwavefront,score);
   }
   // Trim ends from non-null WFs
-  if (wf_aligner->heuristic.strategy == wf_heuristic_none) {
-    if (wavefront_set->out_mwavefront) wavefront_compute_trim_ends(wf_aligner,wavefront_set->out_mwavefront);
-    if (distance_metric == gap_linear) return;
-    if (wavefront_set->out_i1wavefront) wavefront_compute_trim_ends(wf_aligner,wavefront_set->out_i1wavefront);
-    if (wavefront_set->out_d1wavefront) wavefront_compute_trim_ends(wf_aligner,wavefront_set->out_d1wavefront);
-    if (distance_metric == gap_affine) return;
-    if (wavefront_set->out_i2wavefront) wavefront_compute_trim_ends(wf_aligner,wavefront_set->out_i2wavefront);
-    if (wavefront_set->out_d2wavefront) wavefront_compute_trim_ends(wf_aligner,wavefront_set->out_d2wavefront);
-  }
+  if (wavefront_set->out_mwavefront) wavefront_compute_trim_ends(wf_aligner,wavefront_set->out_mwavefront);
+  if (distance_metric == gap_linear) return;
+  if (wavefront_set->out_i1wavefront) wavefront_compute_trim_ends(wf_aligner,wavefront_set->out_i1wavefront);
+  if (wavefront_set->out_d1wavefront) wavefront_compute_trim_ends(wf_aligner,wavefront_set->out_d1wavefront);
+  if (distance_metric == gap_affine) return;
+  if (wavefront_set->out_i2wavefront) wavefront_compute_trim_ends(wf_aligner,wavefront_set->out_i2wavefront);
+  if (wavefront_set->out_d2wavefront) wavefront_compute_trim_ends(wf_aligner,wavefront_set->out_d2wavefront);
 }
 /*
  * Multithread dispatcher
