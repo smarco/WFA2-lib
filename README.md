@@ -107,9 +107,9 @@ Afterwards, we can use the library to display the alignment result (e.g., the al
 
 ```C
 // Display CIGAR & score
-cigar_print_pretty(stderr,pattern,strlen(pattern),text,strlen(text),
-                   &wf_aligner->cigar,wf_aligner->mm_allocator);
-fprintf(stderr,"Alignment Score %d\n",wf_aligner->cigar.score);
+cigar_print_pretty(stderr,wf_aligner->cigar,
+                          pattern,strlen(pattern),text,strlen(text));
+fprintf(stderr,"Alignment Score %d\n",wf_aligner->cigar->score);
 ```
 
 At the end of the program, it is polite to release the memory used.
@@ -121,7 +121,7 @@ wavefront_aligner_delete(wf_aligner); // Free
 To compile and run this example, you need to link against the WFA library (-lwfa).
 
 ```
-$> gcc -O3 wfa_example.c -o wfa_example -lwfa
+$> gcc -I. -O3 -march=native main.c -o main -L./lib/ -lwfa -lm
 $> ./wfa_example
 ```
 

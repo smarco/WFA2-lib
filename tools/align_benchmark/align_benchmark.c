@@ -319,22 +319,22 @@ bool align_benchmark_read_input(
     const int seqs_processed,
     align_input_t* const align_input) {
   // Parameters
-  int line1_length=0, line2_length=0;
+  int line1_length = 0, line2_length = 0;
   // Read queries
-  line1_length = getline(line1,line1_allocated,input_file);
-  if (line1_length==-1) return false;
-  line2_length = getline(line2,line2_allocated,input_file);
-  if (line1_length==-1) return false;
+  line1_length = getline(line1, line1_allocated, input_file);
+  if (line1_length == -1) return false;
+  line2_length = getline(line2, line2_allocated, input_file);
+  if (line2_length == -1) return false;
   // Configure input
   align_input->sequence_id = seqs_processed;
   align_input->pattern = *line1 + 1;
-  align_input->pattern_length = line1_length - 2;
+  align_input->pattern_length  = line1_length - 1;                     // start with removing '>'
+  align_input->pattern_length -= ((*line1)[line1_length - 1] == '\n'); // remove the '\n' character (if needed)
   align_input->pattern[align_input->pattern_length] = '\0';
   align_input->text = *line2 + 1;
-  align_input->text_length = line2_length - 2;
-  if (align_input->text[align_input->text_length] == '\n') {
-    align_input->text[align_input->text_length] = '\0';
-  }
+  align_input->text_length  = line2_length - 1;                        // start with removing '>'
+  align_input->text_length -= ((*line2)[line2_length - 1] == '\n');    // remove the '\n' character (if needed)
+  align_input->text[align_input->text_length] = '\0';
   return true;
 }
 /*
