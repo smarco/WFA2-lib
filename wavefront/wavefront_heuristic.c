@@ -165,9 +165,6 @@ void wf_heuristic_equate(
     if (wavefront_src->lo > wavefront_dst->lo) wavefront_dst->lo = wavefront_src->lo;
     if (wavefront_src->hi < wavefront_dst->hi) wavefront_dst->hi = wavefront_src->hi;
     if (wavefront_dst->lo > wavefront_dst->hi) wavefront_dst->null = true;
-    // Save min/max WF initialized
-    wavefront_dst->wf_elements_init_min = wavefront_dst->lo;
-    wavefront_dst->wf_elements_init_max = wavefront_dst->hi;
   }
 }
 /*
@@ -548,9 +545,6 @@ bool wavefront_heuristic_cufoff(
   // const int wf_length_reduced = mwavefront->hi-mwavefront->lo+1;
   // fprintf(stderr,"[WFA::Heuristic] Heuristic from %d to %d offsets (%2.2f%%)\n",
   //    wf_length_base,wf_length_reduced,100.0f*(float)wf_length_reduced/(float)wf_length_base);
-  // Save min/max WF initialized
-  mwavefront->wf_elements_init_min = mwavefront->lo;
-  mwavefront->wf_elements_init_max = mwavefront->hi;
   // Equate other wavefronts
   if (distance_metric <= gap_linear) return false; // Not Dropped
   // Cut-off the other wavefronts (same dimensions as M)
