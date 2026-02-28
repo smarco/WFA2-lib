@@ -179,6 +179,7 @@ int wavefront_bialign_base(
   }
   // Append CIGAR
   cigar_append_forward(wf_aligner->cigar,wf_base->cigar);
+  wf_aligner->cigar->score = wf_base->cigar->score;
   // Set status and return
   const int align_status = wf_base->align_status.status;
   if (align_status == WF_STATUS_ALG_COMPLETED) {
