@@ -1,3 +1,4 @@
+# WFA2-lib CMake build
 # For Debian currently with
 #
 #   cd build
