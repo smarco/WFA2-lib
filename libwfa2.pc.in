@@ -1,0 +1,10 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=${prefix}
+libdir=${exec_prefix}/@CMAKE_INSTALL_LIBDIR@
+includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@/wfa2lib
+
+Name: libwfa2
+Version: @BUILD_NUMBER@
+Description: Wavefront alignment algorithm library
+Libs: -L${libdir} -lwfa2 -lwfa2cpp
+Cflags: -I${includedir}
