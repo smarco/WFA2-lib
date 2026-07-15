@@ -258,8 +258,8 @@ void wavefront_aligner_init_wf_m(
   wavefront_penalties_t* const penalties = &wf_aligner->penalties;
   alignment_form_t* const form = &wf_aligner->alignment_form;
   // Consider ends-free
-  const int hi = (penalties->match==0) ? form->text_begin_free : 0;
-  const int lo = (penalties->match==0) ? -form->pattern_begin_free : 0;
+  const int hi = (penalties->match==0 && form->span==alignment_endsfree) ? form->text_begin_free : 0;
+  const int lo = (penalties->match==0 && form->span==alignment_endsfree) ? -form->pattern_begin_free : 0;
   // Compute dimensions
   int effective_lo, effective_hi;
   wavefront_compute_limits_output(wf_aligner,lo,hi,&effective_lo,&effective_hi);
