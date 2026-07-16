@@ -57,10 +57,6 @@ WFAligner::WFAligner(
   this->attributes.alignment_scope = (alignmentScope==Score) ? compute_score : compute_alignment;
   // this->attributes.system.verbose = 2; // DEBUG
   // this->attributes.plot.enabled = true; // DEBUG
-  this->wfAligner = nullptr;
-}
-WFAligner::~WFAligner() {
-  wavefront_aligner_delete(wfAligner);
 }
 /*
  * Align End-to-end
@@ -71,10 +67,10 @@ WFAligner::AlignmentStatus WFAligner::alignEnd2End(
     const char* const text,
     const int textLength) {
   // Configure
-  wavefront_aligner_set_alignment_end_to_end(wfAligner);
+  wavefront_aligner_set_alignment_end_to_end(wfAligner.get());
   // Align
   return (WFAligner::AlignmentStatus) wavefront_align(
-      wfAligner,pattern,patternLength,text,textLength);
+      wfAligner.get(),pattern,patternLength,text,textLength);
 }
 WFAligner::AlignmentStatus WFAligner::alignEnd2End(
     const std::string& pattern,
@@ -88,10 +84,10 @@ WFAligner::AlignmentStatus WFAligner::alignEnd2End(
     const uint8_t* const text,
     const int textLength) {
   // Configure
-  wavefront_aligner_set_alignment_end_to_end(wfAligner);
+  wavefront_aligner_set_alignment_end_to_end(wfAligner.get());
   // Align
   return (WFAligner::AlignmentStatus) wavefront_align_packed2bits(
-      wfAligner,pattern,patternLength,text,textLength);
+      wfAligner.get(),pattern,patternLength,text,textLength);
 }
 WFAligner::AlignmentStatus WFAligner::alignEnd2End(
     int (*matchFunct)(int,int,void*),
@@ -99,10 +95,10 @@ WFAligner::AlignmentStatus WFAligner::alignEnd2End(
     const int patternLength,
     const int textLength) {
   // Configure
-  wavefront_aligner_set_alignment_end_to_end(wfAligner);
+  wavefront_aligner_set_alignment_end_to_end(wfAligner.get());
   // Align (using custom matching function)
   return (WFAligner::AlignmentStatus) wavefront_align_lambda(
-      wfAligner,matchFunct,matchFunctArguments,patternLength,textLength);
+      wfAligner.get(),matchFunct,matchFunctArguments,patternLength,textLength);
 }
 /*
  * Align Ends-free
@@ -117,12 +113,12 @@ WFAligner::AlignmentStatus WFAligner::alignEndsFree(
     const int textBeginFree,
     const int textEndFree) {
   // Configure
-  wavefront_aligner_set_alignment_free_ends(wfAligner,
+  wavefront_aligner_set_alignment_free_ends(wfAligner.get(),
       patternBeginFree,patternEndFree,
       textBeginFree,textEndFree);
   // Align
   return (WFAligner::AlignmentStatus) wavefront_align(
-      wfAligner,pattern,patternLength,text,textLength);
+      wfAligner.get(),pattern,patternLength,text,textLength);
 }
 WFAligner::AlignmentStatus WFAligner::alignEndsFree(
     const std::string& pattern,
@@ -146,12 +142,12 @@ WFAligner::AlignmentStatus WFAligner::alignEndsFree(
     const int textBeginFree,
     const int textEndFree) {
   // Configure
-  wavefront_aligner_set_alignment_free_ends(wfAligner,
+  wavefront_aligner_set_alignment_free_ends(wfAligner.get(),
       patternBeginFree,patternEndFree,
       textBeginFree,textEndFree);
   // Align
   return (WFAligner::AlignmentStatus) wavefront_align_packed2bits(
-      wfAligner,pattern,patternLength,text,textLength);
+      wfAligner.get(),pattern,patternLength,text,textLength);
 }
 WFAligner::AlignmentStatus WFAligner::alignEndsFree(
     int (*matchFunct)(int,int,void*),
@@ -163,12 +159,12 @@ WFAligner::AlignmentStatus WFAligner::alignEndsFree(
     const int textBeginFree,
     const int textEndFree) {
   // Configure
-  wavefront_aligner_set_alignment_free_ends(wfAligner,
+  wavefront_aligner_set_alignment_free_ends(wfAligner.get(),
       patternBeginFree,patternEndFree,
       textBeginFree,textEndFree);
   // Align (using custom matching function)
   return (WFAligner::AlignmentStatus) wavefront_align_lambda(
-      wfAligner,matchFunct,matchFunctArguments,patternLength,textLength);
+      wfAligner.get(),matchFunct,matchFunctArguments,patternLength,textLength);
 }
 /*
  * Align Extension
@@ -179,10 +175,10 @@ WFAligner::AlignmentStatus WFAligner::alignExtension(
     const char* const text,
     const int textLength) {
   // Configure
-  wavefront_aligner_set_alignment_extension(wfAligner);
+  wavefront_aligner_set_alignment_extension(wfAligner.get());
   // Align
   return (WFAligner::AlignmentStatus) wavefront_align(
-      wfAligner,pattern,patternLength,text,textLength);
+      wfAligner.get(),pattern,patternLength,text,textLength);
 }
 WFAligner::AlignmentStatus WFAligner::alignExtension(
     std::string& pattern,
@@ -196,10 +192,10 @@ WFAligner::AlignmentStatus WFAligner::alignExtension(
     const uint8_t* const text,
     const int textLength) {
   // Configure
-  wavefront_aligner_set_alignment_extension(wfAligner);
+  wavefront_aligner_set_alignment_extension(wfAligner.get());
   // Align
   return (WFAligner::AlignmentStatus) wavefront_align_packed2bits(
-      wfAligner,pattern,patternLength,text,textLength);
+      wfAligner.get(),pattern,patternLength,text,textLength);
 }
 WFAligner::AlignmentStatus WFAligner::alignExtension(
     int (*matchFunct)(int,int,void*),
@@ -207,36 +203,36 @@ WFAligner::AlignmentStatus WFAligner::alignExtension(
     const int patternLength,
     const int textLength) {
   // Configure
-  wavefront_aligner_set_alignment_extension(wfAligner);
+  wavefront_aligner_set_alignment_extension(wfAligner.get());
   // Align (using custom matching function)
   return (WFAligner::AlignmentStatus) wavefront_align_lambda(
-      wfAligner,matchFunct,matchFunctArguments,patternLength,textLength);
+      wfAligner.get(),matchFunct,matchFunctArguments,patternLength,textLength);
 }
 /*
  * Heuristics
  */
 void WFAligner::setHeuristicNone() {
-  wavefront_aligner_set_heuristic_none(wfAligner);
+  wavefront_aligner_set_heuristic_none(wfAligner.get());
 }
 void WFAligner::setHeuristicBandedStatic(
     const int band_min_k,
     const int band_max_k) {
   wavefront_aligner_set_heuristic_banded_static(
-      wfAligner,band_min_k,band_max_k);
+      wfAligner.get(),band_min_k,band_max_k);
 }
 void WFAligner::setHeuristicBandedAdaptive(
     const int band_min_k,
     const int band_max_k,
     const int steps_between_cutoffs) {
   wavefront_aligner_set_heuristic_banded_adaptive(
-      wfAligner,band_min_k,band_max_k,steps_between_cutoffs);
+      wfAligner.get(),band_min_k,band_max_k,steps_between_cutoffs);
 }
 void WFAligner::setHeuristicWFadaptive(
     const int min_wavefront_length,
     const int max_distance_threshold,
     const int steps_between_cutoffs) {
   wavefront_aligner_set_heuristic_wfadaptive(
-      wfAligner,min_wavefront_length,
+      wfAligner.get(),min_wavefront_length,
       max_distance_threshold,steps_between_cutoffs);
 }
 void WFAligner::setHeuristicWFmash(
@@ -244,54 +240,54 @@ void WFAligner::setHeuristicWFmash(
     const int max_distance_threshold,
     const int steps_between_cutoffs) {
   wavefront_aligner_set_heuristic_wfmash(
-      wfAligner,min_wavefront_length,
+      wfAligner.get(),min_wavefront_length,
       max_distance_threshold,steps_between_cutoffs);
 }
 void WFAligner::setHeuristicXDrop(
     const int xdrop,
     const int steps_between_cutoffs) {
   wavefront_aligner_set_heuristic_xdrop(
-      wfAligner,xdrop,steps_between_cutoffs);
+      wfAligner.get(),xdrop,steps_between_cutoffs);
 }
 void WFAligner::setHeuristicZDrop(
     const int zdrop,
     const int steps_between_cutoffs) {
   wavefront_aligner_set_heuristic_zdrop(
-      wfAligner,zdrop,steps_between_cutoffs);
+      wfAligner.get(),zdrop,steps_between_cutoffs);
 }
 /*
  * Limits
  */
 void WFAligner::setMaxAlignmentSteps(
     const int maxAlignmentSteps) {
-  wavefront_aligner_set_max_alignment_steps(wfAligner,maxAlignmentSteps);
+  wavefront_aligner_set_max_alignment_steps(wfAligner.get(),maxAlignmentSteps);
 }
 void WFAligner::setMaxMemory(
     const uint64_t maxMemoryResident,
     const uint64_t maxMemoryAbort) {
-  wavefront_aligner_set_max_memory(wfAligner,maxMemoryResident,maxMemoryAbort);
+  wavefront_aligner_set_max_memory(wfAligner.get(),maxMemoryResident,maxMemoryAbort);
 }
 // Parallelization
 void WFAligner::setMaxNumThreads(
     const int maxNumThreads) {
-  wavefront_aligner_set_max_num_threads(wfAligner, maxNumThreads);
+  wavefront_aligner_set_max_num_threads(wfAligner.get(), maxNumThreads);
 }
 /*
  * Accessors
  */
-int WFAligner::getAlignmentStatus() {
+int WFAligner::getAlignmentStatus() const {
   return wfAligner->align_status.status;
 }
-int WFAligner::getAlignmentScore() {
+int WFAligner::getAlignmentScore() const {
   return wfAligner->cigar->score;
 }
 void WFAligner::getAlignment(
     char** const cigarOperations,
-    int* cigarLength) {
+    int* cigarLength) const {
  *cigarOperations = wfAligner->cigar->operations + wfAligner->cigar->begin_offset;
  *cigarLength = wfAligner->cigar->end_offset - wfAligner->cigar->begin_offset;
 }
-std::string WFAligner::getAlignment() {
+std::string WFAligner::getAlignment() const {
   // Fetch Alignment
   char* const buffer = wfAligner->cigar->operations + wfAligner->cigar->begin_offset;
   const int length = wfAligner->cigar->end_offset - wfAligner->cigar->begin_offset;
@@ -301,11 +297,11 @@ std::string WFAligner::getAlignment() {
 void WFAligner::getCIGAR(
     const bool showMismatches,
     uint32_t** const cigarOperations,
-    int* const numCigarOperations) {
+    int* const numCigarOperations) const {
   cigar_get_CIGAR(wfAligner->cigar,showMismatches,cigarOperations,numCigarOperations);
 }
 std::string WFAligner::getCIGAR(
-    const bool showMismatches) {
+    const bool showMismatches) const {
   // Check length
   const int alignmentLength = wfAligner->cigar->end_offset - wfAligner->cigar->begin_offset;
   if (alignmentLength <= 0) return std::string();
@@ -326,14 +322,14 @@ void WFAligner::printPretty(
     const char* const pattern,
     const int patternLength,
     const char* const text,
-    const int textLength) {
+    const int textLength) const {
   cigar_print_pretty(stream,wfAligner->cigar,pattern,patternLength,text,textLength);
 }
 /*
  * Misc
  */
 char* WFAligner::strStatus(
-    const WFAligner::AlignmentStatus status) {
+    const WFAligner::AlignmentStatus status) const {
   return wavefront_align_strerror((int)status);
 }
 void WFAligner::debugTag(
@@ -353,7 +349,7 @@ WFAlignerIndel::WFAlignerIndel(
     const MemoryModel memoryModel) :
         WFAligner(alignmentScope,memoryModel) {
   attributes.distance_metric = indel;
-  wfAligner = wavefront_aligner_new(&attributes);
+  wfAligner.reset(wavefront_aligner_new(&attributes));
 }
 /*
  * Edit Aligner (a.k.a Levenshtein)
@@ -363,7 +359,7 @@ WFAlignerEdit::WFAlignerEdit(
     const MemoryModel memoryModel) :
         WFAligner(alignmentScope,memoryModel) {
   attributes.distance_metric = edit;
-  wfAligner = wavefront_aligner_new(&attributes);
+  wfAligner.reset(wavefront_aligner_new(&attributes));
 }
 /*
  * Gap-Linear Aligner (a.k.a Needleman-Wunsch)
@@ -378,7 +374,7 @@ WFAlignerGapLinear::WFAlignerGapLinear(
   attributes.linear_penalties.match = 0;
   attributes.linear_penalties.mismatch = mismatch;
   attributes.linear_penalties.indel = indel;
-  wfAligner = wavefront_aligner_new(&attributes);
+  wfAligner.reset(wavefront_aligner_new(&attributes));
 }
 WFAlignerGapLinear::WFAlignerGapLinear(
     const int match,
@@ -391,7 +387,7 @@ WFAlignerGapLinear::WFAlignerGapLinear(
   attributes.linear_penalties.match = match;
   attributes.linear_penalties.mismatch = mismatch;
   attributes.linear_penalties.indel = indel;
-  wfAligner = wavefront_aligner_new(&attributes);
+  wfAligner.reset(wavefront_aligner_new(&attributes));
 }
 /*
  * Gap-Affine Aligner (a.k.a Smith-Waterman-Gotoh)
@@ -408,7 +404,7 @@ WFAlignerGapAffine::WFAlignerGapAffine(
   attributes.affine_penalties.mismatch = mismatch;
   attributes.affine_penalties.gap_opening = gapOpening;
   attributes.affine_penalties.gap_extension = gapExtension;
-  wfAligner = wavefront_aligner_new(&attributes);
+  wfAligner.reset(wavefront_aligner_new(&attributes));
 }
 WFAlignerGapAffine::WFAlignerGapAffine(
     const int match,
@@ -423,7 +419,7 @@ WFAlignerGapAffine::WFAlignerGapAffine(
   attributes.affine_penalties.mismatch = mismatch;
   attributes.affine_penalties.gap_opening = gapOpening;
   attributes.affine_penalties.gap_extension = gapExtension;
-  wfAligner = wavefront_aligner_new(&attributes);
+  wfAligner.reset(wavefront_aligner_new(&attributes));
 }
 /*
  * Gap-Affine Dual-Cost Aligner (a.k.a. concave 2-pieces)
@@ -444,7 +440,7 @@ WFAlignerGapAffine2Pieces::WFAlignerGapAffine2Pieces(
   attributes.affine2p_penalties.gap_extension1 = gapExtension1;
   attributes.affine2p_penalties.gap_opening2 = gapOpening2;
   attributes.affine2p_penalties.gap_extension2 = gapExtension2;
-  wfAligner = wavefront_aligner_new(&attributes);
+  wfAligner.reset(wavefront_aligner_new(&attributes));
 }
 WFAlignerGapAffine2Pieces::WFAlignerGapAffine2Pieces(
     const int match,
@@ -463,7 +459,7 @@ WFAlignerGapAffine2Pieces::WFAlignerGapAffine2Pieces(
   attributes.affine2p_penalties.gap_extension1 = gapExtension1;
   attributes.affine2p_penalties.gap_opening2 = gapOpening2;
   attributes.affine2p_penalties.gap_extension2 = gapExtension2;
-  wfAligner = wavefront_aligner_new(&attributes);
+  wfAligner.reset(wavefront_aligner_new(&attributes));
 }
 
 } /* namespace wfa */
