@@ -306,7 +306,7 @@ std::string WFAligner::getCIGAR(
   const int alignmentLength = wfAligner->cigar->end_offset - wfAligner->cigar->begin_offset;
   if (alignmentLength <= 0) return std::string();
   // Allocate
-  char* const buffer = new char[2*alignmentLength];
+  char* const buffer = new char[4*alignmentLength+20];
   const int bufferLength = cigar_sprint_SAM_CIGAR(buffer,wfAligner->cigar,showMismatches);
   // Create string
   std::string cigarString = std::string(buffer,bufferLength);
