@@ -32,6 +32,7 @@
 #ifndef BINDINGS_CPP_WFALIGNER_HPP_
 #define BINDINGS_CPP_WFALIGNER_HPP_
 
+#include <memory>
 #include <string>
 #include <cstdint>
 
@@ -66,6 +67,7 @@ public:
     StatusMaxStepsReached = WF_STATUS_MAX_STEPS_REACHED,
     StatusOOM = WF_STATUS_OOM,
   };
+
   // Align End-to-end
   AlignmentStatus alignEnd2End( // Regular ASCII Sequences
       const char* const pattern,
@@ -172,40 +174,42 @@ public:
   void setMaxNumThreads(
       const int maxNumThreads);
   // Accessors
-  int getAlignmentStatus();
-  int getAlignmentScore();
+  int getAlignmentStatus() const;
+  int getAlignmentScore() const;
   void getAlignment(
       char** const cigarOperations,
-      int* cigarLength);
-  std::string getAlignment();
+      int* cigarLength) const;
+  std::string getAlignment() const;
   void getCIGAR(
       const bool showMismatches,
       uint32_t** const cigarOperations,
-      int* const numCigarOperations);
+      int* const numCigarOperations) const;
   std::string getCIGAR(
-      const bool showMismatches);
+      const bool showMismatches) const;
   // Display
   void printPretty(
       FILE* const stream,
       const char* const pattern,
       const int patternLength,
       const char* const text,
-      const int textLength);
+      const int textLength) const;
   // Misc
   char* strStatus(
-      const AlignmentStatus status);
+      const AlignmentStatus status) const;
   void debugTag(
       char* const debugTag);
 protected:
+  struct WFADeleter {
+    void operator()(wavefront_aligner_t* ptr) const { wavefront_aligner_delete(ptr); }
+  };
+
   wavefront_aligner_attr_t attributes;
-  wavefront_aligner_t* wfAligner;
+  std::unique_ptr<wavefront_aligner_t, WFADeleter> wfAligner;
+
   // Setup
   WFAligner(
       const AlignmentScope alignmentScope,
       const MemoryModel memoryModel = MemoryHigh);
-  ~WFAligner();
-private:
-  WFAligner(const WFAligner&);
 };
 /*
  * Indel Aligner (a.k.a Longest Common Subsequence - LCS)
