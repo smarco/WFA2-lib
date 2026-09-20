@@ -58,7 +58,7 @@ Section [WFA2-lib features](#wfa2.features) explores the most relevant options a
     * [Memory modes](#wfa2.mem)
     * [Heuristic modes](#wfa2.heuristics)
     * [Technical notes](#wfa2.other.notes)
-* [Reporting Bugs and Feature Request](#wfa2.complains)
+* [Reporting Bugs and Feature Request](#wfa2.bugs)
 * [License](#wfa2.licence)
 * [Citation](#wfa2.cite)
 
