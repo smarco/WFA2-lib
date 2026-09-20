@@ -115,6 +115,7 @@ int sequence_extract(
   const int length_diff = seqlong_length - seqshort_length;
   const int offset = rand_iid(0,length_diff+1);
   strncpy(seqshort,seqlong+offset,seqshort_length);
+  seqshort[seqshort_length] = '\0';
   // Return offset
   return offset;
 }
