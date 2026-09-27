@@ -9,7 +9,7 @@ mod wfa {
 
 /// Compute the affine alignment score between `a` and `b` with the given substitution,
 /// gap-open, and gap-extend penalties.
-fn linear_score(a: &[i8], b: &[i8], sub: i32, indel: i32) -> i32 {
+fn linear_score(a: &[i8], b: &[i8], sub: i32, gap_open: i32, gap_extend: i32) -> i32 {
     unsafe {
         let mut attributes = wfa::wavefront_aligner_attr_default;
         // Do not use a heuristic (enabled by default).
@@ -19,7 +19,7 @@ fn linear_score(a: &[i8], b: &[i8], sub: i32, indel: i32) -> i32 {
 
         // Set the cost model and parameters.
         attributes.distance_metric = wfa::distance_metric_t_gap_affine;
-        attributes.affine_penalties.mismatch = mismatch as i32;
+        attributes.affine_penalties.mismatch = sub as i32;
         attributes.affine_penalties.gap_opening = gap_open as i32;
         attributes.affine_penalties.gap_extension = gap_extend as i32;
 
