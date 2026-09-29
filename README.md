@@ -448,6 +448,24 @@ WFA2's heuristics are classified into the following categories: ['wf-adaptive'](
   attributes.heuristic.strategy = wf_heuristic_none;
 ```
 
+- **Maximum alignment steps.** This option stops the alignment once the wavefront score reaches a specified limit. The limit applies to the WFA score, not to the number of edits or DP cells computed. By default, `max_alignment_steps` is set to `INT_MAX` (unlimited). Reaching the limit returns `WF_STATUS_MAX_STEPS_REACHED`. In that case, no complete alignment or CIGAR is available.
+
+```C
+  wavefront_aligner_attr_t attributes = wavefront_aligner_attr_default;
+  attributes.distance_metric = gap_affine;
+  attributes.affine_penalties.mismatch = 6;
+  attributes.affine_penalties.gap_opening = 4;
+  attributes.affine_penalties.gap_extension = 2;
+  attributes.heuristic.strategy = wf_heuristic_none;
+  attributes.system.max_alignment_steps = 9; // Allow a total penalty of up to 8
+```
+
+When the match penalty is zero, the threshold can be set directly from the desired WFA score. The limit is exclusive, so set `max_alignment_steps` to one more than the maximum permitted score. For example, with $X=6$, $O=4$, and $E=2$, a two-base gap costs 8, so a limit of 9 allows that alignment. The score reported by WFA for weighted penalties is the negative of the total penalty.
+
+When the match penalty is nonzero, WFA internally uses Eizenga's transformation to obtain an equivalent score. The threshold must be transformed in the same way before setting `max_alignment_steps`. For an end-to-end alignment, let $M$ be the match reward (`M = -attributes.affine_penalties.match`), $|P|$ and $|T|$ the sequence lengths, and $S$ the reported alignment score. The equivalent WFA score is $s=M(|P|+|T|)-2S$. To retain alignments with a reported score of at least $S_{min}$, set `max_alignment_steps` to $M(|P|+|T|)-2S_{min}+1$. For ends-free alignment, the transformation also needs to account for the free ends.
+
+This limit can be combined with the heuristics below; set `attributes.heuristic.strategy = wf_heuristic_none` when an exact threshold comparison is required.
+
 - <a name="wfa2.wfadaptive"></a> **Heuristic wf-adaptive.** This WFA heuristic removes outer diagonals that are extremely far behind compared to other ones in the same wavefront. Unlike other methods, the adaptive-wavefront reduction heuristic prunes based on the potential of the diagonal to lead to the optimal solution without previous knowledge of the error between the sequences.
 
 ```C
