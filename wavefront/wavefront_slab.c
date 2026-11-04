@@ -48,6 +48,7 @@ wavefront_slab_t* wavefront_slab_new(
     const int init_wf_length,
     const bool allocate_backtrace,
     const wf_slab_mode_t slab_mode,
+    const bool use_virtual_arena,
     mm_allocator_t* const mm_allocator) {
   // Allocate
   wavefront_slab_t* const wavefront_slab =
@@ -70,7 +71,7 @@ wavefront_slab_t* wavefront_slab_new(
   // Allocate Virtual Memory Arena for tight mode (wavefront_memory_high) on POSIX/Linux 64-bit
 #if defined(__linux__) && (defined(__x86_64__) || defined(__aarch64__))
 #ifndef WFA_NO_VIRTUAL_ARENA
-  if (slab_mode == wf_slab_tight && getenv("WFA_FORCE_SLAB") == NULL) {
+  if (use_virtual_arena && slab_mode == wf_slab_tight) {
     wavefront_slab->arena = mm_virtual_arena_new(WF_SLAB_ARENA_CHUNK_SIZE);
     if (wavefront_slab->arena != NULL) {
       wavefront_slab->use_virtual_arena = true;

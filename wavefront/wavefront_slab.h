@@ -71,6 +71,7 @@ wavefront_slab_t* wavefront_slab_new(
     const int init_wf_length,
     const bool allocate_backtrace,
     const wf_slab_mode_t slab_mode,
+    const bool use_virtual_arena,
     mm_allocator_t* const mm_allocator);
 void wavefront_slab_reap(
     wavefront_slab_t* const wavefront_slab);
